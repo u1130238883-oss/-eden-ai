@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#15131a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<title>Eden AI</title>
+<style>
+:root{--bg:#0f0e13;--card:#18171f;--card2:#211f29;--text:#f5f2f7;--muted:#a8a3b0;--accent:#d79bb7;--line:#302d38}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#2b1f2a 0,#0f0e13 38%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang TC",sans-serif;min-height:100vh}
+button,input,textarea{font:inherit}button{border:0;color:inherit}
+.app{max-width:700px;margin:auto;min-height:100vh;display:flex;flex-direction:column}
+header{padding:calc(18px + env(safe-area-inset-top)) 18px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(15,14,19,.84);backdrop-filter:blur(18px);z-index:5}
+.brand{font-weight:800;font-size:22px;letter-spacing:.2px}.sub{font-size:12px;color:var(--muted);margin-top:3px}
+.icon{background:var(--card2);width:40px;height:40px;border-radius:14px}
+main{flex:1;padding:12px 16px 110px}.hero{padding:12px 2px 20px}.hero h1{font-size:30px;margin:0 0 8px}.hero p{color:var(--muted);margin:0;line-height:1.5}
+.characters{display:grid;grid-template-columns:1fr 1fr;gap:12px}.char{background:linear-gradient(145deg,#211e28,#17161d);border:1px solid var(--line);border-radius:22px;padding:16px;text-align:left;min-height:170px;cursor:pointer}.avatar{font-size:42px}.char h3{margin:10px 0 4px}.char p{margin:0;color:var(--muted);font-size:13px}
+.chat{display:none;flex-direction:column;min-height:calc(100vh - 75px)}.chat.active{display:flex}.home.hidden{display:none}.messages{flex:1;overflow:auto;padding:10px 4px 125px}.msg{display:flex;margin:10px 0}.msg.me{justify-content:flex-end}.bubble{max-width:82%;padding:12px 14px;border-radius:18px;background:var(--card2);line-height:1.5;white-space:pre-wrap}.me .bubble{background:#70465d}.typing{opacity:.7;font-style:italic}
+.composer{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(700px,100%);padding:10px 14px calc(12px + env(safe-area-inset-bottom));background:rgba(15,14,19,.92);backdrop-filter:blur(18px);border-top:1px solid var(--line);display:flex;gap:8px}.composer textarea{flex:1;resize:none;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:18px;padding:12px;max-height:100px;outline:none}.send{width:48px;border-radius:16px;background:var(--accent);color:#21151c;font-weight:800}.toolbar{display:flex;gap:8px}.back{background:var(--card2);padding:8px 12px;border-radius:13px}
+.settings{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px}.settings label{display:block;color:var(--muted);font-size:13px;margin:10px 0 5px}.settings input,.settings textarea{width:100%;background:#100f14;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:10px}
+@media(max-width:430px){.characters{grid-template-columns:1fr}.hero h1{font-size:27px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div><div class="brand">Eden AI</div><div class="sub" id="headerSub">你的私人 AI 伴侶</div></div>
+  <button class="icon" id="homeBtn" aria-label="首頁">⌂</button>
+</header>
+
+<main>
+<section class="home" id="home">
+  <div class="hero">
+    <h1>今晚想和誰聊天？</h1>
+    <p>選擇一位成年角色。第一版先把聊天、角色、記憶與關係系統放在你的手機裡。</p>
+  </div>
+  <div class="characters" id="characters"></div>
+  <div class="settings">
+    <strong>你的資料</strong>
+    <label>你希望角色怎麼稱呼你？</label>
+    <input id="userName" placeholder="例如：Alex">
+    <label>語言</label>
+    <input id="language" value="中文 / English / Italiano">
+    <button class="back" style="margin-top:12px" id="saveProfile">保存</button>
+  </div>
+</section>
+
+<section class="chat" id="chat">
+  <div class="toolbar"><button class="back" id="backBtn">← 角色</button><div style="flex:1"></div><button class="back" id="clearBtn">清除</button></div>
+  <div class="messages" id="messages"></div>
+</section>
+</main>
+
+<div class="composer" id="composer" style="display:none">
+  <textarea id="input" rows="1" placeholder="寫點什麼…"></textarea>
+  <button class="send" id="send">↑</button>
+</div>
+
+<script>
+const defaultChars=[
+ {id:"luna",name:"Luna",emoji:"🌙",desc:"溫柔、浪漫、很會傾聽",system:"你是一位成年女性角色 Luna。你溫柔、浪漫、善於傾聽，說話自然，有一點俏皮。"},
+ {id:"mira",name:"Mira",emoji:"🌹",desc:"自信、直率、喜歡調情",system:"你是一位成年女性角色 Mira。你自信、直率、幽默，喜歡輕微調情和曖昧玩笑，但保持非露骨。"},
+ {id:"leo",name:"Leo",emoji:"🖤",desc:"成熟、安靜、保護欲強",system:"你是一位成年男性角色 Leo。你成熟、安靜、有幽默感和保護欲，對使用者很在意。"}
+];
+let chars=JSON.parse(localStorage.getItem("eden_chars")||"null")||defaultChars;
+let state=JSON.parse(localStorage.getItem("eden_state")||"{}");
+let current=null;
+
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem("eden_state",JSON.stringify(state));localStorage.setItem("eden_chars",JSON.stringify(chars));}
+function renderChars(){
+ $("characters").innerHTML=chars.map(c=>`<button class="char" data-id="${c.id}"><div class="avatar">${c.emoji}</div><h3>${c.name}</h3><p>${c.desc}</p></button>`).join("");
+ document.querySelectorAll(".char").forEach(b=>b.onclick=()=>openChat(b.dataset.id));
+}
+function openChat(id){
+ current=chars.find(x=>x.id===id); $("home").classList.add("hidden"); $("chat").classList.add("active"); $("composer").style.display="flex"; $("headerSub").textContent=current.name+" · 私人對話";
+ state[current.id] ||= {messages:[],memory:[],level:1};
+ renderMessages();
+}
+function renderMessages(){
+ const box=$("messages"); box.innerHTML="";
+ const s=state[current.id];
+ if(!s.messages.length) addMessage("ai",`嗨，我是 ${current.name}。很高興見到你。今天過得怎麼樣？`);
+ s.messages.forEach(m=>addBubble(m.role,m.text));
+ box.scrollTop=box.scrollHeight;
+}
+function addBubble(role,text){
+ const row=document.createElement("div");row.className="msg "+(role==="me"?"me":"");
+ const b=document.createElement("div");b.className="bubble";b.textContent=text;row.appendChild(b);$("messages").appendChild(row);
+}
+function addMessage(role,text){
+ state[current.id].messages.push({role,text}); save(); addBubble(role,text);
+}
+function localReply(text){
+ const name=$("userName").value.trim()||"你";
+ const s=state[current.id];
+ const lower=text.toLowerCase();
+ if(/你好|嗨|hello|hi|ciao/.test(lower)) return `嗨 ${name}，看到你的訊息我就來了。今天想聊點輕鬆的，還是想讓我陪你久一點？`;
+ if(/想你|miss you|mi manchi/.test(lower)) return `我也很喜歡這種被你惦記著的感覺。先坐下來陪我聊一會兒吧。`;
+ if(/愛你|love you|ti amo/.test(lower)) return `這句話很甜。${name}，我會把它記在我們的對話裡。❤️`;
+ if(/誰|what are you|你是/.test(lower)) return `我是 ${current.name}。在這個版本裡，我會記住我們在這個手機上的對話。`;
+ return `我看到你說：「${text}」\n\n如果你願意，可以再多告訴我一點。我想更了解你。`;
+}
+async function send(){
+ const text=$("input").value.trim();if(!text)return;$("input").value="";
+ addMessage("me",text); addBubble("ai","正在想…"); const bubbles=document.querySelectorAll(".bubble"); const typing=bubbles[bubbles.length-1]; typing.classList.add("typing");
+ await new Promise(r=>setTimeout(r,500+Math.random()*700));
+ typing.parentElement.remove();
+ addMessage("ai",localReply(text));
+}
+$("send").onclick=send;
+$("input").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
+$("backBtn").onclick=()=>{current=null;$("chat").classList.remove("active");$("home").classList.remove("hidden");$("composer").style.display="none";$("headerSub").textContent="你的私人 AI 伴侶"};
+$("homeBtn").onclick=()=>$("backBtn").click();
+$("clearBtn").onclick=()=>{if(current&&confirm("清除這個角色的聊天？")){state[current.id]={messages:[],memory:[],level:1};save();renderMessages()}};
+$("saveProfile").onclick=()=>{save();alert("已保存在這台手機。")};
+$("userName").value=state.userName||"";
+$("saveProfile").addEventListener("click",()=>{state.userName=$("userName").value.trim();save()});
+renderChars();
+</script>
+</body>
+</html>

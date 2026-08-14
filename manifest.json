@@ -1,0 +1,9 @@
+{
+  "name":"Eden AI",
+  "short_name":"Eden AI",
+  "start_url":".",
+  "display":"standalone",
+  "background_color":"#0f0e13",
+  "theme_color":"#15131a",
+  "lang":"zh-Hant"
+}
