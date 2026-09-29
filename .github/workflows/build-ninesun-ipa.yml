@@ -22,7 +22,9 @@ jobs:
         continue-on-error: true
         env:
           NINESUN_LIVE: "1"
-        run: swift test --filter WebLiveTests 2>&1 | grep -E "LIVE|error:|Executed" | head -300
+        run: |
+          swift test --filter WebLiveTests > live.log 2>&1 || true
+          grep -E "LIVE|error:|Executed" live.log || tail -50 live.log
 
       - name: Test AI core (Swift ↔ Python parity, Nine & Twelve engine)
         working-directory: ios/EchoCore

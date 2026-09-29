@@ -46,6 +46,8 @@ final class WebRoutingTests: XCTestCase {
         XCTAssertEqual(WebSearch.place("台北明天天氣如何"), "台北")
         XCTAssertEqual(WebAgent.keywords("請問台北101有多高？"), "台北101有多高")
         XCTAssertEqual(WebAgent.keywords("上網查 iPhone 17 價格"), "iPhone 17 價格")
+        XCTAssertEqual(WebAgent.coreTopic("台北101有多高"), "台北101")
+        XCTAssertEqual(WebAgent.coreTopic("紅燒肉怎麼煮"), "紅燒肉")
     }
 }
 
@@ -55,7 +57,8 @@ final class WebLiveTests: XCTestCase {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["NINESUN_LIVE"] == "1", "live test")
         let qs: [(String, Lang)] = [
             ("台北101有多高", .zh), ("量子電腦是什麼", .zh), ("台北明天天氣如何", .zh), ("今天台灣新聞", .zh),
-            ("紅燒肉怎麼煮", .zh), ("偏財格", .zh), ("what is the capital of Peru", .en),
+            ("紅燒肉怎麼煮", .zh), ("偏財格", .zh), ("日本首相是誰", .zh), ("美元對台幣匯率多少", .zh), ("今天股市怎麼樣", .zh),
+            ("what is the capital of Peru", .en),
         ]
         var found = 0
         for (q, L) in qs {

@@ -73,6 +73,7 @@ public enum WebSearch {
         if lead == nil, let a = await inst { lead = a.text; leadSource = a.source }
         if lead == nil, let w = await wk, related(w.title, q) { lead = w.extract; leadSource = host(w.url) }
         engines["instant"] = lead == nil ? 0 : 1
+        if wantsWeather(q) { engines["weather"] = leadSource == "open-meteo.com" ? 1 : 0 }
         return Answer(lead: lead.map { clip($0, 320) }, leadSource: leadSource, hits: Array(hits.prefix(10)), engines: engines)
     }
 
@@ -256,15 +257,38 @@ public enum WebSearch {
         wantsWeather(q) ? await weather(q, L) : nil
     }
 
+    /// 常見城市的英文名（地理編碼用英文最準）
+    static let cityEN: [String: String] = [
+        "台北": "Taipei", "臺北": "Taipei", "新北": "New Taipei", "板橋": "Banqiao", "桃園": "Taoyuan", "新竹": "Hsinchu", "苗栗": "Miaoli",
+        "台中": "Taichung", "臺中": "Taichung", "彰化": "Changhua", "南投": "Nantou", "雲林": "Douliu", "嘉義": "Chiayi", "台南": "Tainan",
+        "臺南": "Tainan", "高雄": "Kaohsiung", "屏東": "Pingtung", "宜蘭": "Yilan", "花蓮": "Hualien", "台東": "Taitung", "臺東": "Taitung",
+        "基隆": "Keelung", "澎湖": "Magong", "金門": "Kinmen", "馬祖": "Nangan", "香港": "Hong Kong", "澳門": "Macau", "北京": "Beijing",
+        "上海": "Shanghai", "廣州": "Guangzhou", "深圳": "Shenzhen", "東京": "Tokyo", "大阪": "Osaka", "京都": "Kyoto", "首爾": "Seoul",
+        "新加坡": "Singapore", "曼谷": "Bangkok", "紐約": "New York", "洛杉磯": "Los Angeles", "倫敦": "London", "巴黎": "Paris",
+        "雪梨": "Sydney", "溫哥華": "Vancouver", "多倫多": "Toronto", "羅馬": "Rome", "馬德里": "Madrid",
+    ]
+
+    static func geocode(_ name: String, _ L: Lang) async -> (lat: Double, lon: Double, name: String)? {
+        var tries: [(String, String)] = []
+        let trimmed = name.replacingOccurrences(of: "市", with: "").replacingOccurrences(of: "縣", with: "")
+        if let en = cityEN[trimmed] ?? cityEN.first(where: { trimmed.contains($0.key) })?.value { tries.append((en, "en")) }
+        tries.append((name, L == .zh ? "zh" : L.rawValue))
+        if trimmed != name { tries.append((trimmed, "zh")) }
+        for (n, lang) in tries {
+            guard let g = URL(string: "https://geocoding-api.open-meteo.com/v1/search?count=1&language=\(lang)&name=\(enc(n))"),
+                  let gd = await data(request(g, L, ua: desktopUA)),
+                  let gobj = try? JSONSerialization.jsonObject(with: gd) as? [String: Any],
+                  let r = (gobj["results"] as? [[String: Any]])?.first,
+                  let lat = r["latitude"] as? Double, let lon = r["longitude"] as? Double else { continue }
+            return (lat, lon, L == .zh ? name : (r["name"] as? String ?? n))
+        }
+        return nil
+    }
+
     static func weather(_ q: String, _ L: Lang) async -> String? {
         let name = place(q) ?? (L == .zh ? "台北" : "London")
-        let lang = L == .zh ? "zh" : L.rawValue
-        guard let g = URL(string: "https://geocoding-api.open-meteo.com/v1/search?count=1&language=\(lang)&name=\(enc(name))"),
-              let gd = await data(request(g, L, ua: desktopUA)),
-              let gobj = try? JSONSerialization.jsonObject(with: gd) as? [String: Any],
-              let r = (gobj["results"] as? [[String: Any]])?.first,
-              let lat = r["latitude"] as? Double, let lon = r["longitude"] as? Double else { return nil }
-        let city = r["name"] as? String ?? name
+        guard let g = await geocode(name, L) else { return nil }
+        let (lat, lon, city) = g
         guard let f = URL(string: "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&current=temperature_2m,weather_code,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=3&timezone=auto"),
               let fd = await data(request(f, L, ua: desktopUA)),
               let o = try? JSONSerialization.jsonObject(with: fd) as? [String: Any],

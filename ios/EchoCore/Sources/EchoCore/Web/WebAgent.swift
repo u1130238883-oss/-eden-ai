@@ -10,7 +10,15 @@ import Foundation
 public enum WebAgent {
     public enum Kind { case define, reason, method, compare, recommend, news, weather, person, fortune, general }
 
-    public struct Plan { public let kind: Kind; public let keywords: String; public let queries: [String] }
+    public struct Plan {
+        public let kind: Kind
+        public let keywords: String
+        /// 去掉「多高」「怎麼煮」這類問法之後的主題（「台北101」「紅燒肉」）
+        public let core: String
+        public let queries: [String]
+        /// 問的是數量（多高、多少、幾歲……），答案裡要有數字
+        public let numeric: Bool
+    }
     public struct Finding { public let text: String; public let host: String; public let url: String }
     public struct Result {
         public let text: String
@@ -44,16 +52,20 @@ public enum WebAgent {
         else { kind = .general }
 
         let kw = keywords(question)
+        let core = coreTopic(kw)
+        let numeric = has(["多高", "多大", "多遠", "多久", "多長", "多重", "多少", "幾歲", "幾年", "幾點", "幾個", "幾公", "匯率", "價格", "股價", "人口",
+                           "how many", "how much", "how tall", "how far", "how long", "how old", "when did", "when was", "population", "price"])
         var qs = [kw]
         let extra: [Kind: String] = L == .zh
             ? [.define: " 是什麼", .reason: " 原因", .method: " 方法", .compare: " 差別", .recommend: " 推薦", .person: " 簡介"]
             : [.define: " meaning", .reason: " reason", .method: " how to", .compare: " difference", .recommend: " best", .person: " biography"]
-        if let e = extra[kind], !kw.hasSuffix(e.trimmingCharacters(in: .whitespaces)) { qs.append(kw + e) }
+        if let e = extra[kind], !kw.hasSuffix(e.trimmingCharacters(in: .whitespaces)) { qs.append(core + e) }
+        if core != kw && kind != .weather && kind != .news { qs.append(core) }
         // 原句本身也是很好的搜尋詞（搜尋引擎看得懂自然語言）
         let raw = question.trimmingCharacters(in: .whitespacesAndNewlines)
         if raw.count <= 40 { qs.append(raw) }
         var seen = Set<String>()
-        return Plan(kind: kind, keywords: kw, queries: qs.filter { !$0.isEmpty && seen.insert($0).inserted })
+        return Plan(kind: kind, keywords: kw, core: core, queries: qs.filter { !$0.isEmpty && seen.insert($0).inserted }, numeric: numeric)
     }
 
     /// 把口語問句整理成關鍵字
@@ -73,6 +85,18 @@ public enum WebAgent {
         let parts = q.split(separator: " ").map(String.init).filter { !$0.isEmpty }
         let out = parts.joined(separator: " ")
         return out.isEmpty ? raw : out
+    }
+
+    /// 主題詞：去掉問法（「台北101有多高」→「台北101」、「紅燒肉怎麼煮」→「紅燒肉」）
+    public static func coreTopic(_ kw: String) -> String {
+        var t = kw
+        for w in ["有多高", "多高", "有多大", "多大", "有多遠", "多遠", "要多久", "多久", "有多長", "多長", "有多重", "多重", "多少錢", "是多少", "有多少", "多少",
+                  "幾歲", "幾點", "怎麼煮", "怎麼做", "怎麼去", "怎麼用", "怎麼樣", "怎樣", "是哪一座", "是哪一個", "是哪個", "是哪裡", "在哪裡", "哪一座", "哪一個",
+                  "哪個", "哪裡", "的由來", "的原因", "的意思", "的差別", "的方法", "介紹", "的歷史", "的原理"] {
+            t = t.replacingOccurrences(of: w, with: " ")
+        }
+        let out = t.split(separator: " ").map(String.init).filter { !$0.isEmpty }.joined(separator: " ")
+        return out.count >= 2 ? out : kw
     }
 
     // MARK: - 主流程
@@ -105,7 +129,7 @@ public enum WebAgent {
         }
 
         // ④ 閱讀網頁：挑最相關的三個網頁同時打開
-        let terms = termSet(plan.keywords)
+        let terms = termSet(plan.core)
         let toRead = Array(hits.sorted { score($0.title + " " + $0.snippet, terms) > score($1.title + " " + $1.snippet, terms) }
             .filter { !$0.url.contains("news.google.com") }
             .prefix(3))
@@ -117,7 +141,7 @@ public enum WebAgent {
         }
         var findings: [Finding] = []
         for (h, page) in pages {
-            for s in best(sentences(page), terms: terms, n: 3) {
+            for s in best(sentences(page), terms: terms, numeric: plan.numeric, core: plan.core, n: 3) {
                 findings.append(Finding(text: s, host: WebSearch.host(h.url), url: h.url))
             }
         }
@@ -126,7 +150,7 @@ public enum WebAgent {
         }
 
         // ⑤ 交叉比對
-        let common = consensus(findings, exclude: plan.keywords)
+        let common = consensus(findings.filter { score($0.text, terms) > 0 }, exclude: plan.keywords, cjkOnly: zh)
         let sources = orderedUnique(findings.map(\.host) + (leadSource.map { [$0] } ?? []))
         let confidence: String
         if sources.count >= 3 && common.count >= 2 {
@@ -138,13 +162,18 @@ public enum WebAgent {
         }
 
         // ⑥ 回答
-        let ranked = rank(findings, terms: terms, common: common)
+        let ranked = rank(findings, terms: terms, common: common, numeric: plan.numeric, core: plan.core)
         var answer = ""
         if let lead { answer = lead }
         else if let first = ranked.first { answer = WebSearch.clip(first.text, 240) }
+        // 問數量：直接答案裡沒有數字，就改用有數字、最相關的那句
+        if plan.numeric, plan.kind != .weather, !hasNumber(answer, besides: plan.core),
+           let withNum = ranked.first(where: { hasNumber($0.text, besides: plan.core) && score($0.text, terms) > 0 }) {
+            answer = WebSearch.clip(withNum.text, 240) + "（\(withNum.host)）" + (lead.map { "\n\n" + $0 } ?? "")
+        }
         var used: [String] = [answer]
         var points: [String] = []
-        for f in ranked where points.count < 4 {
+        for f in ranked where points.count < (plan.kind == .weather && lead != nil ? 0 : 4) {
             let s = WebSearch.clip(f.text, 140)
             let key = String(s.prefix(15))
             if used.contains(where: { $0.contains(key) }) { continue }
@@ -238,18 +267,40 @@ public enum WebAgent {
         return terms.filter { l.contains($0) }.count
     }
 
-    /// 和問題重疊最多的幾句
-    static func best(_ ss: [String], terms: Set<String>, n: Int) -> [String] {
+    /// 一句話適不適合當答案：跟主題的重疊、問數量時有沒有數字，扣掉列表、清單式的句子
+    /// 除了主題本身（「台北101」的 101）以外，還有沒有數字
+    static func hasNumber(_ s: String, besides core: String) -> Bool {
+        s.replacingOccurrences(of: core, with: "").contains(where: \.isNumber)
+    }
+
+    static func quality(_ s: String, terms: Set<String>, numeric: Bool, core: String = "") -> Int {
+        let hit = score(s, terms)
+        guard hit > 0 else { return 0 }
+        var q = hit * 4
+        if hit * 2 >= terms.count { q += 4 }
+        if numeric && hasNumber(s, besides: core) { q += 6 }
+        let listy = s.components(separatedBy: "｜").count + s.components(separatedBy: "|").count - 2
+            + (s.range(of: #"\d+\.\s*\D+\s*\d+\.\s"#, options: .regularExpression) != nil ? 3 : 0)
+            + s.components(separatedBy: "、").count / 6
+        q -= listy * 3
+        if s.count > 160 { q -= 2 }
+        if s.count < 20 { q -= 2 }
+        return q
+    }
+
+    /// 和問題最相關的幾句
+    static func best(_ ss: [String], terms: Set<String>, numeric: Bool, core: String, n: Int) -> [String] {
         let need = max(1, (terms.count + 1) / 3)
         var seen = Set<String>()
-        return ss.map { ($0, score($0, terms)) }
-            .filter { $0.1 >= need && seen.insert(String($0.0.prefix(20))).inserted }
+        return ss.filter { score($0, terms) >= need && seen.insert(String($0.prefix(20))).inserted }
+            .map { ($0, quality($0, terms: terms, numeric: numeric, core: core)) }
+            .filter { $0.1 > 0 }
             .sorted { $0.1 > $1.1 }.prefix(n).map { $0.0 }
     }
 
-    static func rank(_ fs: [Finding], terms: Set<String>, common: [String]) -> [Finding] {
+    static func rank(_ fs: [Finding], terms: Set<String>, common: [String], numeric: Bool, core: String) -> [Finding] {
         fs.map { f -> (Finding, Int) in
-            (f, score(f.text, terms) * 2 + common.filter { f.text.contains($0) }.count * 3)
+            (f, quality(f.text, terms: terms, numeric: numeric, core: core) * 2 + common.filter { f.text.contains($0) }.count * 2)
         }.sorted { $0.1 > $1.1 }.map { $0.0 }
     }
 
@@ -260,7 +311,7 @@ public enum WebAgent {
 
     // MARK: - 交叉比對：好幾個來源都出現的詞
 
-    static func consensus(_ fs: [Finding], exclude: String) -> [String] {
+    static func consensus(_ fs: [Finding], exclude: String, cjkOnly: Bool) -> [String] {
         var bySource: [String: Set<String>] = [:]
         for f in fs {
             var grams = Set<String>()
@@ -271,7 +322,7 @@ public enum WebAgent {
                     if g.allSatisfy(isCJK) { grams.insert(String(g)) }
                 }
             }
-            for w in f.text.lowercased().split(whereSeparator: { !$0.isLetter }) where w.count >= 5 && w.allSatisfy({ $0.isASCII }) {
+            for w in f.text.lowercased().split(whereSeparator: { !$0.isLetter }) where !cjkOnly && w.count >= 5 && w.allSatisfy({ $0.isASCII }) {
                 grams.insert(String(w))
             }
             bySource[f.host, default: []].formUnion(grams)
