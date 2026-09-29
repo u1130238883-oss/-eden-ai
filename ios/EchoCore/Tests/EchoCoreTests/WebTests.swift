@@ -84,6 +84,7 @@ final class WebLiveTests: XCTestCase {
             let r = await WebAgent.run(q, lang: L)
             if r.found { found += 1 }
             print("LIVE ===== \(q) found=\(r.found) engines=\(r.engines.sorted { $0.key < $1.key })")
+            if !r.debug.isEmpty { print("LIVE DEBUG " + r.debug) }
             print(r.text.split(separator: "\n").map { "LIVE | " + $0 }.joined(separator: "\n"))
         }
         let f = await WebAgent.run("八字 癸水日主 感情", facts: "你的日主是癸水，身弱，喜金、水，忌土、火、木；2026年丙午對你是壞的",

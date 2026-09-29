@@ -38,6 +38,8 @@ public enum WebAgent {
         public let found: Bool
         /// 每個來源找到幾筆（診斷用）
         public let engines: [String: Int]
+        /// 除錯：被丟掉的搜尋結果標題、判斷用的詞
+        public var debug: String = ""
     }
 
     static let kindName: [Kind: String] = [
@@ -153,6 +155,7 @@ public enum WebAgent {
         var lead: String?, leadSource: String?
         var engines: [String: Int] = [:]
         var seenURL = Set<String>()
+        var dropped: [String] = []
         for (tag, a) in answers {
             if lead == nil, let l = a.lead { lead = l; leadSource = a.leadSource }
             for (k, v) in a.engines { engines[k, default: 0] += v }
@@ -160,12 +163,17 @@ public enum WebAgent {
                 // 網路上很多是簡體，先轉成繁體再判斷有沒有關係
                 let h = zh ? WebSearch.Hit(title: WebStrategy.toTraditional(raw.title), snippet: WebStrategy.toTraditional(raw.snippet),
                                            url: raw.url, engine: raw.engine) : raw
-                guard score(h.title + " " + h.snippet, terms) >= need || h.engine == "Google 新聞" else { continue }
+                guard score(h.title + " " + h.snippet, terms) >= need || h.engine == "Google 新聞" else {
+                    if dropped.count < 6 { dropped.append("[\(tag)] " + String(h.title.prefix(40))) }
+                    continue
+                }
                 if seenURL.insert(WebSearch.normURL(h.url)).inserted { hits.append((tag, h)) }
             }
         }
         if hits.isEmpty && lead == nil {
-            return Result(text: Loc.s("webFail", L, plan.keywords), card: nil, found: false, engines: engines)
+            var r = Result(text: Loc.s("webFail", L, plan.keywords), card: nil, found: false, engines: engines)
+            r.debug = "core=\(plan.core) topic=\(topic) need=\(need) terms=\(terms.sorted()) jobs=\(jobs.map(\.q)) dropped=\(dropped)"
+            return r
         }
         func isTrusted(_ url: String) -> Bool { strat.trusted.contains { url.lowercased().contains($0) } }
 
