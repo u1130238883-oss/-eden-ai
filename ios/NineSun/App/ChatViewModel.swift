@@ -23,8 +23,6 @@ final class ChatViewModel: ObservableObject {
     /// 目前介面語言的資料庫
     var knowledge: KnowledgeBase? { knowledgeBases[language] ?? knowledgeBases[.zh] }
     private var engine: EchoEngine?
-    /// 上網查過的答案（記在手機裡）
-    private let webMemory = WebMemory()
     private let queue = DispatchQueue(label: "ninesun.inference", qos: .userInitiated)
 
     private static let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -39,6 +37,8 @@ final class ChatViewModel: ObservableObject {
         language = load("language") ?? UILang.systemDefault
         autoDetect = load("autoDetect") ?? true
         UILang.current = language
+        // 以前的版本會把上網查過的答案存在手機裡；現在每次都即時上網查，舊檔刪掉
+        try? FileManager.default.removeItem(at: Self.docs.appendingPathComponent("ninesun-webmemory.json"))
         if let data = try? Data(contentsOf: Self.historyURL),
            let saved = try? JSONDecoder().decode([ChatTurn].self, from: data) {
             turns = saved
@@ -106,11 +106,10 @@ final class ChatViewModel: ObservableObject {
         thinking = true
         streaming = ""
 
-        // 「重新查…」：忘掉舊答案，直接上網查最新的
+        // 「重新查…」：直接上網查最新的
         if text.hasPrefix("重新查") || text.lowercased().hasPrefix("search again") {
             let q = text.replacingOccurrences(of: "重新查", with: "").replacingOccurrences(of: "search again", with: "", options: .caseInsensitive)
                 .trimmingCharacters(in: .whitespaces)
-            webMemory.forget(q)
             lookupWeb(q.isEmpty ? text : q, autoDetect ? Lang.detect(text, fallback: language) : language)
             return
         }
@@ -142,12 +141,12 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    /// 本地不會的問題：NineSun 自己上網找（理解 → 搜尋 → 讀網頁 → 比對 → 回答）
+    /// 問題交給 NineSun 自己上網找（理解 → 搜尋 → 讀網頁 → 比對 → 回答），每次都即時查
     private func lookupWeb(_ q: String, _ L: Lang) {
-        let book = rules, memory = webMemory
+        let book = rules
         thinking = true
         Task { [self] in
-            let r = await WebAgent.run(q, facts: nil, lang: L, memory: memory)
+            let r = await WebAgent.run(q, facts: nil, lang: L)
             let turn = ChatTurn(role: .echo, text: book.enforce(r.text), source: .knowledge, card: r.card)
             await MainActor.run { self.finish(turn) }
         }
@@ -155,11 +154,11 @@ final class ChatViewModel: ObservableObject {
 
     /// 八字／紫微解讀之後：上網查這個組合的說法，再對照盤面
     private func augmentWeb(_ term: String, facts: String, _ L: Lang) {
-        let book = rules, memory = webMemory
+        let book = rules
         thinking = true
         streaming = ""
         Task { [self] in
-            let r = await WebAgent.run(term, facts: facts, lang: L, memory: memory)
+            let r = await WebAgent.run(term, facts: facts, lang: L)
             let text = r.text.hasPrefix("🔎") ? "我再上網查了「\(term)」的說法，跟你的盤對照一下：\n\n" + r.text : r.text
             let turn = ChatTurn(role: .echo, text: book.enforce(text), source: .knowledge, card: r.card)
             await MainActor.run { self.finish(turn) }

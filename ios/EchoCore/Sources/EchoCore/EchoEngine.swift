@@ -150,6 +150,11 @@ public final class EchoEngine {
         // 2) 觸發規則
         if let t = ctx.rules.trigger(for: text) { return done(t, .rule) }
 
+        // 2.5) 明確叫它上網查（「上網查…」「搜尋…」「幫我查…」「search …」）：直接上網，不用本地存的答案
+        if let q = EchoEngine.explicitSearch(text) {
+            return done(Loc.s("webAsk", L), .tool, web: q)
+        }
+
         // 外語走多語系流程
         if L != .zh, let i18n {
             return replyForeign(text, L, i18n, history: history, ctx: ctx, onToken: onToken, done: done)
@@ -264,6 +269,14 @@ public final class EchoEngine {
             last = out.follow; lastTurn = history.count; lastMantic = nil
             return done(out.text, .reader, card: out.card)
         }
+        // 6.54) 明顯是在問知識、新聞、天氣……（不是在問自己的命）：上網查
+        if EchoEngine.strongInfo(text) {
+            if let kb = knowledge[.zh], let e = kb.answer(text) {
+                return done("\(e.title)：\(e.body)", .knowledge,
+                            card: FortuneCard(title: "資料庫 · \(e.cat)", headline: e.title, details: [e.body]), web: EchoEngine.searchQuery(text))
+            }
+            return done(Loc.s("webAsk", .zh), .tool, web: EchoEngine.searchQuery(text))
+        }
         // 6.55) 規劃型：什麼時候、哪個月最好、哪方面比較順、N宮
         if let ask = Planner.parse(text, now: ctx.now) {
             guard let bd = ctx.profile.birthday else {
@@ -306,9 +319,10 @@ public final class EchoEngine {
         let askSearch = text.hasPrefix("查") || text.hasPrefix("搜尋") || text.contains("幫我查")
             || text.contains("是誰") || text.contains("維基")
         let askKnow = askSearch || FortuneRouter.knowledgeMarkers.contains { text.contains($0) }
-        if askKnow, let kb = knowledge[.zh], let e = kb.answer(text) {
+        if askKnow, !askSearch, let kb = knowledge[.zh], let e = kb.answer(text) {
+            // 本地資料庫先回答，接著上網查更多說法
             return done("\(e.title)：\(e.body)", .knowledge,
-                        card: FortuneCard(title: "資料庫 · \(e.cat)", headline: e.title, details: [e.body]))
+                        card: FortuneCard(title: "資料庫 · \(e.cat)", headline: e.title, details: [e.body]), web: EchoEngine.searchQuery(text))
         }
         if askSearch {
             let k = KnowledgeBase.keyword(text)
@@ -330,8 +344,14 @@ public final class EchoEngine {
     /// 一般對話的回答流程（中文與外語共用）
     func chatReply(_ text: String, _ L: Lang, ctx: Context, palace: Int?, turns: Int = 0, done: (String, ChatTurn.Source, Int?) -> Reply) -> Reply {
         let raw: String
+        let asksMe = EchoEngine.addressedToMe(text)
         if let c = companionReply(text, L, ctx: ctx, palace: palace) {
             raw = c
+        } else if !asksMe, EchoEngine.infoQuestion(text) || EchoEngine.looksLikeQuestion(text) {
+            // 在問問題（不是問 NineSun 自己）：上網查，不用本地寫死的答案
+            var r = done(Loc.s("webAsk", L), .tool, palace)
+            r.webQuery = EchoEngine.searchQuery(text)
+            return r
         } else if let opts = chatBank?.answers(text, L) {
             raw = choose(opts)
         } else if EchoEngine.infoQuestion(text) {
@@ -364,7 +384,9 @@ public final class EchoEngine {
 
     static let infoMarkers = ["請解釋", "解釋一下", "是什麼", "什麼是", "什麼意思", "怎麼做", "怎麼用", "怎麼煮", "如何", "為什麼會", "為什麼要",
                               "多少", "哪裡", "哪個", "誰是", "是誰", "介紹", "教我", "推薦", "意思", "歷史", "原理", "區別", "差別", "方法",
-                              "步驟", "新聞", "天氣", "價格", "幾歲", "有什麼", "怎麼去", "定義", "公式",
+                              "步驟", "新聞", "天氣", "價格", "幾歲", "有什麼", "怎麼去", "定義", "公式", "多高", "多大", "多遠", "多久", "多長",
+                              "幾點", "幾號", "哪一", "哪些", "最新", "匯率", "股價", "比分", "氣溫", "上網", "搜尋", "google",
+                              "where is", "when is", "when did", "how many", "how much", "latest", "news", "weather",
                               "what is", "what are", "who is", "how to", "how do", "how does", "why do", "why is", "explain", "tell me about",
                               "qué es", "quién es", "cómo se", "por qué", "explica", "cos'è", "chi è", "come si", "perché", "spiega"]
     /// 是在問知識／資訊（可以上網查），不是在聊心情或算命
@@ -373,6 +395,52 @@ public final class EchoEngine {
         guard infoMarkers.contains(where: { t.contains($0) }) else { return false }
         let personal = ["我覺得", "我好", "我很", "我最近", "我心情", "我是不是", "我該", "我要不要"]
         return !personal.contains { t.contains($0) }
+    }
+
+    /// 明確要求上網查：回傳要搜尋的關鍵字（問自己的運勢、命盤不算）
+    static func explicitSearch(_ raw: String) -> String? {
+        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let l = t.lowercased()
+        let prefixes = ["上網", "搜尋", "搜索", "查一下", "幫我查", "幫我搜", "幫我上網", "請上網", "請幫我查", "請幫我上網", "去網上", "網上查", "google",
+                        "search ", "search for ", "look up ", "busca ", "buscar ", "cerca "]
+        let inside = ["上網查", "上網搜", "上網找", "網路上查", "網上查", "上網看看"]
+        guard prefixes.contains(where: { l.hasPrefix($0) }) || inside.contains(where: { t.contains($0) }) else { return nil }
+        if t.contains("我的") || t.contains("運勢") || (t.contains("我") && ManticReader.wants(t)) { return nil }
+        let q = WebAgent.keywords(t)
+        return q.isEmpty || q == t ? nil : q
+    }
+
+    /// 明顯是知識、時事類問題（而且不是在問自己的命）
+    static let strongMarkers = ["是什麼", "什麼是", "什麼意思", "是誰", "誰是", "新聞", "天氣", "氣溫", "匯率", "股價", "比分", "怎麼做", "怎麼煮",
+                                "怎麼去", "怎麼用", "教我", "介紹一下", "歷史", "原理", "定義", "公式", "多高", "多遠", "多大", "多久", "多長"]
+    static let selfMarkers = ["我", "運", "命", "宮", "八字", "紫微", "卦", "大限", "流年", "流月", "流日", "九型", "星盤", "合婚", "桃花", "時辰", "生肖", "你"]
+    static func strongInfo(_ raw: String) -> Bool {
+        strongMarkers.contains { raw.contains($0) } && !selfMarkers.contains { raw.contains($0) }
+    }
+
+    /// 在問 NineSun 自己（「你會唱歌嗎」「你幾歲」），不是要查資料
+    static func addressedToMe(_ raw: String) -> Bool {
+        var t = raw.lowercased()
+        for w in ["你知道", "你可以告訴我", "你能告訴我", "你能不能告訴我", "你幫我", "請你", "你查", "你上網", "can you tell me", "do you know", "could you tell me"] {
+            t = t.replacingOccurrences(of: w, with: "")
+        }
+        if ["你", "妳", "您"].contains(where: { t.contains($0) }) { return true }
+        let words = t.split(whereSeparator: { !$0.isLetter })
+        return words.contains { ["you", "your", "tú", "tu", "te", "ti"].contains(String($0)) }
+    }
+
+    /// 句子的形式是問句（「台北101有多高？」「明天會下雨嗎」），而且不是在說自己的心情
+    static func looksLikeQuestion(_ raw: String) -> Bool {
+        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard t.count >= 4 else { return false }
+        let personal = ["我覺得", "我好", "我很", "我最近", "我心情", "我是不是", "我該", "我要不要", "我想", "我今天", "我會不會", "我的"]
+        if personal.contains(where: { t.contains($0) }) { return false }
+        let mark = t.contains("?") || t.contains("？") || ["嗎", "呢", "麼"].contains(where: { t.hasSuffix($0) })
+        let words = ["多少", "幾", "哪", "誰", "什麼", "怎麼", "為何", "為什麼", "是否", "有沒有", "是不是", "可不可以", "能不能", "要不要"]
+        let en = ["what", "who", "where", "when", "why", "how", "which", "is there", "are there", "qué", "quién", "dónde", "cuándo", "cómo",
+                  "cosa", "chi ", "dove", "quando", "come "]
+        return (mark && (words.contains(where: { t.contains($0) }) || t.count >= 6)) || words.contains(where: { t.hasPrefix($0) })
+            || en.contains(where: { t.hasPrefix($0) })
     }
 
     /// 把口語問句整理成搜尋關鍵字

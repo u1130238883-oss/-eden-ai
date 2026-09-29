@@ -17,6 +17,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Live web search check (real network)
+        working-directory: ios/EchoCore
+        continue-on-error: true
+        env:
+          NINESUN_LIVE: "1"
+        run: swift test --filter WebLiveTests 2>&1 | grep -E "LIVE|error:|Executed" | head -300
+
       - name: Test AI core (Swift ↔ Python parity, Nine & Twelve engine)
         working-directory: ios/EchoCore
         run: swift test
