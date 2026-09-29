@@ -1,0 +1,2690 @@
+{
+ "zh": {
+  "shortNames": [
+   "自我",
+   "物質",
+   "交流",
+   "家庭",
+   "桃花",
+   "勞碌",
+   "他人",
+   "偏財",
+   "愉悅",
+   "事業",
+   "朋友",
+   "沉迷"
+  ],
+  "keywords": [
+   [
+    "自己",
+    "煩躁",
+    "躁動",
+    "情緒化",
+    "沖動",
+    "生氣",
+    "上火",
+    "激動",
+    "傷害"
+   ],
+   [
+    "食物",
+    "物質",
+    "我的錢",
+    "清秀的人",
+    "開銷",
+    "正財",
+    "價值觀",
+    "認知",
+    "動力",
+    "口腔"
+   ],
+   [
+    "交流",
+    "交談",
+    "思考",
+    "思維活躍",
+    "學習",
+    "語言",
+    "年齡比本人小的人",
+    "同輩",
+    "同事",
+    "同學",
+    "同桌",
+    "鄰居",
+    "兄弟姐妹",
+    "出門",
+    "學業",
+    "靈活",
+    "好動",
+    "離開",
+    "分離",
+    "走了",
+    "活力",
+    "新鮮感",
+    "甲狀腺"
+   ],
+   [
+    "家庭",
+    "安全感",
+    "敏感",
+    "焦慮",
+    "脆弱",
+    "空落",
+    "擔心",
+    "擔憂",
+    "內省",
+    "內耗",
+    "居住環境",
+    "原生家庭",
+    "出生環境",
+    "出生國家",
+    "女性",
+    "母親"
+   ],
+   [
+    "受人關注",
+    "娛樂",
+    "享樂",
+    "快樂",
+    "桃花",
+    "吸引力",
+    "性",
+    "引人矚目",
+    "戀愛",
+    "男性",
+    "被看見",
+    "父親"
+   ],
+   [
+    "勞碌",
+    "忙碌",
+    "思緒混亂無序",
+    "心累",
+    "勞累",
+    "緊張",
+    "議論",
+    "日常的事物",
+    "勞動",
+    "想得多",
+    "社交",
+    "交際",
+    "想法",
+    "聚焦",
+    "執念",
+    "重複的事情",
+    "反覆",
+    "注意力"
+   ],
+   [
+    "在意別人",
+    "心思在別人身上",
+    "他人",
+    "遇見的人",
+    "羈絆",
+    "一對一關係",
+    "伴侶",
+    "情侶",
+    "對象",
+    "戀人",
+    "身邊的人",
+    "婚姻"
+   ],
+   [
+    "偏財",
+    "孤獨",
+    "無聊",
+    "煎熬",
+    "焦灼",
+    "無助",
+    "黑暗",
+    "痛苦",
+    "折磨",
+    "感覺時間漫長",
+    "身體",
+    "他人的錢",
+    "別人的隱私和隱秘",
+    "別人的私生活",
+    "隱耗",
+    "生存",
+    "體力",
+    "精力",
+    "健康情況"
+   ],
+   [
+    "樂觀",
+    "正向",
+    "愉快",
+    "愉悅",
+    "幸運",
+    "運氣",
+    "宗教",
+    "信仰",
+    "遷移",
+    "文件",
+    "文書",
+    "文憑",
+    "國外",
+    "出遠門",
+    "文化",
+    "豁達",
+    "開朗",
+    "積極",
+    "理想",
+    "善良",
+    "品德",
+    "盲目",
+    "自大",
+    "意義",
+    "機遇",
+    "機會"
+   ],
+   [
+    "事業",
+    "鬱悶",
+    "壓抑",
+    "消極",
+    "沮喪",
+    "麻煩",
+    "困難",
+    "磨難",
+    "失落",
+    "挑戰",
+    "排擠",
+    "煩人的事",
+    "厄運",
+    "比自己年長的人",
+    "工作",
+    "長輩",
+    "職業",
+    "名聲",
+    "權威",
+    "權勢",
+    "才能",
+    "社會地位",
+    "成就",
+    "政府"
+   ],
+   [
+    "朋友",
+    "群體",
+    "變動",
+    "變化",
+    "特別",
+    "差異",
+    "理智",
+    "理性",
+    "精神困擾",
+    "網絡",
+    "不穩定",
+    "波折",
+    "奔波",
+    "折騰",
+    "奔波輾轉"
+   ],
+   [
+    "沉迷",
+    "迷茫",
+    "幻想",
+    "緣分",
+    "脾氣",
+    "性格",
+    "品行",
+    "道德",
+    "幕後",
+    "悲觀",
+    "逃避",
+    "悲傷",
+    "多愁善感",
+    "嚮往",
+    "缺愛",
+    "暗戀",
+    "隱沒",
+    "隱藏",
+    "消耗",
+    "隔離",
+    "自我瓦解",
+    "業力",
+    "循環",
+    "投胎",
+    "輪迴",
+    "玄秘",
+    "玄學",
+    "隔絕",
+    "隱匿",
+    "欺騙"
+   ]
+  ],
+  "names": [
+   "完美主義者",
+   "熱心助人者",
+   "成就至上者",
+   "浪漫藝術者",
+   "格物致知者",
+   "謹慎忠誠者",
+   "享樂主義者",
+   "天生領導者",
+   "和平主義者"
+  ],
+  "taglines": [
+   "有原則、有毅力、自我控制",
+   "慷慨、感恩、善於處理人際關係",
+   "適應力強、有野心、注意力集中",
+   "愛反省、有藝術才能、表情豐富",
+   "觀察敏銳、求知欲強、注重隱私",
+   "勤奮、可靠、有責任心",
+   "有才藝、樂觀、積極主動",
+   "有力量、果斷、自信有權威",
+   "融洽、隨和、可以信任"
+  ],
+  "summaries": [
+   "理性、有條理的類型。力圖保持高的標準和品質，總是注重細節，希望提高生產力，也習慣激勵他人提升自己、變得更有效並且做正確的事。由於條理性很強，對自己及他人會變得過於批判。不喜歡浪費和粗心，這一點可能會使他們無論大小鉅細都去插手，而且沒完沒了，會做出令人喪氣的批評。在最佳狀態，他們能夠做出正確的判斷、明智的決定，成為道德的模範，非常負責任。",
+   "有愛心，善於處理人際關係的類型。對別人的需要很敏感，總是試圖滿足他人的需要。他們讚賞他人的才能，能夠扮演密友和向導的角色，擅長與人的交際。但是，他們對別人的要求很難說「不」，由於希望能夠更好地幫助別人，自己變得很有壓力。他們不喜歡沒有人情味的工作環境，這一點可能導致他們變得偏心，在人際關係方面浪費時間。在最佳狀態時，他們會有同理心、慷慨，幫助團隊建立更緊密的關係。",
+   "適應力強，有野心的類型。知道如何按照顧客的期望更有效率地完成工作。他們往往很有吸引力、迷人、精力充沛，對自己、團隊和企業都有很強的察覺力。他們喜歡被人注意，經常被成功與威望的地位所吸引。樂於競爭，對地位和個人進步的需求促使他們成為工作狂，這一點可能導致他們為了保持領先的地位而走捷徑。在最佳狀態時，他們變得很有才華、令人欽佩，經常被人們看作是鼓舞士氣的模範。",
+   "愛反省，有藝術才能的類型。表情豐富，能給人深刻的印象，自我吸引，情緒變化無常。自我型散發出獨特的魅力。在他們對好的詞語、創意及個人對產品的影響標準的追求上，他們不會妥協。他們不喜歡沒有創造力的工作。對批評過度敏感，這一點可能會導致他們變得情緒無常，工作沒有規律。在最佳狀態時，他們能將直覺力和創造力帶到工作中來，並用他們有深度和獨特的感覺改善工作，他們會欣賞其他的各種型格。",
+   "觀察敏銳，好爭論的類型。求知欲強，創新，注重隱私，古怪。思考型是精力充沛的學習者和實驗家，特別是在專業技術領域。他們喜歡跟從他們的好奇心去理解細節，探索原理。他們有很強的分析能力，鍾情於探索發現，而不是計劃時間去約束和建立關係。他們不健康時可能會變得傲慢，不同他人做溝通，並經常會有思想上的鬥爭。在最佳狀態時，思考型變得有遠見，能夠將全新的理念帶到工作中。",
+   "吸引注意力，忠誠的類型。討人喜歡，有責任心，焦慮，充滿懷疑。忠誠型勤奮、可靠，他們能夠建立工作聯盟以使工作更加有效地完成。他們能夠評定他人的動機和優點，從工作環境中尋找潛在的問題。他們不喜歡面對危機，希望大家意見一致，並對未來有預見。如果沒有團隊賦予的權利，他們會變得遲疑不決，在採取行動方面就有很大的困難，變得總是指責他人。在最佳狀態時，忠誠型很有信心、獨立、有勇氣，往往可以將團隊帶回到他的根本價值上。",
+   "有才藝，樂觀的類型。積極主動，才藝廣泛，衝動，精力分散。享樂型在變化、多樣性、刺激和創新方面非常擅長。他們表達清楚，有幽默感，能夠讓其他人支持他們的想法。享樂型總是追趕潮流，尋求新的可能性和觀點。他們能夠同時進行多個工作，但不能堅持。不健康時他們會變得很嘮叨，注意力分散，能量不集中，許多工作都會半途而廢。在最佳狀態時，享樂型會將焦點集中在有價值的目標上，工作會非常有效率。",
+   "有力量，果斷的類型。自信，有權威，倔強，對抗。權威型很清楚他們想要做什麼，並總是有能力把它做好。他們能夠做困難的決定，並把嚴重的問題看作是對他們的挑戰，克服當中的困難。他們希望佔據支配的地位，覺得委託任務或與他人分享領導的地位是非常困難的。他們樂於支持、保護並激勵他人，但在不健康時他們會威脅他人按照他們的方式行事，在企業內部和外部樹立不必要的敵人。在最佳狀態時，權威型變得寬宏大量，用他們的力量去提高其他人的生活水準。",
+   "融洽、隨和的類型。接受能力強，可以信任，自滿。和諧型通過強調團隊中的正面事物創造協調的團隊，這樣就能夠緩和衝突和緊張的狀態。他們支援、包容他人，能與他人共同工作，謙卑。他們不喜歡團隊中的衝突，總是試圖建立和諧、穩定的關係。但他們可能會因為要附和他人而避免堅持自己的觀點，從而內心非常生氣。不健康時，他們的工作會變得沒有效率、固執、疏忽。在最佳狀態時，他們能夠協調差異，將人們聚集在一起創造一個穩定但有活力的環境。"
+  ],
+  "sectionTitles": [
+   "形成性格的背景",
+   "外在表現",
+   "處於安定和人格提升時",
+   "處於壓力和自我防衛時",
+   "健康的特點",
+   "一般的特點",
+   "不健康的特點"
+  ],
+  "sections": [
+   [
+    [
+     "小時候便察覺到，他們並不被看成是完美的，注意力都聚集在讓自己變成值得被愛的人。",
+     "感覺自己一直處在批判的眼光下，從未被肯定做對了任何事，反而是被要求做得更好。",
+     "可能擁有會公然生氣或批判的父母，口頭上只有責備、不贊成而沒有愛。",
+     "有些人的狀況是，他們是家中的長子或長女，被期望為其他弟妹背負起責任並承擔責難。"
+    ],
+    [
+     "自我要求嚴格，顯現出急躁、緊張、愛批評、控制、自以為是，以及難以克制地追求完美，而且傾向控制身邊的一切。",
+     "壓抑情緒，認為情緒起伏會讓他們犯錯。做事獨立，原則性強而且有高度責任感，以工作填滿所有時間。",
+     "只接受正確的事情，對於那些他們認為不符合正確標準的需要置之不理。",
+     "認為他們的標準就是規則，並相信「人人都知道」這些規則，他們痛恨那些打破規則而且成功逃脫的人。"
+    ],
+    [
+     "走向第七型，會放下拘謹的形象，能夠自嘲，有創意，肯作新嘗試，會接納他人意見。",
+     "在放鬆自在時，一號又有點七號的特性，變得輕鬆、隨意，甚至可將一切規矩拋諸腦後。"
+    ],
+    [
+     "走向第四型，情緒化，反覆無常，憂鬱，自我批判，有時會自戀自憐，自暴自棄，沮喪和充滿無用感，但卻會執著和堅持到底。",
+     "在受壓力時，一號有少許四號的元素，變得非常自我，強調個人感受。這是由於他們覺得自己得不到別人的理解，或看見太多不公平的事。",
+     "再加上一號自我要求高，有時也會因為達不到自己的要求而變得憂鬱、沮喪。而這種抑壓可以盤纏心中許多年，所以很多一號誤以為自己是四號。"
+    ],
+    [
+     "容忍、講理、客觀。",
+     "是非分明，理想崇高，願意為社會進步而改革。",
+     "自律性高，決定當天要做的事，絕不會拖到第二天。",
+     "判斷力高。",
+     "道德標準極高。"
+    ],
+    [
+     "理想主義、嚴格的邏輯性、完美主義者。",
+     "害怕犯錯。",
+     "愛批評別人。",
+     "常想嚴格控制或改變別人。",
+     "做事非黑即白，沒有中間地帶。"
+    ],
+    [
+     "不寬容、妄想、懲罰性。",
+     "自以為是，總以為自己對，別人錯。",
+     "愛在雞蛋裡挑骨頭。",
+     "偽君子，滿口仁義道德，背地裡卻做不見得光的事。",
+     "心胸狹窄。"
+    ]
+   ],
+   [
+    [
+     "絕大多數的博愛型在童年時代是通過滿足他人的願望來獲得愛和安全感，所以從小就相信，要想生存下去，就必須獲得他人的認可。",
+     "他們會把人際關係視作維持生存的最重要條件，所以會盡力爭取他人的支持及認同，避免他人的反對。",
+     "亦會經常不自覺地改變自己、迎合他人；他們知道該如何表現，才能獲得歡迎，從而獲得他人的關愛。"
+    ],
+    [
+     "爭取他人的支持，避免他人的反對；努力改變自己，迎合他人。",
+     "認為自己很重要，亦會對自己的重要性及滿足他人的需要感到驕傲。",
+     "在團體中喜歡與強勢人物交往，希望得到強權的保護，藉此在團體中擁有穩定的地位。",
+     "對自己為了滿足他人而扮演的多個角色感到困惑：「我的每個朋友對我的看法都不同」「哪一個才是真正的我？」",
+     "對「成功的男人」或「出色的女人」十分依戀。但相處久了，便會變回真正的自己——溫和友善、隨和，婉轉含蓄，喜歡幫助別人。"
+    ],
+    [
+     "走向第四型，為自己的心願堅持到底。"
+    ],
+    [
+     "走向第八型，橫蠻無理、自大、任性，將自己的主意強加於他人身上。"
+    ],
+    [
+     "公正無私、情感的投入、寬大。",
+     "能體恤別人，替人設想，同情別人處境。",
+     "對人熱情，容易親近，是個受大眾歡迎的人。",
+     "如德蘭修女般熱心助人。"
+    ],
+    [
+     "諂媚、佔有、自我犧牲。",
+     "渴望被人需要，常常過分熱心。",
+     "佔有欲強，很想完全擁有對方。",
+     "嫉妒心重，伴侶望著異性也不高興。",
+     "覺得自己不可缺少，渴望回報；當付出後，渴望別人回報。"
+    ],
+    [
+     "操縱、強制、感覺被犧牲。",
+     "抱怨連連，常因為自己所做的事得不到別人認同而埋怨、批評；橫蠻無理、自大、任性，將自己主意強加於他人身上。"
+    ]
+   ],
+   [
+    [
+     "從小就認為只有勝利者才值得擁有他人的愛，所以從小就忘記了自己的情感，一心要用出色的表現來獲得他們需要的愛。",
+     "他們努力工作的目的就是為了獲得認可，成為佼佼者，在競爭中獲勝。"
+    ],
+    [
+     "自信、野心勃勃、行動敏捷和熱心十足。表現出色，總是靠自己的能力得到一切。",
+     "能把任何階層的形象都扮演得活靈活現；工作上亦往往表現出成功者的姿態。",
+     "願意接受競爭，渴望勝利，而且十分注重他人眼裡反映出的自身形象。即使工作如何枯燥乏味，有成就的工作便是他們最喜歡的活動。他們不會理會自己的真實感受，所以感覺空虛。",
+     "堅信個人價值在於所做的事，而不是個人本身，認為他人欣賞的是他們的工作成績，而不是他們本身。擁有樂觀性格，失敗絕不會影響他們。"
+    ],
+    [
+     "走向第六型，會把自己奉獻給別人，並且因為這種行為而肯定自己更有價值。",
+     "會是位成功的團隊領袖，有涵養，有實力，魅力非凡，並且忠誠，會適當地運用策略，不會操之過急，是不可多得的管理專才和團隊領導者。"
+    ],
+    [
+     "走向第九型，從敵對的情感中分離出來，結果他們感覺自己什麼也不是，他們「一片空白」，人格解體，心中的空虛暴露無遺。"
+    ],
+    [
+     "內在導向、適應力、企圖心。",
+     "有自信心。",
+     "精力充沛，能量高。",
+     "精明。",
+     "吸引力強，有神采。",
+     "成就出眾。",
+     "有同理心，能與人建立好關係。",
+     "是個成功的領袖。"
+    ],
+    [
+     "競爭、形象投射、表現輕蔑。",
+     "好勝心強，常常想超越別人。",
+     "著重包裝，唯因花太多時間包裝，忽略內涵細節。",
+     "自命不凡，愛吹噓自己，說得天花亂墜。",
+     "工於心計，因為三號為了勝利可以不惜一切，放下自尊，成就自己。"
+    ],
+    [
+     "機會主義、口是心非、報復。",
+     "愛利用別人，常覺得別人只是工具，不介意讓人踩肩膀，亦愛踩人肩膀。",
+     "認為人與人之間只有利用，妒忌心重，常想贏別人。",
+     "會用盡不同方法手段保護自己形象；他的手下做好事，他會邀功，甚至炒了下屬。若三號不健康，很容易會背叛他人，他只要成就，道德感情都放在一邊。"
+    ]
+   ],
+   [
+    [
+     "普遍有被遺棄的經歷，總是帶著憂鬱感，核心問題是缺失感和時常降低的自尊。",
+     "在成長經歷中，總是有被拋棄或者類似的經歷，或是父母離異，長期失去父愛或母愛；或是父母其中一方在他們生活中時而出現時而消失，他們因此而感到悲傷。",
+     "在成年後，這種遺缺感也不會消失。他們因此若有所失，總是帶著憂鬱感。"
+    ],
+    [
+     "情緒總是處在兩極狀態：極度的抑鬱或極度的亢奮，因為他們傾向誇張自己的情緒，忽視真實的感覺；而且很敏感，情緒容易波動。",
+     "經常認為自己受傷害，表現無助，卻拒絕接受他人幫助。對已經擁有的，只看到缺點；對那些遙不可及的，卻能看到優點。這種變化加強了被拋棄的感覺和缺失的感覺。",
+     "當別人有危難或受苦時，會拋開自己的麻煩，全力支持。",
+     "當遇到困境時，可能會情緒低落，甚至做出錯誤行為。"
+    ],
+    [
+     "走向第一型，會變得冷靜而較為理性，做事有原則及客觀，而不會再受控於變化無常的情緒。"
+    ],
+    [
+     "走向第二型，會在感情道路上一意孤行，痴纏，任性，佔有欲強，會失落、抑鬱和行為反覆無常。"
+    ],
+    [
+     "自覺、個性強、敏感性、同情心。",
+     "創造力高，幻想力豐富。",
+     "對別人的感受很靈敏。",
+     "情感真摯，忠於自己的感受。",
+     "表現自我。"
+    ],
+    [
+     "幻想、自覺過度、脫離。",
+     "容易質疑自己。",
+     "感情脆弱。",
+     "由於四號過分自我的性格，許多時候自小已不獲身邊的人認同，常被人批評任性、無紀律等。因慣於遭人否定，自我價值不高，會不信任自己，同時又覺得別人並不了解自己；這種累積的怨憤一旦爆發出來，便不可收拾。",
+     "因此四號常有情緒化的表現。四號小孩很容易哭，自覺不好時會躲在一角，想透過這種抽離吸引成人注意。若自小有習慣製造脆弱，長大後亦會自憐、放縱。"
+    ],
+    [
+     "自我抑制、自我折磨。",
+     "嚴重沮喪，心情極差。",
+     "自責，自卑，埋怨自己沒有用，憎恨自己至絕望地步，自覺已無生存價值。"
+    ]
+   ],
+   [
+    [
+     "思考型的內心就如同座守衛森嚴的城堡，城堡的主人很少離開，總是躲在城堡的高牆後去觀看外面的人。",
+     "他們覺得自己容易受到侵犯，城堡的牆上出現了裂縫，他們的秘密被偷走了。",
+     "他們的防禦策略是撤退，盡量減少接觸及盡量保護自己的私人空間。"
+    ],
+    [
+     "極需私密，內向而自給自足，盡量保持不被涉及的狀態；感到被威脅時，第一道防線是撤退。",
+     "不表露情感，過度強調自我控制，在他人面前控制感覺，等到自己一個人的時候，才表露情感。",
+     "喜歡觀察，冷靜思考，但沉默內向。",
+     "希望能夠預測將要發生的事情。",
+     "博學多聞，有學問、條理分明、表達含蓄。"
+    ],
+    [
+     "走向第八型，有大將之風，勇於冒險，能將構思付諸實踐，樂意爭取達成自己的目標，勇謀兼備，會接受和關心別人，是一位不可多得的將相之材。"
+    ],
+    [
+     "走向第七型，會變得不切實際，孤芳自賞，言過其實，常發白日夢而且有點神經質，經常理論多於一切，舉棋不定，不肯作出承諾，口若懸河地扮專家。"
+    ],
+    [
+     "觀察力強。",
+     "分析力強。",
+     "好奇心強。",
+     "聰明機敏，是科學家、學者、博士人才。"
+    ],
+    [
+     "感情抽離。",
+     "十問九不應。",
+     "事事做旁觀者，做分析，沒法投入。",
+     "愛冷嘲熱諷。",
+     "事事只跟從自己想法，很少顧及別人感受。",
+     "抗拒情感投入，一般談話沒問題，但一旦涉及感情，便會避開。"
+    ],
+    [
+     "逃避，脫離人群，像歸隱深山般不見人。",
+     "充滿敵意，憎恨世界，甚至覺得整個人類都邪惡麻煩。",
+     "與現實脫節，不知許多事情為何會發生。",
+     "精神極度緊張。"
+    ]
+   ],
+   [
+    [
+     "幼時無法保護自己，導致疑心很重，經常懷疑他人的動機，尤其是權威人士的動機。",
+     "往往失去了對權威的信任，絕大多數的忠誠型常說他們是被那些不值得信任的權威養大的。",
+     "通常有一個普遍的成長背景：一個感覺無法保護自己的孩子，找不到安全的藏身之地。父母對孩子的懲罰或羞辱是導致這種信任缺失的主要原因，尤其是如果父母對待孩子的態度反覆無常的話。也有忠誠型說，他們的家庭中藏著不可告人的秘密，大家必須保持沉默。",
+     "幼小的忠誠型必須學會預測父母的態度，因為這些成年人很有可能在沒有明顯徵兆的情況下突然對孩子大發雷霆。"
+    ],
+    [
+     "對權威抱極端態度：要麼順從，要麼反抗。",
+     "在團隊中，成為團體成員的機會多於成為領袖，並經常為那些被踐踏和受到不公平對待的人們代言。",
+     "為別人做事盡心盡力，安於現狀，不喜歡轉換新環境。",
+     "在壓力面前會表現得異常出色，在理想的條件下反而失去鬥志。"
+    ],
+    [
+     "走向第九型，能順其自然，信任身邊的人，樂意效忠所屬的群體，並願意放下自己拘謹的態度和防衛機制，比以往更平和、有安全感、寬大，而且更放鬆。"
+    ],
+    [
+     "走向第三型，變成工作狂，反應過敏，會輕率魯莽地做事，為求達到目的會不顧一切，並傷害那些曾傷害過他們的人。"
+    ],
+    [
+     "自我肯定。",
+     "親切可愛。",
+     "抱著人人平等的觀念，不會欺壓別人。",
+     "相信自己，也相信別人。",
+     "積極行動。",
+     "忠誠行動、值得信賴。"
+    ],
+    [
+     "順從、逃避。",
+     "害怕做決定。",
+     "依附權威。",
+     "優柔寡斷。",
+     "頑強，反叛，表面附和，暗裡卻會批評別人的不是。"
+    ],
+    [
+     "極度欠缺安全感。",
+     "自卑心重。",
+     "愛誇大問題。",
+     "極度焦慮不安。",
+     "受虐狂。"
+    ]
+   ],
+   [
+    [
+     "享樂型的童年充滿了美好回憶，他們的回憶就像一本裝滿快樂照片的相冊；通常，他們的回憶中沒有痛苦。",
+     "即使他們身邊發生了如父母離異等糟糕的事情，也很少會讓享樂型產生憎恨或者抱怨的情緒。"
+    ],
+    [
+     "即使身邊發生糟糕的事情，他們都不會產生負面情緒，因他們的注意力總是自覺地向積極的回憶靠攏。",
+     "總是能量充沛，只要感興趣，他們就願意努力工作；喜歡同時有很多選擇，後果可能是他們無法完全投入到某件事情中。",
+     "很難對單一事件作出長久的承諾。",
+     "喜歡新鮮感，追上潮流，不喜歡承受壓力，怕負面情緒。"
+    ],
+    [
+     "走向第五型，懂得自我克制，心思縝密，會經過觀察和周詳的考慮才去做決定。會將自己深刻的體驗貢獻到環境上，不再害怕自己的快樂會被剝削。",
+     "沒有特別需要時、舒服自在時，會有五號的性格，寧願避開人群，安靜下來，在家中舒服地看書，或去看海，什麼也不幹。"
+    ],
+    [
+     "走向第一型，變得專制、容易發怒、固執而對人有所要求。如果某些人或事讓他們覺得似乎可以協助解決自己的不快樂，他們就會緊緊地捉著不放。",
+     "七號受壓力時，會馬上啟動所有防衛系統，有著一號認真、挑剔的精神，只欠少了少許嚴謹。與一號不同的是，一號辦事認真是為了做得更好、做得正確，七號是為了去玩。"
+    ],
+    [
+     "多才多藝。",
+     "轉數高。",
+     "容易學會新事物。",
+     "容易解決問題。",
+     "外向、達觀、感激。",
+     "自發性強。",
+     "充滿動力、熱心。",
+     "精力充沛，能量高企。"
+    ],
+    [
+     "沉迷慾望。",
+     "愛玩、無節制。",
+     "吃喝玩樂。",
+     "一心多用。",
+     "膚淺，給人一種只懂一點點卻裝作很懂的感覺。",
+     "過度活躍。"
+    ],
+    [
+     "會攻擊，辱罵別人。",
+     "極端失控。",
+     "貪圖享受與排場。",
+     "做任何事都要做到極致，不留餘地，愛出風頭，炫耀自己。",
+     "行事衝動，誇張，不切實際。"
+    ]
+   ],
+   [
+    [
+     "童年時他們自小被灌輸的思想就是強者受到尊敬，弱者遭到拒絕，他們要依靠自己強硬的外表才得以生存。",
+     "儘管如此，他們的世界總是被那些比他們更高大、更強壯的人所主宰，而這些人企圖控制他們的生活。",
+     "為了保護自己，他們會爭取成為強者或領導者，希望能夠用自己的能力來控制局勢。"
+    ],
+    [
+     "以強者或領導者的姿態出現，希望控制其他強勁的競爭者，願意採取任何形式的對抗把對手擊敗。",
+     "設定嚴格要求控制那些可能影響自己生活的人；但自己往往會以行為打破那些嚴格要求。",
+     "喜歡保護別人，但往往會出現幫倒忙的情況。",
+     "當受到羞辱或傷害時會產生複仇思想。",
+     "追求權力，講求實力，有正義感，喜歡做「大哥」。"
+    ],
+    [
+     "走向第二型，俠骨柔腸，慷慨而樂於助人，有理想抱負，能濟世為懷，肯真誠和體貼地去關心別人，以笑容和愛心去緩和暴躁和衝動的心態。"
+    ],
+    [
+     "走向第五型，固執倔強，遠離人群，會對人盤算，以自己的理據去迫人就範，有時扮專家。",
+     "會開始妄想，認為他們的敵人可能會合在一起對抗他們，覺得自己不安全，於是從天不怕地不怕變成害怕每一個人。"
+    ],
+    [
+     "自信心強。",
+     "行動為主。",
+     "天生領導者。",
+     "勇敢寬宏。"
+    ],
+    [
+     "只會保護自己。",
+     "主觀，個人主義，不接受意見。",
+     "愛控制別人，控制環境。",
+     "自視過高。",
+     "害怕受傷害，常常裝成有權勢、有力量的人。",
+     "遇到壓力時不懂得面對，只懂得推開。"
+    ],
+    [
+     "暴力：如暴君一樣。",
+     "無情。",
+     "獨裁。",
+     "過度誇張。",
+     "有毀滅性。"
+    ]
+   ],
+   [
+    [
+     "和諧型覺得自己在小時候被忽視，並因此養成忽略自己真實需要的習慣。",
+     "童年生活的一個共同點就是：沒有人聽取他們的意見，而且他們發現即使是直接表示憤怒，也不會有人重視他們的想法。",
+     "當他們認識到自己的特權得不到重視，他們只能麻醉自己，分散自己的精力，讓大腦把自己忘記，所以經常無法了解自己真正的需要。"
+    ],
+    [
+     "經常分不清什麼是重要，什麼是不重要。",
+     "因為無法知道自身的真實需要，經常用不必要的事物來取代真實需要；最重要的事情往往被留在了一天的最後時刻。",
+     "經常處於中間者的位置，很難就問題作出決定，亦很難說「不」。",
+     "壓抑身體的能量與怒火，即使到不能忍受時，也只會以間接的方法爆發出來。",
+     "溫和友善，忍耐力強，怕與人爭鬥。",
+     "表面上順從他人的意見，但內心還是會有所保留。"
+    ],
+    [
+     "走向第三型，有清晰而明確之目標，對自我成長和發揮潛力感到深厚的興趣。他們將不再自滿，而是能夠控制自己的生活。在自我成長的意識下，他們變得比較有自信，能堅持自己的看法，同時也較獨立。"
+    ],
+    [
+     "走向第六型，行為變得偏激，多疑過慮，怕大禍臨頭，怕被人陷害和欺騙，變得更加防守被動。"
+    ],
+    [
+     "心胸開放。",
+     "心平氣和。",
+     "泰然自若。",
+     "可愛，純真如小孩般。",
+     "開心。",
+     "有耐性，願意聆聽。"
+    ],
+    [
+     "過於服從。",
+     "倚靠別人決定。",
+     "懶惰耽誤。",
+     "不愛做決定、講自己意見，因為害怕與人有衝突，最後很多都不做，陽奉陰違。"
+    ],
+    [
+     "無用無助。",
+     "頑固。",
+     "無方向。",
+     "停滯不前，不做什麼事。",
+     "麻木不仁。"
+    ]
+   ]
+  ]
+ },
+ "en": {
+  "shortNames": [
+   "Self",
+   "Direct Wealth",
+   "Communication",
+   "Home",
+   "Peach Blossom",
+   "Toil",
+   "Others",
+   "Indirect Wealth",
+   "Fortune",
+   "Career",
+   "Friends",
+   "Hidden"
+  ],
+  "keywords": [
+   [
+    "The self",
+    "Irritability",
+    "Restlessness",
+    "Emotional volatility",
+    "Impulsiveness",
+    "Anger",
+    "Flaring temper",
+    "Agitation",
+    "Harm"
+   ],
+   [
+    "Food",
+    "Material things",
+    "My own money",
+    "Fair, refined-looking people",
+    "Spending",
+    "Direct Wealth (steady, earned income)",
+    "Values",
+    "Cognition",
+    "Motivation",
+    "The mouth"
+   ],
+   [
+    "Communication",
+    "Conversation",
+    "Thinking",
+    "An active mind",
+    "Learning",
+    "Language",
+    "People younger than oneself",
+    "Peers",
+    "Colleagues",
+    "Classmates",
+    "Deskmates",
+    "Neighbours",
+    "Siblings",
+    "Going out",
+    "Studies",
+    "Nimbleness",
+    "Being on the move",
+    "Leaving",
+    "Separation",
+    "Having gone away",
+    "Liveliness",
+    "A sense of novelty",
+    "The thyroid"
+   ],
+   [
+    "Home",
+    "Sense of security",
+    "Sensitivity",
+    "Anxiety",
+    "Fragility",
+    "Hollowness",
+    "Worry",
+    "Apprehension",
+    "Introspection",
+    "Inner depletion",
+    "Living environment",
+    "Family of origin",
+    "The environment one was born into",
+    "Country of birth",
+    "Women",
+    "Mother"
+   ],
+   [
+    "Being noticed",
+    "Entertainment",
+    "Enjoyment",
+    "Happiness",
+    "Peach Blossom (romantic attraction, people drawn to you)",
+    "Allure",
+    "Sex",
+    "Standing out",
+    "Romance",
+    "Men",
+    "Being seen",
+    "Father"
+   ],
+   [
+    "Drudgery",
+    "Busyness",
+    "Scattered, disordered thoughts",
+    "Mental exhaustion",
+    "Weariness",
+    "Tension",
+    "Being talked about",
+    "Everyday matters",
+    "Labour",
+    "Overthinking",
+    "Socialising",
+    "Social dealings",
+    "Ideas",
+    "Focus",
+    "Fixation",
+    "Repetitive matters",
+    "Repetition",
+    "Attention"
+   ],
+   [
+    "Minding what others think",
+    "Thoughts fixed on someone else",
+    "Other people",
+    "People one meets",
+    "Binding ties",
+    "One-to-one relationships",
+    "Partner",
+    "Couple",
+    "The person one is seeing",
+    "Lover",
+    "People close at hand",
+    "Marriage"
+   ],
+   [
+    "Indirect Wealth (windfalls, money that is not earned)",
+    "Solitude",
+    "Boredom",
+    "Torment",
+    "Burning anxiety",
+    "Helplessness",
+    "Darkness",
+    "Pain",
+    "Suffering",
+    "Time feeling long",
+    "The body",
+    "Other people's money",
+    "Other people's privacy and secrets",
+    "Other people's private lives",
+    "Unseen drain",
+    "Survival",
+    "Physical strength",
+    "Vitality",
+    "State of health"
+   ],
+   [
+    "Optimism",
+    "Positivity",
+    "Cheer",
+    "Delight",
+    "Good fortune",
+    "Luck",
+    "Religion",
+    "Faith",
+    "Relocation",
+    "Documents",
+    "Paperwork",
+    "Diplomas",
+    "Abroad",
+    "Long journeys",
+    "Culture",
+    "Broad-mindedness",
+    "Sunny temperament",
+    "Drive",
+    "Ideals",
+    "Kindness",
+    "Moral character",
+    "Blindness",
+    "Arrogance",
+    "Meaning",
+    "Opportunity",
+    "Chance"
+   ],
+   [
+    "Career",
+    "Gloom",
+    "Suppression",
+    "Discouragement",
+    "Dejection",
+    "Trouble",
+    "Difficulty",
+    "Ordeals",
+    "Loss",
+    "Challenge",
+    "Being pushed out",
+    "Vexing matters",
+    "Misfortune",
+    "People older than oneself",
+    "Work",
+    "Elders",
+    "Profession",
+    "Reputation",
+    "Authority",
+    "Power",
+    "Ability",
+    "Social standing",
+    "Achievement",
+    "Government"
+   ],
+   [
+    "Friends",
+    "Groups",
+    "Shifts",
+    "Change",
+    "Being set apart",
+    "Difference",
+    "Level-headedness",
+    "Reason",
+    "Mental disturbance",
+    "Networks",
+    "Instability",
+    "Setbacks",
+    "Running about",
+    "Upheaval",
+    "Being tossed from place to place"
+   ],
+   [
+    "Obsession",
+    "Confusion",
+    "Fantasy",
+    "Karmic affinity",
+    "Temper",
+    "Disposition",
+    "Conduct",
+    "Morality",
+    "Behind the scenes",
+    "Pessimism",
+    "Escapism",
+    "Sorrow",
+    "Sentimentality",
+    "Longing",
+    "Starved of love",
+    "Unspoken love",
+    "Fading from view",
+    "Concealment",
+    "Depletion",
+    "Isolation",
+    "Self-dissolution",
+    "Karma",
+    "Cycles",
+    "Rebirth",
+    "Reincarnation",
+    "The esoteric",
+    "Metaphysics",
+    "Being cut off",
+    "Hiding away",
+    "Deception"
+   ]
+  ],
+  "names": [
+   "The Perfectionist",
+   "The Helper",
+   "The Achiever",
+   "The Individualist",
+   "The Investigator",
+   "The Loyalist",
+   "The Enthusiast",
+   "The Challenger",
+   "The Peacemaker"
+  ],
+  "taglines": [
+   "Principled, persevering, self-controlled",
+   "Generous, grateful, gifted with people",
+   "Adaptable, ambitious, focused",
+   "Reflective, artistic, expressive",
+   "Perceptive, curious, private",
+   "Hard-working, dependable, responsible",
+   "Versatile, optimistic, self-starting",
+   "Powerful, decisive, self-assured",
+   "Harmonious, easy-going, trustworthy"
+  ],
+  "summaries": [
+   "The rational, orderly type. They strive to keep standards and quality high, always attend to detail, and want to raise productivity. They habitually push others to improve, to become more effective and to do the right thing. Because they are so orderly, they can turn overly critical of themselves and of others. They dislike waste and carelessness, which can lead them to meddle in everything large and small, endlessly, and to offer criticism that is discouraging. At their best they judge soundly, decide wisely, become models of integrity and carry responsibility very well.",
+   "The loving type, gifted at handling relationships. They are sensitive to what others need and always try to meet it. They appreciate other people's talents, can play confidant and guide, and are skilled with people. But they find it very hard to say no to a request, and the wish to help better puts them under great strain. They dislike impersonal working environments, which can make them play favourites and lose time in relationships. At their best they are empathetic and generous, and help a team build closer bonds.",
+   "The adaptable, ambitious type. They know how to get work done more efficiently and in line with what the client expects. They tend to be attractive, charming and full of energy, with sharp awareness of themselves, their team and the business. They like to be noticed and are often drawn to positions of success and prestige. They enjoy competition, and the need for status and personal advancement drives them to become workaholics — which can lead them to cut corners to stay ahead. At their best they become genuinely talented and admirable, and are often seen as the model that lifts everyone's morale.",
+   "The reflective, artistically gifted type. Expressive, able to leave a deep impression, self-absorbed, with moods that shift without warning. The Individualist gives off a singular charm. On the standard they hold for good language, for originality and for their own mark on the work, they will not compromise. They dislike work with no creativity in it. They are over-sensitive to criticism, which can leave them moody and irregular in their work. At their best they bring intuition and creativity to what they do, improve it with a depth and a singularity of feeling that is theirs alone, and come to appreciate every other type.",
+   "The keenly observant, argumentative type. Hungry to know, inventive, protective of privacy, eccentric. The Investigator is an energetic learner and experimenter, especially in technical fields. They like to follow their curiosity into the detail and explore the principle behind things. Their analytical power is strong, and they love discovery rather than scheduling time to commit to and build relationships. Unhealthy, they can turn arrogant, stop communicating with others and struggle constantly inside their own head. At their best the Investigator becomes far-sighted, able to bring wholly new ideas into the work.",
+   "The attention-drawing, loyal type. Likeable, responsible, anxious, full of doubt. The Loyalist is hard-working and dependable, and can build the alliances at work that get things done more effectively. They can weigh other people's motives and merits, and look for the problems latent in a working environment. They dislike facing a crisis, want everyone to agree, and want to see the future coming. Without authority granted by the group they grow hesitant, find action very difficult and fall into blaming others. At their best the Loyalist is confident, independent and brave, and can often bring a team back to its founding values.",
+   "The versatile, optimistic type. Self-starting, broadly talented, impulsive, with energy spread thin. The Enthusiast excels at change, variety, stimulation and innovation. They express themselves clearly, have a sense of humour, and can win other people over to their ideas. The Enthusiast always chases the trend, looking for new possibilities and new angles. They can run several jobs at once, but cannot keep at them. Unhealthy, they become talkative, scattered in attention and unfocused in energy, leaving much of their work half done. At their best the Enthusiast fixes their focus on a goal worth having and works with real efficiency.",
+   "The powerful, decisive type. Self-assured, authoritative, headstrong, confrontational. The Challenger knows exactly what they want to do and always has the capacity to do it well. They can make hard decisions, treat serious problems as a challenge to them, and overcome the difficulty in them. They want the commanding position, and find delegating a task or sharing leadership very hard. They are glad to support, protect and inspire others, but unhealthy they will threaten people into doing things their way, making unnecessary enemies inside the business and outside it. At their best the Challenger becomes magnanimous, using their strength to raise the standard of other people's lives.",
+   "The harmonious, easy-going type. Highly accepting, trustworthy, complacent. The Peacemaker creates a harmonious team by emphasising what is positive in it, and so eases conflict and tension. They support and accommodate others, work well alongside people, and are humble. They dislike conflict in a team and always try to build harmonious, stable relations. But in going along with others they may avoid holding to their own view, and grow very angry inside. Unhealthy, their work becomes inefficient, stubborn and neglectful. At their best they can reconcile differences and draw people together into an environment that is stable and yet alive."
+  ],
+  "sectionTitles": [
+   "How the character forms",
+   "How it shows on the outside",
+   "When secure and growing",
+   "Under stress and on the defensive",
+   "Healthy traits",
+   "Average traits",
+   "Unhealthy traits"
+  ],
+  "sections": [
+   [
+    [
+     "As children they sensed they were not seen as perfect, and their attention went into making themselves into someone worth loving.",
+     "They felt they were always under a critical eye, never affirmed for getting anything right, only told to do better.",
+     "They may have had parents who were openly angry or critical, whose words carried blame and disapproval but no love.",
+     "For some, they were the eldest child, expected to carry responsibility for younger siblings and to take the blame for them."
+    ],
+    [
+     "They demand a great deal of themselves, and come across as impatient, tense, critical, controlling and self-righteous, with an irrepressible drive for perfection and a tendency to control everything around them.",
+     "They suppress emotion, believing that swings of feeling will make them err. They work independently, hold firmly to principle, carry a strong sense of responsibility, and fill all their time with work.",
+     "They accept only what is correct, and set aside any need that in their view fails to meet the proper standard.",
+     "They treat their own standards as the rules, and believe 'everyone knows' those rules. They loathe those who break the rules and get away with it."
+    ],
+    [
+     "They move towards Type Seven: they set down the stiff image, can laugh at themselves, become creative, willing to try new things and open to other people's views.",
+     "When relaxed and at ease, the One takes on something of the Seven — light, easy-going, even able to throw all the rules aside."
+    ],
+    [
+     "They move towards Type Four: emotional, changeable, melancholy, self-critical, at times self-absorbed and self-pitying, giving up on themselves, low and full of a sense of uselessness — yet still stubborn enough to see things through.",
+     "Under pressure the One takes on a little of the Four, becoming very self-focused and insistent on personal feeling. This comes from feeling misunderstood, or from seeing too much that is unfair.",
+     "On top of that, the One asks so much of themselves that failing their own standard can leave them melancholy and low. That repression can coil inside for years, which is why many Ones mistake themselves for Fours."
+    ],
+    [
+     "Tolerant, reasonable, objective.",
+     "Clear about right and wrong, high-minded, willing to reform things for the good of society.",
+     "Highly self-disciplined; what they decide to do today never slips to tomorrow.",
+     "Excellent judgement.",
+     "Extremely high moral standards."
+    ],
+    [
+     "Idealistic, strictly logical, perfectionistic.",
+     "Afraid of making mistakes.",
+     "Given to criticising others.",
+     "Often wants to control or change others strictly.",
+     "Sees things as black or white, with no middle ground."
+    ],
+    [
+     "Intolerant, deluded, punishing.",
+     "Self-righteous — always sure they are right and everyone else is wrong.",
+     "Picks holes in everything.",
+     "Hypocritical: full of high morals in speech, doing what will not bear daylight behind the scenes.",
+     "Narrow-minded."
+    ]
+   ],
+   [
+    [
+     "Most Helpers won love and safety in childhood by meeting other people's wishes, and so came to believe early that survival depends on other people's approval.",
+     "They treat relationships as the most important condition of survival, so they work hard for support and acceptance and avoid opposition.",
+     "They also change themselves without noticing, to fit in. They know how to behave in order to be welcomed, and so to be cared for."
+    ],
+    [
+     "They seek other people's support and avoid their opposition, working hard to change themselves to fit.",
+     "They see themselves as important, and take pride both in that importance and in meeting other people's needs.",
+     "In a group they like to associate with strong figures, hoping for the protection of power and, through it, a stable place in the group.",
+     "They are confused by the many roles they play to satisfy others: 'Every friend of mine sees me differently.' 'Which one is the real me?'",
+     "They attach strongly to the 'successful man' or the 'outstanding woman'. But given time they return to who they really are — gentle, friendly, easy-going, tactful and reserved, glad to help."
+    ],
+    [
+     "They move towards Type Four, and hold out to the end for what they themselves wish."
+    ],
+    [
+     "They move towards Type Eight: overbearing and unreasonable, arrogant, wilful, forcing their own ideas onto others."
+    ],
+    [
+     "Fair-minded, emotionally invested, magnanimous.",
+     "Considerate — able to think for others and feel for their situation.",
+     "Warm and approachable, well liked by everyone.",
+     "Helps others with the warmth of a Mother Teresa."
+    ],
+    [
+     "Flattering, possessive, self-sacrificing.",
+     "Longs to be needed, and is often over-eager to help.",
+     "Strongly possessive, wanting to own the other person entirely.",
+     "Deeply jealous — unhappy even when a partner merely looks at someone else.",
+     "Feels indispensable and craves return: having given, wants something back."
+    ],
+    [
+     "Manipulative, coercive, feeling sacrificed.",
+     "Full of complaint — resentful and critical when what they have done goes unacknowledged; overbearing, arrogant and wilful, forcing their own ideas onto others."
+    ]
+   ],
+   [
+    [
+     "From childhood they believed that only winners deserve to be loved, and so they set their own feelings aside early, bent on earning the love they needed through outstanding performance.",
+     "The purpose of their hard work is recognition — to be the best, and to win."
+    ],
+    [
+     "Confident, ambitious, quick to act and full of enthusiasm. They perform well and get everything by their own ability.",
+     "They can play the image of any social level convincingly, and at work they carry themselves as a success.",
+     "They welcome competition, long to win, and care greatly about the image of themselves reflected in other people's eyes. However dull the job, work that achieves something is their favourite activity. They pay no attention to how they really feel, and so feel empty.",
+     "They firmly believe personal worth lies in what one does rather than in who one is, and think others admire their results rather than themselves. They are optimistic by nature, and failure never shakes them."
+    ],
+    [
+     "They move towards Type Six, giving themselves to others and affirming their own worth through that giving.",
+     "They make a successful team leader: cultivated, capable, remarkably charismatic and loyal, using strategy well and never rushing — a rare talent in management and in leading a team."
+    ],
+    [
+     "They move towards Type Nine, cutting themselves off from hostile feeling — with the result that they feel they are nothing at all. They go 'blank', the personality comes apart, and the emptiness inside stands fully exposed."
+    ],
+    [
+     "Inner-directed, adaptable, driven.",
+     "Self-confident.",
+     "Full of energy and vitality.",
+     "Shrewd.",
+     "Very attractive, with real presence.",
+     "Outstanding in achievement.",
+     "Empathetic, able to build good relationships.",
+     "A successful leader."
+    ],
+    [
+     "Competitive, image-projecting, given to showing contempt.",
+     "Strongly driven to win, always wanting to surpass others.",
+     "Focused on packaging — and, spending so long on the packaging, neglecting substance and detail.",
+     "Self-important, fond of boasting, talking things up beyond all measure.",
+     "Calculating: the Three will stop at nothing for victory, and will set pride aside to make something of themselves."
+    ],
+    [
+     "Opportunistic, saying one thing and meaning another, vengeful.",
+     "Uses people, often seeing others as mere tools; does not mind being stepped on and is happy to step on others.",
+     "Believes people exist only to be used; deeply jealous, always wanting to beat others.",
+     "Will use any means to protect their image: when a subordinate does well, they claim the credit, and may even fire the subordinate. An unhealthy Three betrays others easily — they want only the achievement, and set morals and feelings aside."
+    ]
+   ],
+   [
+    [
+     "Most have known abandonment, and carry a melancholy with them. At the core lie a sense of something missing and a self-esteem that keeps sinking.",
+     "In their growing up there was always abandonment or something like it: parents separating, a long absence of a father's or a mother's love; or one parent appearing and disappearing from their life, which left them grieving.",
+     "In adulthood the sense of lack does not go away. Something always feels lost, and the melancholy stays."
+    ],
+    [
+     "Their feeling sits at one pole or the other: deep depression or high elation, because they tend to magnify their own emotion and overlook what they actually feel. They are very sensitive, and their mood moves easily.",
+     "They often believe they have been hurt and appear helpless, yet refuse the help offered. In what they already have they see only the flaws; in what is out of reach they see only the merits. That reversal deepens the sense of abandonment and of lack.",
+     "When someone else is in danger or in pain, they set their own troubles aside and support them completely.",
+     "In difficulty they may sink low and even act wrongly."
+    ],
+    [
+     "They move towards Type One: calmer and more rational, principled and objective in what they do, no longer ruled by a mood that will not hold still."
+    ],
+    [
+     "They move towards Type Two: wilful on the path of love, clinging, capricious, strongly possessive, and prone to loss, depression and behaviour that will not settle."
+    ],
+    [
+     "Self-aware, strongly individual, sensitive, compassionate.",
+     "Highly creative, with a rich imagination.",
+     "Finely attuned to what others feel.",
+     "Sincere in feeling, true to what they feel.",
+     "Expressive of who they are."
+    ],
+    [
+     "Fantasising, over-conscious of self, detached.",
+     "Quick to doubt themselves.",
+     "Fragile in feeling.",
+     "Because the Four is so self-absorbed, those around them often withheld approval from childhood on, criticising them as wilful or undisciplined. Used to being denied, they hold their own worth low and distrust themselves, while feeling that nobody understands them. When that stored resentment finally breaks out, nothing can contain it.",
+     "Hence the Four's frequent displays of emotion. A Four child cries easily, and when feeling bad will hide in a corner, hoping that this withdrawal will draw an adult's attention. If the habit of producing fragility starts young, self-pity and self-indulgence follow in adulthood."
+    ],
+    [
+     "Self-inhibiting, self-tormenting.",
+     "Severely depressed, in very low spirits.",
+     "Self-blaming and self-abasing, reproaching themselves as useless, hating themselves to the point of despair and feeling they have no value left in living."
+    ]
+   ],
+   [
+    [
+     "The Investigator's inner life is like a heavily guarded castle. The lord of the castle rarely leaves, and watches the people outside from behind its high wall.",
+     "They feel easily invaded — as though a crack had opened in the castle wall and their secrets were being stolen.",
+     "Their defence is retreat: to minimise contact and to guard their private space as far as they can."
+    ],
+    [
+     "They need privacy intensely, are inward and self-sufficient, and keep themselves as uninvolved as they can. When they feel threatened, the first line of defence is withdrawal.",
+     "They do not show feeling. They over-emphasise self-control, holding their emotions in front of others and letting them out only when alone.",
+     "They like to observe and to think coolly, but are silent and inward.",
+     "They want to be able to predict what is going to happen.",
+     "Widely read and learned, orderly in their thinking, understated in how they say things."
+    ],
+    [
+     "They move towards Type Eight: they carry the bearing of a commander, dare to take risks, put ideas into practice and gladly press on to reach their aims. Courage and strategy come together in them, and they accept and care for others — a rare calibre of leader."
+    ],
+    [
+     "They move towards Type Seven: unrealistic, admiring themselves in isolation, overstating things, daydreaming often and turning somewhat neurotic — all theory and no more, unable to settle on a move, unwilling to commit, and holding forth eloquently as the expert."
+    ],
+    [
+     "Strong powers of observation.",
+     "Strong powers of analysis.",
+     "Strong curiosity.",
+     "Clever and quick — the making of a scientist, a scholar, a doctor of their field."
+    ],
+    [
+     "Detached in feeling.",
+     "Answers one question in ten.",
+     "A spectator in everything, analysing, unable to throw themselves in.",
+     "Given to cold sarcasm.",
+     "Follows only their own thinking in everything, rarely considering how others feel.",
+     "Resists emotional involvement: ordinary conversation is fine, but the moment feeling enters they slip away."
+    ],
+    [
+     "Escaping, cutting away from people, unseen as though gone to live in the mountains.",
+     "Full of hostility, hating the world, even holding the whole of humanity to be evil and troublesome.",
+     "Out of touch with reality, at a loss as to why much of what happens happens.",
+     "Extreme nervous tension."
+    ]
+   ],
+   [
+    [
+     "Unable to protect themselves as small children, they grew deeply suspicious, doubting other people's motives — above all those of anyone in authority.",
+     "They tend to have lost their trust in authority. Most Loyalists say they were raised by authorities who did not deserve trust.",
+     "There is a common background: a child who feels unable to protect themselves and can find no safe place to hide. Punishment or humiliation from a parent is the main cause of that lost trust, especially where the parent's attitude to the child kept changing without reason. Some Loyalists also say their family hid a secret nobody was allowed to speak of.",
+     "The small Loyalist had to learn to predict a parent's mood, because those adults might well fly into a rage at the child with no visible warning."
+    ],
+    [
+     "They take an extreme stance towards authority: either they submit or they rebel.",
+     "In a team they are more likely to be a member than the leader, and they often speak up for those who are trodden on and treated unfairly.",
+     "They give their whole heart to doing things for others, settle for how things are, and dislike moving to a new environment.",
+     "Under pressure they perform remarkably well; in ideal conditions they lose their fighting spirit instead."
+    ],
+    [
+     "They move towards Type Nine: able to let things take their course, trusting those around them, glad to be loyal to the group they belong to, and willing to set down their stiffness and their defences — more peaceful, more secure, more generous and far more relaxed than before."
+    ],
+    [
+     "They move towards Type Three: workaholic, over-reactive, acting rashly and without care, stopping at nothing to reach their aim, and hurting those who once hurt them."
+    ],
+    [
+     "Affirming of themselves.",
+     "Warm and endearing.",
+     "Holds that everyone is equal, and will not push anyone down.",
+     "Trusts themselves and trusts others.",
+     "Acts positively.",
+     "Acts loyally and is worth trusting."
+    ],
+    [
+     "Compliant, evasive.",
+     "Afraid to decide.",
+     "Attaches to authority.",
+     "Irresolute.",
+     "Stubborn and rebellious, agreeing on the surface while criticising others behind their backs."
+    ],
+    [
+     "Extremely insecure.",
+     "Deeply self-abasing.",
+     "Blows problems out of proportion.",
+     "Extremely anxious and unsettled.",
+     "Masochistic."
+    ]
+   ],
+   [
+    [
+     "The Enthusiast's childhood is full of good memories — an album of happy photographs. As a rule there is no pain in what they remember.",
+     "Even when something bad happened around them, such as parents separating, it rarely left the Enthusiast with hatred or complaint."
+    ],
+    [
+     "Even when something bad happens around them they do not produce negative feeling, because their attention moves of its own accord towards the positive memory.",
+     "They are always full of energy, and will work hard at anything that interests them. They like having many options at once, with the consequence that they cannot throw themselves wholly into any one thing.",
+     "They find it very hard to make a lasting commitment to a single thing.",
+     "They like novelty and keep up with the trend; they dislike bearing pressure and fear negative feeling."
+    ],
+    [
+     "They move towards Type Five: self-restrained, careful in thought, deciding only after observing and weighing things thoroughly. They give what they have deeply experienced back to their surroundings, and no longer fear that their happiness will be taken from them.",
+     "With nothing particular required of them, comfortable and at ease, they take on the Five's character: they would rather avoid the crowd, go quiet, read comfortably at home or go and look at the sea and do nothing at all."
+    ],
+    [
+     "They move towards Type One: autocratic, quick to anger, stubborn and demanding of people. If some person or thing seems able to help resolve their unhappiness, they will hold on to it and not let go.",
+     "Under pressure the Seven fires up every defence at once, taking on the One's earnest, fault-finding spirit, only a little less rigorous. The difference is that the One is earnest in order to do better and to do right; the Seven is earnest in order to play."
+    ],
+    [
+     "Many-talented.",
+     "Quick-witted.",
+     "Learns new things easily.",
+     "Solves problems easily.",
+     "Outgoing, philosophical, grateful.",
+     "Highly spontaneous.",
+     "Full of drive and warmth.",
+     "Full of energy, with vitality running high."
+    ],
+    [
+     "Given over to appetite.",
+     "Playful and without restraint.",
+     "Eating, drinking and amusement.",
+     "Doing several things at once.",
+     "Shallow — leaving the impression of knowing a little and pretending to know a lot.",
+     "Over-active."
+    ],
+    [
+     "Attacks and abuses others.",
+     "Extreme loss of control.",
+     "Greedy for pleasure and for show.",
+     "Takes everything to the limit with nothing held back, loves the limelight and shows off.",
+     "Acts impulsively, exaggerates, and is out of touch with what is practical."
+    ]
+   ],
+   [
+    [
+     "From childhood they were taught that the strong are respected and the weak are rejected, and that they must rely on a hard exterior to survive.",
+     "Even so, their world was always ruled by people taller and stronger than they were, people who tried to control their life.",
+     "To protect themselves they set out to become the strong one or the leader, hoping to control the situation by their own capability."
+    ],
+    [
+     "They appear as the strong one or the leader, wanting to control other powerful competitors and willing to take on any form of confrontation to defeat an opponent.",
+     "They set strict demands to control anyone who might affect their life — while often breaking those same demands by their own conduct.",
+     "They like to protect others, though it often comes out as help that hinders.",
+     "When humiliated or hurt, thoughts of revenge arise.",
+     "They pursue power, respect real strength, have a sense of justice, and like to be the 'big brother'."
+    ],
+    [
+     "They move towards Type Two: a chivalrous heart with a tender side, generous and glad to help, holding ideals and aspirations, minded to relieve the world, willing to care for others sincerely and thoughtfully, and softening their own temper and impulsiveness with a smile and a loving heart."
+    ],
+    [
+     "They move towards Type Five: stubborn and unyielding, drawing away from people, calculating about others, using their own reasoning to force people into line, and sometimes playing the expert.",
+     "They begin to imagine things — that their enemies may band together against them — and feel unsafe, so that the one who feared nothing on earth becomes the one who fears everybody."
+    ],
+    [
+     "Strongly self-confident.",
+     "Action first.",
+     "A natural leader.",
+     "Brave and big-hearted."
+    ],
+    [
+     "Protects only themselves.",
+     "Subjective, individualistic, does not take advice.",
+     "Likes to control people and to control the environment.",
+     "Thinks too highly of themselves.",
+     "Afraid of being hurt, and so often puts on the front of someone powerful and strong.",
+     "Does not know how to face pressure, only how to push it away."
+    ],
+    [
+     "Violent — like a tyrant.",
+     "Merciless.",
+     "Dictatorial.",
+     "Wildly exaggerated.",
+     "Destructive."
+    ]
+   ],
+   [
+    [
+     "The Peacemaker felt overlooked as a child, and so formed the habit of overlooking what they themselves really need.",
+     "One thing their childhoods share: nobody listened to their opinion, and they found that even showing anger directly did not make anyone take their thoughts seriously.",
+     "Once they saw that their own claim carried no weight, all they could do was numb themselves, scatter their energy and let the mind forget them — which is why they so often cannot tell what they truly need."
+    ],
+    [
+     "They often cannot tell what matters from what does not.",
+     "Because they cannot know their own real need, they replace it with things that are not necessary; the most important task is often left to the last moment of the day.",
+     "They are often in the middle position, finding it hard to decide an issue and hard to say no.",
+     "They suppress the body's energy and its anger, and even when it becomes unbearable it comes out only indirectly.",
+     "Gentle and friendly, with great endurance, afraid of fighting with anyone.",
+     "They go along with other people's views on the surface, while holding something back inside."
+    ],
+    [
+     "They move towards Type Three: clear and definite in their aims, deeply interested in their own growth and in realising their potential. They are no longer complacent but able to take charge of their life. With that awareness of growth they become more confident, able to hold to their own view, and more independent as well."
+    ],
+    [
+     "They move towards Type Six: their behaviour turns extreme, suspicious and over-thought, fearing disaster is about to fall, fearing being framed and deceived, and growing more defensive and passive."
+    ],
+    [
+     "Open-hearted.",
+     "Calm and even-tempered.",
+     "Composed and unruffled.",
+     "Endearing, innocent as a child.",
+     "Happy.",
+     "Patient and willing to listen."
+    ],
+    [
+     "Too compliant.",
+     "Leans on others to decide.",
+     "Lazy and given to putting things off.",
+     "Dislikes deciding or voicing an opinion, for fear of conflict, so in the end much goes undone — agreeing to your face and doing otherwise behind your back."
+    ],
+    [
+     "Useless and helpless.",
+     "Obstinate.",
+     "Without direction.",
+     "At a standstill, doing nothing.",
+     "Numb and unfeeling."
+    ]
+   ]
+  ]
+ },
+ "es": {
+  "shortNames": [
+   "Yo",
+   "Riqueza directa",
+   "Comunicación",
+   "Hogar",
+   "Flor de Durazno",
+   "Afán",
+   "Los demás",
+   "Riqueza indirecta",
+   "Fortuna",
+   "Carrera",
+   "Amigos",
+   "Oculto"
+  ],
+  "keywords": [
+   [
+    "El yo",
+    "Irritabilidad",
+    "Inquietud",
+    "Volatilidad emocional",
+    "Impulsividad",
+    "Ira",
+    "Arrebato de temperamento",
+    "Agitación",
+    "Daño"
+   ],
+   [
+    "Comida",
+    "Bienes materiales",
+    "Mi propio dinero",
+    "Personas de aspecto fino y agraciado",
+    "Gastos",
+    "Riqueza directa (ingresos estables y ganados)",
+    "Valores",
+    "Cognición",
+    "Motivación",
+    "La boca"
+   ],
+   [
+    "Comunicación",
+    "Conversación",
+    "Pensamiento",
+    "Mente ágil",
+    "Aprendizaje",
+    "Lenguaje",
+    "Personas más jóvenes que uno",
+    "Iguales",
+    "Colegas",
+    "Compañeros de clase",
+    "Compañeros de pupitre",
+    "Vecinos",
+    "Hermanos",
+    "Salir",
+    "Estudios",
+    "Agilidad",
+    "Estar en movimiento",
+    "Marcharse",
+    "Separación",
+    "Haberse ido",
+    "Vivacidad",
+    "Sensación de novedad",
+    "La tiroides"
+   ],
+   [
+    "Hogar",
+    "Sensación de seguridad",
+    "Sensibilidad",
+    "Ansiedad",
+    "Fragilidad",
+    "Vacío interior",
+    "Preocupación",
+    "Inquietud",
+    "Introspección",
+    "Desgaste interior",
+    "Entorno donde se vive",
+    "Familia de origen",
+    "El entorno en que se nació",
+    "País de nacimiento",
+    "Mujeres",
+    "Madre"
+   ],
+   [
+    "Ser notado",
+    "Entretenimiento",
+    "Disfrute",
+    "Alegría",
+    "Flor de Durazno (atracción amorosa, quienes se sienten atraídos por ti)",
+    "Encanto",
+    "Sexo",
+    "Destacar",
+    "Romance",
+    "Hombres",
+    "Ser visto",
+    "Padre"
+   ],
+   [
+    "Trabajo penoso",
+    "Ajetreo",
+    "Pensamientos dispersos y desordenados",
+    "Agotamiento mental",
+    "Cansancio",
+    "Tensión",
+    "Ser objeto de comentarios",
+    "Asuntos cotidianos",
+    "Labor",
+    "Darle demasiadas vueltas",
+    "Socializar",
+    "Trato social",
+    "Ideas",
+    "Concentración",
+    "Obsesión",
+    "Asuntos repetitivos",
+    "Repetición",
+    "Atención"
+   ],
+   [
+    "Preocuparse por lo que piensan los demás",
+    "Pensamiento fijo en otra persona",
+    "Los demás",
+    "Personas que uno conoce",
+    "Lazos que atan",
+    "Relaciones de uno a uno",
+    "Compañero de vida",
+    "Pareja",
+    "La persona con quien se sale",
+    "Amante",
+    "Personas cercanas",
+    "Matrimonio"
+   ],
+   [
+    "Riqueza indirecta (dinero inesperado, no ganado con trabajo)",
+    "Soledad",
+    "Aburrimiento",
+    "Tormento",
+    "Ansiedad abrasadora",
+    "Desamparo",
+    "Oscuridad",
+    "Dolor",
+    "Sufrimiento",
+    "Sentir que el tiempo se alarga",
+    "El cuerpo",
+    "El dinero ajeno",
+    "La privacidad y los secretos de los demás",
+    "La vida privada de los demás",
+    "Desgaste oculto",
+    "Supervivencia",
+    "Fuerza física",
+    "Energía vital",
+    "Estado de salud"
+   ],
+   [
+    "Optimismo",
+    "Actitud positiva",
+    "Alegría",
+    "Deleite",
+    "Buena fortuna",
+    "Suerte",
+    "Religión",
+    "Fe",
+    "Traslado",
+    "Documentos",
+    "Papeleo",
+    "Títulos",
+    "El extranjero",
+    "Viajes largos",
+    "Cultura",
+    "Amplitud de miras",
+    "Temperamento alegre",
+    "Empuje",
+    "Ideales",
+    "Bondad",
+    "Carácter moral",
+    "Ceguera",
+    "Arrogancia",
+    "Significado",
+    "Oportunidad",
+    "Ocasión"
+   ],
+   [
+    "Carrera",
+    "Melancolía",
+    "Represión",
+    "Desánimo",
+    "Abatimiento",
+    "Problemas",
+    "Dificultad",
+    "Pruebas duras",
+    "Pérdida",
+    "Desafío",
+    "Ser apartado",
+    "Asuntos molestos",
+    "Infortunio",
+    "Personas mayores que uno",
+    "Trabajo",
+    "Mayores",
+    "Profesión",
+    "Reputación",
+    "Autoridad",
+    "Poder",
+    "Capacidad",
+    "Posición social",
+    "Logro",
+    "Gobierno"
+   ],
+   [
+    "Amigos",
+    "Grupos",
+    "Cambios de rumbo",
+    "Cambio",
+    "Ser distinto",
+    "Diferencia",
+    "Serenidad de juicio",
+    "Razón",
+    "Perturbación mental",
+    "Redes",
+    "Inestabilidad",
+    "Contratiempos",
+    "Ir de un lado a otro",
+    "Trastorno",
+    "Verse llevado de un lugar a otro"
+   ],
+   [
+    "Obsesión",
+    "Confusión",
+    "Fantasía",
+    "Afinidad kármica",
+    "Genio",
+    "Carácter",
+    "Conducta",
+    "Moralidad",
+    "Entre bastidores",
+    "Pesimismo",
+    "Evasión",
+    "Pena",
+    "Sentimentalismo",
+    "Anhelo",
+    "Falta de amor",
+    "Amor callado",
+    "Desvanecerse de la vista",
+    "Ocultamiento",
+    "Desgaste",
+    "Aislamiento",
+    "Disolución de uno mismo",
+    "Karma",
+    "Ciclos",
+    "Renacimiento",
+    "Reencarnación",
+    "Lo esotérico",
+    "Metafísica",
+    "Estar aislado del mundo",
+    "Ocultarse",
+    "Engaño"
+   ]
+  ],
+  "names": [
+   "El Perfeccionista",
+   "El Ayudador",
+   "El Triunfador",
+   "El Individualista",
+   "El Investigador",
+   "El Leal",
+   "El Entusiasta",
+   "El Desafiador",
+   "El Pacificador"
+  ],
+  "taglines": [
+   "Con principios, perseverante, con autocontrol",
+   "Generoso, agradecido, dotado para el trato",
+   "Adaptable, ambicioso, concentrado",
+   "Reflexivo, artístico, expresivo",
+   "Perspicaz, curioso, reservado",
+   "Trabajador, fiable, responsable",
+   "Polifacético, optimista, con iniciativa",
+   "Poderoso, decidido, con autoridad",
+   "Armonioso, acomodaticio, de fiar"
+  ],
+  "summaries": [
+   "El tipo racional y ordenado. Se esfuerzan por mantener altos el nivel y la calidad, cuidan siempre el detalle y quieren aumentar la productividad. Suelen empujar a los demás a mejorar, a ser más eficaces y a hacer lo correcto. Por ser tan ordenados, pueden volverse demasiado críticos consigo mismos y con los demás. Detestan el desperdicio y el descuido, lo que puede llevarles a intervenir en todo, grande o pequeño, sin fin, y a hacer críticas desalentadoras. En su mejor momento juzgan con acierto, deciden con sabiduría, se convierten en modelos de integridad y asumen muy bien la responsabilidad.",
+   "El tipo afectuoso, dotado para las relaciones. Es sensible a lo que los demás necesitan y siempre intenta satisfacerlo. Aprecia el talento ajeno, sabe hacer de confidente y de guía, y se maneja bien con la gente. Pero le cuesta muchísimo decir que no, y el deseo de ayudar mejor le somete a mucha tensión. No le gustan los entornos de trabajo impersonales, lo que puede llevarle a tener favoritos y a perder tiempo en las relaciones. En su mejor momento es empático y generoso, y ayuda al equipo a estrechar lazos.",
+   "El tipo adaptable y ambicioso. Sabe cómo sacar el trabajo adelante con más eficacia y conforme a lo que el cliente espera. Suele ser atractivo, encantador y lleno de energía, con una aguda percepción de sí mismo, de su equipo y del negocio. Le gusta que le noten y a menudo le atraen los puestos de éxito y prestigio. Disfruta compitiendo, y la necesidad de estatus y de progreso personal le empuja a ser un adicto al trabajo, lo que puede llevarle a atajar para mantenerse delante. En su mejor momento resulta verdaderamente talentoso y admirable, y suele verse como el modelo que levanta la moral de todos.",
+   "El tipo reflexivo y con talento artístico. Expresivo, capaz de dejar honda impresión, ensimismado, de ánimo que cambia sin aviso. El Individualista desprende un encanto singular. En su exigencia sobre la buena palabra, la originalidad y la huella personal en el trabajo no transige. No le gusta el trabajo sin creatividad. Es hipersensible a la crítica, lo que puede dejarle voluble e irregular en el trabajo. En su mejor momento lleva intuición y creatividad a lo que hace, lo mejora con una hondura y una singularidad de sentimiento que solo él tiene, y llega a apreciar a todos los demás tipos.",
+   "El tipo de aguda observación y gusto por discutir. Ávido de saber, innovador, celoso de su intimidad, excéntrico. El Investigador es un aprendiz y experimentador incansable, sobre todo en campos técnicos. Le gusta seguir su curiosidad hasta el detalle y explorar el principio de las cosas. Su capacidad de análisis es fuerte y ama descubrir, más que reservar tiempo para comprometerse y construir relaciones. Insano, puede volverse arrogante, dejar de comunicarse y librar luchas constantes dentro de su cabeza. En su mejor momento se vuelve clarividente, capaz de traer ideas del todo nuevas al trabajo.",
+   "El tipo que atrae la atención y es leal. Agradable, responsable, ansioso, lleno de dudas. El Leal es trabajador y fiable, y sabe construir en el trabajo las alianzas que hacen que las cosas salgan mejor. Sabe medir los motivos y los méritos ajenos y busca los problemas latentes del entorno laboral. No le gusta afrontar una crisis, quiere que todos coincidan y quiere ver venir el futuro. Sin la autoridad que le da el grupo se vuelve indeciso, le cuesta muchísimo actuar y cae en culpar a los demás. En su mejor momento es seguro, independiente y valiente, y a menudo puede devolver al equipo a sus valores fundacionales.",
+   "El tipo polifacético y optimista. Con iniciativa, de talento amplio, impulsivo, con la energía repartida. El Entusiasta destaca en el cambio, la variedad, el estímulo y la innovación. Se expresa con claridad, tiene humor y sabe ganar a otros para sus ideas. Siempre persigue la moda, buscando nuevas posibilidades y nuevos enfoques. Puede llevar varios trabajos a la vez, pero no sostenerlos. Insano, se vuelve hablador, disperso en la atención y desenfocado en la energía, y deja mucho a medias. En su mejor momento fija su foco en una meta que valga la pena y trabaja con verdadera eficacia.",
+   "El tipo poderoso y decidido. Seguro de sí, con autoridad, obstinado, confrontador. El Desafiador sabe exactamente qué quiere hacer y siempre tiene la capacidad de hacerlo bien. Toma decisiones difíciles, ve los problemas graves como un desafío y supera la dificultad que encierran. Quiere el puesto de mando y le cuesta mucho delegar una tarea o compartir el liderazgo. Le gusta apoyar, proteger e inspirar a otros, pero insano amenazará a la gente para que haga las cosas a su manera, creando enemigos innecesarios dentro y fuera de la empresa. En su mejor momento se vuelve magnánimo y usa su fuerza para elevar el nivel de vida de los demás.",
+   "El tipo armonioso y acomodaticio. Muy receptivo, de fiar, complaciente. El Pacificador crea un equipo armónico subrayando lo positivo que hay en él, y así alivia el conflicto y la tensión. Apoya y acoge a los demás, trabaja bien junto a la gente y es humilde. No le gusta el conflicto en el equipo y siempre intenta construir relaciones armónicas y estables. Pero, por seguir la corriente, puede evitar sostener su propia opinión y enfadarse mucho por dentro. Insano, su trabajo se vuelve ineficaz, terco y descuidado. En su mejor momento sabe conciliar diferencias y reunir a la gente en un entorno estable y a la vez vivo."
+  ],
+  "sectionTitles": [
+   "Cómo se forma el carácter",
+   "Cómo se manifiesta por fuera",
+   "En seguridad y crecimiento",
+   "Bajo estrés y a la defensiva",
+   "Rasgos sanos",
+   "Rasgos promedio",
+   "Rasgos insanos"
+  ],
+  "sections": [
+   [
+    [
+     "De niños percibieron que no se les veía como perfectos, y su atención se volcó en convertirse en alguien digno de ser amado.",
+     "Sentían estar siempre bajo una mirada crítica, sin que nunca se les reconociera haber hecho algo bien; solo se les pedía hacerlo mejor.",
+     "Pudieron tener padres abiertamente enfadados o críticos, cuyas palabras traían reproche y desaprobación pero no amor.",
+     "Algunos fueron el hijo o la hija mayor, de quien se esperaba que cargara con la responsabilidad de los hermanos menores y con la culpa por ellos."
+    ],
+    [
+     "Se exigen muchísimo y se muestran impacientes, tensos, críticos, controladores y convencidos de tener razón, con un afán de perfección incontenible y tendencia a controlar todo lo que les rodea.",
+     "Reprimen la emoción, creyendo que los vaivenes del sentimiento les harán errar. Trabajan de forma independiente, se aferran al principio, tienen un fuerte sentido de la responsabilidad y llenan todo su tiempo con el trabajo.",
+     "Solo aceptan lo correcto y desatienden cualquier necesidad que a su juicio no cumpla el criterio adecuado.",
+     "Toman sus propias normas por las reglas y creen que «todo el mundo las conoce». Detestan a quienes rompen las reglas y salen impunes."
+    ],
+    [
+     "Se mueven hacia el Tipo Siete: dejan la imagen rígida, saben reírse de sí mismos, se vuelven creativos, dispuestos a probar cosas nuevas y abiertos a la opinión ajena.",
+     "Relajado y a gusto, el Uno toma algo del Siete: ligero, despreocupado, capaz incluso de dejar de lado todas las reglas."
+    ],
+    [
+     "Se mueven hacia el Tipo Cuatro: emocionales, cambiantes, melancólicos, autocríticos, a veces ensimismados y compadeciéndose de sí, abandonándose, hundidos y llenos de sensación de inutilidad; aun así, tercos hasta llevar las cosas al final.",
+     "Bajo presión el Uno toma algo del Cuatro: se vuelve muy centrado en sí mismo e insiste en el sentimiento personal. Nace de sentirse incomprendido o de ver demasiada injusticia.",
+     "Además, el Uno se exige tanto que no alcanzar su propio criterio puede dejarle melancólico y abatido. Esa represión puede enroscarse dentro durante años, y por eso muchos Unos se confunden con Cuatros."
+    ],
+    [
+     "Tolerante, razonable, objetivo.",
+     "Claro sobre el bien y el mal, de ideales altos, dispuesto a reformar por el progreso social.",
+     "Muy autodisciplinado: lo que decide hacer hoy nunca pasa a mañana.",
+     "Gran capacidad de juicio.",
+     "Criterio moral altísimo."
+    ],
+    [
+     "Idealista, de lógica estricta, perfeccionista.",
+     "Teme equivocarse.",
+     "Propenso a criticar a los demás.",
+     "A menudo quiere controlar o cambiar a los demás con rigidez.",
+     "Ve las cosas en blanco o negro, sin término medio."
+    ],
+    [
+     "Intolerante, delirante, punitivo.",
+     "Convencido de tener razón: siempre él acierta y los demás se equivocan.",
+     "Le busca defectos a todo.",
+     "Hipócrita: mucha moral en la boca y, a escondidas, lo que no resiste la luz del día.",
+     "De miras estrechas."
+    ]
+   ],
+   [
+    [
+     "La mayoría de los Ayudadores ganaron amor y seguridad en la infancia satisfaciendo los deseos ajenos, y llegaron pronto a creer que sobrevivir depende de la aprobación de otros.",
+     "Tratan las relaciones como la condición más importante para sobrevivir, así que se esfuerzan por lograr apoyo y aceptación y evitan la oposición.",
+     "También se modifican sin darse cuenta para encajar. Saben cómo comportarse para ser bien recibidos y así ser queridos."
+    ],
+    [
+     "Buscan el apoyo ajeno y evitan la oposición, esforzándose por cambiarse para encajar.",
+     "Se ven a sí mismos como importantes y se enorgullecen tanto de esa importancia como de atender las necesidades de otros.",
+     "En grupo prefieren tratar con figuras fuertes, esperando la protección del poder y, con ella, un lugar estable en el grupo.",
+     "Les confunden los muchos papeles que representan para satisfacer a otros: «Cada amigo mío me ve distinto». «¿Cuál es el yo verdadero?».",
+     "Se apegan mucho al «hombre de éxito» o a la «mujer brillante». Pero con el tiempo vuelven a ser quienes son: suaves, amables, acomodaticios, discretos y contenidos, felices de ayudar."
+    ],
+    [
+     "Se mueven hacia el Tipo Cuatro y sostienen hasta el final lo que ellos mismos desean."
+    ],
+    [
+     "Se mueven hacia el Tipo Ocho: avasalladores y poco razonables, arrogantes, caprichosos, imponiendo sus ideas a los demás."
+    ],
+    [
+     "Justo, entregado emocionalmente, magnánimo.",
+     "Considerado: sabe ponerse en el lugar del otro y compadecer su situación.",
+     "Cálido y accesible, querido por todos.",
+     "Ayuda con el fervor de una Madre Teresa."
+    ],
+    [
+     "Adulador, posesivo, sacrificado.",
+     "Anhela que le necesiten y a menudo se muestra demasiado solícito.",
+     "Muy posesivo: quiere poseer al otro por completo.",
+     "Muy celoso: le disgusta incluso que su pareja mire a otra persona.",
+     "Se siente imprescindible y ansía retribución: tras dar, espera recibir."
+    ],
+    [
+     "Manipulador, coercitivo, con sensación de haberse sacrificado.",
+     "Lleno de quejas: resentido y crítico cuando lo que ha hecho no se reconoce; avasallador, arrogante y caprichoso, imponiendo sus ideas a los demás."
+    ]
+   ],
+   [
+    [
+     "Desde niños creyeron que solo los ganadores merecen ser amados, así que dejaron pronto de lado sus propios sentimientos, empeñados en ganarse con un desempeño brillante el amor que necesitaban.",
+     "El fin de su esfuerzo es el reconocimiento: ser el mejor y ganar."
+    ],
+    [
+     "Seguro, ambicioso, rápido para actuar y lleno de entusiasmo. Rinde bien y lo consigue todo por su propia capacidad.",
+     "Sabe representar de forma convincente la imagen de cualquier estrato social, y en el trabajo se presenta como un triunfador.",
+     "Acepta la competencia, ansía ganar y cuida mucho la imagen de sí reflejada en los ojos ajenos. Por aburrido que sea el trabajo, la tarea que logra algo es su actividad preferida. No atiende a lo que siente de verdad, y por eso se siente vacío.",
+     "Cree firmemente que el valor personal está en lo que uno hace, no en lo que uno es, y piensa que los demás admiran sus resultados y no a él. Es optimista por carácter, y el fracaso nunca le afecta."
+    ],
+    [
+     "Se mueven hacia el Tipo Seis, entregándose a los demás y afirmando su propio valor mediante esa entrega.",
+     "Resultan líderes de equipo exitosos: cultivados, capaces, notablemente carismáticos y leales, que usan bien la estrategia y nunca se precipitan; un talento raro para la gestión y para dirigir un equipo."
+    ],
+    [
+     "Se mueven hacia el Tipo Nueve, separándose del sentimiento hostil, con el resultado de que sienten que no son nada. Se quedan «en blanco», la personalidad se deshace y el vacío interior queda del todo al descubierto."
+    ],
+    [
+     "Guiado por dentro, adaptable, con empuje.",
+     "Seguro de sí.",
+     "Lleno de energía y vitalidad.",
+     "Perspicaz.",
+     "Muy atractivo, con verdadera presencia.",
+     "Sobresaliente en logros.",
+     "Empático, capaz de construir buenas relaciones.",
+     "Un líder exitoso."
+    ],
+    [
+     "Competitivo, proyector de imagen, propenso a mostrar desdén.",
+     "Con fuerte afán de ganar, siempre queriendo superar a los demás.",
+     "Centrado en el envoltorio y, por dedicarle tanto tiempo, descuida el fondo y el detalle.",
+     "Engreído, aficionado a jactarse, exagerando sin medida.",
+     "Calculador: el Tres no se detiene ante nada por la victoria y deja el orgullo a un lado para llegar a ser alguien."
+    ],
+    [
+     "Oportunista, dice una cosa y piensa otra, vengativo.",
+     "Utiliza a la gente, ve a menudo a los demás como meras herramientas; no le importa que le pisen y le gusta pisar.",
+     "Cree que las personas solo existen para ser usadas; muy celoso, siempre quiere ganar a otros.",
+     "Usará cualquier medio para proteger su imagen: si un subordinado hace algo bien, se apunta el mérito e incluso puede despedirlo. Un Tres insano traiciona con facilidad: solo quiere el logro y deja de lado moral y sentimientos."
+    ]
+   ],
+   [
+    [
+     "Casi todos han conocido el abandono y llevan consigo una melancolía. En el centro están la sensación de que falta algo y una autoestima que no deja de bajar.",
+     "En su crecimiento hubo siempre abandono o algo parecido: padres que se separan, una larga ausencia del amor paterno o materno; o uno de los padres que aparece y desaparece de su vida, lo que les dejó apenados.",
+     "De adultos, esa sensación de carencia no desaparece. Algo se siente siempre perdido, y la melancolía permanece."
+    ],
+    [
+     "Su sentimiento se sitúa en un polo o en el otro: depresión profunda o euforia alta, porque tienden a magnificar su propia emoción y a pasar por alto lo que de verdad sienten. Son muy sensibles y su ánimo se mueve con facilidad.",
+     "Suelen creerse heridos y parecen indefensos, pero rechazan la ayuda que se les ofrece. En lo que ya tienen solo ven defectos; en lo inalcanzable solo ven virtudes. Ese vuelco ahonda la sensación de abandono y de carencia.",
+     "Cuando otro corre peligro o sufre, dejan de lado sus propios problemas y le apoyan por entero.",
+     "En la dificultad pueden hundirse e incluso obrar mal."
+    ],
+    [
+     "Se mueven hacia el Tipo Uno: más calmados y racionales, con principios y objetividad en lo que hacen, ya no gobernados por un ánimo que no se está quieto."
+    ],
+    [
+     "Se mueven hacia el Tipo Dos: obstinados en el camino del amor, pegajosos, caprichosos, muy posesivos, y propensos a la pérdida, la depresión y una conducta que no se asienta."
+    ],
+    [
+     "Consciente de sí, de personalidad marcada, sensible, compasivo.",
+     "Muy creativo, de imaginación rica.",
+     "Finamente atento a lo que sienten los demás.",
+     "Sincero en el sentir, fiel a lo que siente.",
+     "Expresivo de lo que es."
+    ],
+    [
+     "Fantasioso, excesivamente consciente de sí, desapegado.",
+     "Pronto a dudar de sí mismo.",
+     "Frágil en el sentimiento.",
+     "Como el Cuatro es tan ensimismado, quienes le rodeaban a menudo le negaron aprobación desde la infancia, criticándole por caprichoso o indisciplinado. Acostumbrado a que le nieguen, tiene su valor en poco y desconfía de sí, mientras siente que nadie le entiende. Cuando ese resentimiento acumulado estalla, nada puede contenerlo.",
+     "De ahí las frecuentes muestras de emoción del Cuatro. El niño Cuatro llora con facilidad y, cuando se siente mal, se esconde en un rincón, esperando que ese retiro atraiga la atención de un adulto. Si el hábito de fabricar fragilidad empieza pronto, de adulto vendrán la autocompasión y el desenfreno."
+    ],
+    [
+     "Autoinhibido, autotorturado.",
+     "Gravemente deprimido, de ánimo pésimo.",
+     "Culpándose y rebajándose, reprochándose ser un inútil, odiándose hasta la desesperación y sintiendo que ya no vale la pena vivir."
+    ]
+   ],
+   [
+    [
+     "La vida interior del Investigador es como un castillo bien guardado. El señor del castillo rara vez sale y observa a la gente de fuera desde detrás de su alto muro.",
+     "Se sienten fácilmente invadidos, como si se hubiera abierto una grieta en el muro y les robaran sus secretos.",
+     "Su defensa es la retirada: reducir al mínimo el contacto y proteger cuanto puedan su espacio privado."
+    ],
+    [
+     "Necesitan intensamente intimidad, son interiores y autosuficientes, y se mantienen tan al margen como pueden. Ante una amenaza, la primera línea de defensa es retirarse.",
+     "No muestran el sentimiento. Insisten en exceso en el autocontrol: contienen la emoción ante los demás y solo la dejan salir a solas.",
+     "Les gusta observar y pensar con frialdad, pero son callados e interiores.",
+     "Quieren poder predecir lo que va a ocurrir.",
+     "Muy leídos y cultos, ordenados en el pensar, contenidos al expresarse."
+    ],
+    [
+     "Se mueven hacia el Tipo Ocho: tienen porte de comandante, se atreven a arriesgar, llevan las ideas a la práctica y persiguen con gusto sus metas. Valor y estrategia se juntan en ellos, y aceptan y cuidan a los demás: una talla de líder poco común."
+    ],
+    [
+     "Se mueven hacia el Tipo Siete: poco realistas, admirándose en soledad, exagerando, soñando despiertos a menudo y volviéndose algo neuróticos; pura teoría, incapaces de decidirse, sin querer comprometerse y perorando con elocuencia como si fueran el experto."
+    ],
+    [
+     "Gran capacidad de observación.",
+     "Gran capacidad de análisis.",
+     "Gran curiosidad.",
+     "Inteligente y rápido: madera de científico, de erudito, de doctor en su campo."
+    ],
+    [
+     "Desapegado en el sentimiento.",
+     "Responde a una de cada diez preguntas.",
+     "Espectador en todo, analizando, incapaz de entregarse.",
+     "Propenso al sarcasmo frío.",
+     "Sigue solo su propio criterio en todo, sin apenas considerar lo que sienten los demás.",
+     "Se resiste a implicarse emocionalmente: la conversación corriente no le supone problema, pero en cuanto entra el sentimiento se escabulle."
+    ],
+    [
+     "Huyendo, apartándose de la gente, sin dejarse ver, como quien se retira a la montaña.",
+     "Lleno de hostilidad, odiando al mundo, llegando a tener a toda la humanidad por malvada y molesta.",
+     "Desconectado de la realidad, sin entender por qué ocurre gran parte de lo que ocurre.",
+     "Tensión nerviosa extrema."
+    ]
+   ],
+   [
+    [
+     "Incapaces de protegerse de pequeños, se volvieron muy desconfiados, dudando de los motivos ajenos, sobre todo de los de cualquier autoridad.",
+     "Suelen haber perdido la confianza en la autoridad. La mayoría de los Leales dicen haber sido criados por autoridades que no merecían confianza.",
+     "Hay un trasfondo común: un niño que se siente incapaz de protegerse y no encuentra escondite seguro. El castigo o la humillación de un padre es la causa principal de esa pérdida de confianza, sobre todo cuando la actitud del padre hacia el niño cambiaba sin razón. Algunos Leales cuentan además que su familia ocultaba un secreto del que nadie podía hablar.",
+     "El pequeño Leal tuvo que aprender a predecir el ánimo de sus padres, porque aquellos adultos bien podían montar en cólera contra el niño sin señal visible alguna."
+    ],
+    [
+     "Adoptan una postura extrema ante la autoridad: o se someten o se rebelan.",
+     "En un equipo es más probable que sean miembros que líderes, y a menudo hablan por quienes son pisoteados y tratados injustamente.",
+     "Ponen todo el corazón en hacer cosas por otros, se conforman con lo que hay y no les gusta cambiar de entorno.",
+     "Bajo presión rinden extraordinariamente bien; en condiciones ideales, en cambio, pierden el espíritu de lucha."
+    ],
+    [
+     "Se mueven hacia el Tipo Nueve: capaces de dejar que las cosas sigan su curso, confiando en los suyos, contentos de ser leales al grupo al que pertenecen y dispuestos a soltar su rigidez y sus defensas; más serenos, más seguros, más generosos y mucho más relajados que antes."
+    ],
+    [
+     "Se mueven hacia el Tipo Tres: adictos al trabajo, hiperreactivos, obrando con precipitación y descuido, sin detenerse ante nada para lograr su fin y hiriendo a quienes les hirieron."
+    ],
+    [
+     "Se afirma a sí mismo.",
+     "Cálido y entrañable.",
+     "Sostiene que todos son iguales y no oprime a nadie.",
+     "Confía en sí y confía en los demás.",
+     "Actúa con decisión.",
+     "Actúa con lealtad y es digno de confianza."
+    ],
+    [
+     "Sumiso, evasivo.",
+     "Teme decidir.",
+     "Se apega a la autoridad.",
+     "Irresoluto.",
+     "Terco y rebelde: asiente por fuera mientras critica a otros por detrás."
+    ],
+    [
+     "Extremadamente inseguro.",
+     "Con fuerte complejo de inferioridad.",
+     "Exagera los problemas.",
+     "Extremadamente ansioso e inquieto.",
+     "Masoquista."
+    ]
+   ],
+   [
+    [
+     "La infancia del Entusiasta está llena de buenos recuerdos: un álbum de fotografías felices. Por lo general no hay dolor en lo que recuerda.",
+     "Aun cuando ocurriera algo malo a su alrededor, como la separación de sus padres, rara vez dejó en el Entusiasta odio ni queja."
+    ],
+    [
+     "Aun cuando ocurre algo malo a su alrededor no generan sentimiento negativo, porque su atención se desplaza por sí sola hacia el recuerdo positivo.",
+     "Siempre están llenos de energía y trabajarán duro en lo que les interese. Les gusta tener muchas opciones a la vez, con la consecuencia de no poder entregarse del todo a ninguna.",
+     "Les cuesta muchísimo comprometerse de forma duradera con una sola cosa.",
+     "Les gusta la novedad y siguen la moda; no les gusta soportar presión y temen el sentimiento negativo."
+    ],
+    [
+     "Se mueven hacia el Tipo Cinco: contenidos, cuidadosos al pensar, deciden solo tras observar y sopesar a fondo. Devuelven al entorno lo que han vivido hondamente y ya no temen que les arrebaten su alegría.",
+     "Sin nada concreto que se les exija, cómodos y a gusto, toman el carácter del Cinco: prefieren evitar la multitud, callarse, leer tranquilamente en casa o ir a mirar el mar sin hacer nada."
+    ],
+    [
+     "Se mueven hacia el Tipo Uno: autoritarios, prontos a la ira, tercos y exigentes con la gente. Si alguna persona o cosa parece poder resolver su infelicidad, se aferran a ella y no la sueltan.",
+     "Bajo presión el Siete dispara de golpe todas sus defensas y adopta el espíritu serio y quisquilloso del Uno, solo que algo menos riguroso. La diferencia es que el Uno es serio para hacerlo mejor y hacerlo bien; el Siete lo es para jugar."
+    ],
+    [
+     "De muchos talentos.",
+     "De rápido ingenio.",
+     "Aprende cosas nuevas con facilidad.",
+     "Resuelve problemas con facilidad.",
+     "Extrovertido, filosófico, agradecido.",
+     "Muy espontáneo.",
+     "Lleno de empuje y calor.",
+     "Lleno de energía, con la vitalidad alta."
+    ],
+    [
+     "Entregado al apetito.",
+     "Juguetón y sin freno.",
+     "Comer, beber y divertirse.",
+     "Hacer varias cosas a la vez.",
+     "Superficial: da la impresión de saber poco y aparentar mucho.",
+     "Hiperactivo."
+    ],
+    [
+     "Ataca e insulta a los demás.",
+     "Pérdida extrema de control.",
+     "Ávido de placer y de ostentación.",
+     "Lleva todo al límite sin reservarse nada, ama el protagonismo y se luce.",
+     "Actúa por impulso, exagera y pierde el sentido de lo práctico."
+    ]
+   ],
+   [
+    [
+     "Desde niños se les inculcó que al fuerte se le respeta y al débil se le rechaza, y que debían apoyarse en una coraza dura para sobrevivir.",
+     "Aun así, su mundo siempre estuvo gobernado por gente más alta y más fuerte que ellos, gente que intentaba controlar su vida.",
+     "Para protegerse se propusieron ser el fuerte o el líder, esperando dominar la situación con su propia capacidad."
+    ],
+    [
+     "Se presentan como el fuerte o el líder, queriendo controlar a otros competidores poderosos y dispuestos a cualquier forma de enfrentamiento para vencer al rival.",
+     "Imponen exigencias estrictas para controlar a quien pueda afectar su vida, mientras que a menudo rompen ellos mismos esas exigencias con su conducta.",
+     "Les gusta proteger a los demás, aunque a menudo su ayuda estorba.",
+     "Cuando se les humilla o hiere, surgen ideas de venganza.",
+     "Persiguen el poder, respetan la fuerza real, tienen sentido de la justicia y les gusta hacer de «hermano mayor»."
+    ],
+    [
+     "Se mueven hacia el Tipo Dos: corazón caballeroso con un lado tierno, generoso y contento de ayudar, con ideales y aspiraciones, dispuesto a aliviar al mundo, capaz de cuidar de otros con sinceridad y delicadeza, y de suavizar su propio genio e impulsividad con una sonrisa y un corazón amoroso."
+    ],
+    [
+     "Se mueven hacia el Tipo Cinco: tercos e inflexibles, apartándose de la gente, calculadores con los demás, usando su propio razonamiento para forzar a otros y a veces haciéndose pasar por expertos.",
+     "Empiezan a imaginar cosas —que sus enemigos podrían unirse contra ellos— y se sienten inseguros, de modo que quien no temía a nada acaba temiendo a todo el mundo."
+    ],
+    [
+     "Muy seguro de sí.",
+     "La acción primero.",
+     "Líder por naturaleza.",
+     "Valiente y de gran corazón."
+    ],
+    [
+     "Solo se protege a sí mismo.",
+     "Subjetivo, individualista, no acepta consejos.",
+     "Le gusta controlar a la gente y al entorno.",
+     "Se tiene en demasiada estima.",
+     "Teme salir herido y por eso finge a menudo ser alguien poderoso y fuerte.",
+     "No sabe afrontar la presión, solo apartarla."
+    ],
+    [
+     "Violento, como un tirano.",
+     "Despiadado.",
+     "Dictatorial.",
+     "Desmesurado.",
+     "Destructivo."
+    ]
+   ],
+   [
+    [
+     "El Pacificador se sintió pasado por alto de niño, y así formó el hábito de pasar por alto lo que él mismo necesita de verdad.",
+     "Algo comparten sus infancias: nadie escuchaba su opinión, y descubrió que ni siquiera mostrar enfado directamente hacía que alguien tomara en serio lo que pensaba.",
+     "Al ver que su propia reclamación no pesaba, solo pudo adormecerse, dispersar su energía y dejar que la mente le olvidara, y por eso a menudo no sabe qué necesita realmente."
+    ],
+    [
+     "A menudo no distinguen lo importante de lo que no lo es.",
+     "Como no pueden conocer su verdadera necesidad, la sustituyen por cosas innecesarias; lo más importante suele quedar para el último momento del día.",
+     "Suelen ocupar la posición intermedia, les cuesta decidir un asunto y les cuesta decir que no.",
+     "Reprimen la energía del cuerpo y su ira, y aun cuando se vuelve insoportable solo sale de forma indirecta.",
+     "Suaves y amables, de gran aguante, temerosos de pelear con nadie.",
+     "Por fuera siguen la opinión ajena, mientras por dentro se reservan algo."
+    ],
+    [
+     "Se mueven hacia el Tipo Tres: claros y definidos en sus metas, profundamente interesados en su propio crecimiento y en desarrollar su potencial. Dejan de ser complacientes y pasan a gobernar su vida. Con esa conciencia de crecimiento se vuelven más seguros, capaces de sostener su propia opinión y también más independientes."
+    ],
+    [
+     "Se mueven hacia el Tipo Seis: su conducta se vuelve extrema, suspicaz y sobrepensada, temiendo que caiga la desgracia, temiendo ser incriminados y engañados, y volviéndose más defensivos y pasivos."
+    ],
+    [
+     "De corazón abierto.",
+     "Sereno y de buen talante.",
+     "Aplomado e imperturbable.",
+     "Entrañable, inocente como un niño.",
+     "Feliz.",
+     "Paciente y dispuesto a escuchar."
+    ],
+    [
+     "Demasiado sumiso.",
+     "Se apoya en otros para decidir.",
+     "Perezoso y dado a aplazar.",
+     "No le gusta decidir ni dar su opinión, por miedo al conflicto, así que al final mucho queda sin hacer: asiente de cara y obra al revés por detrás."
+    ],
+    [
+     "Inútil y desvalido.",
+     "Obstinado.",
+     "Sin rumbo.",
+     "Estancado, sin hacer nada.",
+     "Insensible y embotado."
+    ]
+   ]
+  ]
+ },
+ "it": {
+  "shortNames": [
+   "Io",
+   "Ricchezza diretta",
+   "Comunicazione",
+   "Casa",
+   "Fiore di Pesco",
+   "Fatica",
+   "Gli altri",
+   "Ricchezza indiretta",
+   "Fortuna",
+   "Carriera",
+   "Amici",
+   "Nascosto"
+  ],
+  "keywords": [
+   [
+    "L'io",
+    "Irritabilità",
+    "Irrequietezza",
+    "Instabilità emotiva",
+    "Impulsività",
+    "Rabbia",
+    "Scatto d'ira",
+    "Agitazione",
+    "Danno"
+   ],
+   [
+    "Cibo",
+    "Beni materiali",
+    "Il mio denaro",
+    "Persone dall'aspetto fine e grazioso",
+    "Spese",
+    "Ricchezza diretta (reddito stabile e guadagnato)",
+    "Valori",
+    "Cognizione",
+    "Motivazione",
+    "La bocca"
+   ],
+   [
+    "Comunicazione",
+    "Conversazione",
+    "Pensiero",
+    "Mente vivace",
+    "Apprendimento",
+    "Linguaggio",
+    "Persone più giovani di sé",
+    "Coetanei",
+    "Colleghi",
+    "Compagni di classe",
+    "Compagni di banco",
+    "Vicini",
+    "Fratelli e sorelle",
+    "Uscire",
+    "Studi",
+    "Agilità",
+    "Essere in movimento",
+    "Andarsene",
+    "Separazione",
+    "Essere andato via",
+    "Vivacità",
+    "Senso di novità",
+    "La tiroide"
+   ],
+   [
+    "Casa",
+    "Senso di sicurezza",
+    "Sensibilità",
+    "Ansia",
+    "Fragilità",
+    "Vuoto interiore",
+    "Preoccupazione",
+    "Apprensione",
+    "Introspezione",
+    "Logoramento interiore",
+    "Ambiente in cui si vive",
+    "Famiglia d'origine",
+    "L'ambiente in cui si è nati",
+    "Paese di nascita",
+    "Donne",
+    "Madre"
+   ],
+   [
+    "Essere notati",
+    "Divertimento",
+    "Piacere",
+    "Gioia",
+    "Fiore di Pesco (attrazione amorosa, chi si sente attratto da te)",
+    "Fascino",
+    "Sesso",
+    "Distinguersi",
+    "Amore",
+    "Uomini",
+    "Essere visti",
+    "Padre"
+   ],
+   [
+    "Lavoro gravoso",
+    "Affaccendamento",
+    "Pensieri sparsi e disordinati",
+    "Esaurimento mentale",
+    "Stanchezza",
+    "Tensione",
+    "Essere oggetto di chiacchiere",
+    "Faccende quotidiane",
+    "Fatica",
+    "Rimuginare",
+    "Socializzare",
+    "Rapporti sociali",
+    "Idee",
+    "Concentrazione",
+    "Fissazione",
+    "Cose ripetitive",
+    "Ripetizione",
+    "Attenzione"
+   ],
+   [
+    "Curarsi di ciò che pensano gli altri",
+    "Pensiero fisso su un'altra persona",
+    "Gli altri",
+    "Persone che si incontrano",
+    "Legami che vincolano",
+    "Relazioni a due",
+    "Compagno",
+    "Coppia",
+    "La persona che si frequenta",
+    "Amante",
+    "Persone vicine",
+    "Matrimonio"
+   ],
+   [
+    "Ricchezza indiretta (denaro inatteso, non guadagnato)",
+    "Solitudine",
+    "Noia",
+    "Tormento",
+    "Ansia bruciante",
+    "Impotenza",
+    "Oscurità",
+    "Dolore",
+    "Sofferenza",
+    "Sentire il tempo lungo",
+    "Il corpo",
+    "Il denaro altrui",
+    "La privacy e i segreti altrui",
+    "La vita privata altrui",
+    "Logorio nascosto",
+    "Sopravvivenza",
+    "Forza fisica",
+    "Energia vitale",
+    "Stato di salute"
+   ],
+   [
+    "Ottimismo",
+    "Positività",
+    "Allegria",
+    "Gioia",
+    "Buona sorte",
+    "Fortuna",
+    "Religione",
+    "Fede",
+    "Trasferimento",
+    "Documenti",
+    "Pratiche burocratiche",
+    "Diplomi",
+    "L'estero",
+    "Viaggi lunghi",
+    "Cultura",
+    "Apertura mentale",
+    "Temperamento solare",
+    "Slancio",
+    "Ideali",
+    "Bontà",
+    "Carattere morale",
+    "Cecità",
+    "Arroganza",
+    "Significato",
+    "Opportunità",
+    "Occasione"
+   ],
+   [
+    "Carriera",
+    "Malinconia",
+    "Repressione",
+    "Scoraggiamento",
+    "Abbattimento",
+    "Guai",
+    "Difficoltà",
+    "Prove dure",
+    "Perdita",
+    "Sfida",
+    "Essere messo da parte",
+    "Faccende fastidiose",
+    "Sfortuna",
+    "Persone più grandi di sé",
+    "Lavoro",
+    "Anziani",
+    "Professione",
+    "Reputazione",
+    "Autorità",
+    "Potere",
+    "Capacità",
+    "Posizione sociale",
+    "Successo",
+    "Governo"
+   ],
+   [
+    "Amici",
+    "Gruppi",
+    "Mutamenti",
+    "Cambiamento",
+    "Essere diversi",
+    "Differenza",
+    "Lucidità",
+    "Ragione",
+    "Turbamento mentale",
+    "Reti",
+    "Instabilità",
+    "Contrattempi",
+    "Correre di qua e di là",
+    "Sconvolgimento",
+    "Essere sballottati da un posto all'altro"
+   ],
+   [
+    "Ossessione",
+    "Confusione",
+    "Fantasia",
+    "Affinità karmica",
+    "Temperamento",
+    "Indole",
+    "Condotta",
+    "Moralità",
+    "Dietro le quinte",
+    "Pessimismo",
+    "Evasione",
+    "Tristezza",
+    "Sentimentalismo",
+    "Struggimento",
+    "Mancanza d'amore",
+    "Amore taciuto",
+    "Svanire dalla vista",
+    "Occultamento",
+    "Consumo",
+    "Isolamento",
+    "Dissoluzione di sé",
+    "Karma",
+    "Cicli",
+    "Rinascita",
+    "Reincarnazione",
+    "L'esoterico",
+    "Metafisica",
+    "Essere tagliati fuori",
+    "Nascondersi",
+    "Inganno"
+   ]
+  ],
+  "names": [
+   "Il Perfezionista",
+   "Il Donatore",
+   "Il Realizzatore",
+   "L'Individualista",
+   "L'Investigatore",
+   "Il Leale",
+   "L'Entusiasta",
+   "Lo Sfidante",
+   "Il Pacificatore"
+  ],
+  "taglines": [
+   "Di principio, perseverante, autocontrollato",
+   "Generoso, riconoscente, portato per le relazioni",
+   "Adattabile, ambizioso, concentrato",
+   "Riflessivo, artistico, espressivo",
+   "Perspicace, curioso, riservato",
+   "Laborioso, affidabile, responsabile",
+   "Versatile, ottimista, pieno d'iniziativa",
+   "Potente, deciso, autorevole",
+   "Armonioso, accomodante, affidabile"
+  ],
+  "summaries": [
+   "Il tipo razionale e ordinato. Si sforzano di mantenere alti lo standard e la qualità, curano sempre il dettaglio e vogliono aumentare la produttività. Tendono a spingere gli altri a migliorare, a essere più efficaci e a fare la cosa giusta. Proprio perché così ordinati, possono diventare troppo critici verso se stessi e verso gli altri. Detestano lo spreco e la sbadataggine, il che può portarli a intromettersi in tutto, nel grande e nel piccolo, senza fine, e a muovere critiche scoraggianti. Al meglio giudicano con rettitudine, decidono con saggezza, diventano modelli di integrità e si assumono molto bene le responsabilità.",
+   "Il tipo affettuoso, portato per le relazioni. È sensibile a ciò di cui gli altri hanno bisogno e cerca sempre di soddisfarlo. Apprezza il talento altrui, sa fare da confidente e da guida ed è abile con le persone. Ma fatica moltissimo a dire di no, e il desiderio di aiutare meglio lo mette sotto forte tensione. Non ama gli ambienti di lavoro impersonali, il che può portarlo a fare favoritismi e a perdere tempo nelle relazioni. Al meglio è empatico e generoso, e aiuta la squadra a stringere legami più saldi.",
+   "Il tipo adattabile e ambizioso. Sa come portare avanti il lavoro con più efficacia e in linea con ciò che il cliente si aspetta. Tende a essere attraente, affascinante e pieno di energia, con acuta consapevolezza di sé, della squadra e dell'azienda. Ama farsi notare ed è spesso attratto da posizioni di successo e prestigio. Gode della competizione, e il bisogno di status e di avanzamento personale lo spinge a diventare stacanovista, il che può portarlo a tagliare le curve per restare avanti. Al meglio diventa davvero talentuoso e ammirevole, e viene spesso visto come il modello che risolleva il morale di tutti.",
+   "Il tipo riflessivo e dotato artisticamente. Espressivo, capace di lasciare un'impressione profonda, ripiegato su di sé, con umori che cambiano senza preavviso. L'Individualista emana un fascino singolare. Sullo standard che tiene per la parola giusta, l'originalità e la propria impronta nel lavoro non scende a compromessi. Non ama il lavoro privo di creatività. È ipersensibile alla critica, il che può renderlo lunatico e irregolare nel lavoro. Al meglio porta intuizione e creatività in ciò che fa, lo migliora con una profondità e una singolarità di sentimento che sono solo sue, e arriva ad apprezzare ogni altro tipo.",
+   "Il tipo dall'osservazione acuta e amante della discussione. Avido di sapere, innovativo, geloso della propria intimità, eccentrico. L'Investigatore è uno studioso e sperimentatore instancabile, soprattutto in campi tecnici. Ama seguire la curiosità fin nel dettaglio ed esplorare il principio delle cose. La sua capacità di analisi è forte e ama scoprire, più che riservare tempo per impegnarsi e costruire relazioni. Malsano, può farsi arrogante, smettere di comunicare e combattere continue lotte dentro la propria testa. Al meglio diventa lungimirante, capace di portare nel lavoro idee del tutto nuove.",
+   "Il tipo che attira l'attenzione ed è leale. Simpatico, responsabile, ansioso, pieno di dubbi. Il Leale è laborioso e affidabile, e sa costruire sul lavoro le alleanze che fanno riuscire meglio le cose. Sa valutare i moventi e i meriti altrui e cerca i problemi latenti nell'ambiente di lavoro. Non ama affrontare una crisi, vuole che tutti concordino e vuole vedere arrivare il futuro. Senza l'autorità conferita dal gruppo diventa esitante, fatica moltissimo ad agire e cade nell'incolpare gli altri. Al meglio è sicuro, indipendente e coraggioso, e spesso sa riportare la squadra ai suoi valori fondanti.",
+   "Il tipo versatile e ottimista. Pieno d'iniziativa, di talento ampio, impulsivo, con l'energia sparsa. L'Entusiasta eccelle nel cambiamento, nella varietà, nello stimolo e nell'innovazione. Si esprime con chiarezza, ha umorismo e sa conquistare gli altri alle proprie idee. Insegue sempre la tendenza, cercando nuove possibilità e nuovi punti di vista. Può portare avanti più lavori insieme, ma non sostenerli. Malsano, diventa loquace, disperso nell'attenzione e non focalizzato nell'energia, e lascia molto a metà. Al meglio fissa il proprio fuoco su un obiettivo che vale e lavora con vera efficacia.",
+   "Il tipo potente e deciso. Sicuro di sé, autorevole, ostinato, incline allo scontro. Lo Sfidante sa esattamente cosa vuole fare e ha sempre la capacità di farlo bene. Prende decisioni difficili, considera i problemi gravi come una sfida e supera la difficoltà che contengono. Vuole la posizione di comando e trova molto difficile delegare un compito o condividere la leadership. È contento di sostenere, proteggere e ispirare gli altri, ma malsano minaccerà le persone perché facciano a modo suo, creandosi nemici inutili dentro e fuori l'azienda. Al meglio diventa magnanimo e usa la propria forza per innalzare il tenore di vita degli altri.",
+   "Il tipo armonioso e accomodante. Molto ricettivo, affidabile, compiacente. Il Pacificatore crea una squadra armoniosa sottolineando ciò che di positivo vi è, e così allevia il conflitto e la tensione. Sostiene e accoglie gli altri, lavora bene accanto alle persone ed è umile. Non ama il conflitto nella squadra e cerca sempre di costruire relazioni armoniose e stabili. Ma, per assecondare gli altri, può evitare di sostenere la propria opinione e arrabbiarsi molto dentro. Malsano, il suo lavoro diventa inefficace, testardo e trascurato. Al meglio sa conciliare le differenze e riunire le persone in un ambiente stabile e insieme vivo."
+  ],
+  "sectionTitles": [
+   "Come si forma il carattere",
+   "Come si manifesta all'esterno",
+   "In sicurezza e crescita",
+   "Sotto stress e sulla difensiva",
+   "Tratti sani",
+   "Tratti nella media",
+   "Tratti malsani"
+  ],
+  "sections": [
+   [
+    [
+     "Da bambini percepirono di non essere visti come perfetti, e la loro attenzione andò tutta nel rendersi qualcuno degno di essere amato.",
+     "Si sentivano sempre sotto uno sguardo critico, senza mai vedersi riconosciuto nulla di giusto; veniva solo chiesto loro di fare meglio.",
+     "Possono aver avuto genitori apertamente arrabbiati o critici, le cui parole portavano rimprovero e disapprovazione ma non amore.",
+     "Alcuni erano il figlio o la figlia maggiore, da cui ci si aspettava che si assumesse la responsabilità dei fratelli minori e ne portasse le colpe."
+    ],
+    [
+     "Pretendono moltissimo da sé e appaiono impazienti, tesi, critici, controllanti e convinti di avere ragione, con una spinta incontenibile alla perfezione e la tendenza a controllare tutto ciò che li circonda.",
+     "Reprimono l'emozione, credendo che gli sbalzi di sentimento li facciano sbagliare. Lavorano in modo indipendente, tengono fermo il principio, hanno un forte senso di responsabilità e riempiono di lavoro tutto il loro tempo.",
+     "Accettano solo ciò che è corretto e mettono da parte qualunque bisogno che a loro avviso non risponda allo standard giusto.",
+     "Considerano i propri criteri come le regole e credono che «tutti le conoscano». Detestano chi infrange le regole e la fa franca."
+    ],
+    [
+     "Si muovono verso il Tipo Sette: depongono l'immagine rigida, sanno ridere di sé, diventano creativi, disposti a provare cose nuove e aperti al parere altrui.",
+     "Rilassato e a suo agio, l'Uno prende qualcosa del Sette: leggero, disinvolto, capace perfino di mettere da parte ogni regola."
+    ],
+    [
+     "Si muovono verso il Tipo Quattro: emotivi, mutevoli, malinconici, autocritici, a volte ripiegati su di sé e compassionevoli verso di sé, arrendevoli, abbattuti e pieni di un senso di inutilità; eppure tenaci fino a portare le cose a termine.",
+     "Sotto pressione l'Uno prende un po' del Quattro: diventa molto centrato su di sé e insiste sul sentimento personale. Nasce dal sentirsi incompreso o dal vedere troppe ingiustizie.",
+     "In più l'Uno pretende tanto da sé che il non raggiungere il proprio standard può lasciarlo malinconico e avvilito. Quella repressione può attorcigliarsi dentro per anni, ed è per questo che molti Uno si scambiano per Quattro."
+    ],
+    [
+     "Tollerante, ragionevole, obiettivo.",
+     "Chiaro sul bene e sul male, di ideali alti, disposto a riformare per il progresso sociale.",
+     "Molto autodisciplinato: ciò che decide di fare oggi non slitta mai a domani.",
+     "Grande capacità di giudizio.",
+     "Criterio morale altissimo."
+    ],
+    [
+     "Idealista, di logica rigorosa, perfezionista.",
+     "Teme di sbagliare.",
+     "Incline a criticare gli altri.",
+     "Spesso vuole controllare o cambiare gli altri con rigidità.",
+     "Vede le cose in bianco o nero, senza vie di mezzo."
+    ],
+    [
+     "Intollerante, delirante, punitivo.",
+     "Convinto di avere ragione: ha sempre ragione lui e torto gli altri.",
+     "Cerca il pelo nell'uovo in ogni cosa.",
+     "Ipocrita: molta morale a parole e, di nascosto, ciò che non regge la luce del giorno.",
+     "Di vedute ristrette."
+    ]
+   ],
+   [
+    [
+     "La maggior parte dei Donatori conquistò amore e sicurezza nell'infanzia soddisfacendo i desideri altrui, e arrivò presto a credere che sopravvivere dipenda dall'approvazione degli altri.",
+     "Considerano le relazioni la condizione più importante per sopravvivere, quindi si adoperano per ottenere sostegno e accettazione ed evitano l'opposizione.",
+     "Si modificano anche senza accorgersene, per adattarsi. Sanno come comportarsi per essere ben accolti e così essere amati."
+    ],
+    [
+     "Cercano il sostegno altrui ed evitano l'opposizione, sforzandosi di cambiarsi per adattarsi.",
+     "Si considerano importanti e sono fieri sia di quell'importanza sia del soddisfare i bisogni degli altri.",
+     "In gruppo preferiscono frequentare figure forti, sperando nella protezione del potere e, tramite essa, in un posto stabile nel gruppo.",
+     "Li confondono i molti ruoli che recitano per accontentare gli altri: «Ogni mio amico mi vede diverso». «Qual è il vero io?».",
+     "Si legano molto all'«uomo di successo» o alla «donna brillante». Ma col tempo tornano a essere ciò che sono: miti, amichevoli, accomodanti, discreti e riservati, contenti di aiutare."
+    ],
+    [
+     "Si muovono verso il Tipo Quattro e tengono duro fino in fondo per ciò che desiderano loro."
+    ],
+    [
+     "Si muovono verso il Tipo Otto: prepotenti e irragionevoli, arroganti, capricciosi, imponendo agli altri le proprie idee."
+    ],
+    [
+     "Giusto, coinvolto emotivamente, magnanimo.",
+     "Premuroso: sa mettersi nei panni altrui e comprenderne la situazione.",
+     "Caloroso e avvicinabile, benvoluto da tutti.",
+     "Aiuta con l'ardore di una Madre Teresa."
+    ],
+    [
+     "Adulatore, possessivo, sacrificale.",
+     "Desidera essere necessario e spesso si mostra troppo sollecito.",
+     "Molto possessivo: vuole possedere l'altro per intero.",
+     "Molto geloso: si dispiace anche solo se il partner guarda un'altra persona.",
+     "Si sente indispensabile e brama la ricompensa: dopo aver dato, vuole ricevere."
+    ],
+    [
+     "Manipolatore, coercitivo, con la sensazione di essersi sacrificato.",
+     "Pieno di lamentele: risentito e critico quando ciò che ha fatto non viene riconosciuto; prepotente, arrogante e capriccioso, impone agli altri le proprie idee."
+    ]
+   ],
+   [
+    [
+     "Fin da bambini credettero che solo i vincitori meritino di essere amati, e misero presto da parte i propri sentimenti, decisi a guadagnarsi con prestazioni eccellenti l'amore di cui avevano bisogno.",
+     "Lo scopo del loro impegno è il riconoscimento: essere i migliori e vincere."
+    ],
+    [
+     "Sicuro, ambizioso, rapido nell'agire e pieno di entusiasmo. Rende bene e ottiene tutto con le proprie capacità.",
+     "Sa interpretare in modo convincente l'immagine di qualsiasi ceto, e sul lavoro si presenta da vincente.",
+     "Accetta la competizione, brama la vittoria e tiene moltissimo all'immagine di sé riflessa negli occhi altrui. Per quanto noioso sia il lavoro, il compito che ottiene qualcosa è la sua attività preferita. Non bada a ciò che prova davvero, e perciò si sente vuoto.",
+     "Crede fermamente che il valore personale stia in ciò che si fa e non in ciò che si è, e pensa che gli altri ammirino i suoi risultati e non lui. È ottimista di carattere, e il fallimento non lo scalfisce mai."
+    ],
+    [
+     "Si muovono verso il Tipo Sei, donandosi agli altri e affermando il proprio valore attraverso quel dono.",
+     "Diventano leader di squadra di successo: coltivati, capaci, straordinariamente carismatici e leali, sanno usare la strategia e non hanno mai fretta; un talento raro nella gestione e nella guida di un gruppo."
+    ],
+    [
+     "Si muovono verso il Tipo Nove, staccandosi dal sentimento ostile, con il risultato di sentire di non essere nulla. Restano «in bianco», la personalità si disfa e il vuoto interiore resta del tutto scoperto."
+    ],
+    [
+     "Guidato dall'interno, adattabile, motivato.",
+     "Sicuro di sé.",
+     "Pieno di energia e vitalità.",
+     "Perspicace.",
+     "Molto attraente, con vera presenza.",
+     "Eccellente nei risultati.",
+     "Empatico, capace di costruire buone relazioni.",
+     "Un leader di successo."
+    ],
+    [
+     "Competitivo, proiettato sull'immagine, incline a mostrare disprezzo.",
+     "Con forte spinta a vincere, sempre desideroso di superare gli altri.",
+     "Concentrato sulla confezione e, dedicandovi tanto tempo, trascura sostanza e dettaglio.",
+     "Presuntuoso, incline a vantarsi, gonfiando le cose oltre misura.",
+     "Calcolatore: il Tre non si ferma davanti a nulla per la vittoria e mette da parte l'orgoglio per affermarsi."
+    ],
+    [
+     "Opportunista, dice una cosa e ne pensa un'altra, vendicativo.",
+     "Usa le persone, vede spesso gli altri come semplici strumenti; non gli importa di essere calpestato e ama calpestare.",
+     "Crede che le persone esistano solo per essere usate; molto geloso, vuole sempre battere gli altri.",
+     "Userà ogni mezzo per proteggere la propria immagine: se un sottoposto fa bene, si prende il merito e può perfino licenziarlo. Un Tre malsano tradisce facilmente: vuole solo il risultato e mette da parte morale e sentimenti."
+    ]
+   ],
+   [
+    [
+     "Quasi tutti hanno conosciuto l'abbandono e portano con sé una malinconia. Al centro stanno la sensazione che manchi qualcosa e un'autostima che continua a calare.",
+     "Nella loro crescita ci fu sempre abbandono o qualcosa di simile: genitori che si separano, una lunga assenza dell'amore paterno o materno; oppure un genitore che appare e scompare dalla loro vita, cosa che li lasciò addolorati.",
+     "Da adulti quella sensazione di mancanza non se ne va. Qualcosa sembra sempre perduto, e la malinconia resta."
+    ],
+    [
+     "Il loro sentire sta a un polo o all'altro: depressione profonda o euforia alta, perché tendono a ingigantire la propria emozione e a trascurare ciò che davvero provano. Sono molto sensibili e il loro umore si muove facilmente.",
+     "Spesso si credono feriti e appaiono indifesi, ma rifiutano l'aiuto offerto. In ciò che già hanno vedono solo i difetti; in ciò che è irraggiungibile vedono solo i pregi. Quel rovesciamento approfondisce il senso di abbandono e di mancanza.",
+     "Quando un altro è in pericolo o soffre, mettono da parte i propri guai e lo sostengono totalmente.",
+     "Nella difficoltà possono abbattersi e persino agire male."
+    ],
+    [
+     "Si muovono verso il Tipo Uno: più calmi e razionali, con principi e obiettività in ciò che fanno, non più governati da un umore che non sta fermo."
+    ],
+    [
+     "Si muovono verso il Tipo Due: ostinati sulla via dell'amore, appiccicosi, capricciosi, molto possessivi, e inclini alla perdita, alla depressione e a una condotta che non si assesta."
+    ],
+    [
+     "Consapevole di sé, di forte personalità, sensibile, compassionevole.",
+     "Molto creativo, di ricca immaginazione.",
+     "Finemente attento a ciò che gli altri provano.",
+     "Sincero nel sentire, fedele a ciò che prova.",
+     "Espressivo di ciò che è."
+    ],
+    [
+     "Fantasioso, eccessivamente consapevole di sé, distaccato.",
+     "Pronto a dubitare di sé.",
+     "Fragile nel sentimento.",
+     "Poiché il Quattro è così ripiegato su di sé, chi gli stava intorno spesso gli negò approvazione fin dall'infanzia, criticandolo come capriccioso o indisciplinato. Abituato a essere negato, tiene basso il proprio valore e diffida di sé, mentre sente che nessuno lo capisce. Quando quel risentimento accumulato esplode, nulla può contenerlo.",
+     "Da qui le frequenti manifestazioni emotive del Quattro. Il bambino Quattro piange facilmente e, quando sta male, si nasconde in un angolo, sperando che quel ritiro attiri l'attenzione di un adulto. Se l'abitudine di fabbricare fragilità comincia presto, da adulto arriveranno autocommiserazione e sregolatezza."
+    ],
+    [
+     "Autoinibito, autotormentato.",
+     "Gravemente depresso, di umore pessimo.",
+     "Si colpevolizza e si svaluta, si rimprovera di essere inutile, si odia fino alla disperazione e sente di non avere più valore nel vivere."
+    ]
+   ],
+   [
+    [
+     "La vita interiore dell'Investigatore è come un castello ben sorvegliato. Il signore del castello esce di rado e osserva la gente di fuori da dietro l'alto muro.",
+     "Si sentono facilmente invasi, come se nel muro si fosse aperta una crepa e i loro segreti venissero rubati.",
+     "La loro difesa è la ritirata: ridurre al minimo il contatto e proteggere quanto possibile il proprio spazio privato."
+    ],
+    [
+     "Hanno un bisogno intenso di intimità, sono interiori e autosufficienti, e si tengono fuori quanto possono. Di fronte a una minaccia, la prima linea di difesa è ritirarsi.",
+     "Non mostrano il sentimento. Insistono troppo sull'autocontrollo: trattengono l'emozione davanti agli altri e la lasciano uscire solo da soli.",
+     "Amano osservare e pensare con freddezza, ma sono silenziosi e interiori.",
+     "Vogliono poter prevedere ciò che accadrà.",
+     "Molto letti e colti, ordinati nel pensiero, sobri nell'esprimersi."
+    ],
+    [
+     "Si muovono verso il Tipo Otto: hanno il portamento di un comandante, osano rischiare, traducono le idee in pratica e perseguono con piacere i propri obiettivi. Coraggio e strategia si uniscono in loro, e accettano e si prendono cura degli altri: una statura di leader rara."
+    ],
+    [
+     "Si muovono verso il Tipo Sette: poco realistici, si ammirano in solitudine, esagerano, fantasticano spesso e diventano un po' nevrotici; tutta teoria, incapaci di decidersi, non disposti a impegnarsi, e disquisiscono con eloquenza come se fossero l'esperto."
+    ],
+    [
+     "Grande capacità di osservazione.",
+     "Grande capacità di analisi.",
+     "Grande curiosità.",
+     "Intelligente e pronto: stoffa da scienziato, da studioso, da dottore nel proprio campo."
+    ],
+    [
+     "Distaccato nel sentimento.",
+     "Risponde a una domanda su dieci.",
+     "Spettatore in tutto, analizza, incapace di buttarsi.",
+     "Incline al sarcasmo freddo.",
+     "Segue in tutto solo il proprio pensiero, curandosi assai poco di ciò che gli altri provano.",
+     "Resiste al coinvolgimento emotivo: la conversazione ordinaria non è un problema, ma appena entra il sentimento si sottrae."
+    ],
+    [
+     "Fugge, si taglia fuori dalle persone, non si fa vedere come chi si ritira in montagna.",
+     "Pieno di ostilità, odia il mondo, arriva a ritenere l'intera umanità malvagia e fastidiosa.",
+     "Scollegato dalla realtà, non capisce perché accada gran parte di ciò che accade.",
+     "Tensione nervosa estrema."
+    ]
+   ],
+   [
+    [
+     "Incapaci di proteggersi da piccoli, divennero molto sospettosi, dubitando dei moventi altrui, soprattutto di quelli di chi ha autorità.",
+     "Tendono ad aver perso la fiducia nell'autorità. La maggior parte dei Leali dice di essere stata cresciuta da autorità che non meritavano fiducia.",
+     "C'è uno sfondo comune: un bambino che si sente incapace di proteggersi e non trova un nascondiglio sicuro. La punizione o l'umiliazione da parte di un genitore è la causa principale di quella fiducia perduta, soprattutto quando l'atteggiamento del genitore verso il bambino cambiava senza ragione. Alcuni Leali raccontano inoltre che la loro famiglia nascondeva un segreto di cui nessuno poteva parlare.",
+     "Il piccolo Leale dovette imparare a prevedere l'umore dei genitori, perché quegli adulti potevano benissimo infuriarsi contro il bambino senza alcun segnale visibile."
+    ],
+    [
+     "Assumono una posizione estrema verso l'autorità: o si sottomettono o si ribellano.",
+     "In una squadra è più probabile che siano membri che leader, e spesso parlano per chi viene calpestato e trattato ingiustamente.",
+     "Mettono tutto il cuore nel fare cose per gli altri, si accontentano di com'è e non amano cambiare ambiente.",
+     "Sotto pressione rendono straordinariamente bene; in condizioni ideali, invece, perdono lo spirito combattivo."
+    ],
+    [
+     "Si muovono verso il Tipo Nove: capaci di lasciare che le cose seguano il loro corso, fidandosi di chi hanno intorno, contenti di essere leali al gruppo cui appartengono e disposti a deporre la propria rigidità e le proprie difese; più sereni, più sicuri, più generosi e molto più rilassati di prima."
+    ],
+    [
+     "Si muovono verso il Tipo Tre: stacanovisti, iperreattivi, agiscono con avventatezza e sbadataggine, non si fermano davanti a nulla pur di raggiungere lo scopo e feriscono chi li ha feriti."
+    ],
+    [
+     "Si afferma.",
+     "Caloroso e caro.",
+     "Sostiene che tutti sono uguali e non opprime nessuno.",
+     "Ha fiducia in sé e negli altri.",
+     "Agisce con decisione.",
+     "Agisce con lealtà ed è degno di fiducia."
+    ],
+    [
+     "Remissivo, evasivo.",
+     "Teme di decidere.",
+     "Si attacca all'autorità.",
+     "Irresoluto.",
+     "Testardo e ribelle: annuisce in superficie mentre critica gli altri alle spalle."
+    ],
+    [
+     "Estremamente insicuro.",
+     "Con forte complesso di inferiorità.",
+     "Ingigantisce i problemi.",
+     "Estremamente ansioso e inquieto.",
+     "Masochista."
+    ]
+   ],
+   [
+    [
+     "L'infanzia dell'Entusiasta è piena di bei ricordi: un album di fotografie felici. Di regola nei suoi ricordi non c'è dolore.",
+     "Anche quando intorno a lui accadde qualcosa di brutto, come la separazione dei genitori, raramente ciò lasciò nell'Entusiasta odio o lamentela."
+    ],
+    [
+     "Anche quando intorno a loro accade qualcosa di brutto non producono sentimento negativo, perché la loro attenzione si sposta da sé verso il ricordo positivo.",
+     "Sono sempre pieni di energia e lavoreranno sodo su ciò che li interessa. Amano avere molte opzioni insieme, con la conseguenza di non potersi dedicare interamente a nessuna.",
+     "Fanno molta fatica a impegnarsi a lungo su una cosa sola.",
+     "Amano la novità e seguono la tendenza; non amano sopportare pressione e temono il sentimento negativo."
+    ],
+    [
+     "Si muovono verso il Tipo Cinque: contenuti, attenti nel pensiero, decidono solo dopo aver osservato e soppesato a fondo. Restituiscono all'ambiente ciò che hanno vissuto profondamente e non temono più che la loro gioia venga sottratta.",
+     "Senza nulla di particolare da fare, comodi e a proprio agio, prendono il carattere del Cinque: preferiscono evitare la folla, fare silenzio, leggere comodamente a casa o andare a guardare il mare senza far niente."
+    ],
+    [
+     "Si muovono verso il Tipo Uno: autoritari, pronti all'ira, testardi ed esigenti con le persone. Se qualche persona o cosa sembra poter risolvere la loro infelicità, ci si aggrappano e non la lasciano.",
+     "Sotto pressione il Sette accende di colpo ogni difesa e assume lo spirito serio e pignolo dell'Uno, solo un po' meno rigoroso. La differenza è che l'Uno è serio per fare meglio e fare bene; il Sette lo è per giocare."
+    ],
+    [
+     "Di molti talenti.",
+     "Di ingegno rapido.",
+     "Impara facilmente cose nuove.",
+     "Risolve facilmente i problemi.",
+     "Estroverso, filosofico, riconoscente.",
+     "Molto spontaneo.",
+     "Pieno di slancio e calore.",
+     "Pieno di energia, con vitalità alta."
+    ],
+    [
+     "In balia dell'appetito.",
+     "Giocoso e senza freni.",
+     "Mangiare, bere e divertirsi.",
+     "Fare più cose insieme.",
+     "Superficiale: dà l'impressione di sapere poco e di far finta di sapere molto.",
+     "Iperattivo."
+    ],
+    [
+     "Attacca e insulta gli altri.",
+     "Perdita estrema di controllo.",
+     "Avido di piacere e di ostentazione.",
+     "Porta tutto al limite senza trattenere nulla, ama la ribalta e si mette in mostra.",
+     "Agisce d'impulso, esagera e perde il senso del pratico."
+    ]
+   ],
+   [
+    [
+     "Fin da bambini fu loro inculcato che il forte è rispettato e il debole è respinto, e che dovevano affidarsi a una corazza dura per sopravvivere.",
+     "Eppure il loro mondo fu sempre governato da persone più alte e più forti di loro, persone che cercavano di controllare la loro vita.",
+     "Per proteggersi si proposero di diventare il forte o il capo, sperando di dominare la situazione con la propria capacità."
+    ],
+    [
+     "Si presentano come il forte o il capo, volendo controllare gli altri concorrenti potenti e disposti a qualsiasi forma di scontro pur di sconfiggere l'avversario.",
+     "Impongono richieste severe per controllare chi può incidere sulla loro vita, mentre spesso sono loro stessi a infrangerle con la propria condotta.",
+     "Amano proteggere gli altri, benché il loro aiuto spesso finisca per intralciare.",
+     "Quando vengono umiliati o feriti, sorgono pensieri di vendetta.",
+     "Perseguono il potere, rispettano la forza reale, hanno senso di giustizia e amano fare il «fratello maggiore»."
+    ],
+    [
+     "Si muovono verso il Tipo Due: cuore cavalleresco con un lato tenero, generoso e contento di aiutare, con ideali e aspirazioni, incline a soccorrere il mondo, capace di prendersi cura degli altri con sincerità e delicatezza, e di ammorbidire il proprio carattere e la propria impulsività con un sorriso e un cuore amorevole."
+    ],
+    [
+     "Si muovono verso il Tipo Cinque: testardi e inflessibili, si allontanano dalle persone, calcolano sugli altri, usano il proprio ragionamento per costringere gli altri e talvolta fanno gli esperti.",
+     "Cominciano a immaginare cose — che i nemici possano allearsi contro di loro — e si sentono insicuri, così chi non temeva nulla finisce per temere tutti."
+    ],
+    [
+     "Molto sicuro di sé.",
+     "Prima l'azione.",
+     "Leader per natura.",
+     "Coraggioso e di gran cuore."
+    ],
+    [
+     "Protegge solo se stesso.",
+     "Soggettivo, individualista, non accetta consigli.",
+     "Ama controllare le persone e l'ambiente.",
+     "Si stima troppo.",
+     "Teme di essere ferito e perciò spesso si finge potente e forte.",
+     "Non sa affrontare la pressione, sa solo spingerla via."
+    ],
+    [
+     "Violento, come un tiranno.",
+     "Spietato.",
+     "Dittatoriale.",
+     "Smisurato.",
+     "Distruttivo."
+    ]
+   ],
+   [
+    [
+     "Il Pacificatore si sentì trascurato da bambino, e formò così l'abitudine a trascurare ciò di cui lui stesso ha davvero bisogno.",
+     "Una cosa accomuna le loro infanzie: nessuno ascoltava la loro opinione, e scoprirono che nemmeno mostrare rabbia direttamente induceva qualcuno a prendere sul serio i loro pensieri.",
+     "Visto che la propria istanza non pesava, non poterono che anestetizzarsi, disperdere le energie e lasciare che la mente li dimenticasse; per questo spesso non sanno di che cosa abbiano davvero bisogno."
+    ],
+    [
+     "Spesso non distinguono ciò che conta da ciò che non conta.",
+     "Poiché non riescono a conoscere il proprio vero bisogno, lo sostituiscono con cose non necessarie; la cosa più importante resta spesso all'ultimo momento della giornata.",
+     "Occupano spesso la posizione intermedia, faticano a decidere una questione e faticano a dire di no.",
+     "Reprimono l'energia del corpo e la sua rabbia, e anche quando diventa insopportabile essa esce solo per vie indirette.",
+     "Miti e amichevoli, di grande sopportazione, timorosi di litigare con chiunque.",
+     "In superficie assecondano l'opinione altrui, mentre dentro trattengono qualcosa."
+    ],
+    [
+     "Si muovono verso il Tipo Tre: chiari e definiti negli obiettivi, profondamente interessati alla propria crescita e a realizzare il proprio potenziale. Non sono più compiacenti ma capaci di guidare la propria vita. Con quella consapevolezza di crescita diventano più sicuri, capaci di sostenere la propria opinione e anche più indipendenti."
+    ],
+    [
+     "Si muovono verso il Tipo Sei: la loro condotta diventa estrema, sospettosa e troppo rimuginata, temono che si abbatta la sciagura, temono di essere incastrati e ingannati, e diventano più difensivi e passivi."
+    ],
+    [
+     "Di cuore aperto.",
+     "Sereno e di buon carattere.",
+     "Composto e imperturbabile.",
+     "Caro, innocente come un bambino.",
+     "Felice.",
+     "Paziente e disposto ad ascoltare."
+    ],
+    [
+     "Troppo remissivo.",
+     "Si appoggia agli altri per decidere.",
+     "Pigro e incline a rimandare.",
+     "Non ama decidere né dire la propria, per paura del conflitto, così alla fine molto resta non fatto: annuisce in faccia e agisce al contrario alle spalle."
+    ],
+    [
+     "Inutile e indifeso.",
+     "Ostinato.",
+     "Senza direzione.",
+     "Fermo, senza far nulla.",
+     "Insensibile e ottuso."
+    ]
+   ]
+  ]
+ }
+}

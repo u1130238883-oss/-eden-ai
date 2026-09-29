@@ -1,0 +1,42 @@
+name: NineSun
+options:
+  bundleIdPrefix: com.ninesun
+  deploymentTarget:
+    iOS: "16.0"
+  developmentLanguage: zh-Hant
+packages:
+  EchoCore:
+    path: EchoCore
+targets:
+  NineSun:
+    type: application
+    platform: iOS
+    sources:
+      - path: NineSun
+        excludes:
+          - "Resources/**"
+      - path: NineSun/Resources
+        buildPhase: resources
+    dependencies:
+      - package: EchoCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ninesun.app
+        PRODUCT_NAME: NineSun
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: "5.0"
+        SWIFT_OPTIMIZATION_LEVEL: "-O"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: Support/Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: "NineSun"
+        INFOPLIST_KEY_UIStatusBarStyle: UIStatusBarStyleLightContent
+        INFOPLIST_KEY_UIUserInterfaceStyle: Dark
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGN_IDENTITY: ""

@@ -1,0 +1,72 @@
+name: Build NineSun IPA
+
+on:
+  push:
+    paths:
+      - "ios/**"
+      - "ai/**"
+      - ".github/workflows/build-ninesun-ipa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test AI core (Swift ↔ Python parity, Nine & Twelve engine)
+        working-directory: ios/EchoCore
+        run: swift test
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: ios
+        run: xcodegen generate
+
+      - name: Build app (unsigned)
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project NineSun.xcodeproj \
+            -scheme NineSun \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tee xcodebuild.log | grep -E "error:|BUILD" || true
+          test -d build/Build/Products/Release-iphoneos/NineSun.app || (grep -B2 -A6 "error:" xcodebuild.log | head -150; tail -80 xcodebuild.log; exit 1)
+
+      - name: Package IPA
+        working-directory: ios
+        run: |
+          rm -rf Payload && mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/NineSun.app Payload/
+          ls -la Payload/NineSun.app | head -30
+          test -f Payload/NineSun.app/ninesun.bin
+          mkdir -p ../dist
+          zip -qry ../dist/NineSun.ipa Payload
+          ls -la ../dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NineSun-ipa
+          path: dist/NineSun.ipa
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ninesun-build-${{ github.run_number }}
+          name: NineSun build ${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          files: dist/NineSun.ipa
+          body: |
+            NineSun 未簽名 IPA（九型十二宮 AI）。
+            用 Sideloadly / AltStore / TrollStore 自行簽名安裝。

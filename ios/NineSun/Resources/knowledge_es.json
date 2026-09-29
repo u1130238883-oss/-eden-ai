@@ -1,0 +1,1785 @@
+[
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 1 Lo Creativo",
+"aliases": [
+"Lo Creativo",
+"乾卦",
+"hexagrama 1"
+],
+"body": "乾為天. Fuerza e iniciativa; el momento es propicio para avanzar, pero cuidado con la arrogancia."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 2 Lo Receptivo",
+"aliases": [
+"Lo Receptivo",
+"坤卦",
+"hexagrama 2"
+],
+"body": "坤為地. Ceder y acoger; coopera y construye con paciencia en lugar de tomar el mando."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 3 La Dificultad Inicial",
+"aliases": [
+"La Dificultad Inicial",
+"屯卦",
+"hexagrama 3"
+],
+"body": "水雷屯. Todo comienzo es difícil; la vida nace en el caos. Asegura tu base y busca ayuda."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 4 La Necedad Juvenil",
+"aliases": [
+"La Necedad Juvenil",
+"蒙卦",
+"hexagrama 4"
+],
+"body": "山水蒙. Inexperiencia que necesita guía; aprende con humildad y no te precipites."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 5 La Espera",
+"aliases": [
+"La Espera",
+"需卦",
+"hexagrama 5"
+],
+"body": "水天需. Espera el momento justo; hay peligro delante, pero pasará. Reúne fuerzas."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 6 El Conflicto",
+"aliases": [
+"El Conflicto",
+"訟卦",
+"hexagrama 6"
+],
+"body": "天水訟. Disputas y pleitos; busca un acuerdo, insistir hasta el final trae pérdidas."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 7 El Ejército",
+"aliases": [
+"El Ejército",
+"師卦",
+"hexagrama 7"
+],
+"body": "地水師. Un ejército en campaña; importan la disciplina y la organización, con causa justa y buen líder."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 8 La Solidaridad",
+"aliases": [
+"La Solidaridad",
+"比卦",
+"hexagrama 8"
+],
+"body": "水地比. Cercanía y unión; elige pronto a tus aliados, dudar hace perder oportunidades."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 9 La Pequeña Fuerza Domesticadora",
+"aliases": [
+"La Pequeña Fuerza Domesticadora",
+"小畜卦",
+"hexagrama 9"
+],
+"body": "風天小畜. Pequeños ahorros, fuerza limitada; sigue acumulando, aún no es tiempo de grandes pasos."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 10 El Porte",
+"aliases": [
+"El Porte",
+"履卦",
+"hexagrama 10"
+],
+"body": "天澤履. Pisar la cola del tigre; actúa con cuidado y respeto para convertir el peligro en seguridad."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 11 La Paz",
+"aliases": [
+"La Paz",
+"泰卦",
+"hexagrama 11"
+],
+"body": "地天泰. Cielo y tierra se unen; todo fluye, pero cuidado con el declive tras la cumbre."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 12 El Estancamiento",
+"aliases": [
+"El Estancamiento",
+"否卦",
+"hexagrama 12"
+],
+"body": "天地否. Comunicación bloqueada; defiende en lugar de atacar y espera el cambio."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 13 La Comunidad",
+"aliases": [
+"La Comunidad",
+"同人卦",
+"hexagrama 13"
+],
+"body": "天火同人. Comunidad de objetivos; el trabajo en equipo abierto y honesto triunfa."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 14 La Gran Posesión",
+"aliases": [
+"La Gran Posesión",
+"大有卦",
+"hexagrama 14"
+],
+"body": "火天大有. Gran cosecha, como el sol de mediodía; sé humilde y comparte tu abundancia."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 15 La Modestia",
+"aliases": [
+"La Modestia",
+"謙卦",
+"hexagrama 15"
+],
+"body": "地山謙. La modestia trae beneficio; trabaja en silencio y el resultado será bueno."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 16 El Entusiasmo",
+"aliases": [
+"El Entusiasmo",
+"豫卦",
+"hexagrama 16"
+],
+"body": "雷地豫. Alegría y soltura; muévete con la corriente, pero prepárate y no te relajes."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 17 El Seguimiento",
+"aliases": [
+"El Seguimiento",
+"隨卦",
+"hexagrama 17"
+],
+"body": "澤雷隨. Sigue los tiempos y elige el bien; cambiar de rumbo con flexibilidad ayuda."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 18 El Trabajo en lo Echado a Perder",
+"aliases": [
+"El Trabajo en lo Echado a Perder",
+"蠱卦",
+"hexagrama 18"
+],
+"body": "山風蠱. Un deterioro antiguo necesita reparación; halla la raíz y reforma con decisión."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 19 El Acercamiento",
+"aliases": [
+"El Acercamiento",
+"臨卦",
+"hexagrama 19"
+],
+"body": "地澤臨. Se acerca la buena suerte; aprovecha el momento, lo bueno no dura para siempre."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 20 La Contemplación",
+"aliases": [
+"La Contemplación",
+"觀卦",
+"hexagrama 20"
+],
+"body": "風地觀. Observa y reflexiona; mira la situación con claridad y sé un ejemplo para otros."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 21 La Mordedura Tajante",
+"aliases": [
+"La Mordedura Tajante",
+"噬嗑卦",
+"hexagrama 21"
+],
+"body": "火雷噬嗑. Muerde el obstáculo; hacen falta reglas claras y acción decidida."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 22 La Gracia",
+"aliases": [
+"La Gracia",
+"賁卦",
+"hexagrama 22"
+],
+"body": "山火賁. Adorno y belleza; lo pequeño prospera, lo grande depende de la sustancia."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 23 La Desintegración",
+"aliases": [
+"La Desintegración",
+"剝卦",
+"hexagrama 23"
+],
+"body": "山地剝. Las cosas se desmoronan; espera en calma y conserva fuerzas, no actúes ahora."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 24 El Retorno",
+"aliases": [
+"El Retorno",
+"復卦",
+"hexagrama 24"
+],
+"body": "地雷復. La luz vuelve tras la oscuridad; empieza de nuevo, paso a paso."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 25 La Inocencia",
+"aliases": [
+"La Inocencia",
+"無妄卦",
+"hexagrama 25"
+],
+"body": "天雷無妄. Nada de imprudencias; la sinceridad trae suerte, las artimañas traen problemas."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 26 La Gran Fuerza Domesticadora",
+"aliases": [
+"La Gran Fuerza Domesticadora",
+"大畜卦",
+"hexagrama 26"
+],
+"body": "山天大畜. Gran acumulación; tiempo de estudiar y almacenar, y actuar cuando estés listo."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 27 La Nutrición",
+"aliases": [
+"La Nutrición",
+"頤卦",
+"hexagrama 27"
+],
+"body": "山雷頤. Nutre cuerpo y mente; cuida lo que comes y dices, y cuida de ti y de los demás."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 28 La Preponderancia de lo Grande",
+"aliases": [
+"La Preponderancia de lo Grande",
+"大過卦",
+"hexagrama 28"
+],
+"body": "澤風大過. La carga es excesiva y la viga se dobla; medidas extraordinarias, pero conoce tus límites."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 29 Lo Abismal",
+"aliases": [
+"Lo Abismal",
+"坎卦",
+"hexagrama 29"
+],
+"body": "坎為水. Peligro sobre peligro; mantén la sinceridad y la calma y cruza las dificultades paso a paso."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 30 Lo Adherente",
+"aliases": [
+"Lo Adherente",
+"離卦",
+"hexagrama 30"
+],
+"body": "離為火. Luz que se adhiere; encuentra el apoyo correcto y deja brillar tu pasión y talento."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 31 El Influjo",
+"aliases": [
+"El Influjo",
+"咸卦",
+"hexagrama 31"
+],
+"body": "澤山咸. Atracción y respuesta mutua; lo mejor es una conexión sincera sin segundas intenciones."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 32 La Duración",
+"aliases": [
+"La Duración",
+"恆卦",
+"hexagrama 32"
+],
+"body": "雷風恆. Constancia y perseverancia; sigue el buen camino y construye a largo plazo."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 33 La Retirada",
+"aliases": [
+"La Retirada",
+"遯卦",
+"hexagrama 33"
+],
+"body": "天山遯. Retírate cuando la situación es desfavorable; dar un paso atrás te protege."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 34 El Gran Poder",
+"aliases": [
+"El Gran Poder",
+"大壯卦",
+"hexagrama 34"
+],
+"body": "雷天大壯. Gran fuerza; con el poder llega el deber de mantenerse recto y evitar la imprudencia."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 35 El Progreso",
+"aliases": [
+"El Progreso",
+"晉卦",
+"hexagrama 35"
+],
+"body": "火地晉. Sale el sol y avanzas; mostrar tu capacidad te trae reconocimiento."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 36 El Oscurecimiento de la Luz",
+"aliases": [
+"El Oscurecimiento de la Luz",
+"明夷卦",
+"hexagrama 36"
+],
+"body": "地火明夷. La luz está herida; tiempos difíciles, oculta tu brillo y protégete."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 37 La Familia",
+"aliases": [
+"La Familia",
+"家人卦",
+"hexagrama 37"
+],
+"body": "風火家人. Armonía en casa, cada uno en su lugar; empieza por ordenar tu propia casa."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 38 El Antagonismo",
+"aliases": [
+"El Antagonismo",
+"睽卦",
+"hexagrama 38"
+],
+"body": "火澤睽. Las opiniones se separan; busca puntos comunes, lo pequeño aún puede salir bien."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 39 El Impedimento",
+"aliases": [
+"El Impedimento",
+"蹇卦",
+"hexagrama 39"
+],
+"body": "水山蹇. El camino es duro; detente, reflexiona y pide ayuda en vez de forzar el paso."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 40 La Liberación",
+"aliases": [
+"La Liberación",
+"解卦",
+"hexagrama 40"
+],
+"body": "雷水解. Las dificultades se disuelven y se abren las nubes; aprovecha para resolver lo pendiente."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 41 La Merma",
+"aliases": [
+"La Merma",
+"損卦",
+"hexagrama 41"
+],
+"body": "山澤損. Renuncia a algo para beneficiar a otros; da primero y recibe después, según tus medios."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 42 El Aumento",
+"aliases": [
+"El Aumento",
+"益卦",
+"hexagrama 42"
+],
+"body": "風雷益. Crecimiento y progreso con apoyo; buen momento para actuar y mejorar."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 43 La Resolución",
+"aliases": [
+"La Resolución",
+"夬卦",
+"hexagrama 43"
+],
+"body": "澤天夬. Limpieza decidida; enfrenta el problema con firmeza, pero con tacto y atento a la reacción."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 44 El Ir al Encuentro",
+"aliases": [
+"El Ir al Encuentro",
+"姤卦",
+"hexagrama 44"
+],
+"body": "天風姤. Un encuentro inesperado; cuidado con la tentación y las relaciones desiguales."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 45 La Reunión",
+"aliases": [
+"La Reunión",
+"萃卦",
+"hexagrama 45"
+],
+"body": "澤地萃. Se reúnen personas y recursos; bueno para encuentros, cooperación y unir corazones."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 46 La Subida",
+"aliases": [
+"La Subida",
+"升卦",
+"hexagrama 46"
+],
+"body": "地風升. Ascenso constante; con los pies en la tierra subirás."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 47 La Desazón",
+"aliases": [
+"La Desazón",
+"困卦",
+"hexagrama 47"
+],
+"body": "澤水困. Agotado y acorralado; aférrate a tus convicciones y sal adelante con hechos, no con palabras."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 48 El Pozo",
+"aliases": [
+"El Pozo",
+"井卦",
+"hexagrama 48"
+],
+"body": "水風井. El pozo que alimenta a todos; enriquece tu interior y ofrece un valor constante."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 49 La Revolución",
+"aliases": [
+"La Revolución",
+"革卦",
+"hexagrama 49"
+],
+"body": "澤火革. Revolución y renovación; cambia con audacia cuando el momento y la razón son justos."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 50 El Caldero",
+"aliases": [
+"El Caldero",
+"鼎卦",
+"hexagrama 50"
+],
+"body": "火風鼎. El caldero establece un nuevo orden; éxito estable, tiempo de construir y mostrar tu talento."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 51 Lo Suscitativo",
+"aliases": [
+"Lo Suscitativo",
+"震卦",
+"hexagrama 51"
+],
+"body": "震為雷. El trueno sacude y luego vuelve la calma; mantén la serenidad y ganarás."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 52 El Aquietamiento",
+"aliases": [
+"El Aquietamiento",
+"艮卦",
+"hexagrama 52"
+],
+"body": "艮為山. Detente donde debes detenerte; haz una pausa y deja que las cosas se asienten."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 53 La Evolución",
+"aliases": [
+"La Evolución",
+"漸卦",
+"hexagrama 53"
+],
+"body": "風山漸. Progreso gradual; paso a paso, el amor y la carrera crecen con firmeza."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 54 La Muchacha que se Casa",
+"aliases": [
+"La Muchacha que se Casa",
+"歸妹卦",
+"hexagrama 54"
+],
+"body": "雷澤歸妹. Un vínculo impropio y actos impulsivos traen arrepentimiento; piénsalo dos veces."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 55 La Plenitud",
+"aliases": [
+"La Plenitud",
+"豐卦",
+"hexagrama 55"
+],
+"body": "雷火豐. Plenitud en su punto máximo; disfruta el presente y prepárate para el cambio."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 56 El Andariego",
+"aliases": [
+"El Andariego",
+"旅卦",
+"hexagrama 56"
+],
+"body": "火山旅. Un viajero sin hogar fijo; sé prudente y amable, lo pequeño sale bien."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 57 Lo Suave",
+"aliases": [
+"Lo Suave",
+"巽卦",
+"hexagrama 57"
+],
+"body": "巽為風. Suave como el viento; la cooperación modesta y la comunicación constante logran las cosas."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 58 Lo Sereno",
+"aliases": [
+"Lo Sereno",
+"兌卦",
+"hexagrama 58"
+],
+"body": "兌為澤. Intercambio alegre; la alegría sincera gana corazones."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 59 La Disolución",
+"aliases": [
+"La Disolución",
+"渙卦",
+"hexagrama 59"
+],
+"body": "風水渙. Dispersión y disolución; une a la gente y reconstruye la confianza."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 60 La Restricción",
+"aliases": [
+"La Restricción",
+"節卦",
+"hexagrama 60"
+],
+"body": "水澤節. Moderación; pon límites y presupuestos, pero sin ser demasiado duro."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 61 La Verdad Interior",
+"aliases": [
+"La Verdad Interior",
+"中孚卦",
+"hexagrama 61"
+],
+"body": "風澤中孚. Verdad en el corazón; la sinceridad conmueve y puede desactivar una crisis."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 62 La Preponderancia de lo Pequeño",
+"aliases": [
+"La Preponderancia de lo Pequeño",
+"小過卦",
+"hexagrama 62"
+],
+"body": "雷山小過. Leve exceso; haz cosas pequeñas y mantén un perfil bajo, no apuntes demasiado alto."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 63 Después de la Consumación",
+"aliases": [
+"Después de la Consumación",
+"既濟卦",
+"hexagrama 63"
+],
+"body": "水火既濟. La tarea está hecha; conservar es más difícil que conquistar, no te relajes pronto."
+},
+{
+"cat": "Hexagramas",
+"title": "Hexagrama 64 Antes de la Consumación",
+"aliases": [
+"Antes de la Consumación",
+"未濟卦",
+"hexagrama 64"
+],
+"body": "火水未濟. Aún no terminado, pero hay esperanza; termina con cuidado, no tropieces en el último paso."
+},
+{
+"cat": "Trigramas",
+"title": "乾 (Cielo)",
+"aliases": [
+"乾",
+"Cielo"
+],
+"body": "fuerza, liderazgo, padre, noroeste."
+},
+{
+"cat": "Trigramas",
+"title": "兌 (Lago)",
+"aliases": [
+"兌",
+"Lago"
+],
+"body": "alegría, palabra, hija menor, oeste."
+},
+{
+"cat": "Trigramas",
+"title": "離 (Fuego)",
+"aliases": [
+"離",
+"Fuego"
+],
+"body": "claridad, belleza, hija mediana, sur."
+},
+{
+"cat": "Trigramas",
+"title": "震 (Trueno)",
+"aliases": [
+"震",
+"Trueno"
+],
+"body": "movimiento, acción, hijo mayor, este."
+},
+{
+"cat": "Trigramas",
+"title": "巽 (Viento)",
+"aliases": [
+"巽",
+"Viento"
+],
+"body": "suavidad, penetración, hija mayor, sureste."
+},
+{
+"cat": "Trigramas",
+"title": "坎 (Agua)",
+"aliases": [
+"坎",
+"Agua"
+],
+"body": "peligro, sabiduría, hijo mediano, norte."
+},
+{
+"cat": "Trigramas",
+"title": "艮 (Montaña)",
+"aliases": [
+"艮",
+"Montaña"
+],
+"body": "quietud, firmeza, hijo menor, noreste."
+},
+{
+"cat": "Trigramas",
+"title": "坤 (Tierra)",
+"aliases": [
+"坤",
+"Tierra"
+],
+"body": "receptividad, tolerancia, madre, suroeste."
+},
+{
+"cat": "Troncos",
+"title": "甲 Jia",
+"aliases": [
+"甲",
+"Jia"
+],
+"body": "Madera Yang, un gran árbol: recto, ambicioso, líder nato, pero puede ser terco."
+},
+{
+"cat": "Troncos",
+"title": "乙 Yi",
+"aliases": [
+"乙",
+"Yi"
+],
+"body": "Madera Yin, flores y enredaderas: flexible y adaptable, hábil con la gente."
+},
+{
+"cat": "Troncos",
+"title": "丙 Bing",
+"aliases": [
+"丙",
+"Bing"
+],
+"body": "Fuego Yang, el sol: cálido, generoso y abierto, pero impaciente."
+},
+{
+"cat": "Troncos",
+"title": "丁 Ding",
+"aliases": [
+"丁",
+"Ding"
+],
+"body": "Fuego Yin, la luz de una vela: delicado, cálido y perspicaz, emociones hacia dentro."
+},
+{
+"cat": "Troncos",
+"title": "戊 Wu",
+"aliases": [
+"戊",
+"Wu"
+],
+"body": "Tierra Yang, las montañas: firme y fiable, muy tolerante, algo conservador."
+},
+{
+"cat": "Troncos",
+"title": "己 Ji",
+"aliases": [
+"己",
+"Ji"
+],
+"body": "Tierra Yin, campos fértiles: práctico y protector, algo preocupón."
+},
+{
+"cat": "Troncos",
+"title": "庚 Geng",
+"aliases": [
+"庚",
+"Geng"
+],
+"body": "Metal Yang, una espada: decidido y leal, a veces demasiado duro."
+},
+{
+"cat": "Troncos",
+"title": "辛 Xin",
+"aliases": [
+"辛",
+"Xin"
+],
+"body": "Metal Yin, joyas: refinado y agudo, cuida la imagen, busca la perfección."
+},
+{
+"cat": "Troncos",
+"title": "壬 Ren",
+"aliases": [
+"壬",
+"Ren"
+],
+"body": "Agua Yang, ríos y mares: listo y libre, estratégico, no soporta los límites."
+},
+{
+"cat": "Troncos",
+"title": "癸 Gui",
+"aliases": [
+"癸",
+"Gui"
+],
+"body": "Agua Yin, lluvia y rocío: suave y sensible, imaginativo y profundo."
+},
+{
+"cat": "Ramas",
+"title": "子 Zi",
+"aliases": [
+"子",
+"Zi"
+],
+"body": "Rata, Agua Yang, 23–1 h, norte."
+},
+{
+"cat": "Ramas",
+"title": "丑 Chou",
+"aliases": [
+"丑",
+"Chou"
+],
+"body": "Buey, Tierra Yin, 1–3 h, norte-noreste."
+},
+{
+"cat": "Ramas",
+"title": "寅 Yin",
+"aliases": [
+"寅",
+"Yin"
+],
+"body": "Tigre, Madera Yang, 3–5 h, este-noreste."
+},
+{
+"cat": "Ramas",
+"title": "卯 Mao",
+"aliases": [
+"卯",
+"Mao"
+],
+"body": "Conejo, Madera Yin, 5–7 h, este."
+},
+{
+"cat": "Ramas",
+"title": "辰 Chen",
+"aliases": [
+"辰",
+"Chen"
+],
+"body": "Dragón, Tierra Yang, 7–9 h, este-sureste."
+},
+{
+"cat": "Ramas",
+"title": "巳 Si",
+"aliases": [
+"巳",
+"Si"
+],
+"body": "Serpiente, Fuego Yin, 9–11 h, sur-sureste."
+},
+{
+"cat": "Ramas",
+"title": "午 Wu",
+"aliases": [
+"午",
+"Wu"
+],
+"body": "Caballo, Fuego Yang, 11–13 h, sur."
+},
+{
+"cat": "Ramas",
+"title": "未 Wei",
+"aliases": [
+"未",
+"Wei"
+],
+"body": "Cabra, Tierra Yin, 13–15 h, sur-suroeste."
+},
+{
+"cat": "Ramas",
+"title": "申 Shen",
+"aliases": [
+"申",
+"Shen"
+],
+"body": "Mono, Metal Yang, 15–17 h, oeste-suroeste."
+},
+{
+"cat": "Ramas",
+"title": "酉 You",
+"aliases": [
+"酉",
+"You"
+],
+"body": "Gallo, Metal Yin, 17–19 h, oeste."
+},
+{
+"cat": "Ramas",
+"title": "戌 Xu",
+"aliases": [
+"戌",
+"Xu"
+],
+"body": "Perro, Tierra Yang, 19–21 h, oeste-noroeste."
+},
+{
+"cat": "Ramas",
+"title": "亥 Hai",
+"aliases": [
+"亥",
+"Hai"
+],
+"body": "Cerdo, Agua Yin, 21–23 h, norte-noroeste."
+},
+{
+"cat": "Cinco Elementos",
+"title": "Madera",
+"aliases": [
+"Madera",
+"木"
+],
+"body": "crecimiento, bondad, ascenso; alimenta al Fuego, controla la Tierra. Hígado, primavera, este, verde."
+},
+{
+"cat": "Cinco Elementos",
+"title": "Fuego",
+"aliases": [
+"Fuego",
+"火"
+],
+"body": "pasión, cortesía, expansión; alimenta a la Tierra, controla el Metal. Corazón, verano, sur, rojo."
+},
+{
+"cat": "Cinco Elementos",
+"title": "Tierra",
+"aliases": [
+"Tierra",
+"土"
+],
+"body": "estabilidad, confianza, tolerancia; alimenta al Metal, controla el Agua. Estómago, fin de estación, centro, amarillo."
+},
+{
+"cat": "Cinco Elementos",
+"title": "Metal",
+"aliases": [
+"Metal",
+"金"
+],
+"body": "decisión, lealtad, contracción; alimenta al Agua, controla la Madera. Pulmones, otoño, oeste, blanco."
+},
+{
+"cat": "Cinco Elementos",
+"title": "Agua",
+"aliases": [
+"Agua",
+"水"
+],
+"body": "sabiduría, fluidez, resiliencia; alimenta la Madera, controla el Fuego. Riñones, invierno, norte, negro."
+},
+{
+"cat": "Diez Dioses",
+"title": "Amigo (比肩)",
+"aliases": [
+"Amigo",
+"比肩"
+],
+"body": "Mismo elemento y polaridad que tú: el yo, amigos, iguales, independencia. En exceso, terquedad."
+},
+{
+"cat": "Diez Dioses",
+"title": "Robo de Riqueza (劫財)",
+"aliases": [
+"Robo de Riqueza",
+"劫財"
+],
+"body": "Mismo elemento, polaridad opuesta: hermanos, rivales, riesgo. En exceso, pérdidas e impulsividad."
+},
+{
+"cat": "Diez Dioses",
+"title": "Dios de la Comida (食神)",
+"aliases": [
+"Dios de la Comida",
+"食神"
+],
+"body": "Lo que produces, misma polaridad: talento, buena comida, disfrute, expresión suave."
+},
+{
+"cat": "Diez Dioses",
+"title": "Oficial Herido (傷官)",
+"aliases": [
+"Oficial Herido",
+"傷官"
+],
+"body": "Lo que produces, polaridad opuesta: creatividad, rebeldía, elocuencia, rechazo al control."
+},
+{
+"cat": "Diez Dioses",
+"title": "Riqueza Indirecta (偏財)",
+"aliases": [
+"Riqueza Indirecta",
+"偏財"
+],
+"body": "Lo que controlas, misma polaridad: ganancias inesperadas, inversiones, popularidad, generosidad."
+},
+{
+"cat": "Diez Dioses",
+"title": "Riqueza Directa (正財)",
+"aliases": [
+"Riqueza Directa",
+"正財"
+],
+"body": "Lo que controlas, polaridad opuesta: ingresos estables, estabilidad, sentido práctico; en hombres, la esposa."
+},
+{
+"cat": "Diez Dioses",
+"title": "Siete Muertes (七殺)",
+"aliases": [
+"Siete Muertes",
+"七殺"
+],
+"body": "Lo que te controla, misma polaridad: presión, empuje, autoridad, desafíos."
+},
+{
+"cat": "Diez Dioses",
+"title": "Oficial Directo (正官)",
+"aliases": [
+"Oficial Directo",
+"正官"
+],
+"body": "Lo que te controla, polaridad opuesta: normas, reputación, cargo; en mujeres, el marido."
+},
+{
+"cat": "Diez Dioses",
+"title": "Recurso Indirecto (偏印)",
+"aliases": [
+"Recurso Indirecto",
+"偏印"
+],
+"body": "Lo que te genera, misma polaridad: saberes insólitos, intuición, soledad, habilidades especiales."
+},
+{
+"cat": "Diez Dioses",
+"title": "Recurso Directo (正印)",
+"aliases": [
+"Recurso Directo",
+"正印"
+],
+"body": "Lo que te genera, polaridad opuesta: aprendizaje, madre, benefactores, protección y cuidado."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "紫微 Zi Wei",
+"aliases": [
+"紫微",
+"Zi Wei"
+],
+"body": "La estrella emperador: dignidad, liderazgo, mucho orgullo; brilla con buenos ayudantes."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "天機 Tian Ji",
+"aliases": [
+"天機",
+"Tian Ji"
+],
+"body": "La estrella de la sabiduría: lista, estratégica, cambiante; mente rápida pero piensa demasiado."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "太陽 Tai Yang",
+"aliases": [
+"太陽",
+"Tai Yang"
+],
+"body": "La estrella de la luz: calidez, entrega, reputación; generosa pero se agota."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "武曲 Wu Qu",
+"aliases": [
+"武曲",
+"Wu Qu"
+],
+"body": "Estrella de riqueza: resuelta, orientada a la acción, buena con el dinero; directa en el amor."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "天同 Tian Tong",
+"aliases": [
+"天同",
+"Tian Tong"
+],
+"body": "La estrella de las bendiciones: suave, disfruta la vida, infantil; querida pero sin empuje."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "廉貞 Lian Zhen",
+"aliases": [
+"廉貞",
+"Lian Zhen"
+],
+"body": "Estrella de carácter fuerte: adaptable pero intensa, clara en el amor y el odio."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "天府 Tian Fu",
+"aliases": [
+"天府",
+"Tian Fu"
+],
+"body": "La estrella del tesoro: estable, conservadora, buena para conservar y administrar."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "太陰 Tai Yin",
+"aliases": [
+"太陰",
+"Tai Yin"
+],
+"body": "La estrella lunar del hogar y la riqueza: suave, delicada, valora la familia y la belleza."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "貪狼 Tan Lang",
+"aliases": [
+"貪狼",
+"Tan Lang"
+],
+"body": "La estrella del deseo y el encanto: muchos talentos, sociable, muy curiosa."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "巨門 Ju Men",
+"aliases": [
+"巨門",
+"Ju Men"
+],
+"body": "La estrella oscura: elocuente, analítica, dubitativa; ideal para trabajos con la palabra."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "天相 Tian Xiang",
+"aliases": [
+"天相",
+"Tian Xiang"
+],
+"body": "La estrella del sello: firme y justa, mediadora que valora la imagen y las normas."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "天梁 Tian Liang",
+"aliases": [
+"天梁",
+"Tian Liang"
+],
+"body": "La estrella protectora: madura, cuida de los demás, convierte la mala suerte en buena."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "七殺 Qi Sha",
+"aliases": [
+"七殺",
+"Qi Sha"
+],
+"body": "La estrella general: empuje, pionera, independiente; audaz, con grandes cambios."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "破軍 Po Jun",
+"aliases": [
+"破軍",
+"Po Jun"
+],
+"body": "La estrella rompedora: derriba lo viejo para crear lo nuevo; valiente pero costosa."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "文昌 Wen Chang",
+"aliases": [
+"文昌",
+"Wen Chang"
+],
+"body": "Estrella del estudio: estudios, exámenes, documentos, orden."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "文曲 Wen Qu",
+"aliases": [
+"文曲",
+"Wen Qu"
+],
+"body": "Estrella del talento: elocuencia, arte, inspiración."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "左輔 Zuo Fu",
+"aliases": [
+"左輔",
+"Zuo Fu"
+],
+"body": "Estrella auxiliar: apoyo de benefactores y compañeros."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "右弼 You Bi",
+"aliases": [
+"右弼",
+"You Bi"
+],
+"body": "Estrella auxiliar: ayuda discreta, popularidad, coordinación."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "祿存 Lu Cun",
+"aliases": [
+"祿存",
+"Lu Cun"
+],
+"body": "Estrella de ingresos: ganancias estables, ahorro prudente."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "擎羊 Qing Yang",
+"aliases": [
+"擎羊",
+"Qing Yang"
+],
+"body": "Estrella dura: impulsividad, competencia, cortes; bien canalizada da valor."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "陀羅 Tuo Luo",
+"aliases": [
+"陀羅",
+"Tuo Luo"
+],
+"body": "Estrella dura: retrasos, enredos, terquedad; hacer las cosas dos veces."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "地空 Di Kong",
+"aliases": [
+"地空",
+"Di Kong"
+],
+"body": "Estrella del vacío: ideas poco convencionales, pérdidas, planes que fallan; buena para la filosofía."
+},
+{
+"cat": "Estrellas Zi Wei",
+"title": "地劫 Di Jie",
+"aliases": [
+"地劫",
+"Di Jie"
+],
+"body": "Estrella del saqueo: contratiempos y pérdidas; evita especular."
+},
+{
+"cat": "Cuatro Transformaciones",
+"title": "Riqueza (化祿)",
+"aliases": [
+"Riqueza",
+"化祿"
+],
+"body": "Riqueza, avance fluido y popularidad; las cosas empiezan bien."
+},
+{
+"cat": "Cuatro Transformaciones",
+"title": "Poder (化權)",
+"aliases": [
+"Poder",
+"化權"
+],
+"body": "Poder y control, capacidad en aumento, pero también tendencia a imponerse."
+},
+{
+"cat": "Cuatro Transformaciones",
+"title": "Fama (化科)",
+"aliases": [
+"Fama",
+"化科"
+],
+"body": "Fama, gente que ayuda, éxito en exámenes y documentos; lo malo se vuelve bueno."
+},
+{
+"cat": "Cuatro Transformaciones",
+"title": "Obstáculo (化忌)",
+"aliases": [
+"Obstáculo",
+"化忌"
+],
+"body": "Apego, obstáculos y deudas; la lección que más cuidado requiere en la vida."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Vida",
+"aliases": [
+"Vida",
+"命宮"
+],
+"body": "El carácter innato, los talentos y el patrón general de la vida."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Hermanos",
+"aliases": [
+"Hermanos",
+"兄弟"
+],
+"body": "Hermanos, iguales y sociedades."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Pareja",
+"aliases": [
+"Pareja",
+"夫妻"
+],
+"body": "El amor, el matrimonio y cómo es tu pareja."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Hijos",
+"aliases": [
+"Hijos",
+"子女"
+],
+"body": "Hijos, menores, intimidad y creatividad."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Riqueza",
+"aliases": [
+"Riqueza",
+"財帛"
+],
+"body": "La capacidad de ganar, la gestión del dinero y la actitud ante él."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Salud",
+"aliases": [
+"Salud",
+"疾厄"
+],
+"body": "La salud, la constitución y los puntos débiles."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Viajes",
+"aliases": [
+"Viajes",
+"遷移"
+],
+"body": "Salir, viajar, las oportunidades y la imagen fuera."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Amigos",
+"aliases": [
+"Amigos",
+"交友"
+],
+"body": "Amigos, colaboradores y la calidad de tu entorno."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Carrera",
+"aliases": [
+"Carrera",
+"官祿"
+],
+"body": "La carrera, la capacidad de trabajo y las profesiones adecuadas."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Propiedades",
+"aliases": [
+"Propiedades",
+"田宅"
+],
+"body": "Propiedades, el hogar y el ambiente familiar."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Espíritu",
+"aliases": [
+"Espíritu",
+"福德"
+],
+"body": "La vida interior, las aficiones y la capacidad de disfrutar."
+},
+{
+"cat": "Palacios Zi Wei",
+"title": "Zi Wei · Padres",
+"aliases": [
+"Padres",
+"父母"
+],
+"body": "Padres, mayores, jefes y trámites."
+},
+{
+"cat": "Conceptos",
+"title": "BaZi (Cuatro Pilares)",
+"aliases": [
+"BaZi (Cuatro Pilares)",
+"八字"
+],
+"body": "Año, mes, día y hora de nacimiento dan cada uno un tronco y una rama: ocho caracteres para leer el equilibrio de los cinco elementos y los diez dioses."
+},
+{
+"cat": "Conceptos",
+"title": "Maestro del Día",
+"aliases": [
+"Maestro del Día",
+"日主"
+],
+"body": "El tronco celeste del pilar del día; te representa a ti y toda lectura BaZi gira en torno a él."
+},
+{
+"cat": "Conceptos",
+"title": "Yo fuerte o débil",
+"aliases": [
+"Yo fuerte o débil",
+"身強身弱"
+],
+"body": "Cuánto apoyo recibe el Maestro del Día; un yo fuerte prefiere desahogarse, uno débil prefiere apoyo."
+},
+{
+"cat": "Conceptos",
+"title": "Elemento favorable",
+"aliases": [
+"Elemento favorable",
+"喜用神"
+],
+"body": "El elemento que más ayuda a tu carta y equilibra los cinco elementos."
+},
+{
+"cat": "Conceptos",
+"title": "Troncos ocultos",
+"aliases": [
+"Troncos ocultos",
+"藏干"
+],
+"body": "Troncos celestes escondidos en cada rama terrestre, p. ej. 寅 oculta 甲, 丙 y 戊."
+},
+{
+"cat": "Conceptos",
+"title": "Pilar de Suerte",
+"aliases": [
+"Pilar de Suerte",
+"大運"
+],
+"body": "Periodos de diez años en BaZi, contados hacia delante o atrás desde el pilar del mes."
+},
+{
+"cat": "Conceptos",
+"title": "Pilar anual",
+"aliases": [
+"Pilar anual",
+"流年"
+],
+"body": "El tronco y la rama de cada año, en interacción con tu carta."
+},
+{
+"cat": "Conceptos",
+"title": "Zi Wei Dou Shu",
+"aliases": [
+"Zi Wei Dou Shu",
+"紫微斗數"
+],
+"body": "Astrología de la Estrella Púrpura: doce palacios según el cumpleaños lunar y la hora, leídos por la posición de las estrellas y las cuatro transformaciones."
+},
+{
+"cat": "Conceptos",
+"title": "Palacio del Cuerpo",
+"aliases": [
+"Palacio del Cuerpo",
+"身宮"
+],
+"body": "En Zi Wei, el palacio que muestra tu enfoque adquirido y el centro de la vida adulta."
+},
+{
+"cat": "Conceptos",
+"title": "Buró de elemento",
+"aliases": [
+"Buró de elemento",
+"五行局"
+],
+"body": "Lo fija el nayin del Palacio de Vida (Agua 2, Madera 3, Metal 4, Tierra 5, Fuego 6); sitúa la estrella Zi Wei y el inicio de las décadas."
+},
+{
+"cat": "Conceptos",
+"title": "Cuatro transformaciones",
+"aliases": [
+"Cuatro transformaciones",
+"四化"
+],
+"body": "Riqueza, Poder, Fama y Obstáculo, según el tronco del año: la clave dinámica de Zi Wei."
+},
+{
+"cat": "Conceptos",
+"title": "Década",
+"aliases": [
+"Década",
+"大限"
+],
+"body": "En Zi Wei, cada periodo de diez años lo rige un palacio."
+},
+{
+"cat": "Conceptos",
+"title": "Hexagrama principal",
+"aliases": [
+"Hexagrama principal",
+"本卦"
+],
+"body": "El hexagrama obtenido; muestra la situación actual."
+},
+{
+"cat": "Conceptos",
+"title": "Hexagrama derivado",
+"aliases": [
+"Hexagrama derivado",
+"變卦"
+],
+"body": "En lo que se convierten las líneas móviles; muestra cómo evoluciona todo."
+},
+{
+"cat": "Conceptos",
+"title": "Hexagrama nuclear",
+"aliases": [
+"Hexagrama nuclear",
+"互卦"
+],
+"body": "Líneas 2–4 y 3–5 del hexagrama principal; el proceso oculto."
+},
+{
+"cat": "Conceptos",
+"title": "Líneas móviles",
+"aliases": [
+"Líneas móviles",
+"動爻"
+],
+"body": "Las líneas que cambian (yin viejo, yang viejo); la clave de la lectura."
+},
+{
+"cat": "Conceptos",
+"title": "Método de las tres monedas",
+"aliases": [
+"Método de las tres monedas",
+"三錢法"
+],
+"body": "Lanza tres monedas seis veces de abajo arriba; 6 y 9 son líneas móviles."
+},
+{
+"cat": "Conceptos",
+"title": "Numerología de la Flor del Ciruelo",
+"aliases": [
+"Numerología de la Flor del Ciruelo",
+"梅花易數"
+],
+"body": "Método de Shao Yong que usa números o la hora: trigrama superior, inferior y una línea móvil."
+},
+{
+"cat": "Conceptos",
+"title": "Términos solares",
+"aliases": [
+"Términos solares",
+"節氣"
+],
+"body": "Cada 15° de longitud solar, 24 al año; en BaZi el mes empieza en los términos 'jie' y el año en Lichun."
+},
+{
+"cat": "Conceptos",
+"title": "Mes intercalar",
+"aliases": [
+"Mes intercalar",
+"閏月"
+],
+"body": "Si caben 13 meses entre dos solsticios de invierno, el primer mes sin término principal es intercalar."
+},
+{
+"cat": "Conceptos",
+"title": "Nayin",
+"aliases": [
+"Nayin",
+"納音"
+],
+"body": "El elemento de cada par de las sesenta combinaciones, p. ej. 甲子 y 乙丑 son Metal del Mar."
+},
+{
+"cat": "Conceptos",
+"title": "Nueve y Doce",
+"aliases": [
+"Nueve y Doce",
+"九型十二宮"
+],
+"body": "Año, mes y día de nacimiento se vuelven tres pilares; su suma da el número de vida, que fija el tipo del Eneagrama y el Palacio de Vida, y luego los doce palacios se leen como Favorable, Alineado o Adverso."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 1 (Yo)",
+"aliases": [
+"Yo",
+"1宮"
+],
+"body": "El yo, Irritabilidad, Inquietud, Volatilidad emocional, Impulsividad, Ira, Arrebato de temperamento, Agitación, Daño."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 2 (Riqueza directa)",
+"aliases": [
+"Riqueza directa",
+"2宮"
+],
+"body": "Comida, Bienes materiales, Mi propio dinero, Personas de aspecto fino y agraciado, Gastos, Riqueza directa (ingresos estables y ganados), Valores, Cognición, Motivación, La boca."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 3 (Comunicación)",
+"aliases": [
+"Comunicación",
+"3宮"
+],
+"body": "Comunicación, Conversación, Pensamiento, Mente ágil, Aprendizaje, Lenguaje, Personas más jóvenes que uno, Iguales, Colegas, Compañeros de clase, Compañeros de pupitre, Vecinos, Hermanos, Salir, Estudios, Agilidad, Estar en movimiento, Marcharse, Separación, Haberse ido, Vivacidad, Sensación de novedad, La tiroides."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 4 (Hogar)",
+"aliases": [
+"Hogar",
+"4宮"
+],
+"body": "Hogar, Sensación de seguridad, Sensibilidad, Ansiedad, Fragilidad, Vacío interior, Preocupación, Inquietud, Introspección, Desgaste interior, Entorno donde se vive, Familia de origen, El entorno en que se nació, País de nacimiento, Mujeres, Madre."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 5 (Flor de Durazno)",
+"aliases": [
+"Flor de Durazno",
+"5宮"
+],
+"body": "Ser notado, Entretenimiento, Disfrute, Alegría, Flor de Durazno (atracción amorosa, quienes se sienten atraídos por ti), Encanto, Sexo, Destacar, Romance, Hombres, Ser visto, Padre."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 6 (Afán)",
+"aliases": [
+"Afán",
+"6宮"
+],
+"body": "Trabajo penoso, Ajetreo, Pensamientos dispersos y desordenados, Agotamiento mental, Cansancio, Tensión, Ser objeto de comentarios, Asuntos cotidianos, Labor, Darle demasiadas vueltas, Socializar, Trato social, Ideas, Concentración, Obsesión, Asuntos repetitivos, Repetición, Atención."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 7 (Los demás)",
+"aliases": [
+"Los demás",
+"7宮"
+],
+"body": "Preocuparse por lo que piensan los demás, Pensamiento fijo en otra persona, Los demás, Personas que uno conoce, Lazos que atan, Relaciones de uno a uno, Compañero de vida, Pareja, La persona con quien se sale, Amante, Personas cercanas, Matrimonio."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 8 (Riqueza indirecta)",
+"aliases": [
+"Riqueza indirecta",
+"8宮"
+],
+"body": "Riqueza indirecta (dinero inesperado, no ganado con trabajo), Soledad, Aburrimiento, Tormento, Ansiedad abrasadora, Desamparo, Oscuridad, Dolor, Sufrimiento, Sentir que el tiempo se alarga, El cuerpo, El dinero ajeno, La privacidad y los secretos de los demás, La vida privada de los demás, Desgaste oculto, Supervivencia, Fuerza física, Energía vital, Estado de salud."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 9 (Fortuna)",
+"aliases": [
+"Fortuna",
+"9宮"
+],
+"body": "Optimismo, Actitud positiva, Alegría, Deleite, Buena fortuna, Suerte, Religión, Fe, Traslado, Documentos, Papeleo, Títulos, El extranjero, Viajes largos, Cultura, Amplitud de miras, Temperamento alegre, Empuje, Ideales, Bondad, Carácter moral, Ceguera, Arrogancia, Significado, Oportunidad, Ocasión."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 10 (Carrera)",
+"aliases": [
+"Carrera",
+"10宮"
+],
+"body": "Carrera, Melancolía, Represión, Desánimo, Abatimiento, Problemas, Dificultad, Pruebas duras, Pérdida, Desafío, Ser apartado, Asuntos molestos, Infortunio, Personas mayores que uno, Trabajo, Mayores, Profesión, Reputación, Autoridad, Poder, Capacidad, Posición social, Logro, Gobierno."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 11 (Amigos)",
+"aliases": [
+"Amigos",
+"11宮"
+],
+"body": "Amigos, Grupos, Cambios de rumbo, Cambio, Ser distinto, Diferencia, Serenidad de juicio, Razón, Perturbación mental, Redes, Inestabilidad, Contratiempos, Ir de un lado a otro, Trastorno, Verse llevado de un lugar a otro."
+},
+{
+"cat": "Palacios Nueve y Doce",
+"title": "Palacio 12 (Oculto)",
+"aliases": [
+"Oculto",
+"12宮"
+],
+"body": "Obsesión, Confusión, Fantasía, Afinidad kármica, Genio, Carácter, Conducta, Moralidad, Entre bastidores, Pesimismo, Evasión, Pena, Sentimentalismo, Anhelo, Falta de amor, Amor callado, Desvanecerse de la vista, Ocultamiento, Desgaste, Aislamiento, Disolución de uno mismo, Karma, Ciclos, Renacimiento, Reencarnación, Lo esotérico, Metafísica, Estar aislado del mundo, Ocultarse, Engaño."
+},
+{
+"cat": "Eneagrama",
+"title": "1 · El Perfeccionista",
+"aliases": [
+"El Perfeccionista",
+"1"
+],
+"body": "Con principios, perseverante, con autocontrol. El tipo racional y ordenado. Se esfuerzan por mantener altos el nivel y la calidad, cuidan siempre el detalle y quieren aumentar la productividad. Suelen empujar a los demás a mejorar, a ser más eficaces y a hacer lo correcto. Por ser tan ordenados, pueden volverse demasiado críticos consigo mismos y con los demás. Detestan el desperdicio y el descuido, lo que puede llevarles a intervenir en todo, grande o pequeño, sin fin, y a hacer críticas desalentadoras. En su mejor momento juzgan con acierto, deciden con sabiduría, se convierten en modelos de integridad y asumen muy bien la responsabilidad."
+},
+{
+"cat": "Eneagrama",
+"title": "2 · El Ayudador",
+"aliases": [
+"El Ayudador",
+"2"
+],
+"body": "Generoso, agradecido, dotado para el trato. El tipo afectuoso, dotado para las relaciones. Es sensible a lo que los demás necesitan y siempre intenta satisfacerlo. Aprecia el talento ajeno, sabe hacer de confidente y de guía, y se maneja bien con la gente. Pero le cuesta muchísimo decir que no, y el deseo de ayudar mejor le somete a mucha tensión. No le gustan los entornos de trabajo impersonales, lo que puede llevarle a tener favoritos y a perder tiempo en las relaciones. En su mejor momento es empático y generoso, y ayuda al equipo a estrechar lazos."
+},
+{
+"cat": "Eneagrama",
+"title": "3 · El Triunfador",
+"aliases": [
+"El Triunfador",
+"3"
+],
+"body": "Adaptable, ambicioso, concentrado. El tipo adaptable y ambicioso. Sabe cómo sacar el trabajo adelante con más eficacia y conforme a lo que el cliente espera. Suele ser atractivo, encantador y lleno de energía, con una aguda percepción de sí mismo, de su equipo y del negocio. Le gusta que le noten y a menudo le atraen los puestos de éxito y prestigio. Disfruta compitiendo, y la necesidad de estatus y de progreso personal le empuja a ser un adicto al trabajo, lo que puede llevarle a atajar para mantenerse delante. En su mejor momento resulta verdaderamente talentoso y admirable, y suele verse como el modelo que levanta la moral de todos."
+},
+{
+"cat": "Eneagrama",
+"title": "4 · El Individualista",
+"aliases": [
+"El Individualista",
+"4"
+],
+"body": "Reflexivo, artístico, expresivo. El tipo reflexivo y con talento artístico. Expresivo, capaz de dejar honda impresión, ensimismado, de ánimo que cambia sin aviso. El Individualista desprende un encanto singular. En su exigencia sobre la buena palabra, la originalidad y la huella personal en el trabajo no transige. No le gusta el trabajo sin creatividad. Es hipersensible a la crítica, lo que puede dejarle voluble e irregular en el trabajo. En su mejor momento lleva intuición y creatividad a lo que hace, lo mejora con una hondura y una singularidad de sentimiento que solo él tiene, y llega a apreciar a todos los demás tipos."
+},
+{
+"cat": "Eneagrama",
+"title": "5 · El Investigador",
+"aliases": [
+"El Investigador",
+"5"
+],
+"body": "Perspicaz, curioso, reservado. El tipo de aguda observación y gusto por discutir. Ávido de saber, innovador, celoso de su intimidad, excéntrico. El Investigador es un aprendiz y experimentador incansable, sobre todo en campos técnicos. Le gusta seguir su curiosidad hasta el detalle y explorar el principio de las cosas. Su capacidad de análisis es fuerte y ama descubrir, más que reservar tiempo para comprometerse y construir relaciones. Insano, puede volverse arrogante, dejar de comunicarse y librar luchas constantes dentro de su cabeza. En su mejor momento se vuelve clarividente, capaz de traer ideas del todo nuevas al trabajo."
+},
+{
+"cat": "Eneagrama",
+"title": "6 · El Leal",
+"aliases": [
+"El Leal",
+"6"
+],
+"body": "Trabajador, fiable, responsable. El tipo que atrae la atención y es leal. Agradable, responsable, ansioso, lleno de dudas. El Leal es trabajador y fiable, y sabe construir en el trabajo las alianzas que hacen que las cosas salgan mejor. Sabe medir los motivos y los méritos ajenos y busca los problemas latentes del entorno laboral. No le gusta afrontar una crisis, quiere que todos coincidan y quiere ver venir el futuro. Sin la autoridad que le da el grupo se vuelve indeciso, le cuesta muchísimo actuar y cae en culpar a los demás. En su mejor momento es seguro, independiente y valiente, y a menudo puede devolver al equipo a sus valores fundacionales."
+},
+{
+"cat": "Eneagrama",
+"title": "7 · El Entusiasta",
+"aliases": [
+"El Entusiasta",
+"7"
+],
+"body": "Polifacético, optimista, con iniciativa. El tipo polifacético y optimista. Con iniciativa, de talento amplio, impulsivo, con la energía repartida. El Entusiasta destaca en el cambio, la variedad, el estímulo y la innovación. Se expresa con claridad, tiene humor y sabe ganar a otros para sus ideas. Siempre persigue la moda, buscando nuevas posibilidades y nuevos enfoques. Puede llevar varios trabajos a la vez, pero no sostenerlos. Insano, se vuelve hablador, disperso en la atención y desenfocado en la energía, y deja mucho a medias. En su mejor momento fija su foco en una meta que valga la pena y trabaja con verdadera eficacia."
+},
+{
+"cat": "Eneagrama",
+"title": "8 · El Desafiador",
+"aliases": [
+"El Desafiador",
+"8"
+],
+"body": "Poderoso, decidido, con autoridad. El tipo poderoso y decidido. Seguro de sí, con autoridad, obstinado, confrontador. El Desafiador sabe exactamente qué quiere hacer y siempre tiene la capacidad de hacerlo bien. Toma decisiones difíciles, ve los problemas graves como un desafío y supera la dificultad que encierran. Quiere el puesto de mando y le cuesta mucho delegar una tarea o compartir el liderazgo. Le gusta apoyar, proteger e inspirar a otros, pero insano amenazará a la gente para que haga las cosas a su manera, creando enemigos innecesarios dentro y fuera de la empresa. En su mejor momento se vuelve magnánimo y usa su fuerza para elevar el nivel de vida de los demás."
+},
+{
+"cat": "Eneagrama",
+"title": "9 · El Pacificador",
+"aliases": [
+"El Pacificador",
+"9"
+],
+"body": "Armonioso, acomodaticio, de fiar. El tipo armonioso y acomodaticio. Muy receptivo, de fiar, complaciente. El Pacificador crea un equipo armónico subrayando lo positivo que hay en él, y así alivia el conflicto y la tensión. Apoya y acoge a los demás, trabaja bien junto a la gente y es humilde. No le gusta el conflicto en el equipo y siempre intenta construir relaciones armónicas y estables. Pero, por seguir la corriente, puede evitar sostener su propia opinión y enfadarse mucho por dentro. Insano, su trabajo se vuelve ineficaz, terco y descuidado. En su mejor momento sabe conciliar diferencias y reunir a la gente en un entorno estable y a la vez vivo."
+}
+]

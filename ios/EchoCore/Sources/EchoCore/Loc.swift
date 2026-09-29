@@ -1,0 +1,91 @@
+import Foundation
+
+/// 系統訊息（非模型生成）的四語字串。
+public enum Loc {
+    static let table: [String: [String]] = [
+        // [zh, en, es, it]
+        "profile.ack": ["收到，%@。現在可以排八字和紫微斗數了！", "Got it, %@. I can now cast your BaZi and Zi Wei!",
+                        "Recibido, %@. ¡Ya puedo hacer tu BaZi y tu Zi Wei!", "Ricevuto, %@. Ora posso fare il tuo BaZi e Zi Wei!"],
+        "profile.birthday": ["生日記為%@", "birthday set to %@", "cumpleaños: %@", "compleanno: %@"],
+        "profile.time": ["出生時間記為 %@（%@時）", "birth time set to %@ (%@ hour)", "hora de nacimiento: %@ (hora %@)",
+                         "ora di nascita: %@ (ora %@)"],
+        "profile.male": ["性別記為男", "gender set to male", "género: hombre", "genere: uomo"],
+        "profile.female": ["性別記為女", "gender set to female", "género: mujer", "genere: donna"],
+        "teach": ["學會了！以後「%@」會觸動%@。我的十二宮感知又進化了一點。",
+                  "Learned it! From now on “%@” touches %@. My twelve-palace perception just evolved a bit.",
+                  "¡Aprendido! Desde ahora «%@» toca %@. Mi percepción de los doce palacios evolucionó un poco.",
+                  "Imparato! D'ora in poi «%@» tocca %@. La mia percezione dei dodici palazzi si è evoluta un po'."],
+        "needGender": ["大運的順逆要看性別。告訴我「我是男生」或「我是女生」就可以了。",
+                       "Luck pillars depend on gender. Just tell me “I'm a man” or “I'm a woman”.",
+                       "Los pilares de suerte dependen del género. Dime «soy hombre» o «soy mujer».",
+                       "I pilastri della sorte dipendono dal genere. Dimmi «sono un uomo» o «sono una donna»."],
+        "noBirthday": ["我還不知道你的生日！直接告訴我，例如：我的生日是2000年1月1日，或到「調頻台」選好日期（會自動儲存）。",
+                       "I don't know your birthday yet! Just tell me, e.g. my birthday is 2000-01-01, or pick it in Tuning (it saves automatically).",
+                       "¡Aún no sé tu cumpleaños! Dímelo, por ejemplo: mi cumpleaños es 2000-01-01, o elígelo en Ajustes (se guarda solo).",
+                       "Non conosco ancora il tuo compleanno! Dimmelo, ad esempio: il mio compleanno è 2000-01-01, oppure sceglilo in Impostazioni (si salva da solo)."],
+        "web": ["資料庫裡沒有「%@」，我上網幫你找…", "“%@” isn't in my library, searching the web…",
+                "«%@» no está en mi biblioteca, buscando en la web…", "«%@» non è nella mia biblioteca, cerco sul web…"],
+        "webFound": ["維基百科：%@", "Wikipedia: %@", "Wikipedia: %@", "Wikipedia: %@"],
+        "webAsk": ["這題我本地沒有答案，我上網幫你查一下…", "I don't have that offline — let me search the web…",
+                   "No lo tengo sin conexión, déjame buscar en la web…", "Non ce l'ho offline, cerco sul web…"],
+        "webResult": ["我上網查了「%@」，整理給你：", "I searched the web for “%@”. Here's what I found:",
+                      "Busqué «%@» en la web. Esto encontré:", "Ho cercato «%@» sul web. Ecco cosa ho trovato:"],
+        "webSources": ["來源", "Sources", "Fuentes", "Fonti"],
+        "webFail": ["網路上暫時查不到「%@」（可能沒有網路），換個說法或稍後再試？", "I couldn't find “%@” online right now (maybe no connection). Try rephrasing or later?",
+                    "No encontré «%@» en línea ahora (quizá sin conexión). ¿Otra forma o más tarde?", "Non trovo «%@» online ora (forse senza connessione). Riformuli o riprovi dopo?"],
+        "webNone": ["維基百科也找不到「%@」，換個關鍵字試試？", "Wikipedia doesn't have “%@” either. Try another keyword?",
+                    "Wikipedia tampoco tiene «%@». ¿Otra palabra clave?", "Neanche Wikipedia ha «%@». Provi un'altra parola?"],
+        "unstable": ["……訊號有點不穩，可以再說一次嗎？", "…the signal is a bit unstable, could you say that again?",
+                     "…la señal está inestable, ¿puedes repetirlo?", "…il segnale è instabile, puoi ripetere?"],
+        "card.gua.coins": ["三錢起卦", "Three-coin cast", "Tirada de tres monedas", "Lancio delle tre monete"],
+        "card.gua.plum": ["梅花易數 %@", "Plum Blossom %@", "Flor de Ciruelo %@", "Fiore di Susino %@"],
+        "card.gua.primary": ["本卦", "Primary", "Principal", "Principale"],
+        "card.gua.changed": ["變卦", "Changing to", "Cambia a", "Diventa"],
+        "card.gua.mutual": ["互卦", "Nuclear", "Nuclear", "Nucleare"],
+        "card.hexagram": ["第%@卦", "Hexagram %@", "Hexagrama %@", "Esagramma %@"],
+        "card.bazi": ["八字 · 四柱", "BaZi · Four Pillars", "BaZi · Cuatro Pilares", "BaZi · Quattro Pilastri"],
+        "card.dayMaster": ["日主", "Day Master", "Maestro del Día", "Maestro del Giorno"],
+        "card.luck": ["八字大運（%@歲起）", "BaZi luck pillars (from age %@)", "Pilares de suerte BaZi (desde los %@)",
+                      "Pilastri della sorte BaZi (dai %@ anni)"],
+        "card.age": ["%@歲", "age %@", "%@ años", "%@ anni"],
+        "card.baziYear": ["八字流年 %@", "BaZi annual pillar %@", "Pilar anual BaZi %@", "Pilastro annuale BaZi %@"],
+        "card.ziwei": ["紫微斗數", "Zi Wei Dou Shu", "Zi Wei Dou Shu", "Zi Wei Dou Shu"],
+        "card.lifePalace": ["命宮", "Life Palace", "Palacio de Vida", "Palazzo della Vita"],
+        "card.today": ["今日", "Today", "Hoy", "Oggi"],
+        "card.month": ["流月", "Monthly", "Mensual", "Mensile"],
+        "card.year": ["流年", "Annual", "Anual", "Annuale"],
+        "card.luckPillar": ["大運", "Luck Pillar", "Pilar de Suerte", "Pilastro della Sorte"],
+        "card.natal": ["本命盤", "Natal chart", "Carta natal", "Tema natale"],
+        "card.type": ["九型人格", "Enneagram", "Eneagrama", "Enneagramma"],
+        "card.syn": ["合盤", "Compatibility", "Compatibilidad", "Compatibilità"],
+        "card.portrait": ["命主畫像", "Your portrait", "Tu retrato", "Il tuo ritratto"],
+        "card.library": ["資料庫", "Library", "Biblioteca", "Biblioteca"],
+        "noHourCard": ["未設定出生時辰，只排三柱", "No birth time set, three pillars only", "Sin hora de nacimiento, solo tres pilares",
+                       "Nessuna ora di nascita, solo tre pilastri"],
+        "time.now": ["現在是 %@。訊號時鐘校準完畢！", "It's %@. Signal clock calibrated!", "Son las %@. ¡Reloj de señal calibrado!",
+                     "Sono le %@. Orologio del segnale calibrato!"],
+        "time.date": ["今天是 %@。", "Today is %@.", "Hoy es %@.", "Oggi è %@."],
+        "math": ["計算結果：%@ = %@", "Result: %@ = %@", "Resultado: %@ = %@", "Risultato: %@ = %@"],
+        "tail.bday": ["順帶看今天：白天與夜裡的宮位見下方。想細看就說「今天運勢」。",
+                      "Today at a glance — day: %@; night: %@. Say “today's fortune” for details.",
+                      "Hoy de un vistazo — día: %@; noche: %@. Di «mi suerte de hoy» para el detalle.",
+                      "Oggi in breve — giorno: %@; notte: %@. Di' «fortuna di oggi» per i dettagli."],
+        "tail.ctx": ["順帶看大局：這個月（流月）%@、今年（流年）%@、目前大運%@。",
+                     "The bigger picture — this month: %@; this year: %@; current luck period: %@. Ask “this month”, “this year” or “my luck period” for details.",
+                     "El panorama — este mes: %@; este año: %@; década de suerte actual: %@. Pregunta «este mes», «este año» o «mi década de suerte».",
+                     "Il quadro generale — questo mese: %@; quest'anno: %@; decennio attuale: %@. Chiedi «questo mese», «quest'anno» o «il mio decennio»."],
+        "dayOn": ["%@：日宮%@，夜宮%@。", "%@ — day palace: %@; night palace: %@.", "%@ — palacio de día: %@; palacio de noche: %@.",
+                  "%@ — palazzo del giorno: %@; palazzo della notte: %@."],
+        "math.div0": ["除以零會讓訊號爆炸的！換個算式吧。", "Dividing by zero would blow up the signal! Try another one.",
+                      "¡Dividir entre cero haría explotar la señal! Prueba otra.", "Dividere per zero farebbe esplodere il segnale! Provane un'altra."],
+    ]
+
+    public static func s(_ key: String, _ L: Lang, _ args: String...) -> String {
+        let i = [Lang.zh, .en, .es, .it].firstIndex(of: L)!
+        var out = table[key]![i]
+        for a in args {
+            if let r = out.range(of: "%@") { out.replaceSubrange(r, with: a) }
+        }
+        return out
+    }
+}

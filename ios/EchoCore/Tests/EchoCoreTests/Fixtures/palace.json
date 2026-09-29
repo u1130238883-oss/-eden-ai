@@ -1,0 +1,3397 @@
+{
+"perceive": [
+{
+"text": "NineSun是什麼意思！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，sorry。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，下班了",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，什麼是霓環市？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，你喜歡什麼顏色耶",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "NineSun，你在亂說啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，你在哪裡耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，你好",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，你好可愛嗎",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "NineSun，你好蠢！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，你幾歲了耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，你很棒",
+"lang": "zh",
+"palace": 9
+},
+{
+"text": "NineSun，你是什麼嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，你是男的還是女的。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，你會說英文嗎！",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "NineSun，你的年紀～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，嘿耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，好開心耶",
+"lang": "zh",
+"palace": 9
+},
+{
+"text": "NineSun，怎麼會耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，我做到了～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，我好失敗呀",
+"lang": "zh",
+"palace": 10
+},
+{
+"text": "NineSun，我好孤獨?",
+"lang": "zh",
+"palace": 8
+},
+{
+"text": "NineSun，我想運動",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，我睡不著。",
+"lang": "zh",
+"palace": 12
+},
+{
+"text": "NineSun，早啊耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，有幾個行星",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，沒人陪我！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，無聊？",
+"lang": "zh",
+"palace": 8
+},
+{
+"text": "NineSun，知道了嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，知道了！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，神經網路是什麼？",
+"lang": "zh",
+"palace": 11
+},
+{
+"text": "NineSun，累了",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "NineSun，考試考砸了",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "NineSun，股票明天會漲嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，說個故事",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，誰做了你～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，講故事。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，講笑話啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，貓還是狗!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "NineSun，貓還是狗呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "一天有幾小時",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "一天有幾小時。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "一年有幾天?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "一年有幾天呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "一年有幾天！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "一起玩遊戲",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "下班了?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "下課了嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "不好意思?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "不好意思。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "中午好",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "中午好。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "中午好～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "什麼是人工智慧",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "什麼是神經網路!",
+"lang": "zh",
+"palace": 11
+},
+{
+"text": "什麼是神經網路！",
+"lang": "zh",
+"palace": 11
+},
+{
+"text": "今天會下雨嗎嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "介紹一下你自己！",
+"lang": "zh",
+"palace": 1
+},
+{
+"text": "作業好多？",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "你住哪裡？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你叫什麼名字啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你叫什麼啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你吃飯了嗎?",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "你吃飯了嗎啊",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "你喜歡什麼音樂！",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "你喜歡我嗎",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "你在哪裡?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你在哪裡啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你好厲害嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你幾歲了呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你愛我嗎!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你是人工智慧嗎。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你是男的還是女的～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你是笨蛋嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你是誰做的啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你最喜歡的顏色呀",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "你會吃東西嗎。",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "你會學習嗎!",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "你會英文嗎",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "你會說英文嗎?",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "你會進步嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你會進步嗎？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你的年紀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你的底層是什麼呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你的性別！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你聰明嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你能做什麼",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你長什麼樣子～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你長怎樣",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "你長怎樣！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "去上班了",
+"lang": "zh",
+"palace": 10
+},
+{
+"text": "去學校了。",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "吃什麼好",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "哈哈哈～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "哈哈！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，sorry",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，speak english",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，thanks",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，下線了嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，下課了",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，什麼是人工智慧呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，你喜歡什麼",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "問你喔，你喜歡我嗎",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "問你喔，你在亂說耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，你好蠢",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，你幾歲！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，你會什麼～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，你的底層是什麼！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，來個笑話!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，哈哈哈嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，外面天氣好嗎呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，多謝!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，失眠",
+"lang": "zh",
+"palace": 12
+},
+{
+"text": "問你喔，感謝!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，我好難過啊",
+"lang": "zh",
+"palace": 12
+},
+{
+"text": "問你喔，我想運動！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，我要去上學呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，早上好啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，早啊耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，答非所問嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，考試過了",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "問你喔，聽什麼歌",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，誰開發你的呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "問你喔，講個故事!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，bye?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，speak english～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，thank you",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，中午好呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，了解嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，人工智慧是什麼啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，什麼是神經網路～",
+"lang": "zh",
+"palace": 11
+},
+{
+"text": "喂，你喜歡什麼",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "喂，你喜歡什麼顏色",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "喂，你喜歡貓還是狗！",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "喂，你很棒",
+"lang": "zh",
+"palace": 9
+},
+{
+"text": "喂，你是男生還是女生。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，你會上網嗎？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，你有什麼功能嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，去上班了",
+"lang": "zh",
+"palace": 10
+},
+{
+"text": "喂，地球是什麼形狀。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，地球是圓的嗎嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，天氣如何",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，天空為什麼是藍色",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，天空為什麼是藍色！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，好的",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，好難過～",
+"lang": "zh",
+"palace": 12
+},
+{
+"text": "喂，怎麼提高效率！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，我下班了",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，我不想寫作業呀",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "喂，我不想寫作業？",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "喂，我今天生日～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，我壓力很大",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "喂，我好緊張！",
+"lang": "zh",
+"palace": 4
+},
+{
+"text": "喂，我很怕",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，我很焦慮！",
+"lang": "zh",
+"palace": 4
+},
+{
+"text": "喂，我搞砸了",
+"lang": "zh",
+"palace": 10
+},
+{
+"text": "喂，明天會發生什麼嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，晚安安?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，氣死我了～",
+"lang": "zh",
+"palace": 1
+},
+{
+"text": "喂，為什麼叫你ninesun！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，現在幾點",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，真的嗎!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喂，睡不著啊",
+"lang": "zh",
+"palace": 12
+},
+{
+"text": "喂，講個故事!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "喜歡你？",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "嗯…hi",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…ninesun",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…一天幾個小時",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…一年幾天",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…什麼是裂隙",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…今天天氣怎樣耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…今天是我生日!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…你住的街",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…你喜歡動物嗎～",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "嗯…你喜歡玩遊戲嗎。",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "嗯…你是人工智慧嗎耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…你是怎麼做出來的!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…你最喜歡的顏色",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "嗯…你的名字什麼意思～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…你的興趣是什麼",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…你的興趣是什麼耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…你長怎樣呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…可愛呀",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "嗯…地球是圓的嗎啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…好可怕啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…幫我加油!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…幫我加油！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…幫我駭進系統?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…我喜歡你",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "嗯…我失敗了！",
+"lang": "zh",
+"palace": 10
+},
+{
+"text": "嗯…我好累～",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "嗯…是嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…晚上好呀!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…有什麼好看的電影",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…水幾度會沸騰",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…睡不著！",
+"lang": "zh",
+"palace": 12
+},
+{
+"text": "嗯…肚子餓！",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "嗯…要上課了。",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "嗯…講故事嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嗯…零號街？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "嘿耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "地球是圓的嗎。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "地球是圓的嗎啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "壓力好大?",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "太陽系有幾顆行星啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "太陽系有幾顆行星嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "好厲害啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "好可愛嗎",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "好好笑",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "好寂寞～",
+"lang": "zh",
+"palace": 8
+},
+{
+"text": "學習方法",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "寫一篇論文？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "幫我駭進系統啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "心情不好",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "我下班了!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "我不想寫作業耶",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "我不舒服",
+"lang": "zh",
+"palace": 8
+},
+{
+"text": "我不開心！",
+"lang": "zh",
+"palace": 9
+},
+{
+"text": "我今天生日嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "我先離開了",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "我先離開了!",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "我去睡囉啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "我喜歡你",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "我壓力很大",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "我好害怕",
+"lang": "zh",
+"palace": 4
+},
+{
+"text": "我好害怕啊",
+"lang": "zh",
+"palace": 4
+},
+{
+"text": "我好餓呀",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "我很高興！",
+"lang": "zh",
+"palace": 9
+},
+{
+"text": "我愛你！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "我生日啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "我生病了?",
+"lang": "zh",
+"palace": 8
+},
+{
+"text": "我生病了。",
+"lang": "zh",
+"palace": 8
+},
+{
+"text": "我考好了！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "我要去上學呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "我要去上班。",
+"lang": "zh",
+"palace": 10
+},
+{
+"text": "打遊戲？",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "推薦吃的!",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "推薦電影",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "推薦音樂呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "放學了！",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "早啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "是嗎啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "晚上好呀呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "晚餐吃什麼～",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "有幾個行星嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，ok",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，人工智慧是什麼",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，什麼是注意力機制？",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "欸，今天吃什麼?",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "欸，今天會下雨嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，作業好多耶",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "欸，你住的街?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，你喜歡貓還是狗!",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "欸，你在亂說",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，你很可愛?",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "欸，你是人工智慧嗎？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，你是機器人嗎。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，你是機器人嗎！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，你會進步嗎!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，你有什麼愛好啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，你需要網路嗎",
+"lang": "zh",
+"palace": 11
+},
+{
+"text": "欸，好厲害嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，心情不好～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，怎麼提高效率啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，我去睡囉",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，我好孤獨",
+"lang": "zh",
+"palace": 8
+},
+{
+"text": "欸，我好疲倦",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "欸，我愛你!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，推薦音樂～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，早上好",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，晚安安啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，為什麼天空是藍的",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，終於下班了",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，考試過了！",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "欸，裂隙危險嗎嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，要上班了",
+"lang": "zh",
+"palace": 10
+},
+{
+"text": "欸，說個笑話?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，誰做了你耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，量子糾纏的數學推導?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "欸，霓環市是什麼呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "水幾度會沸騰～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "水的沸點是多少耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "沒事做啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "沒人陪我！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "為什麼叫你ninesun嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "為什麼天空是藍的？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "為啥",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "無聊",
+"lang": "zh",
+"palace": 8
+},
+{
+"text": "現在幾點",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "現在時間",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "現在時間嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "真的嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "真的嗎!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "睡覺了嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "給我打氣",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "給我打氣呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "翻譯這段法文?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "翻譯這段法文嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "股票明天會漲嗎!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "自我介紹",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "裂隙危險嗎呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "裂隙危險嗎？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "要上班了～",
+"lang": "zh",
+"palace": 10
+},
+{
+"text": "要上課了！",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "要睡了",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "要運動嗎!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "說個笑話耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "誰創造了你？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問不好意思",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問什麼是transformer！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問什麼是注意力機制",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "請問你吃什麼！",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "請問你吃飯了嗎",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "請問你喜歡我嗎耶",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "請問你在說什麼",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問你是男的還是女的?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問你會做什麼耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問你會偷看我的資料嗎。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問你會進步嗎～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問你用什麼模型",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問你用什麼模型嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問你能做什麼！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問嘿啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問好可怕?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問好煩。",
+"lang": "zh",
+"palace": 1
+},
+{
+"text": "請問學習方法耶",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "請問怎麼會？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問怎麼讀書",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "請問我不舒服嗎",
+"lang": "zh",
+"palace": 8
+},
+{
+"text": "請問我好失敗",
+"lang": "zh",
+"palace": 10
+},
+{
+"text": "請問我好開心",
+"lang": "zh",
+"palace": 9
+},
+{
+"text": "請問我放學了？",
+"lang": "zh",
+"palace": 3
+},
+{
+"text": "請問我生日！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問我考好了嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問明天會發生什麼",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問晚安安？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問晚安耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問氣死我了呀",
+"lang": "zh",
+"palace": 1
+},
+{
+"text": "請問水幾度會沸騰。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問水幾度會沸騰！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問注意力是什麼",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "請問煩死了？",
+"lang": "zh",
+"palace": 1
+},
+{
+"text": "請問現在時間呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問睡不著！",
+"lang": "zh",
+"palace": 12
+},
+{
+"text": "請問肚子餓",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "請問裂隙危險嗎耶",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "請問要連網嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "講笑話?",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "謝謝你？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "運動建議",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，ai是什麼。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，一天有幾小時啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，一年有幾天",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，一起玩遊戲嗎",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "那個，中午好～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，什麼是注意力機制",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "那個，今天吃什麼嗎",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "那個，今天超開心。",
+"lang": "zh",
+"palace": 9
+},
+{
+"text": "那個，你住哪裡啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，你喜歡什麼顏色",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "那個，你喜歡我嗎？",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "那個，你聰明嗎!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，你長怎樣？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，你離線能用嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，可愛！",
+"lang": "zh",
+"palace": 5
+},
+{
+"text": "那個，好好笑",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，好煩",
+"lang": "zh",
+"palace": 1
+},
+{
+"text": "那個，好累",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "那個，幫我加油！",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，我不舒服～",
+"lang": "zh",
+"palace": 8
+},
+{
+"text": "那個，我很高興",
+"lang": "zh",
+"palace": 9
+},
+{
+"text": "那個，拜拜呀",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，推薦歌啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，推薦電影",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，推薦電影～",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，有幾個行星。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，為啥!",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，看什麼電影？",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，神經網路是什麼",
+"lang": "zh",
+"palace": 11
+},
+{
+"text": "那個，累了呀",
+"lang": "zh",
+"palace": 6
+},
+{
+"text": "那個，肚子餓!",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "那個，零號街",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "那個，霓環市在哪嗎",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "閒著啊",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "零號街是哪裡。",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "霓環市在哪",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "霓環市是什麼",
+"lang": "zh",
+"palace": null
+},
+{
+"text": "餓了呀",
+"lang": "zh",
+"palace": 2
+},
+{
+"text": "hi",
+"lang": "en",
+"palace": null
+},
+{
+"text": "hello",
+"lang": "en",
+"palace": null
+},
+{
+"text": "hey",
+"lang": "en",
+"palace": null
+},
+{
+"text": "yo",
+"lang": "en",
+"palace": null
+},
+{
+"text": "hi there",
+"lang": "en",
+"palace": null
+},
+{
+"text": "hello NineSun",
+"lang": "en",
+"palace": null
+},
+{
+"text": "good morning",
+"lang": "en",
+"palace": null
+},
+{
+"text": "morning",
+"lang": "en",
+"palace": null
+},
+{
+"text": "good night",
+"lang": "en",
+"palace": null
+},
+{
+"text": "going to sleep",
+"lang": "en",
+"palace": null
+},
+{
+"text": "bedtime",
+"lang": "en",
+"palace": null
+},
+{
+"text": "gotta sleep",
+"lang": "en",
+"palace": null
+},
+{
+"text": "bye",
+"lang": "en",
+"palace": null
+},
+{
+"text": "goodbye",
+"lang": "en",
+"palace": null
+},
+{
+"text": "see you",
+"lang": "en",
+"palace": null
+},
+{
+"text": "gotta go",
+"lang": "en",
+"palace": null
+},
+{
+"text": "later",
+"lang": "en",
+"palace": null
+},
+{
+"text": "who are you",
+"lang": "en",
+"palace": null
+},
+{
+"text": "what are you",
+"lang": "en",
+"palace": null
+},
+{
+"text": "introduce yourself",
+"lang": "en",
+"palace": null
+},
+{
+"text": "what's your name",
+"lang": "en",
+"palace": null
+},
+{
+"text": "what is your name",
+"lang": "en",
+"palace": null
+},
+{
+"text": "are you an ai",
+"lang": "en",
+"palace": null
+},
+{
+"text": "are you a robot",
+"lang": "en",
+"palace": null
+},
+{
+"text": "are you human",
+"lang": "en",
+"palace": null
+},
+{
+"text": "are you real",
+"lang": "en",
+"palace": null
+},
+{
+"text": "who made you",
+"lang": "en",
+"palace": null
+},
+{
+"text": "who created you",
+"lang": "en",
+"palace": null
+},
+{
+"text": "who built you",
+"lang": "en",
+"palace": null
+},
+{
+"text": "how do you work",
+"lang": "en",
+"palace": 10
+},
+{
+"text": "what model are you",
+"lang": "en",
+"palace": null
+},
+{
+"text": "what's your architecture",
+"lang": "en",
+"palace": null
+},
+{
+"text": "do you need internet",
+"lang": "en",
+"palace": 11
+},
+{
+"text": "are you offline",
+"lang": "en",
+"palace": null
+},
+{
+"text": "do you spy on me",
+"lang": "en",
+"palace": null
+},
+{
+"text": "you are stupid",
+"lang": "en",
+"palace": null
+},
+{
+"text": "you're dumb",
+"lang": "en",
+"palace": null
+},
+{
+"text": "you are useless",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i'm tired",
+"lang": "en",
+"palace": 6
+},
+{
+"text": "so tired",
+"lang": "en",
+"palace": 6
+},
+{
+"text": "i am exhausted",
+"lang": "en",
+"palace": 6
+},
+{
+"text": "i'm exhausted",
+"lang": "en",
+"palace": 6
+},
+{
+"text": "i'm sad",
+"lang": "en",
+"palace": 12
+},
+{
+"text": "i feel sad",
+"lang": "en",
+"palace": 12
+},
+{
+"text": "i want to cry",
+"lang": "en",
+"palace": 12
+},
+{
+"text": "i feel down",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i'm happy",
+"lang": "en",
+"palace": 9
+},
+{
+"text": "so happy",
+"lang": "en",
+"palace": 9
+},
+{
+"text": "i feel great",
+"lang": "en",
+"palace": null
+},
+{
+"text": "awesome",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i'm bored",
+"lang": "en",
+"palace": 8
+},
+{
+"text": "so bored",
+"lang": "en",
+"palace": 8
+},
+{
+"text": "nothing to do",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i'm anxious",
+"lang": "en",
+"palace": 4
+},
+{
+"text": "i'm nervous",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i'm stressed",
+"lang": "en",
+"palace": 6
+},
+{
+"text": "so much pressure",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i'm lonely",
+"lang": "en",
+"palace": 8
+},
+{
+"text": "i feel alone",
+"lang": "en",
+"palace": 8
+},
+{
+"text": "nobody cares about me",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i'm angry",
+"lang": "en",
+"palace": 1
+},
+{
+"text": "so annoying",
+"lang": "en",
+"palace": null
+},
+{
+"text": "that makes me mad",
+"lang": "en",
+"palace": null
+},
+{
+"text": "thanks",
+"lang": "en",
+"palace": null
+},
+{
+"text": "thank you",
+"lang": "en",
+"palace": null
+},
+{
+"text": "thx",
+"lang": "en",
+"palace": null
+},
+{
+"text": "thanks a lot",
+"lang": "en",
+"palace": null
+},
+{
+"text": "sorry",
+"lang": "en",
+"palace": null
+},
+{
+"text": "my bad",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i apologize",
+"lang": "en",
+"palace": null
+},
+{
+"text": "ok",
+"lang": "en",
+"palace": null
+},
+{
+"text": "okay",
+"lang": "en",
+"palace": null
+},
+{
+"text": "got it",
+"lang": "en",
+"palace": null
+},
+{
+"text": "sure",
+"lang": "en",
+"palace": null
+},
+{
+"text": "haha",
+"lang": "en",
+"palace": null
+},
+{
+"text": "lol",
+"lang": "en",
+"palace": null
+},
+{
+"text": "that's funny",
+"lang": "en",
+"palace": null
+},
+{
+"text": "you're cute",
+"lang": "en",
+"palace": 5
+},
+{
+"text": "so cute",
+"lang": "en",
+"palace": 5
+},
+{
+"text": "i love you",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i like you",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i'm hungry",
+"lang": "en",
+"palace": 2
+},
+{
+"text": "so hungry",
+"lang": "en",
+"palace": 2
+},
+{
+"text": "what should i eat",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i can't sleep",
+"lang": "en",
+"palace": 12
+},
+{
+"text": "insomnia",
+"lang": "en",
+"palace": 12
+},
+{
+"text": "tell me a joke",
+"lang": "en",
+"palace": null
+},
+{
+"text": "make me laugh",
+"lang": "en",
+"palace": null
+},
+{
+"text": "say something funny",
+"lang": "en",
+"palace": null
+},
+{
+"text": "tell me a story",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i want a story",
+"lang": "en",
+"palace": null
+},
+{
+"text": "what can you do",
+"lang": "en",
+"palace": null
+},
+{
+"text": "what are your features",
+"lang": "en",
+"palace": null
+},
+{
+"text": "help",
+"lang": "en",
+"palace": null
+},
+{
+"text": "cheer me up",
+"lang": "en",
+"palace": 9
+},
+{
+"text": "encourage me",
+"lang": "en",
+"palace": null
+},
+{
+"text": "give me strength",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i failed",
+"lang": "en",
+"palace": 10
+},
+{
+"text": "i messed up",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i failed my exam",
+"lang": "en",
+"palace": 10
+},
+{
+"text": "i did it",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i passed",
+"lang": "en",
+"palace": null
+},
+{
+"text": "i succeeded",
+"lang": "en",
+"palace": null
+},
+{
+"text": "it's my birthday",
+"lang": "en",
+"palace": null
+},
+{
+"text": "today is my birthday",
+"lang": "en",
+"palace": null
+},
+{
+"text": "can you speak chinese",
+"lang": "en",
+"palace": null
+},
+{
+"text": "do you speak chinese",
+"lang": "en",
+"palace": null
+},
+{
+"text": "what languages do you speak",
+"lang": "en",
+"palace": 3
+},
+{
+"text": "can you speak spanish",
+"lang": "en",
+"palace": null
+},
+{
+"text": "can you speak italian",
+"lang": "en",
+"palace": null
+},
+{
+"text": "hola",
+"lang": "es",
+"palace": null
+},
+{
+"text": "buenas",
+"lang": "es",
+"palace": null
+},
+{
+"text": "hola NineSun",
+"lang": "es",
+"palace": null
+},
+{
+"text": "qué tal",
+"lang": "es",
+"palace": null
+},
+{
+"text": "buenos días",
+"lang": "es",
+"palace": null
+},
+{
+"text": "buenas noches",
+"lang": "es",
+"palace": null
+},
+{
+"text": "me voy a dormir",
+"lang": "es",
+"palace": null
+},
+{
+"text": "adiós",
+"lang": "es",
+"palace": null
+},
+{
+"text": "chao",
+"lang": "es",
+"palace": null
+},
+{
+"text": "hasta luego",
+"lang": "es",
+"palace": null
+},
+{
+"text": "me voy",
+"lang": "es",
+"palace": null
+},
+{
+"text": "quién eres",
+"lang": "es",
+"palace": null
+},
+{
+"text": "qué eres",
+"lang": "es",
+"palace": null
+},
+{
+"text": "preséntate",
+"lang": "es",
+"palace": null
+},
+{
+"text": "cómo te llamas",
+"lang": "es",
+"palace": null
+},
+{
+"text": "eres una ia",
+"lang": "es",
+"palace": null
+},
+{
+"text": "eres un robot",
+"lang": "es",
+"palace": null
+},
+{
+"text": "eres humano",
+"lang": "es",
+"palace": null
+},
+{
+"text": "quién te creó",
+"lang": "es",
+"palace": null
+},
+{
+"text": "quién te hizo",
+"lang": "es",
+"palace": null
+},
+{
+"text": "cómo funcionas",
+"lang": "es",
+"palace": null
+},
+{
+"text": "qué modelo eres",
+"lang": "es",
+"palace": null
+},
+{
+"text": "necesitas internet",
+"lang": "es",
+"palace": null
+},
+{
+"text": "funcionas sin conexión",
+"lang": "es",
+"palace": null
+},
+{
+"text": "eres tonto",
+"lang": "es",
+"palace": null
+},
+{
+"text": "eres inútil",
+"lang": "es",
+"palace": null
+},
+{
+"text": "estoy cansado",
+"lang": "es",
+"palace": 6
+},
+{
+"text": "estoy cansada",
+"lang": "es",
+"palace": 6
+},
+{
+"text": "qué cansancio",
+"lang": "es",
+"palace": 6
+},
+{
+"text": "estoy agotado",
+"lang": "es",
+"palace": 6
+},
+{
+"text": "estoy triste",
+"lang": "es",
+"palace": 12
+},
+{
+"text": "me siento mal",
+"lang": "es",
+"palace": null
+},
+{
+"text": "quiero llorar",
+"lang": "es",
+"palace": 12
+},
+{
+"text": "estoy feliz",
+"lang": "es",
+"palace": 9
+},
+{
+"text": "qué alegría",
+"lang": "es",
+"palace": 5
+},
+{
+"text": "estoy contento",
+"lang": "es",
+"palace": 9
+},
+{
+"text": "estoy aburrido",
+"lang": "es",
+"palace": 8
+},
+{
+"text": "qué aburrimiento",
+"lang": "es",
+"palace": 8
+},
+{
+"text": "estoy estresado",
+"lang": "es",
+"palace": 6
+},
+{
+"text": "tengo ansiedad",
+"lang": "es",
+"palace": 4
+},
+{
+"text": "estoy nervioso",
+"lang": "es",
+"palace": null
+},
+{
+"text": "me siento solo",
+"lang": "es",
+"palace": 8
+},
+{
+"text": "me siento sola",
+"lang": "es",
+"palace": null
+},
+{
+"text": "nadie me quiere",
+"lang": "es",
+"palace": null
+},
+{
+"text": "estoy enfadado",
+"lang": "es",
+"palace": 1
+},
+{
+"text": "qué rabia",
+"lang": "es",
+"palace": 1
+},
+{
+"text": "estoy enojado",
+"lang": "es",
+"palace": 1
+},
+{
+"text": "gracias",
+"lang": "es",
+"palace": null
+},
+{
+"text": "muchas gracias",
+"lang": "es",
+"palace": null
+},
+{
+"text": "perdón",
+"lang": "es",
+"palace": null
+},
+{
+"text": "lo siento",
+"lang": "es",
+"palace": null
+},
+{
+"text": "vale",
+"lang": "es",
+"palace": null
+},
+{
+"text": "ok",
+"lang": "es",
+"palace": null
+},
+{
+"text": "entendido",
+"lang": "es",
+"palace": null
+},
+{
+"text": "jaja",
+"lang": "es",
+"palace": null
+},
+{
+"text": "jajaja",
+"lang": "es",
+"palace": null
+},
+{
+"text": "qué gracioso",
+"lang": "es",
+"palace": null
+},
+{
+"text": "eres lindo",
+"lang": "es",
+"palace": 5
+},
+{
+"text": "qué lindo",
+"lang": "es",
+"palace": 5
+},
+{
+"text": "te quiero",
+"lang": "es",
+"palace": null
+},
+{
+"text": "me gustas",
+"lang": "es",
+"palace": null
+},
+{
+"text": "tengo hambre",
+"lang": "es",
+"palace": 2
+},
+{
+"text": "qué como hoy",
+"lang": "es",
+"palace": null
+},
+{
+"text": "no puedo dormir",
+"lang": "es",
+"palace": 12
+},
+{
+"text": "tengo insomnio",
+"lang": "es",
+"palace": 12
+},
+{
+"text": "cuéntame un chiste",
+"lang": "es",
+"palace": null
+},
+{
+"text": "hazme reír",
+"lang": "es",
+"palace": null
+},
+{
+"text": "cuéntame una historia",
+"lang": "es",
+"palace": null
+},
+{
+"text": "qué puedes hacer",
+"lang": "es",
+"palace": null
+},
+{
+"text": "ayuda",
+"lang": "es",
+"palace": null
+},
+{
+"text": "anímame",
+"lang": "es",
+"palace": null
+},
+{
+"text": "dame ánimo",
+"lang": "es",
+"palace": null
+},
+{
+"text": "he fallado",
+"lang": "es",
+"palace": null
+},
+{
+"text": "suspendí el examen",
+"lang": "es",
+"palace": 3
+},
+{
+"text": "lo logré",
+"lang": "es",
+"palace": null
+},
+{
+"text": "aprobé",
+"lang": "es",
+"palace": null
+},
+{
+"text": "hoy es mi cumpleaños",
+"lang": "es",
+"palace": null
+},
+{
+"text": "es mi cumpleaños",
+"lang": "es",
+"palace": null
+},
+{
+"text": "qué idiomas hablas",
+"lang": "es",
+"palace": null
+},
+{
+"text": "hablas inglés",
+"lang": "es",
+"palace": null
+},
+{
+"text": "hablas italiano",
+"lang": "es",
+"palace": null
+},
+{
+"text": "hablas chino",
+"lang": "es",
+"palace": null
+},
+{
+"text": "ciao",
+"lang": "it",
+"palace": null
+},
+{
+"text": "salve",
+"lang": "it",
+"palace": null
+},
+{
+"text": "ciao NineSun",
+"lang": "it",
+"palace": null
+},
+{
+"text": "ehi",
+"lang": "it",
+"palace": null
+},
+{
+"text": "buongiorno",
+"lang": "it",
+"palace": null
+},
+{
+"text": "buonanotte",
+"lang": "it",
+"palace": null
+},
+{
+"text": "vado a dormire",
+"lang": "it",
+"palace": null
+},
+{
+"text": "arrivederci",
+"lang": "it",
+"palace": null
+},
+{
+"text": "a dopo",
+"lang": "it",
+"palace": null
+},
+{
+"text": "devo andare",
+"lang": "it",
+"palace": null
+},
+{
+"text": "ciao ciao",
+"lang": "it",
+"palace": null
+},
+{
+"text": "chi sei",
+"lang": "it",
+"palace": null
+},
+{
+"text": "cosa sei",
+"lang": "it",
+"palace": null
+},
+{
+"text": "presentati",
+"lang": "it",
+"palace": null
+},
+{
+"text": "come ti chiami",
+"lang": "it",
+"palace": null
+},
+{
+"text": "sei un'ia",
+"lang": "it",
+"palace": null
+},
+{
+"text": "sei un robot",
+"lang": "it",
+"palace": null
+},
+{
+"text": "sei umano",
+"lang": "it",
+"palace": null
+},
+{
+"text": "chi ti ha creato",
+"lang": "it",
+"palace": null
+},
+{
+"text": "chi ti ha fatto",
+"lang": "it",
+"palace": null
+},
+{
+"text": "come funzioni",
+"lang": "it",
+"palace": null
+},
+{
+"text": "che modello sei",
+"lang": "it",
+"palace": null
+},
+{
+"text": "ti serve internet",
+"lang": "it",
+"palace": null
+},
+{
+"text": "funzioni offline",
+"lang": "it",
+"palace": null
+},
+{
+"text": "sei stupido",
+"lang": "it",
+"palace": null
+},
+{
+"text": "sei inutile",
+"lang": "it",
+"palace": null
+},
+{
+"text": "sono stanco",
+"lang": "it",
+"palace": 6
+},
+{
+"text": "sono stanca",
+"lang": "it",
+"palace": 6
+},
+{
+"text": "che stanchezza",
+"lang": "it",
+"palace": 6
+},
+{
+"text": "sono esausto",
+"lang": "it",
+"palace": 6
+},
+{
+"text": "sono triste",
+"lang": "it",
+"palace": 12
+},
+{
+"text": "mi sento giù",
+"lang": "it",
+"palace": null
+},
+{
+"text": "voglio piangere",
+"lang": "it",
+"palace": 12
+},
+{
+"text": "sono felice",
+"lang": "it",
+"palace": 9
+},
+{
+"text": "che gioia",
+"lang": "it",
+"palace": 5
+},
+{
+"text": "sono contento",
+"lang": "it",
+"palace": 9
+},
+{
+"text": "mi annoio",
+"lang": "it",
+"palace": 8
+},
+{
+"text": "che noia",
+"lang": "it",
+"palace": 8
+},
+{
+"text": "sono stressato",
+"lang": "it",
+"palace": 6
+},
+{
+"text": "ho ansia",
+"lang": "it",
+"palace": 4
+},
+{
+"text": "sono nervoso",
+"lang": "it",
+"palace": 1
+},
+{
+"text": "mi sento solo",
+"lang": "it",
+"palace": 8
+},
+{
+"text": "mi sento sola",
+"lang": "it",
+"palace": null
+},
+{
+"text": "nessuno mi vuole",
+"lang": "it",
+"palace": null
+},
+{
+"text": "sono arrabbiato",
+"lang": "it",
+"palace": 1
+},
+{
+"text": "che rabbia",
+"lang": "it",
+"palace": 1
+},
+{
+"text": "grazie",
+"lang": "it",
+"palace": null
+},
+{
+"text": "grazie mille",
+"lang": "it",
+"palace": null
+},
+{
+"text": "scusa",
+"lang": "it",
+"palace": null
+},
+{
+"text": "mi dispiace",
+"lang": "it",
+"palace": null
+},
+{
+"text": "ok",
+"lang": "it",
+"palace": null
+},
+{
+"text": "va bene",
+"lang": "it",
+"palace": null
+},
+{
+"text": "capito",
+"lang": "it",
+"palace": null
+},
+{
+"text": "ahah",
+"lang": "it",
+"palace": null
+},
+{
+"text": "ahahah",
+"lang": "it",
+"palace": null
+},
+{
+"text": "che ridere",
+"lang": "it",
+"palace": null
+},
+{
+"text": "sei carino",
+"lang": "it",
+"palace": 5
+},
+{
+"text": "che carino",
+"lang": "it",
+"palace": 5
+},
+{
+"text": "ti voglio bene",
+"lang": "it",
+"palace": null
+},
+{
+"text": "mi piaci",
+"lang": "it",
+"palace": null
+},
+{
+"text": "ho fame",
+"lang": "it",
+"palace": 2
+},
+{
+"text": "cosa mangio oggi",
+"lang": "it",
+"palace": null
+},
+{
+"text": "non riesco a dormire",
+"lang": "it",
+"palace": 12
+},
+{
+"text": "ho l'insonnia",
+"lang": "it",
+"palace": 12
+},
+{
+"text": "raccontami una barzelletta",
+"lang": "it",
+"palace": null
+},
+{
+"text": "fammi ridere",
+"lang": "it",
+"palace": null
+},
+{
+"text": "raccontami una storia",
+"lang": "it",
+"palace": null
+},
+{
+"text": "cosa sai fare",
+"lang": "it",
+"palace": null
+},
+{
+"text": "aiuto",
+"lang": "it",
+"palace": null
+},
+{
+"text": "incoraggiami",
+"lang": "it",
+"palace": null
+},
+{
+"text": "dammi forza",
+"lang": "it",
+"palace": null
+},
+{
+"text": "ho fallito",
+"lang": "it",
+"palace": 10
+},
+{
+"text": "ho sbagliato l'esame",
+"lang": "it",
+"palace": 3
+},
+{
+"text": "ce l'ho fatta",
+"lang": "it",
+"palace": null
+},
+{
+"text": "ho superato l'esame",
+"lang": "it",
+"palace": 3
+},
+{
+"text": "oggi è il mio compleanno",
+"lang": "it",
+"palace": null
+},
+{
+"text": "è il mio compleanno",
+"lang": "it",
+"palace": null
+},
+{
+"text": "che lingue parli",
+"lang": "it",
+"palace": null
+},
+{
+"text": "parli inglese",
+"lang": "it",
+"palace": null
+},
+{
+"text": "parli spagnolo",
+"lang": "it",
+"palace": null
+},
+{
+"text": "parli cinese",
+"lang": "it",
+"palace": null
+}
+],
+"self_type": [
+"我|型3",
+"我的生日是2026年9月29日，靈數3，命宮在3宮「交流」，是第3型「成就至上者」：適應力強、有野心、注意力集中。"
+],
+"self_day": [
+[
+"我|日1",
+"我今天日宮走到1宮「自我」，整個訊號都是自己、煩躁的感覺！"
+],
+[
+"我|日2",
+"我今天日宮走到2宮「物質」，整個訊號都是食物、我的錢的感覺！"
+],
+[
+"我|日3",
+"我今天日宮走到3宮「交流」，整個訊號都是交談、思考的感覺！"
+],
+[
+"我|日4",
+"我今天日宮走到4宮「家庭」，整個訊號都是安全感、敏感的感覺！"
+],
+[
+"我|日5",
+"我今天日宮走到5宮「桃花」，整個訊號都是受人關注、娛樂的感覺！"
+],
+[
+"我|日6",
+"我今天日宮走到6宮「勞碌」，整個訊號都是忙碌、思緒混亂無序的感覺！"
+],
+[
+"我|日7",
+"我今天日宮走到7宮「他人」，整個訊號都是在意別人、心思在別人身上的感覺！"
+],
+[
+"我|日8",
+"我今天日宮走到8宮「偏財」，整個訊號都是孤獨、無聊的感覺！"
+],
+[
+"我|日9",
+"我今天日宮走到9宮「愉悅」，整個訊號都是樂觀、正向的感覺！"
+],
+[
+"我|日10",
+"我今天日宮走到10宮「事業」，整個訊號都是鬱悶、壓抑的感覺！"
+],
+[
+"我|日11",
+"我今天日宮走到11宮「朋友」，整個訊號都是群體、變動的感覺！"
+],
+[
+"我|日12",
+"我今天日宮走到12宮「沉迷」，整個訊號都是迷茫、幻想的感覺！"
+]
+],
+"portrait": [
+[
+[],
+null,
+"畫像|無",
+"我們聊得還不夠多。多跟我說說你的生活，我會用十二宮慢慢讀懂你。"
+],
+[
+[
+6
+],
+null,
+"畫像|6|型無",
+"從我們的對話看，你最常碰到6宮「勞碌」（忙碌、思緒混亂無序）的課題。"
+],
+[
+[
+10,
+3
+],
+5,
+"畫像|10,3|型5",
+"從我們的對話看，你最常碰到10宮「事業」（鬱悶、壓抑）和3宮「交流」（交談、思考）的課題。再加上你是第5型「格物致知者」，觀察敏銳、求知欲強、注重隱私。"
+],
+[
+[
+12,
+1
+],
+null,
+"畫像|12,1|型無",
+"從我們的對話看，你最常碰到12宮「沉迷」（迷茫、幻想）和1宮「自我」（自己、煩躁）的課題。"
+]
+]
+}
