@@ -42,7 +42,16 @@ public enum WebSearch {
     }()
 
     /// 同時問所有來源，合併去重
-    public static func search(_ q: String, lang L: Lang, news: Bool = false) async -> Answer {
+    /// light：只問 Bing（拆成好幾個方面分開查的時候用，比較快）
+    public static func search(_ q: String, lang L: Lang, news: Bool = false, light: Bool = false) async -> Answer {
+        if light {
+            async let rss = bingRSS(q, L)
+            async let bh = bingHTML(q, L)
+            let a = await rss, b = await bh
+            var seen = Set<String>()
+            let hits = (a + b).filter { seen.insert(normURL($0.url)).inserted }
+            return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)), engines: ["bing": a.count, "bing-web": b.count])
+        }
         async let rss = bingRSS(q, L)
         async let bh = bingHTML(q, L)
         async let dh = ddgHTML(q, L)
@@ -51,6 +60,8 @@ public enum WebSearch {
         async let wk = wikiSummary(q, L)
         async let nw = newsIf(news, q, L)
         async let wx = weatherIf(q, L)
+        async let fx = exchangeIf(q, L)
+        async let mk = marketIf(q, L)
 
         let lists: [(String, [Hit])] = [("news", await nw), ("bing", await rss), ("bing-web", await bh), ("duckduckgo", await dh), ("wikipedia", await ws)]
         var engines: [String: Int] = [:]
@@ -70,6 +81,8 @@ public enum WebSearch {
 
         var lead: String?, leadSource: String?
         if let w = await wx { lead = w; leadSource = "open-meteo.com" }
+        if lead == nil, let f = await fx { lead = f; leadSource = "open.er-api.com" }
+        if lead == nil, let m = await mk { lead = m; leadSource = "finance.yahoo.com" }
         if lead == nil, let a = await inst { lead = a.text; leadSource = a.source }
         if lead == nil, let w = await wk, related(w.title, q) { lead = w.extract; leadSource = host(w.url) }
         engines["instant"] = lead == nil ? 0 : 1
@@ -312,6 +325,70 @@ public enum WebSearch {
             s += "。"
         }
         return s
+    }
+
+    // MARK: - 匯率（open.er-api.com，免費、不需要金鑰）
+
+    static let currencies: [(words: [String], code: String, zh: String)] = [
+        (["美元", "美金", "usd", "dollar"], "USD", "美元"), (["台幣", "臺幣", "新台幣", "twd", "ntd"], "TWD", "新台幣"),
+        (["日圓", "日元", "日幣", "jpy", "yen"], "JPY", "日圓"), (["人民幣", "rmb", "cny"], "CNY", "人民幣"),
+        (["歐元", "eur", "euro"], "EUR", "歐元"), (["港幣", "港元", "hkd"], "HKD", "港幣"), (["韓元", "韓幣", "krw", "won"], "KRW", "韓元"),
+        (["英鎊", "gbp", "pound"], "GBP", "英鎊"), (["澳幣", "澳元", "aud"], "AUD", "澳幣"), (["泰銖", "thb", "baht"], "THB", "泰銖"),
+        (["新加坡幣", "新幣", "sgd"], "SGD", "新加坡幣"), (["加幣", "cad"], "CAD", "加幣"),
+    ]
+
+    static func exchangeIf(_ q: String, _ L: Lang) async -> String? {
+        let l = q.lowercased()
+        guard ["匯率", "換多少", "兌", "exchange rate", "tipo de cambio", "cambio"].contains(where: { l.contains($0) }) else { return nil }
+        // 依照在句子裡出現的先後決定「誰換誰」
+        var found: [(pos: Int, code: String, zh: String)] = []
+        for c in currencies {
+            if let r = c.words.compactMap({ l.range(of: $0) }).min(by: { $0.lowerBound < $1.lowerBound }) {
+                found.append((l.distance(from: l.startIndex, to: r.lowerBound), c.code, c.zh))
+            }
+        }
+        found.sort { $0.pos < $1.pos }
+        let from = found.first ?? (0, "USD", "美元")
+        var to = found.count > 1 ? found[1] : (0, "TWD", "新台幣")
+        if to.code == from.code { to = from.code == "TWD" ? (0, "USD", "美元") : (0, "TWD", "新台幣") }
+        guard let url = URL(string: "https://open.er-api.com/v6/latest/\(from.code)"),
+              let d = await data(request(url, L, ua: desktopUA)),
+              let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
+              let rates = o["rates"] as? [String: Double], let r = rates[to.code] else { return nil }
+        let when = (o["time_last_update_utc"] as? String).map { " （更新：\(shortDate($0.replacingOccurrences(of: "+0000", with: "GMT"))）" } ?? ""
+        let v = r >= 100 ? String(format: "%.2f", r) : String(format: "%.4f", r)
+        let inv = 1 / r >= 100 ? String(format: "%.2f", 1 / r) : String(format: "%.4f", 1 / r)
+        if L == .zh { return "1 \(from.zh) ≈ \(v) \(to.zh)；1 \(to.zh) ≈ \(inv) \(from.zh)\(when)。這是市場參考匯率，銀行實際買賣價會有價差。" }
+        return "1 \(from.code) ≈ \(v) \(to.code); 1 \(to.code) ≈ \(inv) \(from.code). Market reference rate; bank rates differ."
+    }
+
+    // MARK: - 股市指數（Yahoo Finance 公開報價）
+
+    static let indices: [(words: [String], symbol: String, zh: String)] = [
+        (["台股", "臺股", "加權指數", "大盤", "台灣股市", "台灣股票", "股市"], "^TWII", "台股加權指數"),
+        (["櫃買", "上櫃"], "^TWOII", "櫃買指數"), (["道瓊", "dow"], "^DJI", "道瓊工業指數"), (["那斯達克", "納斯達克", "nasdaq"], "^IXIC", "那斯達克指數"),
+        (["標普", "s&p"], "^GSPC", "標普500指數"), (["費半", "費城半導體"], "^SOX", "費城半導體指數"), (["日經", "nikkei"], "^N225", "日經225指數"),
+        (["恆生", "港股"], "^HSI", "恆生指數"), (["美股"], "^GSPC", "標普500指數"),
+    ]
+
+    static func marketIf(_ q: String, _ L: Lang) async -> String? {
+        let l = q.lowercased()
+        guard let idx = indices.first(where: { $0.words.contains(where: { l.contains($0) }) }) else { return nil }
+        guard let url = URL(string: "https://query1.finance.yahoo.com/v8/finance/chart/\(enc(idx.symbol))?range=1d&interval=1d"),
+              let d = await data(request(url, L, ua: desktopUA)),
+              let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
+              let res = ((o["chart"] as? [String: Any])?["result"] as? [[String: Any]])?.first,
+              let meta = res["meta"] as? [String: Any], let price = meta["regularMarketPrice"] as? Double else { return nil }
+        let prev = meta["chartPreviousClose"] as? Double ?? meta["previousClose"] as? Double
+        let t = (meta["regularMarketTime"] as? Double).map { Date(timeIntervalSince1970: $0) }
+        let f = DateFormatter(); f.dateFormat = "M/d HH:mm"
+        var s = "\(idx.zh) \(String(format: "%.2f", price))"
+        if let p = prev, p > 0 {
+            let ch = price - p
+            s += "，漲跌 \(ch >= 0 ? "+" : "")\(String(format: "%.2f", ch))（\(ch >= 0 ? "+" : "")\(String(format: "%.2f", ch / p * 100))%）"
+        }
+        if let t { s += "，時間 \(f.string(from: t))" }
+        return s + "。"
     }
 
     // MARK: - 讀網頁

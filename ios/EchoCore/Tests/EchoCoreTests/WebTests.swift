@@ -13,7 +13,9 @@ final class WebRoutingTests: XCTestCase {
             "台北101有多高？", "上網查 iPhone 17 價格", "幫我查一下今天的新聞", "明天台北天氣如何", "美元對台幣匯率多少",
             "量子電腦是什麼", "日本首相是誰", "搜尋 珍珠奶茶的由來", "紅燒肉怎麼煮", "世界上最高的山是哪一座",
             "上網查偏財格", "who won the last world cup", "what is the capital of Peru", "search quantum physics",
-            "高雄到台南要多久", "今天股市怎麼樣？",
+            "高雄到台南要多久", "今天股市怎麼樣？", "甲減是什麼", "甲狀腺疾病有哪些", "我有甲減要注意什麼", "甲亢的症狀",
+            "橋本氏甲狀腺炎怎麼治療", "糖尿病可以吃什麼", "房東不還押金怎麼辦", "車禍對方不賠償怎麼辦", "老闆不給加班費違法嗎",
+            "離婚要準備什麼", "被詐騙了怎麼辦", "遺產怎麼分",
         ]
         var fails: [String] = []
         for q in web {
@@ -21,7 +23,8 @@ final class WebRoutingTests: XCTestCase {
             if r.webQuery == nil { fails.append("✗ 沒上網：\(q) → \(r.turn.text.prefix(40))") }
         }
         // 這些還是要用本地的命理／陪伴（不能被上網搶走）
-        let local: [String] = ["今天運勢", "我的八字", "我今年感情怎麼樣", "你會唱歌嗎", "我今天好累", "你好", "12+30", "我的紫微斗數"]
+        let local: [String] = ["今天運勢", "我的八字", "我今年感情怎麼樣", "你會唱歌嗎", "我今天好累", "你好", "12+30", "我的紫微斗數",
+                               "我今年會不會離婚", "我的健康運", "我今年身體怎麼樣"]
         for q in local {
             let r = engine.reply(to: q, context: ctx)
             if r.webQuery != nil { fails.append("✗ 不該上網：\(q)") }
@@ -48,6 +51,11 @@ final class WebRoutingTests: XCTestCase {
         XCTAssertEqual(WebAgent.keywords("上網查 iPhone 17 價格"), "iPhone 17 價格")
         XCTAssertEqual(WebAgent.coreTopic("台北101有多高"), "台北101")
         XCTAssertEqual(WebAgent.coreTopic("紅燒肉怎麼煮"), "紅燒肉")
+        XCTAssertEqual(WebAgent.understand("甲減是什麼", L: .zh, fortune: false).kind, .health)
+        XCTAssertEqual(WebAgent.understand("房東不還押金怎麼辦", L: .zh, fortune: false).kind, .legal)
+        XCTAssertEqual(WebAgent.understand("今天股市怎麼樣", L: .zh, fortune: false).kind, .news)
+        XCTAssertEqual(WebStrategy.canonical("甲減"), "甲狀腺機能低下症")
+        XCTAssertEqual(WebStrategy.toTraditional("甲状腺功能减退的症状"), "甲狀腺功能減退的症狀")
     }
 }
 
@@ -56,8 +64,9 @@ final class WebLiveTests: XCTestCase {
     func testLiveSearch() async throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["NINESUN_LIVE"] == "1", "live test")
         let qs: [(String, Lang)] = [
-            ("台北101有多高", .zh), ("量子電腦是什麼", .zh), ("台北明天天氣如何", .zh), ("今天台灣新聞", .zh),
-            ("紅燒肉怎麼煮", .zh), ("偏財格", .zh), ("日本首相是誰", .zh), ("美元對台幣匯率多少", .zh), ("今天股市怎麼樣", .zh),
+            ("台北101有多高", .zh), ("量子電腦是什麼", .zh), ("台北明天天氣如何", .zh),
+            ("紅燒肉怎麼煮", .zh), ("日本首相是誰", .zh), ("美元對台幣匯率多少", .zh), ("今天股市怎麼樣", .zh),
+            ("甲減是什麼", .zh), ("甲狀腺疾病有哪些", .zh), ("我有甲減要注意什麼", .zh), ("房東不還押金怎麼辦", .zh), ("老闆不給加班費違法嗎", .zh),
             ("what is the capital of Peru", .en),
         ]
         var found = 0

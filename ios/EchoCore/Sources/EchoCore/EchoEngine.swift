@@ -269,8 +269,8 @@ public final class EchoEngine {
             last = out.follow; lastTurn = history.count; lastMantic = nil
             return done(out.text, .reader, card: out.card)
         }
-        // 6.54) 明顯是在問知識、新聞、天氣……（不是在問自己的命）：上網查
-        if EchoEngine.strongInfo(text) {
+        // 6.54) 明顯是在問知識、新聞、天氣、疾病、法律……（不是在問自己的命）：上網查
+        if EchoEngine.strongInfo(text) || EchoEngine.healthOrLegal(text) {
             if let kb = knowledge[.zh], let e = kb.answer(text) {
                 return done("\(e.title)：\(e.body)", .knowledge,
                             card: FortuneCard(title: "資料庫 · \(e.cat)", headline: e.title, details: [e.body]), web: EchoEngine.searchQuery(text))
@@ -416,6 +416,16 @@ public final class EchoEngine {
     static let selfMarkers = ["我", "運", "命", "宮", "八字", "紫微", "卦", "大限", "流年", "流月", "流日", "九型", "星盤", "合婚", "桃花", "時辰", "生肖", "你"]
     static func strongInfo(_ raw: String) -> Bool {
         strongMarkers.contains { raw.contains($0) } && !selfMarkers.contains { raw.contains($0) }
+    }
+
+    /// 疾病、法律問題（就算句子裡有「我」也要上網查），但「我今年會不會離婚」這種是在問命
+    static func healthOrLegal(_ raw: String) -> Bool {
+        guard WebStrategy.isHealth(raw) || WebStrategy.isLegal(raw) else { return false }
+        let fortune = ["運", "命", "宮", "八字", "紫微", "卦", "大限", "流年", "流月", "流日", "九型", "桃花", "時辰", "生肖"]
+        if fortune.contains(where: { raw.contains($0) }) { return false }
+        let when = ["會不會", "會嗎", "今年", "明年", "什麼時候", "哪年", "哪一年", "幾歲", "這個月", "下個月"]
+        if raw.contains("我") && when.contains(where: { raw.contains($0) }) { return false }
+        return raw.count >= 2
     }
 
     /// 在問 NineSun 自己（「你會唱歌嗎」「你幾歲」），不是要查資料
