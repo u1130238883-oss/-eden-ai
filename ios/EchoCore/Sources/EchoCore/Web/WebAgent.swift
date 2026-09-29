@@ -133,7 +133,7 @@ public enum WebAgent {
 
         // ②③ 拆成幾組關鍵字，同時上網查（tag -1：整體；0…：各個小問題）
         var jobs: [(tag: Int, q: String, full: Bool)] = []
-        for (i, q) in plan.queries.prefix(strat.angles.isEmpty ? 3 : 2).enumerated() { jobs.append((-1, q, i == 0 || strat.angles.isEmpty)) }
+        for (i, q) in plan.queries.prefix(strat.angles.isEmpty ? 3 : 1).enumerated() { jobs.append((-1, q, i == 0 || strat.angles.isEmpty)) }
         if let canon { jobs.append((-1, canon, true)) }
         for q in also.prefix(2) where !jobs.contains(where: { $0.q == q }) { jobs.append((-1, q, true)) }
         for (i, a) in strat.angles.enumerated() { jobs.append((i, topic + a.suffix, false)) }

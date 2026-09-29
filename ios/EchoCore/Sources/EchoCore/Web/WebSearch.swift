@@ -47,9 +47,9 @@ public enum WebSearch {
     public static func search(_ q: String, lang L: Lang, news: Bool = false, light: Bool = false) async -> Answer {
         if light {
             // 小問題：Bing 問一次、Yahoo 問一次（分散，不要被搜尋引擎當成機器人）
-            async let rss = bingRSS(q, L)
-            async let yh = yahoo(q, L)
-            let a = await rss, b = await yh
+            // 小問題只問一次 Bing（中文）；外文用 Yahoo 分散
+            let a = await bingRSS(q, L)
+            let b: [Hit] = a.count < 3 ? await yahoo(q, L) : []
             var seen = Set<String>()
             var hits: [Hit] = []
             for i in 0..<max(a.count, b.count) {
