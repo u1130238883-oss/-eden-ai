@@ -118,19 +118,22 @@ public enum WebAgent {
 
     // MARK: - 主流程
 
-    public static func run(_ question: String, facts: String? = nil, lang L: Lang) async -> Result {
+    /// also：命理時同一張盤還要一起查的其他組合
+    public static func run(_ question: String, facts: String? = nil, also: [String] = [], lang L: Lang) async -> Result {
         let fortune = facts != nil
         let plan = understand(question, L: L, fortune: fortune)
         let zh = L == .zh
-        let strat = zh && !fortune ? WebStrategy.strategy(plan.kind, question: question)
-                                   : WebStrategy.Strategy(angles: [], trusted: [], note: nil)
-        let canon = zh ? WebStrategy.canonical(plan.core) : nil
-        let topic = canon ?? plan.core
+        let strat = !zh ? WebStrategy.Strategy(angles: [], trusted: [], note: nil)
+            : fortune ? WebFortune.strategy(question) : WebStrategy.strategy(plan.kind, question: question)
+        let canon = zh && !fortune ? WebStrategy.canonical(plan.core) : nil
+        let topic = fortune ? WebFortune.base(question) : (canon ?? plan.core)
+        let chart = facts.map(WebFortune.parse)
 
         // ②③ 拆成幾組關鍵字，同時上網查（tag -1：整體；0…：各個小問題）
         var jobs: [(tag: Int, q: String, full: Bool)] = []
         for (i, q) in plan.queries.prefix(strat.angles.isEmpty ? 3 : 2).enumerated() { jobs.append((-1, q, i == 0 || strat.angles.isEmpty)) }
         if let canon { jobs.append((-1, canon, true)) }
+        for q in also.prefix(2) where !jobs.contains(where: { $0.q == q }) { jobs.append((-1, q, true)) }
         for (i, a) in strat.angles.enumerated() { jobs.append((i, topic + a.suffix, false)) }
         let answers = await withTaskGroup(of: (Int, Int, WebSearch.Answer).self) { g -> [(Int, WebSearch.Answer)] in
             for (n, j) in jobs.enumerated() {
@@ -144,7 +147,8 @@ public enum WebAgent {
         // ④ 只留下跟主題有關的結果
         var terms = termSet(plan.core)
         if let canon { terms.formUnion(termSet(canon)) }
-        let need = max(1, min(3, (termSet(plan.core).count + 1) / 3))
+        if fortune { terms = termSet(topic); for q in also { terms.formUnion(termSet(WebFortune.base(q))) } }
+        let need = max(1, min(3, ((fortune ? terms.count : termSet(plan.core).count) + 1) / 3))
         var hits: [(tag: Int, hit: WebSearch.Hit)] = []
         var lead: String?, leadSource: String?
         var engines: [String: Int] = [:]
@@ -246,6 +250,25 @@ public enum WebAgent {
             if !pts.isEmpty { sections.append((plan.kind == .method ? "步驟／做法" : "重點", pts)) }
         }
 
+        // ④ 命理：逐句對照你的盤
+        var fortuneBlock = ""
+        if let chart, zh {
+            var ok: [String] = [], bad: [String] = []
+            var seenJ = Set<String>()
+            var total = 0
+            for f in ranked.prefix(24) where seenJ.insert(String(f.text.prefix(14))).inserted {
+                total += 1
+                let (v, why) = WebFortune.judge(f.text, chart)
+                let line = "• " + WebSearch.clip(f.text, 90) + "\n  → " + why
+                if v == .fits && ok.count < 4 { ok.append(line) }
+                if v == .conflicts && bad.count < 3 { bad.append(line) }
+            }
+            fortuneBlock = "🧭 對照你的盤"
+            fortuneBlock += ok.isEmpty ? "\n✅ 跟你的盤對得上的：這次沒有找到直接講到你盤上關鍵（喜忌、身強弱、命宮主星）的說法。" : "\n✅ 跟你的盤對得上的：\n" + ok.joined(separator: "\n")
+            if !bad.isEmpty { fortuneBlock += "\n⚠️ 不適用在你身上的：\n" + bad.joined(separator: "\n") }
+            fortuneBlock += "\n\n" + WebFortune.conclude(chart, fits: ok.count, conflicts: bad.count, total: total, facts: facts ?? "")
+        }
+
         // ⑥ 反思：把握程度與還不確定的地方
         let covered = sections.count
         var confidence: String
@@ -263,7 +286,7 @@ public enum WebAgent {
         var t = ""
         if zh {
             t += "🔎 我的思路\n"
-            t += "① 釐清：這是\(kindName[plan.kind] ?? "一般")的問題，主題是「\(plan.core)」"
+            t += "① 釐清：這是\(kindName[plan.kind] ?? "一般")的問題，主題是「\(fortune ? ([topic] + also.map(WebFortune.base)).joined(separator: "、") : plan.core)」"
             if let canon { t += "（正式名稱：\(canon)）" }
             t += "。\n"
             if !strat.angles.isEmpty {
@@ -278,13 +301,14 @@ public enum WebAgent {
             t += "④ 閱讀：打開 \(pages.count) 個網頁，只留下真的在回答問題的句子。\n"
             t += "⑤ 查證：" + (trustedHosts.isEmpty ? "" : "採用了 " + trustedHosts.prefix(3).joined(separator: "、") + " 等可信來源；")
                 + (common.isEmpty ? "各來源說法比較分散，挑最相關的整理。" : "好幾個來源都提到「" + common.prefix(4).joined(separator: "」「") + "」。") + "\n"
-            if let facts { t += "⑥ 對照你的盤：\(facts)。網路上的說法當作補充，判斷還是以你盤上的喜忌和流年為準。\n" }
+            if facts != nil { t += "⑥ 對照：把每一句網路說法放到你的盤上檢查——喜忌、身強身弱、命宮主星、化忌宮位對不對得上，對不上的就排除。\n" }
             t += "\n📌 " + (fortune ? "網路上的說法" : "回答") + "\n" + answer
             for (title, pts) in sections {
                 let numbered = plan.kind == .method || title == "可以怎麼做" || title == "步驟"
                 t += "\n\n【\(title)】\n" + pts.enumerated().map { numbered ? "\($0.offset + 1). \($0.element)" : "• \($0.element)" }.joined(separator: "\n")
             }
             if let note = strat.note { t += "\n\n" + note }
+            if !fortuneBlock.isEmpty { t += "\n\n" + fortuneBlock }
             t += "\n\n🤔 我的判斷：把握程度\(confidence)。"
             if !gaps.isEmpty { t += "還不確定的地方：" + gaps.joined(separator: "；") + "。" }
             if covered == 0 && lead == nil { t += "這題網路上的資料跟你問的不太對得上，可以換個說法或講得更具體一點，我再查一次。" }

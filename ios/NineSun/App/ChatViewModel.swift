@@ -131,9 +131,9 @@ final class ChatViewModel: ObservableObject {
                     return
                 }
                 if let term = reply.webAugment.first {
-                    // 先給盤面解讀，再上網查這個組合的說法，對照分析
-                    let facts = reply.augmentFacts, L = reply.lang
-                    self.play(text: reply.turn.text, final: reply.turn) { self.augmentWeb(term, facts: facts, L) }
+                    // 先給盤面解讀，再上網查這幾個組合的說法，逐句對照你的盤分析
+                    let facts = reply.augmentFacts, L = reply.lang, also = Array(reply.webAugment.dropFirst())
+                    self.play(text: reply.turn.text, final: reply.turn) { self.augmentWeb(term, also: also, facts: facts, L) }
                     return
                 }
                 self.play(text: reply.turn.text, final: reply.turn)
@@ -153,13 +153,13 @@ final class ChatViewModel: ObservableObject {
     }
 
     /// 八字／紫微解讀之後：上網查這個組合的說法，再對照盤面
-    private func augmentWeb(_ term: String, facts: String, _ L: Lang) {
+    private func augmentWeb(_ term: String, also: [String], facts: String, _ L: Lang) {
         let book = rules
         thinking = true
         streaming = ""
         Task { [self] in
-            let r = await WebAgent.run(term, facts: facts, lang: L)
-            let text = r.text.hasPrefix("🔎") ? "我再上網查了「\(term)」的說法，跟你的盤對照一下：\n\n" + r.text : r.text
+            let r = await WebAgent.run(term, facts: facts, also: also, lang: L)
+            let text = r.text.hasPrefix("🔎") ? "我再上網查了網路上對你盤上這些組合的說法，一句一句拿來對照你的盤：\n\n" + r.text : r.text
             let turn = ChatTurn(role: .echo, text: book.enforce(text), source: .knowledge, card: r.card)
             await MainActor.run { self.finish(turn) }
         }

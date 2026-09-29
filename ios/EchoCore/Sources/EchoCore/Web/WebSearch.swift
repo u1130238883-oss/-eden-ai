@@ -337,29 +337,43 @@ public enum WebSearch {
         (["新加坡幣", "新幣", "sgd"], "SGD", "新加坡幣"), (["加幣", "cad"], "CAD", "加幣"),
     ]
 
+    struct Currency { let code: String; let zh: String }
+
     static func exchangeIf(_ q: String, _ L: Lang) async -> String? {
         let l = q.lowercased()
-        guard ["匯率", "換多少", "兌", "exchange rate", "tipo de cambio", "cambio"].contains(where: { l.contains($0) }) else { return nil }
+        let asks = ["匯率", "換多少", "兌", "exchange rate", "tipo de cambio", "cambio"]
+        if !asks.contains(where: { l.contains($0) }) { return nil }
         // 依照在句子裡出現的先後決定「誰換誰」
-        var found: [(pos: Int, code: String, zh: String)] = []
+        var found: [(Int, Currency)] = []
         for c in currencies {
-            if let r = c.words.compactMap({ l.range(of: $0) }).min(by: { $0.lowerBound < $1.lowerBound }) {
-                found.append((l.distance(from: l.startIndex, to: r.lowerBound), c.code, c.zh))
+            var pos: Int? = nil
+            for w in c.words {
+                if let r = l.range(of: w) {
+                    let p = l.distance(from: l.startIndex, to: r.lowerBound)
+                    if pos == nil || p < pos! { pos = p }
+                }
             }
+            if let p = pos { found.append((p, Currency(code: c.code, zh: c.zh))) }
         }
-        found.sort { $0.pos < $1.pos }
-        let from = found.first ?? (0, "USD", "美元")
-        var to = found.count > 1 ? found[1] : (0, "TWD", "新台幣")
-        if to.code == from.code { to = from.code == "TWD" ? (0, "USD", "美元") : (0, "TWD", "新台幣") }
-        guard let url = URL(string: "https://open.er-api.com/v6/latest/\(from.code)"),
-              let d = await data(request(url, L, ua: desktopUA)),
-              let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
-              let rates = o["rates"] as? [String: Double], let r = rates[to.code] else { return nil }
-        let when = (o["time_last_update_utc"] as? String).map { " （更新：\(shortDate($0.replacingOccurrences(of: "+0000", with: "GMT"))）" } ?? ""
-        let v = r >= 100 ? String(format: "%.2f", r) : String(format: "%.4f", r)
-        let inv = 1 / r >= 100 ? String(format: "%.2f", 1 / r) : String(format: "%.4f", 1 / r)
-        if L == .zh { return "1 \(from.zh) ≈ \(v) \(to.zh)；1 \(to.zh) ≈ \(inv) \(from.zh)\(when)。這是市場參考匯率，銀行實際買賣價會有價差。" }
-        return "1 \(from.code) ≈ \(v) \(to.code); 1 \(to.code) ≈ \(inv) \(from.code). Market reference rate; bank rates differ."
+        found.sort { $0.0 < $1.0 }
+        let usd = Currency(code: "USD", zh: "美元"), twd = Currency(code: "TWD", zh: "新台幣")
+        let from: Currency = found.first?.1 ?? usd
+        var to: Currency = found.count > 1 ? found[1].1 : twd
+        if to.code == from.code { to = from.code == "TWD" ? usd : twd }
+        guard let url = URL(string: "https://open.er-api.com/v6/latest/" + from.code) else { return nil }
+        guard let d = await data(request(url, L, ua: desktopUA)) else { return nil }
+        guard let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return nil }
+        guard let rates = o["rates"] as? [String: Double], let r = rates[to.code], r > 0 else { return nil }
+        let v = fmtNum(r)
+        let inv = fmtNum(1.0 / r)
+        if L == .zh {
+            return "1 " + from.zh + " ≈ " + v + " " + to.zh + "；1 " + to.zh + " ≈ " + inv + " " + from.zh + "。這是市場參考匯率，銀行實際買賣價會有價差。"
+        }
+        return "1 " + from.code + " ≈ " + v + " " + to.code + "; 1 " + to.code + " ≈ " + inv + " " + from.code + ". Market reference rate; bank rates differ."
+    }
+
+    static func fmtNum(_ x: Double) -> String {
+        x >= 100 ? String(format: "%.2f", x) : String(format: "%.4f", x)
     }
 
     // MARK: - 股市指數（Yahoo Finance 公開報價）
@@ -373,21 +387,26 @@ public enum WebSearch {
 
     static func marketIf(_ q: String, _ L: Lang) async -> String? {
         let l = q.lowercased()
-        guard let idx = indices.first(where: { $0.words.contains(where: { l.contains($0) }) }) else { return nil }
-        guard let url = URL(string: "https://query1.finance.yahoo.com/v8/finance/chart/\(enc(idx.symbol))?range=1d&interval=1d"),
-              let d = await data(request(url, L, ua: desktopUA)),
-              let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
-              let res = ((o["chart"] as? [String: Any])?["result"] as? [[String: Any]])?.first,
-              let meta = res["meta"] as? [String: Any], let price = meta["regularMarketPrice"] as? Double else { return nil }
-        let prev = meta["chartPreviousClose"] as? Double ?? meta["previousClose"] as? Double
-        let t = (meta["regularMarketTime"] as? Double).map { Date(timeIntervalSince1970: $0) }
-        let f = DateFormatter(); f.dateFormat = "M/d HH:mm"
-        var s = "\(idx.zh) \(String(format: "%.2f", price))"
-        if let p = prev, p > 0 {
-            let ch = price - p
-            s += "，漲跌 \(ch >= 0 ? "+" : "")\(String(format: "%.2f", ch))（\(ch >= 0 ? "+" : "")\(String(format: "%.2f", ch / p * 100))%）"
+        guard let idx = indices.first(where: { item in item.words.contains(where: { l.contains($0) }) }) else { return nil }
+        guard let url = URL(string: "https://query1.finance.yahoo.com/v8/finance/chart/" + enc(idx.symbol) + "?range=1d&interval=1d") else { return nil }
+        guard let d = await data(request(url, L, ua: desktopUA)) else { return nil }
+        guard let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return nil }
+        guard let chart = o["chart"] as? [String: Any], let results = chart["result"] as? [[String: Any]],
+              let res = results.first, let meta = res["meta"] as? [String: Any],
+              let price = meta["regularMarketPrice"] as? Double else { return nil }
+        var s = idx.zh + " " + String(format: "%.2f", price)
+        let prev = (meta["chartPreviousClose"] as? Double) ?? (meta["previousClose"] as? Double) ?? 0
+        if prev > 0 {
+            let ch = price - prev
+            let pct = ch / prev * 100
+            let sign = ch >= 0 ? "+" : ""
+            s += "，漲跌 " + sign + String(format: "%.2f", ch) + "（" + sign + String(format: "%.2f", pct) + "%）"
         }
-        if let t { s += "，時間 \(f.string(from: t))" }
+        if let ts = meta["regularMarketTime"] as? Double {
+            let f = DateFormatter()
+            f.dateFormat = "M/d HH:mm"
+            s += "，時間 " + f.string(from: Date(timeIntervalSince1970: ts))
+        }
         return s + "。"
     }
 

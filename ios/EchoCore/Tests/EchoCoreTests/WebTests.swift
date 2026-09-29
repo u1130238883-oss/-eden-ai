@@ -55,6 +55,16 @@ final class WebRoutingTests: XCTestCase {
         XCTAssertEqual(WebAgent.understand("房東不還押金怎麼辦", L: .zh, fortune: false).kind, .legal)
         XCTAssertEqual(WebAgent.understand("今天股市怎麼樣", L: .zh, fortune: false).kind, .news)
         XCTAssertEqual(WebStrategy.canonical("甲減"), "甲狀腺機能低下症")
+
+        // 命理：網路說法對照自己的盤
+        let c = WebFortune.parse("你的日主是癸水，身弱，喜金、水，忌土、火、木；2026年丙午對你是壞的")
+        XCTAssertEqual(c.dayMaster, "癸水")
+        XCTAssertEqual(c.strong, false)
+        XCTAssertEqual(c.fav, ["金", "水"])
+        XCTAssertEqual(c.avoid, ["木", "火", "土"])
+        XCTAssertEqual(WebFortune.judge("癸水日主身弱，喜金水相生", c).0, .fits)
+        XCTAssertEqual(WebFortune.judge("癸水生於冬月，喜火調候", c).0, .conflicts)
+        XCTAssertEqual(WebFortune.judge("身強的癸水喜木火洩秀", c).0, .conflicts)
         XCTAssertEqual(WebStrategy.toTraditional("甲状腺功能减退的症状"), "甲狀腺功能減退的症狀")
     }
 }
@@ -76,6 +86,10 @@ final class WebLiveTests: XCTestCase {
             print("LIVE ===== \(q) found=\(r.found) engines=\(r.engines.sorted { $0.key < $1.key })")
             print(r.text.split(separator: "\n").map { "LIVE | " + $0 }.joined(separator: "\n"))
         }
+        let f = await WebAgent.run("八字 癸水日主 感情", facts: "你的日主是癸水，身弱，喜金、水，忌土、火、木；2026年丙午對你是壞的",
+                                   also: ["癸水日主 身弱 感情"], lang: .zh)
+        print("LIVE ===== 命理對照 found=\(f.found) engines=\(f.engines.sorted { $0.key < $1.key })")
+        print(f.text.split(separator: "\n").map { "LIVE | " + $0 }.joined(separator: "\n"))
         print("LIVE-SUMMARY: \(found)/\(qs.count) found")
         XCTAssertGreaterThanOrEqual(found, qs.count - 1)
     }
