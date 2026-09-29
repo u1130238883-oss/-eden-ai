@@ -148,7 +148,7 @@ public enum WebAgent {
         var terms = termSet(plan.core)
         if let canon { terms.formUnion(termSet(canon)) }
         if fortune { terms = termSet(topic); for q in also { terms.formUnion(termSet(WebFortune.base(q))) } }
-        let need = max(1, min(3, ((fortune ? terms.count : termSet(plan.core).count) + 1) / 3))
+        let need = max(1, min(2, ((fortune ? terms.count : termSet(plan.core).count) + 1) / 3))
         var hits: [(tag: Int, hit: WebSearch.Hit)] = []
         var lead: String?, leadSource: String?
         var engines: [String: Int] = [:]
@@ -156,7 +156,11 @@ public enum WebAgent {
         for (tag, a) in answers {
             if lead == nil, let l = a.lead { lead = l; leadSource = a.leadSource }
             for (k, v) in a.engines { engines[k, default: 0] += v }
-            for h in a.hits where score(h.title + " " + h.snippet, terms) >= need || h.engine == "Google 新聞" {
+            for raw in a.hits {
+                // 網路上很多是簡體，先轉成繁體再判斷有沒有關係
+                let h = zh ? WebSearch.Hit(title: WebStrategy.toTraditional(raw.title), snippet: WebStrategy.toTraditional(raw.snippet),
+                                           url: raw.url, engine: raw.engine) : raw
+                guard score(h.title + " " + h.snippet, terms) >= need || h.engine == "Google 新聞" else { continue }
                 if seenURL.insert(WebSearch.normURL(h.url)).inserted { hits.append((tag, h)) }
             }
         }
@@ -286,7 +290,7 @@ public enum WebAgent {
         var t = ""
         if zh {
             t += "🔎 我的思路\n"
-            t += "① 釐清：這是\(kindName[plan.kind] ?? "一般")的問題，主題是「\(fortune ? ([topic] + also.map(WebFortune.base)).joined(separator: "、") : plan.core)」"
+            t += "① 釐清：這是\(kindName[plan.kind] ?? "一般")的問題，主題是「\(fortune ? orderedUnique([topic] + also.map(WebFortune.base)).joined(separator: "、") : plan.core)」"
             if let canon { t += "（正式名稱：\(canon)）" }
             t += "。\n"
             if !strat.angles.isEmpty {

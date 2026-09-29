@@ -133,6 +133,8 @@ enum WebStrategy {
     }()
 
     static func toTraditional(_ s: String) -> String {
-        String(s.map { s2t[$0] ?? $0 })
+        // 系統內建的完整簡轉繁（ICU Hans-Hant）；不支援時才用上面的常用字表
+        if let t = s.applyingTransform(StringTransform(rawValue: "Hans-Hant"), reverse: false) { return t }
+        return String(s.map { s2t[$0] ?? $0 })
     }
 }
