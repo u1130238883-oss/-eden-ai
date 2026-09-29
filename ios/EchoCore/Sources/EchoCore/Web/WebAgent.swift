@@ -137,13 +137,21 @@ public enum WebAgent {
         if let canon { jobs.append((-1, canon, true)) }
         for q in also.prefix(2) where !jobs.contains(where: { $0.q == q }) { jobs.append((-1, q, true)) }
         for (i, a) in strat.angles.enumerated() { jobs.append((i, topic + a.suffix, false)) }
-        let answers = await withTaskGroup(of: (Int, Int, WebSearch.Answer).self) { g -> [(Int, WebSearch.Answer)] in
-            for (n, j) in jobs.enumerated() {
-                g.addTask { (n, j.tag, await WebSearch.search(j.q, lang: L, news: plan.kind == .news && n == 0, light: !j.full)) }
+        // 一次最多查兩組，查完再查下一批（太密集會被搜尋引擎當成機器人，回一堆無關的結果）
+        var answers: [(Int, WebSearch.Answer)] = []
+        var start = 0
+        while start < jobs.count {
+            let batch = Array(jobs.enumerated())[start..<min(jobs.count, start + 2)]
+            let got = await withTaskGroup(of: (Int, Int, WebSearch.Answer).self) { g -> [(Int, Int, WebSearch.Answer)] in
+                for (n, j) in batch {
+                    g.addTask { (n, j.tag, await WebSearch.search(j.q, lang: L, news: plan.kind == .news && n == 0, light: !j.full)) }
+                }
+                var out: [(Int, Int, WebSearch.Answer)] = []
+                for await a in g { out.append(a) }
+                return out
             }
-            var out: [(Int, Int, WebSearch.Answer)] = []
-            for await a in g { out.append(a) }
-            return out.sorted { $0.0 < $1.0 }.map { ($0.1, $0.2) }
+            answers += got.sorted { $0.0 < $1.0 }.map { ($0.1, $0.2) }
+            start += 2
         }
 
         // ④ 只留下跟主題有關的結果

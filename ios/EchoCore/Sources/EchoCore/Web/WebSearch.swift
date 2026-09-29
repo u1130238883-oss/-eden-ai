@@ -38,6 +38,7 @@ public enum WebSearch {
         c.requestCachePolicy = .reloadIgnoringLocalCacheData
         c.urlCache = nil
         c.httpShouldSetCookies = false
+        c.httpMaximumConnectionsPerHost = 3
         return URLSession(configuration: c)
     }()
 
@@ -45,16 +46,21 @@ public enum WebSearch {
     /// light：只問 Bing（拆成好幾個方面分開查的時候用，比較快）
     public static func search(_ q: String, lang L: Lang, news: Bool = false, light: Bool = false) async -> Answer {
         if light {
+            // 小問題：Bing 問一次、Yahoo 問一次（分散，不要被搜尋引擎當成機器人）
             async let rss = bingRSS(q, L)
-            async let bh = bingHTML(q, L)
-            let a = await rss, b = await bh
+            async let yh = yahoo(q, L)
+            let a = await rss, b = await yh
             var seen = Set<String>()
-            let hits = (a + b).filter { seen.insert(normURL($0.url)).inserted }
-            return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)), engines: ["bing": a.count, "bing-web": b.count])
+            var hits: [Hit] = []
+            for i in 0..<max(a.count, b.count) {
+                for l in [a, b] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
+            }
+            return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)), engines: ["bing": a.count, "yahoo": b.count])
         }
         async let rss = bingRSS(q, L)
         async let bh = bingHTML(q, L)
         async let dh = ddgHTML(q, L)
+        async let yh = yahoo(q, L)
         async let ws = wikiSearch(q, L)
         async let inst = ddgInstant(q, L)
         async let wk = wikiSummary(q, L)
@@ -63,7 +69,7 @@ public enum WebSearch {
         async let fx = exchangeIf(q, L)
         async let mk = marketIf(q, L)
 
-        let lists: [(String, [Hit])] = [("news", await nw), ("bing", await rss), ("bing-web", await bh), ("duckduckgo", await dh), ("wikipedia", await ws)]
+        let lists: [(String, [Hit])] = [("news", await nw), ("bing", await rss), ("bing-web", await bh), ("duckduckgo", await dh), ("yahoo", await yh), ("wikipedia", await ws)]
         var engines: [String: Int] = [:]
         var hits: [Hit] = []
         var seen = Set<String>()
@@ -128,6 +134,35 @@ public enum WebSearch {
         while u.count % 4 != 0 { u += "=" }
         if let d = Data(base64Encoded: u), let s = String(data: d, encoding: .utf8), s.hasPrefix("http") { return s }
         return href
+    }
+
+    // MARK: - Yahoo（台灣用 tw.search.yahoo.com）
+
+    static func yahoo(_ q: String, _ L: Lang) async -> [Hit] {
+        let host = L == .zh ? "tw.search.yahoo.com" : "search.yahoo.com"
+        guard let url = URL(string: "https://\(host)/search?p=\(enc(q))&ei=UTF-8"),
+              let html = await text(url, L, ua: desktopUA) else { return [] }
+        var out: [Hit] = []
+        for block in html.components(separatedBy: "class=\"compTitle").dropFirst() {
+            guard let href = first(#"<a[^>]*href="([^"]+)""#, block, group: 1),
+                  let title = first(#"<a[^>]*>(.*?)</a>"#, block, group: 1) else { continue }
+            let snip = first(#"class="compText[^"]*"[^>]*>(.*?)</div>"#, block, group: 1) ?? ""
+            let link = yahooRealURL(href.replacingOccurrences(of: "&amp;", with: "&"))
+            if link.contains("yahoo.com") && !link.contains("tw.news.yahoo") && !link.contains("tw.stock.yahoo") { continue }
+            let t = clean(title)
+            if t.isEmpty { continue }
+            out.append(Hit(title: t, snippet: clean(snip), url: link, engine: "Yahoo"))
+            if out.count >= 8 { break }
+        }
+        return out
+    }
+
+    /// Yahoo 的轉址連結（.../RU=<網址>/RK=...）→ 原網址
+    static func yahooRealURL(_ href: String) -> String {
+        guard let r = href.range(of: "/RU=") else { return href }
+        var rest = String(href[r.upperBound...])
+        if let e = rest.range(of: "/RK=") { rest = String(rest[..<e.lowerBound]) }
+        return rest.removingPercentEncoding ?? rest
     }
 
     // MARK: - DuckDuckGo

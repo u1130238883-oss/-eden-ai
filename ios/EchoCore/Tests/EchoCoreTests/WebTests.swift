@@ -81,6 +81,7 @@ final class WebLiveTests: XCTestCase {
         ]
         var found = 0
         for (q, L) in qs {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)   // 像真人一樣一題一題問
             let r = await WebAgent.run(q, lang: L)
             if r.found { found += 1 }
             print("LIVE ===== \(q) found=\(r.found) engines=\(r.engines.sorted { $0.key < $1.key })")
