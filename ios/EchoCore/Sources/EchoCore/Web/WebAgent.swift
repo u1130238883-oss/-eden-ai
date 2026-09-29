@@ -234,7 +234,7 @@ public enum WebAgent {
             .filter { quality($0.text, terms: terms, numeric: plan.numeric, core: plan.core) > 0 }
         var answer = ""
         if let lead2 { answer = lead2 }
-        else if let first = (strat.angles.isEmpty ? ranked : ranked.filter { $0.angle <= 0 }).first ?? ranked.first {
+        else if let first = (strat.angles.isEmpty ? ranked : ranked.filter { $0.angle <= 0 }).first(where: { $0.text.count >= 30 }) ?? ranked.first {
             answer = WebSearch.clip(first.text, 240) + "（\(first.host)）"
         }
         // 問數量：直接答案裡沒有數字，就改用有數字、最相關的那句
@@ -418,6 +418,8 @@ public enum WebAgent {
         if s.count > 160 { q -= 2 }
         if s.count < 20 { q -= 2 }
         if s.hasSuffix("?") || s.hasSuffix("？") { q -= 6 }
+        if s.hasSuffix("：") || s.hasSuffix(":") { q -= 8 }        // 「以下是常見症狀：」這種開場白
+        if s.count < 30 && !s.contains("。") { q -= 3 }         // 太短、像標題
         if s.contains(" - ") && s.count < 60 { q -= 3 }   // 網頁標題
         return q
     }
