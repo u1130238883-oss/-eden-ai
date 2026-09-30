@@ -234,7 +234,8 @@ public enum WebAgent {
         findings.removeAll { isQuestionOrFluff($0.text) }
         var lead2 = lead.map { zh ? WebStrategy.toTraditional($0) : $0 }
         // 百科／DuckDuckGo 的摘要常常是別的條目（問天空卻給「天空色的奇蹟」），不切題就只當一般資料
-        if let l = lead2, leadSource != nil, !leadFits(l, plan: plan) {
+        let listQ = question.contains("哪些") || question.contains("列表") || question.contains("有什麼")
+        if let l = lead2, leadSource != nil, !leadFits(l, plan: plan, list: listQ) {
             findings.append(Finding(text: l, host: leadSource ?? "", url: "", angle: -1, trusted: false))
             lead2 = nil
         }
@@ -245,13 +246,22 @@ public enum WebAgent {
         let trustedHosts = orderedUnique(findings.filter(\.trusted).map(\.host))
 
         // ⑦ 組回答
-        let listQ = question.contains("哪些") || question.contains("列表") || question.contains("有什麼")
         let ranked = rank(findings, terms: terms, common: common, numeric: plan.numeric, core: plan.core, list: listQ)
             .filter { quality($0.text, terms: terms, numeric: plan.numeric, core: plan.core, list: listQ) > 0 }
         var answer = ""
         if let lead2 { answer = lead2 }
         else if let first = (strat.angles.isEmpty ? ranked : ranked.filter { $0.angle <= 0 }).first(where: { $0.text.count >= 30 }) ?? ranked.first {
             answer = WebSearch.clip(first.text, 240) + "（\(first.host)）"
+        }
+        // 問「有哪些」：答案要是一份名單，不是介紹文；找不到名單就老實說
+        if listQ, lead2 == nil {
+            func items(_ s: String) -> Int { s.components(separatedBy: "、").count - 1 }
+            if let best = ranked.filter({ items($0.text) >= 4 }).max(by: { items($0.text) < items($1.text) }) {
+                answer = WebSearch.clip(best.text, 420) + "（\(best.host)）"
+            } else if zh {
+                answer = "我在網路上沒找到一份完整的名單，下面是找到的相關資料，你可以換個更具體的問法（例如「北歐有哪些國家」）我再查一次。"
+                    + (answer.isEmpty ? "" : "\n" + answer)
+            }
         }
         // 問數量：直接答案裡沒有數字，就改用有數字、最相關的那句
         if plan.numeric, plan.kind != .weather, !hasNumber(answer, besides: plan.core),
@@ -399,8 +409,11 @@ public enum WebAgent {
     static func isQuestionOrFluff(_ s: String) -> Bool {
         let t = s.trimmingCharacters(in: .whitespaces)
         if t.hasSuffix("？") || t.hasSuffix("?") || t.hasSuffix("嗎") { return true }
-        let fluff = ["你知道", "您知道", "大家都知道", "相信大家", "想必", "各位", "你是否", "有沒有想過", "今天就來", "今天要來", "本文", "這篇文章", "小編"]
-        return fluff.contains { t.hasPrefix($0) }
+        let fluff = ["你知道", "您知道", "大家都知道", "相信大家", "想必", "各位", "你是否", "有沒有想過", "今天就來", "今天要來", "本文", "這篇文章", "小編",
+                     "帶你", "一次看懂", "讓我們", "接下來", "下面就", "以下將", "快來看"]
+        if fluff.contains(where: { t.hasPrefix($0) }) { return true }
+        // 「本文將透過…帶你詳細瞭解…」這種介紹文章在講什麼、卻沒有內容的句子
+        return ["帶你詳細", "帶你了解", "帶你瞭解", "帶大家", "一起來看", "告訴你", "整理給你"].contains { t.contains($0) }
     }
 
     /// 各來源說的數字（「46 個」「約 50 個」），一個來源一票
@@ -444,8 +457,11 @@ public enum WebAgent {
     }
 
     /// 直接摘要切不切題：主題的字詞要大多出現；問原因、做法的，摘要裡要真的有原因或做法；問數量的要有數字
-    static func leadFits(_ lead: String, plan: Plan) -> Bool {
+    static func leadFits(_ lead: String, plan: Plan, list: Bool = false) -> Bool {
         if plan.kind == .weather || plan.kind == .news { return true }
+        if isQuestionOrFluff(lead) { return false }
+        // 問「有哪些」：摘要本身要真的列出好幾個
+        if list && lead.components(separatedBy: "、").count < 4 { return false }
         let t = termSet(plan.core)
         if !t.isEmpty, Double(score(lead, t)) / Double(t.count) < 0.6 { return false }
         switch plan.kind {

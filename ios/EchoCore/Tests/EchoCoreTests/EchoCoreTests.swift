@@ -738,6 +738,23 @@ final class EchoCoreTests: XCTestCase {
         }
         if engine.reply(to: "你去死吧", context: ctx).webQuery != nil { fails.append("✗ 罵人被拿去上網查") }
         if Safety.isCrisis("自殺防治是什麼") { fails.append("✗ 知識題被當成危機") }
+        // 問「有哪些」要真的列出來；追問「這些國家是哪些」要接得上上一題；主題詞不同（亞洲、歐盟）不能拿歐洲的答案
+        let eu = engine.reply(to: "歐洲有多少個國家", context: ctx)
+        if !eu.turn.text.contains("44") || eu.webQuery != nil { fails.append("✗ 歐洲有多少個國家 → \(eu.turn.text.prefix(30))") }
+        for q in ["那這些國家都是哪些國家", "我是說這些歐洲國家是哪些國家"] {
+            let r = engine.reply(to: q, context: ctx)
+            if !(r.turn.text.contains("北歐") && r.turn.text.contains("義大利")) { fails.append("✗ 追問名單：\(q) → \(r.turn.text.prefix(30))") }
+        }
+        for q in ["亞洲有哪些國家", "歐盟有幾個國家", "歐洲國家人口有多少"] {
+            let r = engine.reply(to: q, context: ctx)
+            if r.turn.text.contains("西歐（7）") || r.turn.text.contains("一般說法是 44") || r.turn.text.contains("父母") {
+                fails.append("✗ 主題不同卻用錯答案：\(q) → \(r.turn.text.prefix(30))")
+            }
+        }
+        if !engine.reply(to: "歐盟有幾個國家", context: ctx).turn.text.contains("27") { fails.append("✗ 歐盟有幾個國家") }
+        XCTAssertEqual(EchoEngine.substituteAnaphor("那這些國家都是哪些國家", previous: "歐洲有多少個國家"), "歐洲國家都是哪些國家")
+        XCTAssertNil(EchoEngine.substituteAnaphor("這個人很煩怎麼辦", previous: "歐洲有多少個國家"))
+        XCTAssertTrue(WebAgent.isQuestionOrFluff("本文將透過地理分區、政治實體等不同角度，帶你詳細瞭解歐洲到底包含哪些國家。"))
         let phone = engine.reply(to: "iPhone和安卓哪個好", context: ctx)
         if !phone.turn.text.contains("預算") || phone.webQuery != nil { fails.append("✗ iPhone／安卓 → \(phone.turn.text.prefix(30))") }
         if engine.reply(to: "iPhone怎麼截圖", context: ctx).turn.text.contains("預算") { fails.append("✗ iPhone 截圖被當成選購題") }

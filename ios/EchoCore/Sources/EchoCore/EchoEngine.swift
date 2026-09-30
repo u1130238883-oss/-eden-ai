@@ -127,11 +127,22 @@ public final class EchoEngine {
     /// 上一次上網查的問題（追問「那這些國家是哪些」時補上主題）
     var lastWebQuery: String?
     var lastWebTurn = -100
+    /// 上一個問題（不論是上網查還是本地回答），追問時用來補上主題
+    var lastQuestion: String?
+    var lastQuestionTurn = -100
 
     /// 逐字產生回覆。`onToken` 每產生一個字就回呼一次。
     public func reply(to message: String, history: [ChatTurn] = [], context: Context,
                       onToken: ((String) -> Void)? = nil) -> Reply {
-        var r = replyCore(to: message, history: history, context: context, onToken: onToken)
+        // 追問（「那這些國家都是哪些國家」）：先把代名詞換回上一題的主題，再照一般問題處理
+        var text = message
+        if let prev = lastQuestion, history.count - lastQuestionTurn <= 8,
+           let t = EchoEngine.substituteAnaphor(message, previous: prev) { text = t }
+        var r = replyCore(to: text, history: history, context: context, onToken: onToken)
+        if r.webQuery != nil || (EchoEngine.isQuestion(text) && !EchoEngine.fortuneIntent(text) && r.turn.card == nil) {
+            lastQuestion = text
+            lastQuestionTurn = history.count
+        }
         if let q = r.webQuery {
             // 上網查的回覆不帶宮位感知標籤；追問的代名詞補上前一題的主題
             r.turn.palace = nil
@@ -144,6 +155,25 @@ public final class EchoEngine {
     }
 
     static let anaphora = ["這些", "那些", "這個", "那個", "它們", "他們", "牠們", "其中", "剛剛說的", "剛才說的", "上面說的"]
+
+    /// 追問換成完整的問題：「那這些國家都是哪些國家」（上一題「歐洲有多少個國家」）→「歐洲國家都是哪些國家」
+    static func substituteAnaphor(_ text: String, previous prev: String) -> String? {
+        let t0 = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // 「這個月」「那個時候」是時間，不是在指上一題；要算運勢的也不接
+        let timeWords = ["這個月", "那個月", "這個禮拜", "這個星期", "這個時候", "那個時候", "這個年", "這個週末"]
+        if timeWords.contains(where: { t0.contains($0) }) || fortuneIntent(t0) { return nil }
+        guard let a = anaphora.first(where: { t0.contains($0) }) else { return nil }
+        let topic = WebAgent.coreTopic(prev).replacingOccurrences(of: "個", with: "")
+        let main = topic.split(separator: " ").map(String.init).filter { $0.count >= 2 }
+        guard !main.isEmpty else { return nil }
+        let missing = main.filter { !t0.contains($0) }
+        // 跟上一題有共同的詞（「這些國家」的國家），或是很短的追問（「那些是哪些」），才當成在指上一題
+        guard missing.count < main.count || t0.count <= 6 else { return nil }
+        var t = t0
+        for w in ["我是說", "我的意思是", "我是問", "那麼", "那"] where t.hasPrefix(w) { t.removeFirst(w.count); break }
+        if let r = t.range(of: a) { t.replaceSubrange(r, with: missing.joined()) }
+        return t.isEmpty ? nil : t
+    }
 
     /// 追問：「那這些國家都是哪些國家」→「歐洲 國家 哪些國家 列表」
     static func resolveFollowUp(_ text: String, query q: String, previous: String?, gap: Int) -> String {

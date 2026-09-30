@@ -51,7 +51,7 @@ public final class ChatBank {
     }
 
     static let askMarkers = ["怎麼", "怎樣", "如何", "要不要", "該不該", "嗎", "什麼", "為什麼", "哪", "辦", "可不可以", "能不能", "有沒有",
-                             "多少", "是不是", "應該", "不了", "不到", "一直", "好難", "不知道", "緊張", "不行"]
+                             "多少", "有幾", "幾個", "幾種", "幾步", "是不是", "應該", "不了", "不到", "一直", "好難", "不知道", "緊張", "不行"]
 
     static func bigrams(_ s: String) -> Set<String> {
         let c = Array(s.replacingOccurrences(of: " ", with: ""))
@@ -80,6 +80,9 @@ public final class ChatBank {
                     s = max(s, 2 * Double(inter) / Double(tg.count + item.grams.count))
                 }
             }
+            // 思路庫的題目只差一個主題詞（「歐洲」→「亞洲」、「歐洲」→「歐盟」）時字面很像，答案卻完全不對：
+            // 不是幾乎一模一樣的話，至少要命中一個關鍵詞
+            if s < 0.9, let ks = all[item.entry].k, !ks.isEmpty, !ks.contains(where: { t.contains($0.lowercased()) }) { continue }
             if s > (best?.1 ?? 0) { best = (item.entry, s) }
         }
         // 關鍵詞比對：命中 2 個以上，或是問句／在講困擾時命中 1 個（和 ai/ 的 Python 版一致）

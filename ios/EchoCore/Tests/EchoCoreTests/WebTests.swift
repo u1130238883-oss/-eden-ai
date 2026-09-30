@@ -109,11 +109,11 @@ final class WebThinkingTests: XCTestCase {
             XCTAssertNil(r.webQuery, q)
         }
         // 上網的回覆不帶宮位標籤；追問要補主題
-        let a = engine.reply(to: "歐洲有多少個國家？", context: ctx)
+        let a = engine.reply(to: "日本有多少個縣？", context: ctx)
         XCTAssertNotNil(a.webQuery)
         XCTAssertNil(a.turn.palace)
-        let b = engine.reply(to: "那這些國家都是哪些國家", history: [ChatTurn(role: .user, text: "歐洲有多少個國家？"), a.turn], context: ctx)
-        XCTAssertTrue(b.webQuery?.contains("歐洲") == true, b.webQuery ?? "nil")
+        let b = engine.reply(to: "那這些縣都是哪些縣", history: [ChatTurn(role: .user, text: "日本有多少個縣？"), a.turn], context: ctx)
+        XCTAssertTrue(b.webQuery?.contains("日本") == true, b.webQuery ?? "nil")
     }
 }
 
