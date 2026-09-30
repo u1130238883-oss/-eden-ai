@@ -65,7 +65,9 @@ public final class KnowledgeBase {
     static func bigrams(_ s: String) -> Set<String> {
         let c = Array(s)
         guard c.count > 1 else { return Set(c.map(String.init)) }
-        return Set((0..<(c.count - 1)).map { String(c[$0]) + String(c[$0 + 1]) })
+        var out = Set<String>()
+        for i in 0..<(c.count - 1) { out.insert(String(c[i]) + String(c[i + 1])) }
+        return out
     }
 
     /// 搜尋：別名完全相符 > 標題包含 > 雙字重疊

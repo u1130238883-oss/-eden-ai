@@ -53,6 +53,8 @@ public enum ManticReader {
         let isBazi = has(text, baziWords)
         let isZiwei = has(text, ziweiWords) || has(text, ManticRouter.palaceWords)
         guard isBazi || isZiwei else { return nil }
+        // 「八字跟九型十二宮哪個準」「八字可以信嗎」是在討論命理本身，交給思路庫
+        if has(text, ["哪個準", "哪一個準", "哪個比較準", "哪一個比較準", "可以信", "可不可以信", "準不準", "準嗎"]) { return nil }
         // 「八字是什麼」「紫微斗數準嗎」是知識題，交給資料庫
         if has(text, FortuneRouter.knowledgeMarkers) && !text.contains("我") && FortuneRouter.parseDate(raw) == nil { return nil }
         if text.contains("五行") && !isZiwei && !has(text, ["八字", "我", "缺"]) { return nil }

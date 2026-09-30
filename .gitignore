@@ -6,3 +6,7 @@ ios/build/
 ios/*.xcodeproj/
 ios/Payload/
 dist/
+web/NineSunWeb/.build/
+web/site/dist/
+ios/EchoCore/.build/
+.build/

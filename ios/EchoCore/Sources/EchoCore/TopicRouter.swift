@@ -159,6 +159,16 @@ public enum TopicRouter {
             advice = ["cosa devo fare", "consiglio", "che faccio", "suggerisci", "cosa faccio"]
             more = ["dimmi di più", "dimmi di piu", "più dettagli", "piu dettagli", "raccontami di più", "vai avanti", "altro"]
         }
+        // 中文：拿掉追問詞和語助詞之後，如果還剩下別的內容（「老闆不給我加薪怎麼辦」），就是新問題，不是追問
+        if L == .zh {
+            var rest = text
+            for w in (why + advice + more).sorted(by: { $0.count > $1.count }) { rest = rest.replacingOccurrences(of: w, with: "") }
+            for w in ["那麼", "所以", "應該", "覺得", "可以", "請問", "會這樣", "是這樣", "這樣", "比較", "一點", "那", "我", "該", "呢", "啊",
+                      "嗎", "要", "好", "的", "你", "？", "?", "，", "。", "！"] {
+                rest = rest.replacingOccurrences(of: w, with: "")
+            }
+            if rest.count > 2 { return nil }
+        }
         if has(text, why) { return .why }
         if has(text, advice) { return .advice }
         if has(text, more) { return .more }

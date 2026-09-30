@@ -164,3 +164,12 @@ ios/project.yml      XcodeGen
 **路由**（`EchoEngine`）：明確說「上網查／搜尋」、知識／新聞／天氣／匯率／股市、疾病與法律問題、問句形式的一般問題 → 上網；問自己的運勢、命盤、心情、跟 NineSun 聊天 → 本地。八字／紫微解讀完會自動上網對照。
 
 **測試**：`WebTests.swift`。`WebRoutingTests` 每次跑；`WebLiveTests` 只在 CI 的「Live web search check」步驟用 `NINESUN_LIVE=1` 真的連網（GitHub 的機器 IP 問太多題會被限流，後面的題目查不到是正常的）。
+
+---
+
+## 附：思路庫與網頁測試版（2026-09-30 合併）
+
+- `ai/claude_playbook.py`：使用者常問的問題，用 Claude 的思路寫好答案（前提 → 原因 → 做法 → 下一步），`python3 ai/chat_bank.py` 會併進 `chat_bank.json`。有關鍵詞比對，換句話說也接得住（`PARAPHRASE_TESTS`）。
+- 路由：問句如果命中思路庫，先給寫好的思路答案，**再上網查**最新資料補充；沒命中就照原本的直接上網查。沒有要算運勢的實用問題（「老闆不給我加薪怎麼辦」）不會被 10宮主題搶走。
+- 本機也能編譯測試了：SwiftWasm 6.0.3 工具鏈（`github.com/swiftwasm/swift/releases`）在 Linux 上可以直接 `swift test`（`--skip testLiveSearch`）。
+- `web/`：把 EchoCore 編成 WebAssembly 的網頁測試版（`web/build.sh`）。網頁不能連外網，所以只能測本地功能。EchoCore 加了 `Web/`（URLSession）之後，要編網頁版得先把 `Web/` 排除在 WASI 之外。

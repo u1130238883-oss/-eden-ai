@@ -4,7 +4,11 @@ import XCTest
 /// 上網功能：問題要交給網路查，而不是用本地寫死的答案
 final class WebRoutingTests: XCTestCase {
     func testQuestionsGoToTheWeb() throws {
+        #if os(Linux)
+        let t = EchoCoreTests(name: "helper", testClosure: { _ in })
+        #else
         let t = EchoCoreTests()
+        #endif
         let engine = try t.makeEngine(seed: 3)
         var ctx = EchoEngine.Context(now: t.date(2026, 9, 29, 21))
         ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 8, minute: 0, male: true)

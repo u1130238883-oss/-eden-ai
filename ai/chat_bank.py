@@ -7,6 +7,7 @@ import os
 
 import corpus
 import i18n_chat
+from claude_playbook import PLAYBOOK_ZH
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -128,6 +129,8 @@ def build():
         bank["zh"].append({"q": list(qs), "a": list(ans)})
     for qs, ans in EXTRA_ZH:
         bank["zh"].append({"q": qs, "a": ans})
+    # 思路庫放在最前面比對時優先（同分時先出現的贏）
+    bank["zh"] = [{"q": qs, "a": ans, "k": kw} for qs, ans, kw in PLAYBOOK_ZH] + bank["zh"]
     for L, extra in (("en", EXTRA_EN), ("es", EXTRA_ES), ("it", EXTRA_IT)):
         for qs, ans in i18n_chat.CHAT[L]:
             bank[L].append({"q": list(qs), "a": list(ans)})

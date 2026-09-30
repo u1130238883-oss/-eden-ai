@@ -3,7 +3,8 @@ import Foundation
 /// 對話庫：手寫問答（人設、日常、生活）以字元雙字組相似度檢索。
 /// 命中就直接用人寫好的答案回答；沒命中就交給下一層，不亂編。可以隨時擴充 chat_bank.json，不用重新訓練。
 public final class ChatBank {
-    struct Entry: Decodable { let q: [String]; let a: [String] }
+    /// k：思路庫的關鍵詞（換句話說時，命中關鍵詞也算同一題）
+    struct Entry: Decodable { let q: [String]; let a: [String]; let k: [String]? }
     struct Hit { let entry: Entry; let score: Double }
 
     let entries: [Lang: [Entry]]
@@ -49,13 +50,18 @@ public final class ChatBank {
         return out.trimmingCharacters(in: .whitespaces)
     }
 
+    static let askMarkers = ["怎麼", "怎樣", "如何", "要不要", "該不該", "嗎", "什麼", "為什麼", "哪", "辦", "可不可以", "能不能", "有沒有",
+                             "多少", "是不是", "應該", "不了", "不到", "一直", "好難", "不知道", "緊張", "不行"]
+
     static func bigrams(_ s: String) -> Set<String> {
         let c = Array(s.replacingOccurrences(of: " ", with: ""))
         guard c.count > 1 else { return Set(c.map(String.init)) }
-        return Set((0..<(c.count - 1)).map { String(c[$0]) + String(c[$0 + 1]) })
+        var out = Set<String>()
+        for i in 0..<(c.count - 1) { out.insert(String(c[i]) + String(c[i + 1])) }
+        return out
     }
 
-    func match(_ text: String, _ L: Lang) -> Hit? {
+    func match(_ text: String, _ L: Lang, useKeywords: Bool = true, onlyPlaybook: Bool = false) -> Hit? {
         guard let list = index[L], let all = entries[L] else { return nil }
         let t = ChatBank.norm(text)
         guard !t.isEmpty else { return nil }
@@ -63,6 +69,7 @@ public final class ChatBank {
         let minLen = L == .zh ? 2 : 4
         var best: (Int, Double)?
         for item in list {
+            if onlyPlaybook && all[item.entry].k == nil { continue }
             var s = 0.0
             if t == item.norm { s = 1 }
             else {
@@ -75,10 +82,24 @@ public final class ChatBank {
             }
             if s > (best?.1 ?? 0) { best = (item.entry, s) }
         }
+        // 關鍵詞比對：命中 2 個以上，或是問句／在講困擾時命中 1 個（和 ai/ 的 Python 版一致）
+        let raw = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let ask = ChatBank.askMarkers.contains { t.contains($0) } || raw.hasSuffix("?") || raw.hasSuffix("？")
+        for (i, e) in all.enumerated() where useKeywords {
+            let ks = (e.k ?? []).filter { $0.count >= 2 }
+            if ks.isEmpty { continue }
+            let m = ks.filter { t.contains($0.lowercased()) }.count
+            if !(m >= 2 || (m == 1 && ask)) { continue }
+            let s = min(0.9, 0.66 + 0.04 * Double(m - 1))
+            if s > (best?.1 ?? 0) { best = (i, s) }
+        }
         guard let (i, score) = best, score >= (L == .zh ? 0.65 : 0.7) else { return nil }
         return Hit(entry: all[i], score: score)
     }
 
     /// 回傳這題的候選答案（同一題有好幾種說法）；沒命中回傳 nil
-    public func answers(_ text: String, _ L: Lang) -> [String]? { match(text, L)?.entry.a }
+    public func answers(_ text: String, _ L: Lang, useKeywords: Bool = true) -> [String]? { match(text, L, useKeywords: useKeywords)?.entry.a }
+
+    /// 只看思路庫（有關鍵詞的那些）：實用型問題的寫好答案
+    public func playbook(_ text: String, _ L: Lang) -> [String]? { match(text, L, onlyPlaybook: true)?.entry.a }
 }

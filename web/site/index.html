@@ -1,0 +1,396 @@
+<title>NineSun 測試版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@1,600;1,700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* 版面：一個螢幕的聊天台——上方訊號列、中間對話、下方快捷鍵與輸入；刻意只做深色（跟 App 同一個世界） */
+:root {
+  --ink: #111317;        /* 背景 */
+  --panel: #1b1e24;      /* 對話泡泡 */
+  --panel-2: #23272f;
+  --line: #333844;
+  --fg: #eef0f3;
+  --muted: #9aa1ad;
+  --lime: #d4f53c;       /* 使用者、主色 */
+  --cyan: #3ddcf5;       /* NineSun */
+  --hazard: #ff6a1f;
+  --good: #7be07b; --bad: #ff6b6b; --mid: #e8c547;
+  --display: "Chakra Petch", "Noto Sans TC", system-ui, sans-serif;
+  --body: "Noto Sans TC", system-ui, -apple-system, "PingFang TC", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--ink); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.65; }
+.app { height: 100%; display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; padding-inline: 16px; }
+header { display: flex; align-items: center; gap: 12px; padding-block: 12px 10px; }
+.mark { font-family: var(--display); font-style: italic; font-weight: 700; font-size: 26px; letter-spacing: .5px; line-height: 1; }
+.online { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; background: var(--lime); color: var(--ink); padding: 2px 6px; }
+.who { font-family: var(--mono); font-size: 12px; color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icon-btn { background: var(--lime); color: var(--ink); border: 0; font: 700 13px var(--body); padding: 8px 12px; cursor: pointer; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
+.icon-btn:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.hazard { height: 8px; background: repeating-linear-gradient(-45deg, var(--lime) 0 10px, var(--ink) 10px 20px); flex: none; }
+.log { flex: 1; overflow-y: auto; padding-block: 14px; display: flex; flex-direction: column; gap: 14px; overscroll-behavior: contain; }
+.msg { max-width: 92%; min-width: 0; }
+.msg.user { align-self: flex-end; background: var(--lime); color: var(--ink); padding: 10px 14px; font-weight: 500; box-shadow: 4px 4px 0 var(--hazard); white-space: pre-wrap; word-break: break-word; }
+.msg.echo { align-self: flex-start; background: var(--panel); border-left: 3px solid var(--cyan); padding: 10px 14px 12px; }
+.tags { display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+.tag { font-family: var(--mono); font-size: 11px; padding: 1px 7px; background: var(--cyan); color: var(--ink); letter-spacing: .5px; }
+.tag.src { background: var(--panel-2); color: var(--muted); }
+.text { white-space: pre-wrap; word-break: break-word; }
+.note { margin-top: 8px; font-size: 13px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 6px; }
+.card { margin-top: 10px; border: 1px solid var(--line); background: var(--panel-2); padding: 10px 12px; }
+.card h4 { margin: 0; font-size: 13px; color: var(--muted); font-weight: 500; }
+.card .head { font-size: 16px; font-weight: 700; color: var(--cyan); margin: 2px 0 6px; }
+.card ul { margin: 0; padding-left: 18px; font-size: 13px; }
+.verdict { font-family: var(--mono); font-size: 11px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; color: var(--ink); }
+.v0 { background: var(--good); } .v1 { background: var(--mid); } .v2 { background: var(--bad); }
+.pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 6px 0 8px; }
+.pillar { background: var(--ink); text-align: center; padding: 6px 2px; }
+.pillar small { display: block; font-size: 11px; color: var(--muted); }
+.pillar b { display: block; font-size: 22px; line-height: 1.25; }
+.pillar b + b { color: var(--cyan); }
+.zw-wrap { overflow-x: auto; }
+.zw { display: grid; grid-template-columns: repeat(4, minmax(78px, 1fr)); grid-template-rows: repeat(4, auto); gap: 3px; margin: 6px 0 8px; min-width: 330px; }
+.zc { background: var(--ink); padding: 4px 5px; font-size: 11px; line-height: 1.4; min-height: 64px; }
+.zc .p { color: var(--lime); font-weight: 700; }
+.zc .b { float: right; font-family: var(--mono); color: var(--muted); }
+.zc.ming { outline: 1px solid var(--lime); }
+.zc.shen .p::after { content: " 身"; color: var(--hazard); }
+.zcenter { grid-column: 2 / 4; grid-row: 2 / 4; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--muted); font-size: 12px; padding: 8px; }
+.hex { display: flex; flex-direction: column-reverse; gap: 5px; width: 120px; margin: 8px 0; }
+.hex i { display: flex; gap: 12px; height: 8px; }
+.hex i span { flex: 1; background: var(--fg); }
+.hex i.moving span { background: var(--hazard); }
+.card a { color: var(--cyan); font-size: 13px; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-block: 8px; flex: none; scrollbar-width: none; }
+.chip { flex: none; background: transparent; color: var(--lime); border: 1px solid var(--lime); font: 500 13px var(--body); padding: 6px 12px; cursor: pointer; }
+.chip:hover { background: var(--lime); color: var(--ink); }
+form.bar { display: flex; gap: 8px; padding-block: 6px 12px; flex: none; }
+form.bar input { flex: 1; min-width: 0; background: var(--panel); color: var(--fg); border: 1px solid var(--line); font: 15px var(--body); padding: 11px 12px; }
+form.bar button { background: var(--panel-2); color: var(--lime); border: 1px solid var(--lime); font: 700 italic 15px var(--display); padding: 0 16px; cursor: pointer; }
+form.bar button:disabled { opacity: .4; cursor: default; }
+.boot { align-self: stretch; background: var(--panel); padding: 14px; border-left: 3px solid var(--hazard); }
+.meter { height: 6px; background: var(--ink); margin-top: 8px; }
+.meter div { height: 100%; width: 0; background: var(--lime); transition: width .2s; }
+.sheet { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: flex-end; justify-content: center; z-index: 10; }
+.sheet > div { background: var(--panel); width: 100%; max-width: 520px; padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px)); border-top: 3px solid var(--lime); display: grid; gap: 12px; }
+.sheet h3 { margin: 0; font: 700 italic 20px var(--display); }
+.row { display: grid; gap: 4px; }
+.row label { font-size: 13px; color: var(--muted); }
+.row input, .row select { background: var(--ink); color: var(--fg); border: 1px solid var(--line); font: 15px var(--body); padding: 9px 10px; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btns button { flex: 1; min-width: 120px; background: var(--panel-2); color: var(--fg); border: 1px solid var(--line); font: 500 14px var(--body); padding: 10px; cursor: pointer; }
+.btns button.primary { background: var(--lime); color: var(--ink); border-color: var(--lime); font-weight: 700; }
+.toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--cyan); color: var(--ink); padding: 6px 14px; font-size: 13px; z-index: 20; }
+@media (prefers-reduced-motion: reduce) { .meter div { transition: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <div class="mark">NineSun</div>
+    <div class="online" id="status">BOOT</div>
+    <div class="who" id="who">命主 —</div>
+    <button class="icon-btn" id="openSettings" type="button">設定</button>
+  </header>
+  <div class="hazard" aria-hidden="true"></div>
+  <div class="log" id="log" aria-live="polite">
+    <div class="boot" id="boot">
+      <b>正在載入 NineSun 引擎</b>
+      <div id="bootText" style="font-size:13px;color:var(--muted)">第一次要下載約 34 MB（引擎和模型），之後瀏覽器會快取。</div>
+      <div class="meter"><div id="meterBar"></div></div>
+    </div>
+  </div>
+  <div class="chips" id="chips"></div>
+  <form class="bar" id="bar">
+    <input id="q" autocomplete="off" placeholder="對 NineSun 發送訊號…" aria-label="訊息">
+    <button id="send" type="submit" disabled>SEND ▶</button>
+  </form>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div role="dialog" aria-labelledby="sheetTitle">
+    <h3 id="sheetTitle">調頻台</h3>
+    <div class="row"><label for="bd">生日</label><input type="date" id="bd"></div>
+    <div class="check"><input type="checkbox" id="knowsTime"><label for="knowsTime">知道出生時間（八字時柱、紫微需要）</label></div>
+    <div class="row"><label for="bt">出生時間</label><input type="time" id="bt"></div>
+    <div class="row"><label for="gender">性別</label>
+      <select id="gender"><option value="">不設定</option><option value="m">男</option><option value="f">女</option></select></div>
+    <div class="btns">
+      <button type="button" class="primary" id="saveSettings">儲存</button>
+      <button type="button" id="copyLog">複製對話（回報問題用）</button>
+      <button type="button" id="clearLog">清除對話</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted)">這是網頁測試版，跑的是和 App 同一份引擎。網頁不能連外網，所以「自己上網查」只會顯示它要查什麼；其他功能都和 App 一樣。</div>
+  </div>
+</div>
+
+<script>
+// ── WASI 墊片 + 引擎呼叫（和 web/site/nsrt.js 相同） ──
+(function (root) {
+  function makeWasi(getMem) {
+    const ENOSYS = 52, EBADF = 8, OK = 0;
+    const dv = () => new DataView(getMem().buffer);
+    const u8 = () => new Uint8Array(getMem().buffer);
+    let lineBuf = "";
+    const dec = new TextDecoder();
+    const nosys = () => ENOSYS;
+    return {
+      args_get: () => OK,
+      args_sizes_get: (a, b) => { dv().setUint32(a, 0, true); dv().setUint32(b, 0, true); return OK; },
+      environ_get: () => OK,
+      environ_sizes_get: (a, b) => { dv().setUint32(a, 0, true); dv().setUint32(b, 0, true); return OK; },
+      clock_res_get: (id, p) => { dv().setBigUint64(p, 1000n, true); return OK; },
+      clock_time_get: (id, prec, p) => { dv().setBigUint64(p, BigInt(Math.round(Date.now() * 1e6)), true); return OK; },
+      fd_write: (fd, iovs, n, written) => {
+        const d = dv(); let total = 0;
+        for (let i = 0; i < n; i++) {
+          const ptr = d.getUint32(iovs + i * 8, true), len = d.getUint32(iovs + i * 8 + 4, true);
+          lineBuf += dec.decode(u8().slice(ptr, ptr + len)); total += len;
+        }
+        const parts = lineBuf.split("\n"); lineBuf = parts.pop();
+        parts.forEach((l) => console.log("[ns]", l));
+        d.setUint32(written, total, true); return OK;
+      },
+      fd_prestat_get: () => EBADF, fd_prestat_dir_name: () => EBADF,
+      fd_fdstat_get: (fd, p) => { if (fd > 2) return EBADF; const d = dv(); d.setUint8(p, 2); d.setUint16(p + 2, 0, true); d.setBigUint64(p + 8, 0n, true); d.setBigUint64(p + 16, 0n, true); return OK; },
+      fd_close: () => OK, fd_fdstat_set_flags: nosys, fd_filestat_get: () => EBADF, fd_filestat_set_size: nosys,
+      fd_pread: () => EBADF, fd_read: () => EBADF, fd_readdir: () => EBADF, fd_seek: () => EBADF, fd_sync: () => OK, fd_tell: () => EBADF,
+      path_create_directory: nosys, path_filestat_get: () => 44, path_filestat_set_times: nosys, path_link: nosys,
+      path_open: () => 44, path_readlink: nosys, path_remove_directory: nosys, path_rename: nosys, path_symlink: nosys,
+      path_unlink_file: nosys, poll_oneoff: nosys,
+      proc_exit: (c) => { throw new Error("proc_exit " + c); },
+      random_get: (p, n) => { crypto.getRandomValues(u8().subarray(p, p + n)); return OK; },
+    };
+  }
+  async function boot(wasmBytes, files) {
+    let inst;
+    const wasi = makeWasi(() => inst.exports.memory);
+    const { instance } = await WebAssembly.instantiate(wasmBytes, { wasi_snapshot_preview1: wasi });
+    inst = instance;
+    const ex = inst.exports;
+    if (ex._initialize) ex._initialize();
+    const enc = new TextEncoder(), dec = new TextDecoder();
+    const put = (kind, bytes) => {
+      const p = ex.ns_alloc(bytes.length);
+      new Uint8Array(ex.memory.buffer, p, bytes.length).set(bytes);
+      ex.ns_file(kind, p, bytes.length);
+      ex.ns_free(p);
+    };
+    for (const [kind, bytes] of files) put(kind, bytes);
+    if (!ex.ns_start()) throw new Error("引擎啟動失敗");
+    return {
+      send(text, profile, nowMs) {
+        const b = enc.encode(JSON.stringify({ text, profile, now: nowMs }));
+        const p = ex.ns_alloc(b.length);
+        new Uint8Array(ex.memory.buffer, p, b.length).set(b);
+        const n = ex.ns_send(p, b.length);
+        ex.ns_free(p);
+        return JSON.parse(dec.decode(new Uint8Array(ex.memory.buffer, ex.ns_out(), n)));
+      },
+      reset() { ex.ns_reset(); },
+    };
+  }
+  root.NineSunRuntime = { boot };
+})(window);
+
+// ── 頁面 ──
+const $ = (id) => document.getElementById(id);
+const logEl = $("log");
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+// 預設是命主的生日（可以在設定裡改）
+let profile = store.get("ns.profile", { birthday: { year: 2006, month: 1, day: 14 }, hour: 7, minute: 0 });
+let transcript = [];
+let ns = null;
+
+const QUICK = ["今天運勢", "今晚運勢", "明天運勢", "這個月運勢", "今年運勢", "我的感情怎麼樣", "我的錢財怎麼樣", "我的大運",
+  "我的命盤", "幫我做完整解讀", "我的八字", "我的八字今年運勢", "紫微斗數", "紫微今年運勢", "算一卦",
+  "我要不要換工作", "你跟Claude有什麼不一樣"];
+QUICK.forEach((q) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = q;
+  b.onclick = () => ask(q);
+  $("chips").appendChild(b);
+});
+
+function showWho() {
+  const b = profile.birthday;
+  let s = b ? `命主 ${b.year}年${b.month}月${b.day}日` : "命主 未設定生日";
+  if (b && profile.hour != null) s += ` ${String(profile.hour).padStart(2, "0")}:${String(profile.minute || 0).padStart(2, "0")}`;
+  if (profile.male === true) s += " 男"; else if (profile.male === false) s += " 女";
+  $("who").textContent = s;
+}
+showWho();
+
+const SRC = { reader: "解讀", neural: "對話", grounded: "引擎", corrected: "引擎校正", tool: "系統", knowledge: "資料庫", rule: "規則" };
+const VERDICT = ["好", "中性", "壞"];
+const ZW_POS = { 5: [1, 1], 6: [1, 2], 7: [1, 3], 8: [1, 4], 9: [2, 4], 10: [3, 4], 11: [4, 4], 0: [4, 3], 1: [4, 2], 2: [4, 1], 3: [3, 1], 4: [2, 1] };
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+function renderCard(c) {
+  const box = el("div", "card");
+  const h = el("h4", null, c.title || "");
+  if (c.verdict != null && VERDICT[c.verdict]) h.appendChild(el("span", "verdict v" + c.verdict, VERDICT[c.verdict]));
+  box.appendChild(h);
+  if (c.headline) box.appendChild(el("div", "head", c.headline));
+  if (c.pillars && c.pillars.length) {
+    const g = el("div", "pillars");
+    const names = ["年柱", "月柱", "日柱", "時柱"];
+    c.pillars.forEach((p, i) => {
+      const col = el("div", "pillar");
+      col.appendChild(el("small", null, (c.pillarGods && c.pillarGods[i]) || ""));
+      col.appendChild(el("b", null, p[0])); col.appendChild(el("b", null, p[1]));
+      col.appendChild(el("small", null, names[i]));
+      g.appendChild(col);
+    });
+    box.appendChild(g);
+  }
+  if (c.ziwei && c.ziwei.length === 12) {
+    const wrap = el("div", "zw-wrap"), g = el("div", "zw");
+    c.ziwei.forEach((z) => {
+      const [r, col] = ZW_POS[z.branch];
+      const cell = el("div", "zc" + (z.isMing ? " ming" : "") + (z.isShen ? " shen" : ""));
+      cell.style.gridRow = r; cell.style.gridColumn = col;
+      cell.appendChild(el("span", "b", z.stem + "子丑寅卯辰巳午未申酉戌亥"[z.branch]));
+      const pn = z.palace.endsWith("宮") ? z.palace : z.palace + "宮";
+      cell.appendChild(el("div", "p", pn));
+      cell.appendChild(el("div", null, z.stars.join(" ")));
+      g.appendChild(cell);
+    });
+    const center = el("div", "zcenter", c.title + "\n" + (c.headline || ""));
+    center.style.whiteSpace = "pre-line";
+    g.appendChild(center);
+    wrap.appendChild(g); box.appendChild(wrap);
+  }
+  if (c.hexLines && c.hexLines.length === 6) {
+    const hx = el("div", "hex");
+    c.hexLines.forEach((v, i) => {
+      const line = el("i", (c.hexMoving || []).includes(i) ? "moving" : "");
+      line.appendChild(el("span"));
+      if (v % 2 === 0) line.appendChild(el("span"));
+      hx.appendChild(line);
+    });
+    box.appendChild(hx);
+  }
+  if (c.details && c.details.length) {
+    const ul = el("ul");
+    c.details.forEach((d) => ul.appendChild(el("li", null, d)));
+    box.appendChild(ul);
+  }
+  if (c.link) { const a = el("a", null, "打開來源"); a.href = c.link; a.target = "_blank"; a.rel = "noopener"; box.appendChild(a); }
+  return box;
+}
+
+function addUser(text) {
+  logEl.appendChild(el("div", "msg user", text));
+  transcript.push("我：" + text);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function addEcho(r) {
+  const m = el("div", "msg echo");
+  const tags = el("div", "tags");
+  tags.appendChild(el("span", "tag", "NINESUN"));
+  if (r.source) tags.appendChild(el("span", "tag src", SRC[r.source] || r.source));
+  m.appendChild(tags);
+  m.appendChild(el("div", "text", r.text));
+  if (r.card) m.appendChild(renderCard(r.card));
+  if (r.webQuery) m.appendChild(el("div", "note", `App 版會在這裡自己上網查「${r.webQuery}」，讀網頁、比對後回答。網頁測試版不能連外網，所以只顯示它要查什麼。`));
+  if (r.webAugment && r.webAugment.length) m.appendChild(el("div", "note", `App 版接著會上網查「${r.webAugment[0]}」的說法，再跟你的盤對照。`));
+  logEl.appendChild(m);
+  transcript.push("NineSun：" + r.text);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function ask(text) {
+  text = (text || "").trim();
+  if (!text || !ns) return;
+  addUser(text);
+  // 引擎用 UTC 的日曆，所以把本地時間平移過去，今天、今晚才會是你這裡的今天
+  const now = Date.now() - new Date().getTimezoneOffset() * 60000;
+  let r;
+  try { r = ns.send(text, profile, now); }
+  catch (e) { r = { text: "引擎出錯了：" + e.message + "\n請按「設定 → 複製對話」把這段貼給開發者。", source: "tool" }; console.error(e); }
+  if (r.profile) { profile = r.profile; store.set("ns.profile", profile); showWho(); }
+  addEcho(r);
+}
+
+$("bar").addEventListener("submit", (e) => { e.preventDefault(); const v = $("q").value; $("q").value = ""; ask(v); });
+
+// ── 設定 ──
+function openSettings() {
+  const b = profile.birthday;
+  $("bd").value = b ? `${b.year}-${String(b.month).padStart(2, "0")}-${String(b.day).padStart(2, "0")}` : "";
+  $("knowsTime").checked = profile.hour != null;
+  $("bt").value = profile.hour != null ? `${String(profile.hour).padStart(2, "0")}:${String(profile.minute || 0).padStart(2, "0")}` : "08:00";
+  $("gender").value = profile.male === true ? "m" : profile.male === false ? "f" : "";
+  $("sheet").hidden = false;
+}
+$("openSettings").onclick = openSettings;
+$("sheet").addEventListener("click", (e) => { if (e.target === $("sheet")) $("sheet").hidden = true; });
+$("saveSettings").onclick = () => {
+  const p = {};
+  if ($("bd").value) { const [y, m, d] = $("bd").value.split("-").map(Number); p.birthday = { year: y, month: m, day: d }; }
+  if ($("knowsTime").checked && $("bt").value) { const [h, mi] = $("bt").value.split(":").map(Number); p.hour = h; p.minute = mi; }
+  if ($("gender").value) p.male = $("gender").value === "m";
+  profile = p; store.set("ns.profile", profile); showWho();
+  $("sheet").hidden = true; toast("已儲存");
+};
+$("clearLog").onclick = () => {
+  logEl.querySelectorAll(".msg").forEach((n) => n.remove());
+  transcript = []; if (ns) ns.reset();
+  $("sheet").hidden = true; toast("對話已清除");
+};
+$("copyLog").onclick = () => {
+  const text = `【NineSun 測試對話】${$("who").textContent}\n\n` + transcript.join("\n\n");
+  navigator.clipboard.writeText(text).then(() => toast("已複製，可以直接貼給開發者"), () => {
+    const ta = el("textarea"); ta.value = text; ta.style.width = "100%"; ta.rows = 6;
+    $("sheet").firstElementChild.appendChild(ta); ta.select(); toast("請手動複製下面的文字");
+  });
+};
+function toast(t) { const n = el("div", "toast", t); document.body.appendChild(n); setTimeout(() => n.remove(), 1800); }
+
+// ── 載入引擎 ──
+const PARTS = { engine: ["dist/engine-0.wasm", "dist/engine-1.wasm", "dist/engine-2.wasm"], model: ["dist/model-0.wasm", "dist/model-1.wasm"] };
+async function gunzipParts(urls, onPart) {
+  const blobs = [];
+  for (const u of urls) {
+    const res = await fetch(u);
+    if (!res.ok) throw new Error(`下載 ${u} 失敗（${res.status}）`);
+    blobs.push(await res.blob()); onPart();
+  }
+  const stream = new Blob(blobs).stream().pipeThrough(new DecompressionStream("gzip"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+(async () => {
+  const total = PARTS.engine.length + PARTS.model.length + 1;
+  let done = 0;
+  const tick = () => { done++; $("meterBar").style.width = Math.round(done / (total + 1) * 100) + "%"; };
+  try {
+    const dataRes = await fetch("dist/data.json"); const data = await dataRes.json(); tick();
+    const enc = new TextEncoder();
+    const [wasm, model] = await Promise.all([gunzipParts(PARTS.engine, tick), gunzipParts(PARTS.model, tick)]);
+    $("bootText").textContent = "啟動中…";
+    const files = [[0, model], [1, enc.encode(data["ninesun.json"])], [2, enc.encode(data["i18n.json"])], [3, enc.encode(data["chat_bank.json"])],
+      [4, enc.encode(data["palace_lexicon.json"])], [10, enc.encode(data["knowledge_zh.json"])], [11, enc.encode(data["knowledge_en.json"])],
+      [12, enc.encode(data["knowledge_es.json"])], [13, enc.encode(data["knowledge_it.json"])]];
+    ns = await NineSunRuntime.boot(wasm, files);
+    $("meterBar").style.width = "100%";
+    $("boot").remove();
+    $("status").textContent = "ONLINE";
+    $("send").disabled = false;
+    addEcho({ text: "訊號接通！我是 NineSun 網頁測試版，跑的是和 App 一模一樣的引擎。\n生日、出生時間、性別在右上角「設定」。\n直接問我，或點下面的快捷鍵。覺得哪裡答得不好，按「設定 → 複製對話」貼給開發者就能修。", source: "tool" });
+    $("q").focus();
+  } catch (e) {
+    console.error(e);
+    $("bootText").textContent = "載入失敗：" + e.message + "。請重新整理頁面再試一次。";
+    $("status").textContent = "ERROR";
+  }
+})();
+</script>

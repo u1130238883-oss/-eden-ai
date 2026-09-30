@@ -249,6 +249,16 @@ public final class EchoEngine {
                             card: card, ctx: ctx, onToken: onToken, done: done)
         }
 
+        // 5.5) 實用型問題（沒有要算運勢）：用思路庫寫好的答案，不要被主題、宮位搶走
+        if EchoEngine.isQuestion(text), !EchoEngine.fortuneIntent(text), let opts = chatBank?.playbook(text, .zh) {
+            let raw = choose(opts)
+            var r = done(raw, .neural)
+            r.turn.tokens = []
+            r.turn.variant = raw
+            if !EchoEngine.addressedToMe(text) { r.webQuery = EchoEngine.searchQuery(text) }
+            return r
+        }
+
         // 6) 八字、紫微、易經卦
         if let q = ManticRouter.route(text, profile: ctx.profile, now: ctx.now, rng: &rng) {
             if q.deterministic { return done(q.fallback + q.tail, .tool, card: q.card) }
@@ -345,6 +355,16 @@ public final class EchoEngine {
     func chatReply(_ text: String, _ L: Lang, ctx: Context, palace: Int?, turns: Int = 0, done: (String, ChatTurn.Source, Int?) -> Reply) -> Reply {
         let raw: String
         let asksMe = EchoEngine.addressedToMe(text)
+        let asking = EchoEngine.isQuestion(text)
+        if asking, let opts = chatBank?.playbook(text, L) {
+            // 思路庫：先用寫好的思路回答（前提 → 原因 → 做法 → 下一步），再上網查最新資料補充
+            let a = choose(opts)
+            var r = done(a, .neural, palace)
+            r.turn.tokens = []
+            r.turn.variant = a
+            if !asksMe { r.webQuery = EchoEngine.searchQuery(text) }
+            return r
+        }
         if let c = companionReply(text, L, ctx: ctx, palace: palace) {
             raw = c
         } else if !asksMe, EchoEngine.infoQuestion(text) || EchoEngine.looksLikeQuestion(text) {
@@ -352,9 +372,10 @@ public final class EchoEngine {
             var r = done(Loc.s("webAsk", L), .tool, palace)
             r.webQuery = EchoEngine.searchQuery(text)
             return r
-        } else if let opts = chatBank?.answers(text, L) {
+        } else if let opts = chatBank?.answers(text, L, useKeywords: asking) {
             raw = choose(opts)
-        } else if EchoEngine.infoQuestion(text) {
+        } else if EchoEngine.infoQuestion(text) || (asking && !text.contains("我")) {
+            // 知識題、跟自己無關的問題：上網查
             var r = done(Loc.s("webAsk", L), .tool, palace)
             r.webQuery = EchoEngine.searchQuery(text)
             return r
@@ -389,6 +410,24 @@ public final class EchoEngine {
                               "where is", "when is", "when did", "how many", "how much", "latest", "news", "weather",
                               "what is", "what are", "who is", "how to", "how do", "how does", "why do", "why is", "explain", "tell me about",
                               "qué es", "quién es", "cómo se", "por qué", "explica", "cos'è", "chi è", "come si", "perché", "spiega"]
+    /// 是不是問句（問句不該被當成閒聊，用宮位感知亂回）
+    static func isQuestion(_ raw: String) -> Bool {
+        let t = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let words = ["怎麼", "怎樣", "如何", "要不要", "該不該", "什麼", "為什麼", "哪", "可不可以", "能不能", "有沒有", "多少", "是不是",
+                     "才能", "誰", "幾", "how", "what", "why", "which", "who", "cómo", "qué", "por qué", "come", "cosa", "perché"]
+        return words.contains { t.contains($0) } || t.hasSuffix("?") || t.hasSuffix("？") || t.hasSuffix("嗎") || t.hasSuffix("呢")
+    }
+
+    /// 有沒有要算運勢的意思（有的話交給命理；沒有的話是一般的實用問題）
+    static func fortuneIntent(_ text: String) -> Bool {
+        let meta = ["哪個準", "哪一個準", "比較準", "可以信", "可不可以信", "準不準", "準嗎"]
+        if meta.contains(where: { text.contains($0) }) { return false }
+        let words = ["運", "命", "宮", "今年", "明年", "流年", "大運", "流月", "這個月", "下個月", "今天", "明天", "今晚", "順不順", "好不好",
+                     "會不會", "什麼時候", "哪個月", "哪一年", "哪天", "哪幾天", "哪一天", "適合", "八字", "紫微", "卦", "怎麼樣", "如何",
+                     "九型", "第幾型"]
+        return words.contains { text.contains($0) }
+    }
+
     /// 是在問知識／資訊（可以上網查），不是在聊心情或算命
     static func infoQuestion(_ raw: String) -> Bool {
         let t = raw.lowercased()
@@ -406,6 +445,8 @@ public final class EchoEngine {
         let inside = ["上網查", "上網搜", "上網找", "網路上查", "網上查", "上網看看"]
         guard prefixes.contains(where: { l.hasPrefix($0) }) || inside.contains(where: { t.contains($0) }) else { return nil }
         if t.contains("我的") || t.contains("運勢") || (t.contains("我") && ManticReader.wants(t)) { return nil }
+        // 「你可以上網找資料嗎」「你會上網嗎」是在問 NineSun 的能力，不是要它去查
+        if ["你可以", "你會", "你能", "你有辦法"].contains(where: { t.hasPrefix($0) }) && (t.hasSuffix("嗎") || t.hasSuffix("？") || t.hasSuffix("?")) { return nil }
         let q = WebAgent.keywords(t)
         return q.isEmpty || q == t ? nil : q
     }

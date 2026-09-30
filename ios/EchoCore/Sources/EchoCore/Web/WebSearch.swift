@@ -472,6 +472,7 @@ public enum WebSearch {
         if cs == nil, let head = String(data: d.prefix(3000), encoding: .isoLatin1) {
             cs = first(#"charset=["']?([a-zA-Z0-9_-]+)"#, head, group: 1)?.lowercased()
         }
+        #if canImport(Darwin)
         switch cs ?? "utf-8" {
         case "big5", "big5-hkscs", "x-big5":
             return String(data: d, encoding: String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.big5_HKSCS_1999.rawValue))))
@@ -482,6 +483,11 @@ public enum WebSearch {
         default:
             return String(data: d, encoding: .utf8) ?? String(decoding: d, as: UTF8.self)
         }
+        #else
+        // Linux／網頁版沒有 CoreFoundation 的 big5、gbk 轉碼（只用來跑測試）
+        _ = cs
+        return String(data: d, encoding: .utf8) ?? String(decoding: d, as: UTF8.self)
+        #endif
     }
 
     // MARK: - RSS

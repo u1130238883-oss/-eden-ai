@@ -714,6 +714,16 @@ final class EchoCoreTests: XCTestCase {
         let whyT = engine.reply(to: "為什麼", history: [ChatTurn(role: .user, text: "我今年感情運如何"), topicR.turn], context: ctx).turn.text
         if whyT.contains("r12") || whyT.contains("年柱") || !whyT.contains("根源") { fails.append("✗ 為什麼還在講算法：\(whyT.prefix(80))") }
 
+        // 思路庫：問句要用寫好的思路回答，不能被當成閒聊用宮位亂回
+        for (q, must) in [("所以我要怎樣要求克勞德幫我改進我的這個AI才能與克勞德給出的思路和答案相近啊", "先確定一件事"),
+                          ("怎麼樣才能讓你的回答跟Claude差不多", "400 萬參數"), ("你比Claude笨在哪裡", "差別"),
+                          ("你可以上網找資料嗎", "規劃"), ("我最近很想離職怎麼辦", "逃離"), ("老闆不給我加薪怎麼辦", "證據"),
+                          ("每個月都存不了錢要怎麼辦", "先分好"), ("我做事一直拖怎麼辦", "5 分鐘"), ("晚上一直睡不著覺怎麼辦", "20 分鐘"),
+                          ("英文要怎麼學比較快", "每天"), ("算命到底可不可以信", "趨勢"), ("八字跟九型十二宮哪一個比較準", "角度")] {
+            let r = engine.reply(to: q, context: ctx)
+            if !r.turn.text.contains(must) { fails.append("✗ 思路庫沒接住：\(q) [\(r.turn.source.rawValue)] → \(r.turn.text.prefix(60))") }
+        }
+
         // 幫別人看不能改掉自己的生日；自我介紹名字要記住
         XCTAssertNil(engine.reply(to: "我媽媽的生日是1965年3月2日", context: ctx).profile)
         let named = engine.reply(to: "我叫小明", context: ctx)
@@ -739,7 +749,7 @@ final class EchoCoreTests: XCTestCase {
                 fails.append("✗ \(q) [\(r.turn.source.rawValue)] → \(r.turn.text.prefix(100))")
             }
         }
-        print("USER-PHRASINGS: \(cases.count + 18 - fails.count) ok, \(fails.count) failed\n" + fails.joined(separator: "\n"))
+        print("USER-PHRASINGS: \(cases.count + 30 - fails.count) ok, \(fails.count) failed\n" + fails.joined(separator: "\n"))
         XCTAssertTrue(fails.isEmpty, fails.joined(separator: "\n"))
     }
 
