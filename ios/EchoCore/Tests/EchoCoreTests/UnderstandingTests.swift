@@ -6,6 +6,13 @@ final class UnderstandingTests: XCTestCase {
     func testFrames() {
         func want(_ q: String) -> Understanding.Want { Understanding.frame(q).want }
         XCTAssertEqual(want("歐洲有哪些國家"), .list(noun: "國家"))
+        // 同一個問題的不同問法，都要理解成「要一份名單」
+        for q in ["歐洲有什麼國家", "歐洲有什麼國家？", "歐洲有哪幾個國家", "列出歐洲所有國家", "歐洲包括什麼國家"] {
+            XCTAssertEqual(want(q), .list(noun: "國家"), q)
+            XCTAssertEqual(Understanding.frame(q).subject, "歐洲", q)
+        }
+        XCTAssertEqual(want("台北有什麼好玩的"), .list(noun: "景點"))
+        XCTAssertEqual(want("維他命C有什麼好處"), .open)
         XCTAssertEqual(Understanding.frame("歐洲國家都是哪些國家").subject, "歐洲")
         XCTAssertEqual(Understanding.frame("日本有哪些縣？").subject, "日本")
         XCTAssertEqual(want("加拿大有多少個省"), .number(attr: "省", units: ["個省", "座省", "種省", "名省", "省"]))

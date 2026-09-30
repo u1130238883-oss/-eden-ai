@@ -158,6 +158,18 @@ extension Understanding {
                      "你想知道「\(m[1])」是\(who ? "誰" : "哪一個") → 要一個明確的名稱，再說明根據。")
         }
 
+        // 名單的其他說法：「歐洲有什麼國家」「有哪幾個國家」「包括什麼國家」「列出歐洲的國家」→ 都當成「歐洲有哪些國家」
+        let notList = ["用", "意思", "關係", "不同", "差別", "問題", "好處", "壞處", "影響", "特色", "功能", "區別", "用處", "作用", "意義"]
+        if let m = match(t, #"^(.+?)(?:有什麼|有啥|有哪幾個|有哪幾種|包括什麼|包含什麼|包括哪幾個)(.{1,6})$"#), !notList.contains(m[2]) {
+            var noun = m[2]
+            // 「台北有什麼好玩的」「日本有什麼好吃的」：要的是推薦的地方、食物
+            if noun.hasPrefix("好玩") { noun = "景點" } else if noun.hasPrefix("好吃") { noun = "美食" }
+            return frame(m[1] + "有哪些" + noun)
+        }
+        if let m = match(t, #"^列出(.+?)(?:的|所有的|所有|全部的|全部)(.{1,6})$"#) {
+            return frame(m[1] + "有哪些" + m[2])
+        }
+
         // 名單：X 有哪些 Y
         if let m = match(t, #"^(.*?)哪些(.+)$"#) {
             var pre = m[1], noun = trimTail(m[2], ["的", "列表", "名單", "一覽"])
@@ -330,6 +342,9 @@ extension Understanding {
         return s
     }
 
+    /// 最近一次找名單的過程（除錯用）
+    nonisolated(unsafe) public static var lastListDebug = ""
+
     /// 從網頁裡找出名單：表格第一欄、「、」隔開的一串、連續的短行
     public static func extractList(_ pages: [Evidence], noun: String, subject: String) -> (items: [String], hosts: [String]) {
         let suffix = ["縣", "省", "州", "市", "區", "島", "山", "河", "湖", "星", "洲", "洋"].first { noun.hasSuffix($0) }
@@ -441,6 +456,8 @@ extension Understanding {
             // 名單要有明確的來源：表頭對得上的表格、「X國家包括…」這種在列名單的句子、或《作品》
             confirmed = good.filter { g in g.host.hasPrefix("★") || g.items.first?.hasPrefix("《") == true }
         }
+        lastListDebug = "groups=" + groups.map { "\($0.host):\($0.items.count):\($0.items.prefix(3).joined(separator: "/"))" }.joined(separator: " | ")
+            + " good=\(good.count) confirmed=\(confirmed.count)"
         guard var best = confirmed.max(by: { $0.items.count < $1.items.count }) else { return ([], []) }
         if let suffix {
             best.items = best.items.filter { ($0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府")) && !$0.contains("列表") && !$0.hasPrefix(noun) }

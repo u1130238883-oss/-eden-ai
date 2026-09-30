@@ -567,6 +567,11 @@ public enum WebAgent {
                                details: Array(links.prefix(5)).map { WebSearch.host($0) + "  " + WebSearch.clip(readablePath($0), 40) },
                                link: links.first)
         var res = Result(text: t, card: card, found: true, engines: engines)
+        if let fr, case .list = fr.want {
+            // 除錯：讀了哪些網頁（每頁前兩行、有幾行表格）、找到哪些名單
+            res.debug = "pages=" + pages.map { p in WebSearch.host(p.0.url) + "[" + p.0.url.suffix(30) + "] lines=\(p.1.components(separatedBy: "\n").count) table=\(p.1.components(separatedBy: "\n").filter { $0.contains("｜") }.count) head=" + p.1.components(separatedBy: "\n").filter { $0.contains("｜") }.prefix(2).joined(separator: " // ").prefix(160) }.joined(separator: " || ")
+                + " LIST " + Understanding.lastListDebug
+        }
         res.answered = solved?.ok ?? true
         return res
     }
