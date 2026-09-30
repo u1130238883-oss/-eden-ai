@@ -91,7 +91,7 @@ final class WebThinkingTests: XCTestCase {
         XCTAssertEqual(v?.best, "46個")
         XCTAssertEqual(v?.others, ["50個"])
         XCTAssertEqual(WebSearch.wikiTerm("誰發明了電話"), "發明 電話")
-        XCTAssertEqual(WebSearch.wikiTerm("地球到月亮有多遠"), "地球 月亮")
+        XCTAssertEqual(WebSearch.wikiTerm("地球到月亮有多遠"), "地球 月亮 距離")
         XCTAssertEqual(WebSearch.wikiTerm("日本的首都是哪裡"), "日本 首都")
         XCTAssertEqual(WebAgent.readablePath("https://zh.wikipedia.org/zh-tw/%E6%AD%90%E6%B4%B2"), "zh-tw/歐洲")
 
@@ -137,6 +137,7 @@ final class WebConversationLiveTests: XCTestCase {
             "歐洲有多少個國家？", "那這些國家都是哪些國家", "我是說這些歐洲國家是哪些國家？",
             "台北101有多高", "天空為什麼是藍色的", "感冒了怎麼辦", "誰發明了電話", "地球到月亮有多遠",
             "iPhone和安卓哪個好", "日本的首都是哪裡", "怎麼煮白飯", "老闆不給我加薪怎麼辦",
+            "太陽到地球有多遠", "月亮為什麼會發光", "日本有哪些縣", "怎麼煮綠豆湯", "玉山有多高",
         ]
         var history: [ChatTurn] = []
         var slow = 0

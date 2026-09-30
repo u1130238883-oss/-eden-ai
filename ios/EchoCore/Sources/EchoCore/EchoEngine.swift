@@ -327,7 +327,8 @@ public final class EchoEngine {
         }
 
         // 5.5) 實用型問題（沒有要算運勢）：用思路庫寫好的答案，不要被主題、宮位搶走
-        if EchoEngine.isQuestion(text), !EchoEngine.fortuneIntent(text), let pb = chatBank?.playbookEntry(text, .zh) {
+        // 不是問句的（「我感冒了好難受」）只接常識型、不用上網的答案；心情、感情這類還是交給命盤陪伴
+        if !EchoEngine.fortuneIntent(text), let pb = chatBank?.playbookEntry(text, .zh), EchoEngine.isQuestion(text) || !pb.web {
             let raw = choose(pb.answers)
             var r = done(raw, .neural)
             r.turn.tokens = []
@@ -472,6 +473,9 @@ public final class EchoEngine {
             if asksMe {
                 // 對 NineSun 說的話（「你去死吧」「你好爛」）不是要查資料：老實回應
                 raw = Companion.fallback(L: L, choose: choose)
+            } else if !EchoEngine.isQuestion(text) && !EchoEngine.infoQuestion(text) && (text.contains("我") || text.lowercased().contains(" i ") || text.lowercased().hasPrefix("i ")) {
+                // 講自己的事（「我今天不想煮飯」）不是在問問題：先聽，不拿去上網查
+                raw = choose(EchoEngine.listenReplies[[Lang.zh, .en, .es, .it].firstIndex(of: L) ?? 0])
             } else {
                 // 本地不會：上網查（App 收到 webQuery 就去搜尋並整理答案）
                 var r = done(Loc.s("webAsk", L), .tool, palace)
@@ -485,6 +489,13 @@ public final class EchoEngine {
         return r
     }
 
+    static let listenReplies: [[String]] = [
+        ["嗯，我在聽。想多說一點嗎？", "了解。是發生了什麼事，還是只是想找人聊聊？", "聽起來今天有點累。想聊聊，還是要我幫你想想辦法？"],
+        ["I'm listening. Want to tell me more?", "Got it. Did something happen, or do you just want to talk?"],
+        ["Te escucho. ¿Quieres contarme más?", "Entiendo. ¿Pasó algo o solo quieres hablar?"],
+        ["Ti ascolto. Vuoi raccontarmi di più?", "Capito. È successo qualcosa o vuoi solo parlare?"],
+    ]
+
     static let infoMarkers = ["請解釋", "解釋一下", "是什麼", "什麼是", "什麼意思", "怎麼做", "怎麼用", "怎麼煮", "如何", "為什麼會", "為什麼要",
                               "多少", "哪裡", "哪個", "誰是", "是誰", "介紹", "教我", "推薦", "意思", "歷史", "原理", "區別", "差別", "方法",
                               "步驟", "新聞", "天氣", "價格", "幾歲", "有什麼", "怎麼去", "定義", "公式", "多高", "多大", "多遠", "多久", "多長",
@@ -496,7 +507,7 @@ public final class EchoEngine {
     static func isQuestion(_ raw: String) -> Bool {
         let t = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         let words = ["怎麼", "怎樣", "如何", "要不要", "該不該", "什麼", "為什麼", "哪", "可不可以", "能不能", "有沒有", "多少", "是不是",
-                     "才能", "誰", "幾", "how", "what", "why", "which", "who", "cómo", "qué", "por qué", "come", "cosa", "perché"]
+                     "才能", "誰", "幾", "多遠", "多高", "多久", "多重", "多大", "多長", "多深", "how", "what", "why", "which", "who", "cómo", "qué", "por qué", "come", "cosa", "perché"]
         return words.contains { t.contains($0) } || t.hasSuffix("?") || t.hasSuffix("？") || t.hasSuffix("嗎") || t.hasSuffix("呢")
     }
 

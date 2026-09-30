@@ -253,6 +253,17 @@ public enum WebAgent {
         else if let first = (strat.angles.isEmpty ? ranked : ranked.filter { $0.angle <= 0 }).first(where: { $0.text.count >= 30 }) ?? ranked.first {
             answer = WebSearch.clip(first.text, 240) + "（\(first.host)）"
         }
+        // 問為什麼：開頭那句要真的在講原因；問做法：要真的有步驟。找不到就老實說，不拿不相關的句子充數
+        if lead2 == nil, plan.kind == .reason || plan.kind == .method {
+            let markers = plan.kind == .reason ? ["因為", "由於", "原因", "所以", "導致", "造成", "散射", "是因"]
+                                               : ["步驟", "先", "再", "然後", "接著", "最後", "分鐘", "加入", "放入", "倒入", "按下"]
+            if let f = ranked.first(where: { r in markers.contains { r.text.contains($0) } }) {
+                answer = WebSearch.clip(f.text, 240) + "（\(f.host)）"
+            } else if zh {
+                answer = plan.kind == .reason ? "我在網路上沒找到把原因講清楚的資料，下面是找到的相關內容，僅供參考。"
+                                              : "我在網路上沒找到清楚的步驟，下面是找到的相關內容，僅供參考；你也可以把問題講得更具體（例如用電鍋還是瓦斯爐），我再查一次。"
+            }
+        }
         // 問「有哪些」：答案要是一份名單，不是介紹文；找不到名單就老實說
         if listQ, lead2 == nil {
             func items(_ s: String) -> Int { s.components(separatedBy: "、").count - 1 }
@@ -277,6 +288,16 @@ public enum WebAgent {
                 answer = head + "\n" + WebSearch.clip(s.text, 220) + "（\(s.host)）"
             } else {
                 answer = head + (answer.isEmpty ? "" : "\n" + answer)
+            }
+        }
+        // 問多遠、多高、多重：答案裡要有對應的單位，不然就是答非所問
+        if plan.numeric, zh, let units = [("多遠", ["公里", "km", "英里", "光年", "公尺", "天文單位"]), ("多高", ["公尺", "米"]),
+                                            ("多重", ["公斤", "噸", "克", "kg"]), ("多深", ["公尺", "米"]), ("多長", ["公里", "公尺", "米"])]
+            .first(where: { question.contains($0.0) })?.1, !units.contains(where: { answer.contains($0) }) {
+            if let f = ranked.first(where: { r in units.contains { r.text.contains($0) } && hasNumber(r.text, besides: plan.core) }) {
+                answer = WebSearch.clip(f.text, 240) + "（\(f.host)）"
+            } else {
+                answer = "我在網路上沒找到確切的數字，下面是找到的相關資料，建議再確認。"
             }
         }
         var used: [String] = [answer]
@@ -486,8 +507,12 @@ public enum WebAgent {
         let junk = ["cookie", "copyright", "版權所有", "all rights reserved", "登入", "註冊", "訂閱", "javascript", "隱私權", "privacy policy",
                     "點擊", "下載app", "分享到", "上一篇", "下一篇", "sign in", "subscribe", "廣告",
                     "oldid=", "title=", "index.php", "維基百科，自由的百科全書", "自由的百科全書", "[編輯]", "編輯原始碼", "取自「", "本頁面最後修訂",
-                    "跳轉到", "跳到導覽", "跳至導覽", "wikipedia, the free encyclopedia", "retrieved from", "&action="]
+                    "跳轉到", "跳到導覽", "跳至導覽", "wikipedia, the free encyclopedia", "retrieved from", "&action=",
+                    "頁面存檔備份", "網際網路檔案館", "存檔副本", "原始內容存檔", "isbn", "doi:"]
         if junk.contains(where: { l.contains($0) }) { return true }
+        // 參考資料那一段：「^ 1.0 1.1 某某醫院. 標題. 天下雜誌.」
+        let trimmed = s.trimmingCharacters(in: .whitespaces)
+        if trimmed.hasPrefix("^") || trimmed.hasPrefix("↑") { return true }
         let letters = s.filter { $0.isLetter }.count
         return Double(letters) / Double(max(1, s.count)) < 0.5
     }

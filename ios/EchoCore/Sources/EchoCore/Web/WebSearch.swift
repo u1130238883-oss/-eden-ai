@@ -216,13 +216,16 @@ public enum WebSearch {
     /// 維基百科要用關鍵詞查，整句問題查不到（「誰發明了電話」→「發明 電話」、「地球到月亮有多遠」→「地球 月亮」）
     public static func wikiTerm(_ q: String) -> String {
         var t = q
+        // 問多遠、多高：百科裡寫的是「距離」「高度」，把這個詞補上才找得到對的條目（不然「地球 月亮」會找到超級月亮）
+        let hint = [("多遠", "距離"), ("多高", "高度"), ("多重", "質量"), ("多深", "深度"), ("多長", "長度")].first { q.contains($0.0) }?.1
         for w in ["是哪裡", "在哪裡", "是哪一個", "是哪個", "有多遠", "有多高", "有多大", "有多少", "有多長", "有多久", "是多少", "是什麼", "是誰",
                   "為什麼", "怎麼樣", "怎麼", "如何", "哪些", "哪裡", "哪個", "什麼", "多少", "多遠", "多高", "多大", "多久",
                   "誰", "嗎", "呢", "了", "的", "是", "要", "會", "有"] {
             t = t.replacingOccurrences(of: w, with: " ")
         }
         for w in ["到", "和", "跟", "與", "及"] { t = t.replacingOccurrences(of: w, with: " ") }
-        let out = t.split(separator: " ").map(String.init).filter { !$0.isEmpty }.joined(separator: " ")
+        var out = t.split(separator: " ").map(String.init).filter { !$0.isEmpty }.joined(separator: " ")
+        if let hint, out.count >= 2, !out.contains(hint) { out += " " + hint }
         return out.count >= 2 ? out : q
     }
 
