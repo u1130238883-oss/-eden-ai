@@ -479,7 +479,12 @@ public enum WebSearch {
         }
         html = html.replacingOccurrences(of: "(?is)<!--.*?-->", with: " ", options: .regularExpression)
         html = html.replacingOccurrences(of: "(?i)<(br|p|div|li|h[1-6]|tr|section|article)\\b[^>]*>", with: "\n", options: .regularExpression)
-        let lines = html.components(separatedBy: "\n").map { clean($0) }.filter { $0.count >= 8 }
+        // 表格每一格用「｜」隔開，才看得出第一欄是名單（國家、縣市……）
+        html = html.replacingOccurrences(of: "(?i)<(td|th)\\b[^>]*>", with: " ｜ ", options: .regularExpression)
+        // 短行（清單的一項，例如「青森縣」）也要留著，挑句子時會再過濾
+        let lines = html.components(separatedBy: "\n").map { clean($0).trimmingCharacters(in: .whitespaces) }
+            .map { $0.hasPrefix("｜") ? String($0.dropFirst()).trimmingCharacters(in: .whitespaces) : $0 }
+            .filter { $0.count >= 2 }
         return lines.joined(separator: "\n")
     }
 

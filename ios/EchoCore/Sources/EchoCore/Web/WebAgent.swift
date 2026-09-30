@@ -130,11 +130,15 @@ public enum WebAgent {
         let canon = zh && !fortune ? WebStrategy.canonical(plan.core) : nil
         let topic = fortune ? WebFortune.base(question) : (canon ?? plan.core)
         let chart = facts.map(WebFortune.parse)
+        // ① 先想清楚要什麼樣的答案（數字、名單、原因、做法……），照這個決定怎麼查、怎麼挑
+        let fr = zh && !fortune ? Understanding.frame(question) : nil
 
         // ②③ 拆成幾組關鍵字，同時上網查（tag -1：整體；0…：各個小問題）
         var jobs: [(tag: Int, q: String, full: Bool)] = []
         // 一般問題查 2 組就夠（原句＋換個說法），太多組只會變慢
-        for (i, q) in plan.queries.prefix(strat.angles.isEmpty ? (canon == nil ? 2 : 1) : 1).enumerated() { jobs.append((-1, q, i == 0 || strat.angles.isEmpty)) }
+        let firstQs: [String] = fr.map { Understanding.uniq(Array($0.searches.prefix(strat.angles.isEmpty ? 2 : 1)) + (strat.angles.isEmpty ? [plan.queries.first ?? ""] : [])) }
+            ?? Array(plan.queries.prefix(strat.angles.isEmpty ? (canon == nil ? 2 : 1) : 1))
+        for (i, q) in firstQs.enumerated() { jobs.append((-1, q, i == 0 || strat.angles.isEmpty)) }
         if let canon { jobs.append((-1, canon, true)) }
         for q in also.prefix(2) where !jobs.contains(where: { $0.q == q }) { jobs.append((-1, q, true)) }
         for (i, a) in strat.angles.enumerated() { jobs.append((i, topic + a.suffix, false)) }
@@ -161,6 +165,7 @@ public enum WebAgent {
         // ④ 只留下跟主題有關的結果
         var terms = termSet(plan.core)
         if let canon { terms.formUnion(termSet(canon)) }
+        if let fr, fr.subject.count >= 2 { terms.formUnion(termSet(fr.subject)) }
         if fortune { terms = termSet(topic); for q in also { terms.formUnion(termSet(WebFortune.base(q))) } }
         let need = max(1, min(2, ((fortune ? terms.count : termSet(plan.core).count) + 1) / 3))
         var hits: [(tag: Int, hit: WebSearch.Hit)] = []
@@ -195,11 +200,26 @@ public enum WebAgent {
                 .sorted { (score($0.title + $0.snippet, terms) + (isTrusted($0.url) ? 3 : 0)) > (score($1.title + $1.snippet, terms) + (isTrusted($1.url) ? 3 : 0)) }
                 .prefix(n).map { $0 }
         }
-        var toRead: [WebSearch.Hit] = pick(-1, strat.angles.isEmpty ? 3 : 2)
+        var toRead: [WebSearch.Hit] = []
+        // 要名單、要數量時，直接打開維基百科的列表頁（「日本都道府縣列表」「加拿大省列表」）
+        var wikiTried = Set<String>()
+        func wikiHit(_ title: String) -> WebSearch.Hit {
+            wikiTried.insert(title)
+            let path = title.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? title
+            return WebSearch.Hit(title: title, snippet: "", url: "https://zh.wikipedia.org/zh-tw/\(path)", engine: "wiki")
+        }
+        if let fr {
+            switch fr.want {
+            case .list, .number: for t in fr.wikiTitles.prefix(1) { toRead.append(wikiHit(t)) }
+            default: break
+            }
+        }
+        let wikiFirst = toRead.count
+        toRead += pick(-1, strat.angles.isEmpty ? 3 : 2).filter { h in !toRead.contains { $0.url == h.url } }
         for i in strat.angles.indices { for h in pick(i, 1) where !toRead.contains(where: { $0.url == h.url }) { toRead.append(h) } }
         let pages = await withTaskGroup(of: (WebSearch.Hit, String?).self) { g -> [(WebSearch.Hit, String)] in
             // 最多打開幾個網頁，每個最多等 6 秒（慢的網站就跳過，不讓使用者一直等）
-            for h in toRead.prefix(strat.angles.isEmpty ? 3 : 5) { g.addTask { (h, await within(6) { await WebSearch.pageText(h.url, L) } ?? nil) } }
+            for h in toRead.prefix((strat.angles.isEmpty ? 3 : 5) + wikiFirst) { g.addTask { (h, await within(6) { await WebSearch.pageText(h.url, L) } ?? nil) } }
             var out: [(WebSearch.Hit, String)] = []
             for await (h, t) in g { if let t { out.append((h, t)) } }
             return out
@@ -238,6 +258,54 @@ public enum WebAgent {
         if let l = lead2, leadSource != nil, !leadFits(l, plan: plan, list: listQ, question: question) {
             findings.append(Finding(text: l, host: leadSource ?? "", url: "", angle: -1, trusted: false))
             lead2 = nil
+        }
+
+        // ⑥ 檢查：挑到的東西有沒有真的回答問題？沒有就換個查法再查一輪
+        var solved: (text: String, ok: Bool)?
+        var checkNote = ""
+        var pagesRead = pages.count
+        if let fr {
+            func ev(_ ps: [(WebSearch.Hit, String)]) -> [Understanding.Evidence] {
+                ps.map { .init(text: zh ? WebStrategy.toTraditional($0.1) : $0.1, host: WebSearch.host($0.0.url)) }
+            }
+            var snips = findings.map { Understanding.Evidence(text: $0.text, host: $0.host) }
+            var s = solve(fr, pages: ev(pages), snippets: snips)
+            if !s.ok, !fr.retry.isEmpty {
+                let retryQs = Array(fr.retry.prefix(2))
+                let got = await withTaskGroup(of: WebSearch.Answer?.self) { g -> [WebSearch.Answer] in
+                    for q in retryQs { g.addTask { await within(8) { await WebSearch.search(q, lang: L, news: false, light: true) } ?? nil } }
+                    var out: [WebSearch.Answer] = []
+                    for await a in g { if let a { out.append(a) } }
+                    return out
+                }
+                var newHits: [WebSearch.Hit] = []
+                for a in got {
+                    for raw in a.hits {
+                        let h = WebSearch.Hit(title: WebStrategy.toTraditional(raw.title), snippet: WebStrategy.toTraditional(raw.snippet), url: raw.url, engine: raw.engine)
+                        guard score(h.title + " " + h.snippet, terms) >= need, seenURL.insert(WebSearch.normURL(h.url)).inserted else { continue }
+                        newHits.append(h)
+                        for x in sentences(h.snippet) { snips.append(.init(text: x, host: WebSearch.host(h.url))) }
+                    }
+                }
+                var reread = Array(newHits.prefix(2))
+                for t in fr.wikiTitles where !wikiTried.contains(t) && reread.count < 4 {
+                    if case .list = fr.want { reread.insert(wikiHit(t), at: 0) }
+                    else if case .number = fr.want { reread.insert(wikiHit(t), at: 0) }
+                }
+                let more = await withTaskGroup(of: (WebSearch.Hit, String?).self) { g -> [(WebSearch.Hit, String)] in
+                    for h in reread { g.addTask { (h, await within(6) { await WebSearch.pageText(h.url, L) } ?? nil) } }
+                    var out: [(WebSearch.Hit, String)] = []
+                    for await (h, t) in g { if let t { out.append((h, t)) } }
+                    return out
+                }
+                pagesRead += more.count
+                s = solve(fr, pages: ev(pages + more), snippets: snips)
+                checkNote = (s.ok ? "第一輪的資料沒有直接回答，改查「" : "第一輪沒有直接回答，改查「") + retryQs.joined(separator: "」「")
+                    + (s.ok ? "」後找到了。" : "」還是沒找到能直接回答的內容。")
+            } else {
+                checkNote = s.ok ? "找到的內容有直接回答問題。" : "找到的內容沒有直接回答問題。"
+            }
+            solved = s
         }
 
         // ⑤ 查證：交叉比對
@@ -303,6 +371,18 @@ public enum WebAgent {
                 answer = "我在網路上沒找到確切的數字，下面是找到的相關資料，建議再確認。"
             }
         }
+        if let fr, let s = solved {
+            if s.ok && !s.text.isEmpty { answer = s.text }
+            else if !s.ok {
+                switch fr.want {
+                case .number: answer = "我查了兩輪，沒找到可靠的數字，下面是找到的相關資料，建議再確認。"
+                case .list: answer = "我查了兩輪，沒找到一份完整的名單，下面是找到的相關資料。"
+                case .reason: answer = "我查了兩輪，沒找到把原因講清楚的資料，下面是找到的相關內容，僅供參考。"
+                case .steps: answer = "我查了兩輪，沒找到清楚的步驟，下面是找到的相關內容；你也可以講得更具體一點，我再查一次。"
+                default: break
+                }
+            }
+        }
         var used: [String] = [answer]
         func take(_ fs: [Finding], _ n: Int) -> [String] {
             var out: [String] = []
@@ -326,8 +406,10 @@ public enum WebAgent {
             let heads = hits.filter { $0.hit.engine == "Google 新聞" }.prefix(6).map { WebStrategy.toTraditional($0.hit.snippet) }
             if !heads.isEmpty { sections.append(("最新消息", Array(heads))) }
             if lead2 == nil && !heads.isEmpty { answer = zh ? "我找到這些最新的相關新聞：" : "Latest related news:" }
+        } else if let fr, solved?.ok == true, { if case .list = fr.want { return true }; if case .steps = fr.want { return true }; return false }() {
+            // 名單、步驟已經是完整的答案，不用再附一堆零散的句子
         } else if !(plan.kind == .weather && lead != nil) {
-            let pts = take(ranked, 4)
+            let pts = take(ranked, fr != nil && solved?.ok == true ? 2 : 4)
             if !pts.isEmpty { sections.append((plan.kind == .method ? "步驟／做法" : "重點", pts)) }
         }
 
@@ -367,9 +449,13 @@ public enum WebAgent {
         var t = ""
         if zh {
             t += "🔎 我的思路\n"
-            t += "① 釐清：這是\(kindName[plan.kind] ?? "一般")的問題，主題是「\(fortune ? orderedUnique([topic] + also.map(WebFortune.base)).joined(separator: "、") : plan.core)」"
-            if let canon { t += "（正式名稱：\(canon)）" }
-            t += "。\n"
+            if let fr {
+                t += "① 理解：" + fr.restated + "\n"
+            } else {
+                t += "① 釐清：這是\(kindName[plan.kind] ?? "一般")的問題，主題是「\(fortune ? orderedUnique([topic] + also.map(WebFortune.base)).joined(separator: "、") : plan.core)」"
+                if let canon { t += "（正式名稱：\(canon)）" }
+                t += "。\n"
+            }
             if !strat.angles.isEmpty {
                 t += "② 拆解：分成「" + strat.angles.map(\.title).joined(separator: "」→「") + "」幾個小問題，分開上網查。\n"
             } else {
@@ -379,9 +465,10 @@ public enum WebAgent {
             t += "③ 蒐集：查了 \(jobs.count) 組關鍵字" + (names.isEmpty ? "" : "，從 " + names.joined(separator: "、")) + " 留下 \(hits.count) 個跟主題有關的結果"
             if let leadSource, lead != nil { t += "，另外取得 \(leadSource) 的直接資料" }
             t += "。\n"
-            t += "④ 閱讀：打開 \(pages.count) 個網頁，只留下真的在回答問題的句子。\n"
+            t += "④ 閱讀：打開 \(pagesRead) 個網頁，只留下真的在回答問題的句子。\n"
             t += "⑤ 查證：" + (trustedHosts.isEmpty ? "" : "採用了 " + trustedHosts.prefix(3).joined(separator: "、") + " 等可信來源；")
                 + (common.isEmpty ? "各來源說法比較分散，挑最相關的整理。" : "好幾個來源都提到「" + common.prefix(4).joined(separator: "」「") + "」。") + "\n"
+            if !checkNote.isEmpty { t += "⑥ 檢查：" + checkNote + "\n" }
             if facts != nil { t += "⑥ 對照：把每一句網路說法放到你的盤上檢查——喜忌、身強身弱、命宮主星、化忌宮位對不對得上，對不上的就排除。\n" }
             t += "\n📌 " + (fortune ? "網路上的說法" : "回答") + "\n" + answer
             for (title, pts) in sections {
@@ -392,7 +479,7 @@ public enum WebAgent {
             if !fortuneBlock.isEmpty { t += "\n\n" + fortuneBlock }
             t += "\n\n🤔 我的判斷：把握程度\(confidence)。"
             if !gaps.isEmpty { t += "還不確定的地方：" + gaps.joined(separator: "；") + "。" }
-            if covered == 0 && lead == nil { t += "這題網路上的資料跟你問的不太對得上，可以換個說法或講得更具體一點，我再查一次。" }
+            if covered == 0 && lead == nil && solved?.ok != true { t += "這題網路上的資料跟你問的不太對得上，可以換個說法或講得更具體一點，我再查一次。" }
             t += "\n來源：" + sources.prefix(5).joined(separator: "、")
         } else {
             t += Loc.s("webResult", L, plan.keywords) + "\n\n" + answer

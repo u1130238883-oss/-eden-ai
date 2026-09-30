@@ -173,3 +173,14 @@ ios/project.yml      XcodeGen
 - 路由：問句如果命中思路庫，先給寫好的思路答案，**再上網查**最新資料補充；沒命中就照原本的直接上網查。沒有要算運勢的實用問題（「老闆不給我加薪怎麼辦」）不會被 10宮主題搶走。
 - 本機也能編譯測試了：SwiftWasm 6.0.3 工具鏈（`github.com/swiftwasm/swift/releases`）在 Linux 上可以直接 `swift test`（`--skip testLiveSearch`）。
 - `web/`：把 EchoCore 編成 WebAssembly 的網頁測試版（`web/build.sh`）。網頁不能連外網，所以只能測本地功能。EchoCore 加了 `Web/`（URLSession）之後，要編網頁版得先把 `Web/` 排除在 WASI 之外。
+
+## Understanding questions before searching (Web/Understanding.swift)
+
+Factual questions are no longer answered from hand-written entries. The flow is:
+1. `Understanding.frame(question)` works out the subject and the kind of answer wanted: number (with the right units), list, reason, steps, person, place, time, definition, comparison, or open.
+2. The frame decides the searches (list → "X列表" plus the Wikipedia list page; distance → "X 距離"; recipe → "X 做法").
+3. `WebAgent.solve` keeps only evidence of that shape: numbers with units (voted per website), lists from table first columns / "、" enumerations / short-line runs, sentences with a cause, ordered steps.
+4. If nothing answers the question, one retry round with `frame.retry` (and more Wikipedia pages); if still nothing, it says so instead of padding with unrelated text.
+5. "我的思路" shows ① 理解 (the restated question) and ⑥ 檢查 (whether the evidence answered it).
+
+The chat bank keeps only things a search cannot answer: crisis safety, riddles, ethics/philosophy views, and questions about NineSun itself. Unit tests: `Tests/EchoCoreTests/UnderstandingTests.swift`.
