@@ -109,6 +109,25 @@ public enum Understanding {
 // MARK: - 1. 理解問題
 
 extension Understanding {
+    public enum Missing { case personal, generic }
+    static let personalAttrs = ["名字", "叫什麼", "幾歲", "年紀", "年齡", "生日", "住哪", "住在", "來自", "興趣", "喜歡", "性別", "星座"]
+    static let askBits = ["名字", "叫", "什麼", "幾歲", "年紀", "年齡", "生日", "住", "在", "哪裡", "哪", "是", "多高", "多重", "多大", "多少錢",
+                          "多少", "價格", "顏色", "多遠", "多久", "有", "誰", "電話", "地址", "的", "意思", "了", "來自", "興趣", "喜歡",
+                          "性別", "星座", "幾", "個", "怎麼樣", "如何", "好不好"]
+
+    /// 問題有沒有主語：「名字叫什麼」「多少錢」「是什麼顏色」沒說是誰、是什麼東西
+    public static func missingSubject(_ question: String) -> Missing? {
+        var t = plain(question)
+        for w in ["那麼", "所以", "那", "請問"] where t.hasPrefix(w) { t.removeFirst(w.count); break }
+        guard !t.isEmpty, t.count <= 8 else { return nil }
+        var rest = t
+        for w in askBits.sorted(by: { $0.count > $1.count }) { rest = rest.replacingOccurrences(of: w, with: "") }
+        guard rest.isEmpty else { return nil }
+        return personalAttrs.contains { t.contains($0) } ? .personal : .generic
+    }
+}
+
+extension Understanding {
     public static func frame(_ question: String) -> Frame {
         // 「現在」「目前」只說明要最新的資料，不是主題的一部分
         var t = plain(question)
@@ -267,7 +286,9 @@ extension Understanding {
         var s = raw.replacingOccurrences(of: #"\[[^\]]*\]|（[^）]*）|\([^)]*\)"#, with: "", options: .regularExpression)
         s = s.replacingOccurrences(of: #"^\s*(\d{1,3}[\.、．)）]|[•·\-–])\s*"#, with: "", options: .regularExpression)
         s = s.trimmingCharacters(in: .whitespaces)
+        // 名字不會有「是、的、於、為、比、稱、僅、最」這些句子用的字（「是世界人口第三多的洲」是一句話，不是一個國家）
         guard (2...12).contains(s.count), !s.contains(where: { "。，：:；;？?！!".contains($0) }),
+              !["是", "的", "於", "為", "比", "稱", "僅", "最", "次", "約", "被", "將", "把", "也"].contains(where: { s.contains($0) }),
               s.filter(\.isNumber).count <= 1, !stop.contains(s) else { return nil }
         return s
     }
@@ -281,7 +302,8 @@ extension Understanding {
             var run: [String] = [], table: [String] = []
             // 這一串前面幾行有沒有提到主題（「北歐國家包括…」）；側欄、導覽列通常不會
             var recent: [String] = []
-            var tableCtx = false
+            // 這一頁的開頭就在講主題（「歐洲國家列表」），頁面裡的表格就算有脈絡
+            var tableCtx = !subj.isEmpty && p.text.components(separatedBy: "\n").prefix(15).contains { $0.contains(subj) }
             func near() -> Bool { !subj.isEmpty && recent.suffix(6).contains { $0.contains(subj) } }
             // 連續短行多半是導覽列、側欄：只有字尾明確（縣、省……）的名單才採用，所以不算有主題脈絡
             func flush() { if run.count >= 5 { groups.append((run, p.host, false)) }; run = [] }
@@ -289,7 +311,7 @@ extension Understanding {
                 defer { recent.append(line) }
                 if line.contains("｜") {
                     if let first = line.components(separatedBy: "｜").lazy.compactMap({ item($0) }).first {
-                        if table.isEmpty { tableCtx = near() }
+                        if table.isEmpty && !tableCtx { tableCtx = near() }
                         table.append(first)
                     }
                     continue

@@ -73,6 +73,8 @@ final class UnderstandingTests: XCTestCase {
         XCTAssertEqual(Understanding.frame("台灣現在人口有多少").subject, "台灣人口")
         let clauses = "松德海峽大橋開通後，故海關檢查亦隨之鬆綁，瑞典及挪威之間，海關或護照檢查則更加寬鬆，不過北歐公民除護照外，並配合機票，通常亦可放行。"
         XCTAssertTrue(Understanding.extractList([.init(text: clauses, host: "w")], noun: "國家", subject: "北歐").items.isEmpty)
+        let desc = "歐洲全稱歐羅巴洲、是世界人口第三多的洲、僅次於亞洲和非洲、最北端是挪威的北角、其與亞洲合稱為歐亞大陸"
+        XCTAssertTrue(Understanding.extractList([.init(text: desc, host: "w")], noun: "國家", subject: "歐洲").items.isEmpty)
         let intro = "本文將透過地理分區、政治實體等不同角度，帶你詳細瞭解。"
         XCTAssertTrue(Understanding.extractList([.init(text: intro, host: "y")], noun: "國家", subject: "歐洲").items.isEmpty)
     }
@@ -118,6 +120,28 @@ final class ThinkingHabitsTests: XCTestCase {
         // 一個官方來源勝過一個普通網站
         let ev: [Understanding.Evidence] = [.init(text: "總人口約2,340萬人。", host: "www.ris.gov.tw"), .init(text: "總人口約2,100萬人。", host: "blog.example.com")]
         XCTAssertEqual(Understanding.voteNumber(ev, units: ["人"], subject: "台灣")?.shown, "2,340萬人")
+    }
+
+    func testMissingSubject() throws {
+        XCTAssertEqual(Understanding.missingSubject("名字叫什麼"), .personal)
+        XCTAssertEqual(Understanding.missingSubject("幾歲"), .personal)
+        XCTAssertEqual(Understanding.missingSubject("多少錢"), .generic)
+        XCTAssertEqual(Understanding.missingSubject("是什麼顏色"), .generic)
+        XCTAssertNil(Understanding.missingSubject("台北101有多高"))
+        XCTAssertNil(Understanding.missingSubject("歐洲有哪些國家"))
+        #if os(Linux)
+        let t = EchoCoreTests(name: "helper", testClosure: { _ in })
+        #else
+        let t = EchoCoreTests()
+        #endif
+        let engine = try t.makeEngine(seed: 2)
+        let ctx = EchoEngine.Context(now: t.date(2026, 9, 30, 11))
+        let name = engine.reply(to: "名字叫什麼", context: ctx)
+        XCTAssertNil(name.webQuery)
+        XCTAssertTrue(name.turn.text.contains("NineSun"), name.turn.text)
+        let price = engine.reply(to: "多少錢", context: ctx)
+        XCTAssertNil(price.webQuery)
+        XCTAssertTrue(price.turn.text.contains("告訴我名稱"), price.turn.text)
     }
 
     func testClarifyVaguePronoun() throws {

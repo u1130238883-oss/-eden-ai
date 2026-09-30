@@ -135,13 +135,39 @@ public final class EchoEngine {
     public func reply(to message: String, history: [ChatTurn] = [], context: Context,
                       onToken: ((String) -> Void)? = nil) -> Reply {
         // 追問（「那這些國家都是哪些國家」）：先把代名詞換回上一題的主題，再照一般問題處理
+        let prevQuestion = lastQuestion, prevQuestionTurn = lastQuestionTurn
         var text = message
         if let prev = lastQuestion, history.count - lastQuestionTurn <= 8,
            let t = EchoEngine.substituteAnaphor(message, previous: prev) { text = t }
         var r = replyCore(to: text, history: history, context: context, onToken: onToken)
-        if r.webQuery != nil || (EchoEngine.isQuestion(text) && !EchoEngine.fortuneIntent(text) && r.turn.card == nil) {
+        // 沒有主語的問題不能當成「上一題的主題」
+        if Understanding.missingSubject(text) == nil,
+           r.webQuery != nil || (EchoEngine.isQuestion(text) && !EchoEngine.fortuneIntent(text) && r.turn.card == nil) {
             lastQuestion = text
             lastQuestionTurn = history.count
+        }
+        // 沒有主語的問題（「名字叫什麼」「多少錢」）：接上一題的主題；問的是個人資料就是在問我；都不是就先問清楚
+        if r.webQuery != nil, let miss = Understanding.missingSubject(message) {
+            if miss == .generic, let prev = prevQuestion, Understanding.missingSubject(prev) == nil, history.count - prevQuestionTurn <= 4 {
+                let subject = Understanding.frame(prev).subject
+                if !subject.isEmpty && subject != Understanding.plain(prev) || subject.count <= 8 {
+                    var ask = Understanding.plain(message)
+                    for w in ["那麼", "那"] where ask.hasPrefix(w) { ask.removeFirst(w.count); break }
+                    r = replyCore(to: subject + ask, history: history, context: context, onToken: onToken)
+                }
+            } else if miss == .personal {
+                var me = replyCore(to: "你" + Understanding.plain(message), history: history, context: context, onToken: onToken)
+                if me.webQuery != nil { me = replyCore(to: "你是誰", history: history, context: context, onToken: onToken) }
+                me.turn.text = "你是問我嗎？" + me.turn.text
+                me.webQuery = nil
+                me.turn.palace = nil
+                return me
+            } else {
+                r.webQuery = nil
+                r.turn.palace = nil
+                r.turn.text = "你想問的是誰、或是什麼東西的？告訴我名稱（例如「台北101多高」），我再幫你查。"
+                return r
+            }
         }
         // 問題太模糊（「它有多高」「那個是什麼」，前面也沒聊過相關的東西）：先問清楚，不要亂查
         if r.webQuery != nil, text == message, lastWebQuery == nil,
