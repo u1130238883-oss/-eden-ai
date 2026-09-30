@@ -238,7 +238,7 @@ def main():
         done = time.time() - t0 > budget
         if step % 50 == 0:
             say(f"step {step} loss {np.mean(losses[-50:]):.3f} lr {lr:.2e} {time.time() - t0:.0f}s")
-        if step % 1000 == 0 or done:
+        if step % 500 == 0 or done:
             em, f = evaluate(model, tok, dev, limit=400)
             say(f"== step {step} dev EM {em:.3f} F1 {f:.3f}")
             z = {k: v for k, v in model.p.items()}
