@@ -328,6 +328,8 @@ public enum WebAgent {
 
         // ⑥ 檢查：挑到的東西有沒有真的回答問題？沒有就換個查法再查一輪
         var solved: (text: String, ok: Bool)?
+        var brainNote = ""
+        var brainAnswered = false
         var checkNote = ""
         var pagesRead = pages.count
         var firstRoundOK = false
@@ -337,7 +339,16 @@ public enum WebAgent {
                 ps.map { .init(text: zh ? WebStrategy.toTraditional($0.1) : $0.1, host: WebSearch.host($0.0.url)) }
             }
             var snips = findings.map { Understanding.Evidence(text: $0.text, host: $0.host) }
-            var s = solve(fr, pages: ev(pages), snippets: snips)
+            // 先讓大腦讀：每一段都由它判斷有沒有在回答問題、答案是什麼；它沒把握才用舊的規則
+            func judge(_ ps: [Understanding.Evidence], _ sn: [Understanding.Evidence]) -> (text: String, ok: Bool) {
+                if let brain = Brain.shared, let c = Think.conclude(question: question, pages: ps, snippets: sn, brain: brain) {
+                    brainNote = "用大腦讀了 \(c.read) 段文字，判斷其中 \(c.relevant) 段在回答問題" + (c.hosts.isEmpty ? "" : "（來自 \(c.hosts.count) 個網站）") + "。"
+                    if c.confident { brainAnswered = true; return (c.text, true) }
+                }
+                brainAnswered = false
+                return solve(fr, pages: ps, snippets: sn)
+            }
+            var s = judge(ev(pages), snips)
             firstRoundOK = s.ok
             if !s.ok, !fr.retry.isEmpty {
                 let retryQs = Array(Cite.distinct(fr.retry).filter { r in !jobs.contains { Cite.similar($0.q, r) } }.prefix(2))
@@ -376,7 +387,7 @@ public enum WebAgent {
                 }
                 pagesRead += more.count
                 readHosts += more.map { WebSearch.host($0.0.url) }
-                s = solve(fr, pages: ev(pages + more), snippets: snips)
+                s = judge(ev(pages + more), snips)
                 checkNote = (s.ok ? "第一輪的資料沒有直接回答，改查「" : "第一輪沒有直接回答，改查「") + retryQs.joined(separator: "」「")
                     + (s.ok ? "」後找到了。" : "」還是沒找到能直接回答的內容。")
             } else {
@@ -507,6 +518,8 @@ public enum WebAgent {
             let heads = hits.filter { $0.hit.engine == "Google 新聞" }.prefix(6).map { WebStrategy.toTraditional($0.hit.snippet) }
             if !heads.isEmpty { sections.append(("最新消息", Array(heads))) }
             if lead2 == nil && !heads.isEmpty { answer = zh ? "我找到這些最新的相關新聞：" : "Latest related news:" }
+        } else if brainAnswered {
+            // 大腦已經把各網站的說法比對、整理好了，不用再附零散的句子
         } else if let fr, solved?.ok == true, { if case .list = fr.want { return true }; if case .steps = fr.want { return true }; return false }() {
             // 名單、步驟已經是完整的答案，不用再附一堆零散的句子
         } else if !(plan.kind == .weather && lead != nil) {
@@ -600,6 +613,7 @@ public enum WebAgent {
             t += "查了" + jobs.prefix(3).map { "「\($0.q)」" }.joined(separator: "、") + "，讀了 \(pagesRead) 個網頁"
             if !trustedHosts.isEmpty { t += "（以 " + trustedHosts.prefix(2).joined(separator: "、") + " 這類原始來源為主）" }
             t += "。"
+            if !brainNote.isEmpty { t += brainNote }
             if !checkNote.isEmpty { t += checkNote }
             if !learnedNotes.isEmpty { t += "\n🧠 經驗：" + learnedNotes.joined(separator: "；") + "。" }
             if facts != nil { t += "\n對照方式：把每一句網路說法放到你的盤上檢查——喜忌、身強身弱、命宮主星、化忌宮位對不對得上，對不上的就排除。" }

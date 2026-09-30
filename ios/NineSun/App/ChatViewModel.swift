@@ -62,6 +62,8 @@ final class ChatViewModel: ObservableObject {
                 for L in Lang.allCases { engine.knowledge[L] = try? KnowledgeBase(bundle: .main, lang: L) }
                 engine.i18n = try? I18N(bundle: .main)
                 engine.chatBank = try? ChatBank(bundle: .main)
+                // 大腦（閱讀理解模型）：上網查到的每段文字都由它來讀懂、判斷
+                Brain.shared = try? Brain(bundle: .main)
                 let core = try PalaceCore(bundle: .main)
                 if let d = try? Data(contentsOf: Self.coreURL), let s = try? JSONDecoder().decode(PalaceCore.Snapshot.self, from: d) {
                     core.restore(s)
