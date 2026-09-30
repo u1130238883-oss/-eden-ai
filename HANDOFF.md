@@ -191,3 +191,22 @@ The chat bank keeps only things a search cannot answer: crisis safety, riddles, 
 - Values used in judging (Mind.values): evidence over claims, official/encyclopedia/majority sources first, say "not sure" when unsure, answer the question first.
 - Correction: "不對／錯了／答錯…" right after a web answer → the hosts used last time are penalised and avoided, the retry wording is used first, and the reply starts with 🔁 反思.
 - Self-upgrade stores no answers: SelfTuning keeps small counters per question type — which websites actually contained the answer, whether the first search round worked — and 👍/👎 on web answers adjust them. Saved in ninesun-selftuning.json (capped).
+
+## 大腦（閱讀理解模型）— 2026-09-30 訓練完成
+
+- 權重：`ios/NineSun/Resources/reader.bin`（float16，約 3 百萬參數）＋ `reader.json`。App 啟動時 `Brain.shared = try? Brain(bundle: .main)` 載入；上網查到的每一段文字都由它判斷有沒有在回答、答案是哪幾個字（`Web/Think.swift`）。
+- 訓練：`python3 ai/train_reader.py --data DIR --out DIR --pretrain-min 60 --finetune-min 150`（PyTorch，CPU）。
+  1. 讀書：遮 15% 的字讓它猜（前面放一句同篇或別篇的句子，學會對照著找）。
+  2. 閱讀測驗：DRCD（繁體）＋ CMRC 2018（轉繁體）共 44,792 題；段落切法跟 App 讀網頁一樣（兩三句一段），約一半是「同一篇裡沒在回答」的段落。
+  - 教材只有公開資料集，不含任何 AI 產生的文字。
+- 考試（DRCD dev 1,000 題，從沒拿來訓練）：
+
+  | 指標 | 大腦 | 舊方法 |
+  |---|---|---|
+  | 挑到真正回答的那一段 | **90.3%** | 拿開頭那段 29.2% |
+  | 混進 4 篇無關文章還挑得到 | **89.9%** | 問題字詞重疊最多 86.5% |
+  | 答案字詞 F1／完全答對 | 62.7%／40.9% | — |
+
+- 對照測試：`python3 ai/brain_fixture.py ios/NineSun/Resources ios/EchoCore/Tests/EchoCoreTests/Fixtures/brain.json` 產生 fixture；`BrainTests.swift` 檢查 Swift 讀出來的答案和 Python 一樣。
+- 字的比對（`match_features`）比的是字本身，不是字表編號：字表裡沒有的罕見人名、地名也對得到。
+- 追問：句子開頭的「他／她／它」（「他幾歲？」）會換成上一題的主題（`EchoEngine.substituteAnaphor`）。
