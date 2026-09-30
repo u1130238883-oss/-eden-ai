@@ -377,15 +377,25 @@ extension Understanding {
                     }
                     if var l = parts.last {
                         for m in ["等", "。", "共", "及其", "；"] { if let r = l.range(of: m) { l = String(l[..<r.lowerBound]) } }
-                        parts[parts.count - 1] = l
+                        // 「…、挪威和瑞典」：最後兩個用「和／及」連起來
+                        if let r = l.range(of: "以及") ?? l.range(of: "和") ?? l.range(of: "及") ?? l.range(of: "與"),
+                           l.distance(from: l.startIndex, to: r.lowerBound) >= 2, l.distance(from: r.upperBound, to: l.endIndex) >= 2 {
+                            let a = String(l[..<r.lowerBound]), b = String(l[r.upperBound...])
+                            parts[parts.count - 1] = a
+                            parts.append(b)
+                        } else {
+                            parts[parts.count - 1] = l
+                        }
                     }
                     let its = parts.compactMap { item($0) }
                     // 沒有明確字尾時，同一句要同時講到主題和名詞（「北歐國家包括…」），才算這一類的名單
                     let key = String(noun.prefix(1))
                     _ = key
                     // 「北歐國家包括…」「北歐五國是…」這種開頭本身就是在列名單，不用別的資料印證
-                    let intro = !subj.isEmpty && line.range(of: NSRegularExpression.escapedPattern(for: subj) + ".{0,4}(" + NSRegularExpression.escapedPattern(for: noun)
-                        + "|[一二三四五六七八九十\\d]+[國個])" + ".{0,3}(包括|包含|分別是|有|是|為|：|:)", options: .regularExpression) != nil
+                    // 「北歐國家包括」「北歐五國是」「北歐理事會成員國包括」：主題後面不遠處出現名詞（或它的第一個字），接著是在列名單的字
+                    let key1 = NSRegularExpression.escapedPattern(for: String(noun.prefix(1)))
+                    let intro = !subj.isEmpty && line.range(of: NSRegularExpression.escapedPattern(for: subj) + "[^，。、]{0,8}" + key1
+                        + "[^，。、]{0,3}(包括|包含|分別是|分別為|有|是|為|：|:)", options: .regularExpression) != nil
                     if its.count >= 4 { groups.append((its, intro ? "★" + p.host : p.host, line.contains(subj) && line.contains(noun) || intro)) }
                     flush()
                 } else if let it = item(line) {
@@ -427,9 +437,8 @@ extension Understanding {
         // 沒有字尾可以檢查時，要有第二份資料印證：另一串（另一句、另一個網站、表格）至少有兩個相同的項目
         var confirmed = good
         if suffix == nil {
-            confirmed = good.enumerated().filter { i, g in
-                g.host.hasPrefix("★") || g.items.first?.hasPrefix("《") == true || good.enumerated().contains { j, h in j != i && Set(h.items).intersection(g.items).count >= 2 }
-            }.map { $0.element }
+            // 名單要有明確的來源：表頭對得上的表格、「X國家包括…」這種在列名單的句子、或《作品》
+            confirmed = good.filter { g in g.host.hasPrefix("★") || g.items.first?.hasPrefix("《") == true }
         }
         guard var best = confirmed.max(by: { $0.items.count < $1.items.count }) else { return ([], []) }
         if let suffix {
@@ -492,14 +501,26 @@ extension WebAgent {
     static func solve(_ fr: Understanding.Frame, pages: [Understanding.Evidence], snippets: [Understanding.Evidence]) -> (text: String, ok: Bool) {
         // 主題裡的中文詞一定要出現（「台北101」只對到「101」的句子，可能在講舉重 101 公斤）
         let subjTerms = termSet(fr.subject).filter { $0.contains(where: isCJK) }
-        // 主題不長時（「台北101」「法國」），整個名稱都要出現；只對到「台北」可能在講別的東西
-        let whole = fr.subject.filter { $0.isLetter || $0.isNumber }
+        // 主題拆成幾個名稱（「地球到月亮」→ 地球、月亮；「台灣人口」→ 台灣），每個名稱都要出現；
+        // 短的名稱要整個出現（「台北101」只對到「台北」可能在講別的東西），同義寫法（臺／台、月球／月亮）算一樣
+        func canon(_ x: String) -> String {
+            var y = x
+            for (a, b) in [("臺", "台"), ("月球", "月亮"), ("太陽系", "太陽系"), ("大陸", "大陸")] { y = y.replacingOccurrences(of: a, with: b) }
+            return y
+        }
+        var core = canon(fr.subject.filter { $0.isLetter || $0.isNumber })
+        for a in ["人口", "價格", "面積", "溫度", "年齡"] where core.hasSuffix(a) && core.count > a.count + 1 { core.removeLast(a.count) }
+        let tokens = core.components(separatedBy: CharacterSet(charactersIn: "到和跟與離")).filter { $0.count >= 2 }
+        func tokenIn(_ s: String, _ t: String) -> Bool {
+            if t.count <= 5 || t.contains(where: { $0.isNumber || ($0.isASCII && $0.isLetter) }) { return s.contains(t) }
+            return score(s, termSet(t)) >= (termSet(t).count + 1) / 2
+        }
         var predTerms = Set<String>()
         if case let .reason(pred) = fr.want { predTerms = termSet(pred) }
         func relevant(_ s: String) -> Bool {
-            if subjTerms.isEmpty { return true }
-            if whole.count <= 6 { if s.contains(whole) { return true } }
-            else if score(s, subjTerms) >= max(2, (subjTerms.count + 1) / 2) { return true }
+            if subjTerms.isEmpty || tokens.isEmpty { return true }
+            let cs = canon(s)
+            if tokens.allSatisfy({ tokenIn(cs, $0) }) { return true }
             // 問原因時，句子講到「發燒」「呼嚕」這件事本身也算（發燒的原因不一定會重提感冒）
             return !predTerms.isEmpty && score(s, predTerms) >= max(1, predTerms.count / 2)
         }
@@ -543,8 +564,12 @@ extension WebAgent {
         case .place:
             // 問首都、位置：句子要講到這個地方本身，還要有「首都」「位於」這類字
             let marks = fr.searches.first?.contains("首都") == true ? ["首都"] : ["位於", "位在", "坐落", "在"]
-            let direct = marks.map { fr.subject + $0 } + marks.map { fr.subject + "的" + $0 }
-            guard let e = sents.first(where: { e in direct.contains { e.text.contains($0) } })
+            // 最好的句子是直接說「法國的首都是巴黎」「東京是日本的首都」；「位於法國首都巴黎的足球俱樂部」只是順帶提到
+            let sj = fr.subject
+            let best = marks.flatMap { m in ["\(sj)的\(m)是", "\(sj)\(m)是", "\(sj)的\(m)為", "\(sj)\(m)為", "是\(sj)的\(m)", "為\(sj)的\(m)", "\(sj)，\(m)", "\(sj)的\(m)：", "\(m)：", "\(m)為"] }
+            let direct = marks.map { sj + $0 } + marks.map { sj + "的" + $0 }
+            guard let e = sents.first(where: { e in best.contains { e.text.contains($0) } && !e.text.contains("圈") })
+                    ?? sents.first(where: { e in direct.contains { e.text.contains($0) } && !e.text.contains("圈") && !e.text.contains("俱樂部") && !e.text.contains("位於") })
                     ?? sents.first(where: { e in marks.contains { e.text.contains($0) } && !e.text.contains("大部分") && !e.text.contains("例如") && !e.text.contains("如英國") })
             else { return ("", false) }
             return ("答案：" + WebSearch.clip(e.text, 200) + "（\(e.host)）", true)

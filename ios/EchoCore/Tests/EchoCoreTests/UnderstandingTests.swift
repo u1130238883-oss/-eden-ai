@@ -83,7 +83,7 @@ final class UnderstandingTests: XCTestCase {
         // 同一句沒同時講到主題和名詞的一串，不算名單
         let states = "春秋時期有秦國、曹國、鄭國、梁國等諸侯國。\n北歐的氣候寒冷。"
         XCTAssertTrue(Understanding.extractList([.init(text: states, host: "w")], noun: "國家", subject: "北歐").items.isEmpty)
-        let nordic = "北歐國家包括挪威、瑞典、芬蘭、丹麥、冰島。\n北歐國家的首都：挪威、瑞典、丹麥、芬蘭、冰島都有自己的首都。"
+        let nordic = "北歐國家包括挪威、瑞典、芬蘭、丹麥、冰島。"
         XCTAssertEqual(Understanding.extractList([.init(text: nordic, host: "w")], noun: "國家", subject: "北歐").items.count, 5)
         // 只有一串、沒人印證的不算（「經濟競爭力、公民自由…」）
         let lone = "北歐國家在經濟競爭力、公民自由、社會福利、教育水準方面都名列前茅。"
@@ -114,6 +114,25 @@ final class UnderstandingTests: XCTestCase {
         XCTAssertEqual(s?.steps.first, "綠豆洗淨，泡水 2 小時。")
         let nutrition = "綠豆\n打開的成熟綠豆豆莢\n綠豆芽可以炒、煮、涼拌、醃製等做法。\n鈣 ｜ 95毫克\n鐵 ｜ 18毫克\n綠豆湯是常見甜品"
         XCTAssertNil(Understanding.extractSteps([.init(text: nutrition, host: "w")], target: "綠豆湯"))
+    }
+
+    func testTopicMatchingAndCapitals() {
+        let moon = Understanding.frame("地球到月亮有多遠")
+        let m = [Understanding.Evidence(text: "平均而言，地球到月球的距離約385,000 km。", host: "zh.wikipedia.org")]
+        XCTAssertTrue(WebAgent.solve(moon, pages: m, snippets: m).text.contains("385,000"))
+        let tw = Understanding.frame("台灣現在人口有多少")
+        let p = [Understanding.Evidence(text: "臺灣地區總人口於2026年8月底為23,224,721人。", host: "zh.wikipedia.org")]
+        XCTAssertTrue(WebAgent.solve(tw, pages: p, snippets: p).text.contains("23,224,721"))
+        let fr = Understanding.frame("法國的首都是哪裡")
+        let c = [Understanding.Evidence(text: "巴黎聖日耳曼是一家位於法國首都巴黎的足球俱樂部。", host: "w"),
+                 Understanding.Evidence(text: "法國的首都是巴黎。", host: "w")]
+        XCTAssertEqual(WebAgent.solve(fr, pages: c, snippets: c).text, "答案：法國的首都是巴黎。（w）")
+        let jp = Understanding.frame("日本的首都是哪裡")
+        let j = [Understanding.Evidence(text: "日本的首都圈指的是以首都東京為中心的都會區。", host: "w"),
+                 Understanding.Evidence(text: "東京是日本的首都。", host: "w")]
+        XCTAssertTrue(WebAgent.solve(jp, pages: j, snippets: j).text.contains("東京是日本的首都"))
+        let nordic = "北歐理事會的成員國包括丹麥、芬蘭、冰島、挪威和瑞典。\n瑞典的移民多數來自北歐國家、芬蘭、土耳其、德國、伊朗。"
+        XCTAssertEqual(Understanding.extractList([.init(text: nordic, host: "w")], noun: "國家", subject: "北歐").items, ["丹麥", "芬蘭", "冰島", "挪威", "瑞典"])
     }
 
     func testSolveNumbersAndPlaces() {
