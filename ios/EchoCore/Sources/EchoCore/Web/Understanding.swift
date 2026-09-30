@@ -263,7 +263,7 @@ extension Understanding {
     }
 
     /// 數字＋單位（「38.4萬公里」「384,400 公里」），換算成同一個數值方便比對
-    static func numbers(_ s: String, units: [String]) -> [(value: Double, shown: String)] {
+    static func numbers(_ s: String, units: [String], rates: Bool = false) -> [(value: Double, shown: String)] {
         let alt = units.sorted { $0.count > $1.count }.map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|")
         guard !alt.isEmpty, let re = try? NSRegularExpression(pattern: #"(\d[\d,]*(?:\.\d+)?)\s*(萬|億)?\s*(?:"# + alt + ")") else { return [] }
         var out: [(Double, String)] = []
@@ -273,7 +273,7 @@ extension Understanding {
             // 「每平方公里 113,703 人」「人口密度」是比率，不是問的那個數量
             let before = String(s[s.index(r.lowerBound, offsetBy: -min(8, s.distance(from: s.startIndex, to: r.lowerBound)))..<r.lowerBound])
             let after = String(s[r.upperBound..<s.index(r.upperBound, offsetBy: min(3, s.distance(from: r.upperBound, to: s.endIndex)))])
-            if before.contains("每") || before.contains("密度") || after.hasPrefix("/") || after.hasPrefix("每") || after.hasPrefix("／") { continue }
+            if !rates && (before.contains("每") || before.contains("密度") || after.hasPrefix("/") || after.hasPrefix("每") || after.hasPrefix("／")) { continue }
             if let mr = Range(m.range(at: 2), in: s) { v *= s[mr] == "萬" ? 1e4 : 1e8 }
             out.append((v, String(s[r])))
         }
@@ -281,13 +281,14 @@ extension Understanding {
     }
 
     /// 各來源說的數字，差不到 3% 的算同一個說法；一個網站一票
-    public static func voteNumber(_ ev: [Evidence], units: [String], subject: String)
+    public static func voteNumber(_ ev: [Evidence], units: [String], subject: String, rates: Bool = false)
         -> (shown: String, sentence: Evidence, votes: Int, others: [String])? {
         var groups: [(value: Double, shown: String, sentence: Evidence, hosts: Set<String>)] = []
         for e in ev {
             // 主題本身的數字（「台北101」的 101）不算
             let body = e.text.replacingOccurrences(of: subject, with: "")
-            for n in numbers(body, units: units) where n.value > 0 {
+            // 「1公尺」這種定義用的數字通常不是答案
+            for n in numbers(body, units: units, rates: rates) where n.value > 1 {
                 if let i = groups.firstIndex(where: { abs($0.value - n.value) / max($0.value, n.value) < 0.015 }) {
                     groups[i].hosts.insert(e.host)
                 } else {
@@ -367,7 +368,9 @@ extension Understanding {
                         parts[parts.count - 1] = l
                     }
                     let its = parts.compactMap { item($0) }
-                    if its.count >= 4 { groups.append((its, p.host, line.contains(subj) || near())) }
+                    // 沒有明確字尾時，同一句要同時講到主題和名詞（「北歐國家包括…」），才算這一類的名單
+                    let key = String(noun.prefix(1))
+                    if its.count >= 4 { groups.append((its, p.host, line.contains(subj) && (line.contains(noun) || line.contains(key)))) }
                     flush()
                 } else if let it = item(line) {
                     run.append(it)
@@ -377,6 +380,19 @@ extension Understanding {
             }
             flush()
             flushTable()
+            // 作品、書、電影、歌：直接收講到主題的句子裡的《書名》
+            if ["作品", "書", "小說", "電影", "歌", "專輯", "劇", "著作", "名著", "戲劇"].contains(where: { noun.contains($0) }) {
+                var titles: [String] = []
+                for line in p.text.components(separatedBy: "\n") where line.contains(subj) {
+                    var rest = Substring(line)
+                    while let a = rest.firstIndex(of: "《"), let b = rest[a...].firstIndex(of: "》") {
+                        let t = String(rest[rest.index(after: a)..<b])
+                        if (1...20).contains(t.count) && !titles.contains(t) { titles.append(t) }
+                        rest = rest[rest.index(after: b)...]
+                    }
+                }
+                if titles.count >= 3 { groups.append((titles.map { "《\($0)》" }, p.host, true)) }
+            }
         }
         // 一組算不算這一類：有明確字尾（縣、省……）就要多數符合；否則要夠長
         let good = groups.map { g -> (items: [String], host: String, ctx: Bool) in
@@ -451,11 +467,14 @@ extension WebAgent {
     static func solve(_ fr: Understanding.Frame, pages: [Understanding.Evidence], snippets: [Understanding.Evidence]) -> (text: String, ok: Bool) {
         // 主題裡的中文詞一定要出現（「台北101」只對到「101」的句子，可能在講舉重 101 公斤）
         let subjTerms = termSet(fr.subject).filter { $0.contains(where: isCJK) }
+        // 主題不長時（「台北101」「法國」），整個名稱都要出現；只對到「台北」可能在講別的東西
+        let whole = fr.subject.filter { $0.isLetter || $0.isNumber }
         var predTerms = Set<String>()
         if case let .reason(pred) = fr.want { predTerms = termSet(pred) }
         func relevant(_ s: String) -> Bool {
             if subjTerms.isEmpty { return true }
-            if score(s, subjTerms) >= max(1, min(2, subjTerms.count / 2)) { return true }
+            if whole.count <= 6 { if s.contains(whole) { return true } }
+            else if score(s, subjTerms) >= max(2, (subjTerms.count + 1) / 2) { return true }
             // 問原因時，句子講到「發燒」「呼嚕」這件事本身也算（發燒的原因不一定會重提感冒）
             return !predTerms.isEmpty && score(s, predTerms) >= max(1, predTerms.count / 2)
         }
@@ -465,7 +484,7 @@ extension WebAgent {
 
         switch fr.want {
         case let .number(attr, units):
-            guard let v = Understanding.voteNumber(sents, units: units, subject: fr.subject) else { return ("", false) }
+            guard let v = Understanding.voteNumber(sents, units: units, subject: fr.subject, rates: attr == "速度") else { return ("", false) }
             var t = "答案：\(v.shown)"
             t += v.votes >= 2 ? "（\(v.votes) 個網站都這樣說）。" : "。"
             t += "\n依據：" + WebSearch.clip(v.sentence.text, 200) + "（\(v.sentence.host)）"
@@ -496,6 +515,16 @@ extension WebAgent {
         case let .steps(target):
             guard let s = Understanding.extractSteps(pages, target: target) else { return ("", false) }
             return ("做法（整理自 \(s.host)）：\n" + s.steps.enumerated().map { "\($0.offset + 1). " + WebSearch.clip($0.element, 110) }.joined(separator: "\n"), true)
+        case .place:
+            // 問首都、位置：句子要講到這個地方本身，還要有「首都」「位於」這類字
+            let marks = fr.searches.first?.contains("首都") == true ? ["首都"] : ["位於", "位在", "坐落", "在"]
+            guard let e = sents.first(where: { e in marks.contains { e.text.contains($0) } }) else { return ("", false) }
+            return ("答案：" + WebSearch.clip(e.text, 200) + "（\(e.host)）", true)
+        case .open where fr.restated.contains("明確的名稱"):
+            // 「世界上最高的山是哪座」：句子要有主題的關鍵詞和那一類東西（山、行星……）
+            let head = String(fr.subject.last ?? " ")
+            guard let e = sents.first(where: { $0.text.contains(head) }) else { return ("", false) }
+            return ("答案：" + WebSearch.clip(e.text, 200) + "（\(e.host)）", true)
         case let .compare(a, b):
             let ta = termSet(a), tb = termSet(b)
             let both = sents.filter { score($0.text, ta) > 0 && score($0.text, tb) > 0 }
