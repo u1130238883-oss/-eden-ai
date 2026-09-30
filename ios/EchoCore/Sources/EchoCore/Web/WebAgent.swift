@@ -63,7 +63,7 @@ public enum WebAgent {
         else if has(["差別", "區別", "比較", "哪個好", "哪一個好", " vs", "difference", "better than", "diferencia", "differenza"]) { kind = .compare }
         else if has(["為什麼", "為何", "原因", "why", "por qué", "perché"]) { kind = .reason }
         else if has(["怎麼", "如何", "方法", "步驟", "教我", "how to", "how do", "how can", "cómo", "come si"]) { kind = .method }
-        else if has(["推薦", "有哪些", "哪裡", "recommend", "best ", "recomienda", "consiglia"]) { kind = .recommend }
+        else if has(["推薦", "哪裡好玩", "哪裡好吃", "去哪裡玩", "recommend", "best ", "recomienda", "consiglia"]) { kind = .recommend }
         else if has(["是誰", "誰是", "who is", "quién es", "chi è"]) { kind = .person }
         else if has(["是什麼", "什麼是", "什麼意思", "定義", "what is", "what are", "meaning", "qué es", "cos'è"]) { kind = .define }
         else { kind = .general }

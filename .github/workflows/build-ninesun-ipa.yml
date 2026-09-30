@@ -17,15 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Live web search check (real network)
-        working-directory: ios/EchoCore
-        continue-on-error: true
-        env:
-          NINESUN_LIVE: "1"
-        run: |
-          swift test --filter "WebConversationLiveTests|WebLiveTests" > live.log 2>&1 || true
-          grep -E "LIVE|error:|Executed" live.log || tail -50 live.log
-
       - name: Test AI core (Swift ↔ Python parity, Nine & Twelve engine)
         working-directory: ios/EchoCore
         run: swift test
@@ -79,3 +70,12 @@ jobs:
           body: |
             NineSun 未簽名 IPA（九型十二宮 AI）。
             用 Sideloadly / AltStore / TrollStore 自行簽名安裝。
+
+      - name: Live web search check (real network)
+        working-directory: ios/EchoCore
+        continue-on-error: true
+        env:
+          NINESUN_LIVE: "1"
+        run: |
+          swift test --filter WebConversationLiveTests > live.log 2>&1 || true
+          grep -E "LIVE|error:|Executed" live.log || tail -50 live.log

@@ -90,6 +90,9 @@ final class WebThinkingTests: XCTestCase {
         let v = WebAgent.numberVote(fs, core: "歐洲")
         XCTAssertEqual(v?.best, "46個")
         XCTAssertEqual(v?.others, ["50個"])
+        XCTAssertEqual(WebSearch.wikiTerm("誰發明了電話"), "發明 電話")
+        XCTAssertEqual(WebSearch.wikiTerm("地球到月亮有多遠"), "地球 月亮")
+        XCTAssertEqual(WebSearch.wikiTerm("日本的首都是哪裡"), "日本 首都")
         XCTAssertEqual(WebAgent.readablePath("https://zh.wikipedia.org/zh-tw/%E6%AD%90%E6%B4%B2"), "zh-tw/歐洲")
 
         // 腦筋急轉彎：本地直接答，不用上網

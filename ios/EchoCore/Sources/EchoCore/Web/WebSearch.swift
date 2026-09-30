@@ -46,24 +46,25 @@ public enum WebSearch {
     /// light：只問 Bing（拆成好幾個方面分開查的時候用，比較快）
     public static func search(_ q: String, lang L: Lang, news: Bool = false, light: Bool = false) async -> Answer {
         if light {
-            // 小問題：Bing 問一次、Yahoo 問一次（分散，不要被搜尋引擎當成機器人）
-            // 小問題只問一次 Bing（中文）；外文用 Yahoo 分散
+            // 小問題：Bing 一次＋維基百科一次（Bing 不給結果時再問 Yahoo）
+            async let wk = wikiSearch(wikiTerm(q), L)
             let a = await bingRSS(q, L)
             let b: [Hit] = a.count < 3 ? await yahoo(q, L) : []
+            let w = await wk
             var seen = Set<String>()
             var hits: [Hit] = []
-            for i in 0..<max(a.count, b.count) {
-                for l in [a, b] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
+            for i in 0..<max(a.count, b.count, w.count) {
+                for l in [a, w, b] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
             }
-            return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)), engines: ["bing": a.count, "yahoo": b.count])
+            return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)), engines: ["bing": a.count, "yahoo": b.count, "wikipedia": w.count])
         }
         async let rss = bingRSS(q, L)
         async let bh = bingHTML(q, L)
         async let dh = ddgHTML(q, L)
         async let yh = yahoo(q, L)
-        async let ws = wikiSearch(q, L)
+        async let ws = wikiSearch(wikiTerm(q), L)
         async let inst = ddgInstant(q, L)
-        async let wk = wikiSummary(q, L)
+        async let wk = wikiSummary(wikiTerm(q), L)
         async let nw = newsIf(news, q, L)
         async let wx = weatherIf(q, L)
         async let fx = exchangeIf(q, L)
@@ -211,6 +212,19 @@ public enum WebSearch {
     }
 
     // MARK: - 維基百科（中文用台灣正體）
+
+    /// 維基百科要用關鍵詞查，整句問題查不到（「誰發明了電話」→「發明 電話」、「地球到月亮有多遠」→「地球 月亮」）
+    public static func wikiTerm(_ q: String) -> String {
+        var t = q
+        for w in ["是哪裡", "在哪裡", "是哪一個", "是哪個", "有多遠", "有多高", "有多大", "有多少", "有多長", "有多久", "是多少", "是什麼", "是誰",
+                  "為什麼", "怎麼樣", "怎麼", "如何", "哪些", "哪裡", "哪個", "什麼", "多少", "多遠", "多高", "多大", "多久",
+                  "誰", "嗎", "呢", "了", "的", "是", "要", "會", "有"] {
+            t = t.replacingOccurrences(of: w, with: " ")
+        }
+        for w in ["到", "和", "跟", "與", "及"] { t = t.replacingOccurrences(of: w, with: " ") }
+        let out = t.split(separator: " ").map(String.init).filter { !$0.isEmpty }.joined(separator: " ")
+        return out.count >= 2 ? out : q
+    }
 
     static func wikiHost(_ L: Lang) -> String { "\(L.rawValue).wikipedia.org" }
 
