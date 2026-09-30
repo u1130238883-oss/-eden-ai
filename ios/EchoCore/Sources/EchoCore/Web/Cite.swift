@@ -14,15 +14,17 @@ public enum Cite {
         let chars = Array(s)
         guard !chars.isEmpty else { return "" }
         // 關鍵詞出現的位置
-        var pos = 0
+        var pos = 0, focusLen = 0
         for f in focus where !f.isEmpty {
-            if let r = s.range(of: f) { pos = s.distance(from: s.startIndex, to: r.lowerBound); break }
+            if let r = s.range(of: f) { pos = s.distance(from: s.startIndex, to: r.lowerBound); focusLen = f.count; break }
         }
         // 從關鍵詞所在的子句開頭取起
         // 往前找到子句開頭；子句開頭離關鍵詞不遠（10 字內）就從開頭取，名字才不會被切掉（「珠穆朗瑪峰…」）
         var clause = pos
         while clause > 0 && !"，；：。、,;:".contains(chars[clause - 1]) { clause -= 1 }
-        let start = pos - clause <= 10 ? clause : pos - 6
+        var start = pos - clause <= 10 ? clause : pos - 6
+        // 關鍵詞本身一定要完整（「508公尺」不能變成「508公」）
+        if focusLen <= maxQuote { start = max(start, pos + focusLen - maxQuote) }
         var out = ""
         var i = start
         while i < chars.count && out.count < maxQuote {
