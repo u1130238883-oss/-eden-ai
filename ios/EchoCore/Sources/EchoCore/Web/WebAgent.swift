@@ -232,7 +232,12 @@ public enum WebAgent {
             }
         }
         findings.removeAll { isQuestionOrFluff($0.text) }
-        let lead2 = lead.map { zh ? WebStrategy.toTraditional($0) : $0 }
+        var lead2 = lead.map { zh ? WebStrategy.toTraditional($0) : $0 }
+        // 百科／DuckDuckGo 的摘要常常是別的條目（問天空卻給「天空色的奇蹟」），不切題就只當一般資料
+        if let l = lead2, leadSource != nil, !leadFits(l, plan: plan) {
+            findings.append(Finding(text: l, host: leadSource ?? "", url: "", angle: -1, trusted: false))
+            lead2 = nil
+        }
 
         // ⑤ 查證：交叉比對
         let common = consensus(findings.filter { score($0.text, terms) > 0 }, exclude: plan.keywords + topic, cjkOnly: zh)
@@ -438,11 +443,34 @@ public enum WebAgent {
         return out.filter { !looksLikeJunk($0) }
     }
 
+    /// 直接摘要切不切題：主題的字詞要大多出現；問原因、做法的，摘要裡要真的有原因或做法；問數量的要有數字
+    static func leadFits(_ lead: String, plan: Plan) -> Bool {
+        if plan.kind == .weather || plan.kind == .news { return true }
+        let t = termSet(plan.core)
+        if !t.isEmpty, Double(score(lead, t)) / Double(t.count) < 0.6 { return false }
+        switch plan.kind {
+        case .reason:
+            if !["因為", "由於", "原因", "所以", "導致", "造成", "because", "due to"].contains(where: { lead.lowercased().contains($0) }) { return false }
+        case .method:
+            if !["步驟", "方法", "首先", "先", "再", "然後", "可以"].contains(where: { lead.contains($0) }) { return false }
+        case .compare:
+            if !["比", "較", "差別", "不同", "優點", "缺點", "相比"].contains(where: { lead.contains($0) }) { return false }
+        default: break
+        }
+        if plan.numeric {
+            let bare = lead.replacingOccurrences(of: #"\[\d+\]"#, with: "", options: .regularExpression)
+            if !hasNumber(bare, besides: plan.core) { return false }
+        }
+        return true
+    }
+
     /// 選單、版權、Cookie 提示之類的句子
     static func looksLikeJunk(_ s: String) -> Bool {
         let l = s.lowercased()
         let junk = ["cookie", "copyright", "版權所有", "all rights reserved", "登入", "註冊", "訂閱", "javascript", "隱私權", "privacy policy",
-                    "點擊", "下載app", "分享到", "上一篇", "下一篇", "sign in", "subscribe", "廣告"]
+                    "點擊", "下載app", "分享到", "上一篇", "下一篇", "sign in", "subscribe", "廣告",
+                    "oldid=", "title=", "index.php", "維基百科，自由的百科全書", "自由的百科全書", "[編輯]", "編輯原始碼", "取自「", "本頁面最後修訂",
+                    "跳轉到", "跳到導覽", "跳至導覽", "wikipedia, the free encyclopedia", "retrieved from", "&action="]
         if junk.contains(where: { l.contains($0) }) { return true }
         let letters = s.filter { $0.isLetter }.count
         return Double(letters) / Double(max(1, s.count)) < 0.5

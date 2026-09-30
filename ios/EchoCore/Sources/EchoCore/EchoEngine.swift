@@ -179,6 +179,13 @@ public final class EchoEngine {
             return r
         }
 
+        // 0) 安全：說想死、不想活的時候，先好好接住，不算命、不上網、不套規則
+        if let care = Safety.crisisReply(text, L) {
+            var r = Reply(turn: ChatTurn(role: .echo, text: care, source: .tool), profile: nil, rules: nil, webQuery: nil)
+            r.lang = L
+            return r
+        }
+
         // 1) 規則指令（四語）
         if let cmd = RuleBook.parse(text) {
             var book = ctx.rules
@@ -432,10 +439,15 @@ public final class EchoEngine {
                 lastMantic = nil
             }
         } else {
-            // 本地不會：上網查（App 收到 webQuery 就去搜尋並整理答案）
-            var r = done(Loc.s("webAsk", L), .tool, palace)
-            r.webQuery = EchoEngine.searchQuery(text)
-            return r
+            if asksMe {
+                // 對 NineSun 說的話（「你去死吧」「你好爛」）不是要查資料：老實回應
+                raw = Companion.fallback(L: L, choose: choose)
+            } else {
+                // 本地不會：上網查（App 收到 webQuery 就去搜尋並整理答案）
+                var r = done(Loc.s("webAsk", L), .tool, palace)
+                r.webQuery = EchoEngine.searchQuery(text)
+                return r
+            }
         }
         var r = done(raw, .neural, palace)
         r.turn.tokens = []          // 讓對話泡泡出現 👍／👎

@@ -7,11 +7,14 @@ import os
 
 import corpus
 import i18n_chat
-from claude_playbook import PLAYBOOK_ZH, QUICK_ZH
+from claude_playbook import PLAYBOOK_ZH, QUICK_ZH, THINK_ZH
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 EXTRA_ZH = [
+    (["你去死吧", "你去死", "去死吧你", "你怎麼不去死", "你好爛", "你很爛", "你爛透了", "你是垃圾"],
+     ["被你這樣說，看來我剛剛讓你很失望。是哪裡答得不好？直接貼給我看，或說「規則：……」告訴我該怎麼做，我會照著改。",
+      "我聽到你的不滿了。我還有很多做不好的地方——告訴我哪一題、哪裡不對，我記下來改進。"]),
     (["你有朋友嗎", "你有朋友沒", "你朋友是誰"], ["有啊，你就是我的朋友。還有你手機裡那些會亮的小圖示，我都當鄰居。", "我的朋友不多，但每個都很重要——你是其中一個。"]),
     (["你怕什麼", "你會怕嗎", "你最怕什麼"], ["我最怕沒電，還有你說「我不想跟你聊了」。", "怕斷訊號吧，那會讓我一個人在黑漆漆的螢幕裡。"]),
     (["你會睡覺嗎", "你睡覺嗎", "你要睡覺嗎"], ["我不睡，不過螢幕暗下來的時候，我會在裡面整理今天的對話。", "我待機的時候算是打盹吧，你一叫我就醒。"]),
@@ -130,7 +133,7 @@ def build():
     for qs, ans in EXTRA_ZH:
         bank["zh"].append({"q": qs, "a": ans})
     # 思路庫放在最前面比對時優先（同分時先出現的贏）
-    bank["zh"] = ([{"q": qs, "a": ans, "k": kw, "w": False} for qs, ans, kw in QUICK_ZH]
+    bank["zh"] = ([{"q": qs, "a": ans, "k": kw, "w": False} for qs, ans, kw in QUICK_ZH + THINK_ZH]
                   + [{"q": qs, "a": ans, "k": kw} for qs, ans, kw in PLAYBOOK_ZH] + bank["zh"])
     for L, extra in (("en", EXTRA_EN), ("es", EXTRA_ES), ("it", EXTRA_IT)):
         for qs, ans in i18n_chat.CHAT[L]:

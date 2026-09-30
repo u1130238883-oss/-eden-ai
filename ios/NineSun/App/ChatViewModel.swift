@@ -127,7 +127,8 @@ final class ChatViewModel: ObservableObject {
                 if let q = reply.webQuery {
                     self.streaming = nil
                     self.turns.append(reply.turn)
-                    self.lookupWeb(q, reply.lang)
+                    // 已經先給了思路庫的答案，網路只是補充：沒查到就不要再跳一則「查不到」
+                    self.lookupWeb(q, reply.lang, quietIfNothing: reply.turn.source == .neural)
                     return
                 }
                 if let term = reply.webAugment.first {
@@ -142,12 +143,17 @@ final class ChatViewModel: ObservableObject {
     }
 
     /// 問題交給 NineSun 自己上網找（理解 → 搜尋 → 讀網頁 → 比對 → 回答），每次都即時查
-    private func lookupWeb(_ q: String, _ L: Lang) {
+    private func lookupWeb(_ q: String, _ L: Lang, quietIfNothing: Bool = false) {
         let book = rules
         thinking = true
         Task { [self] in
             let r = await WebAgent.run(q, facts: nil, lang: L)
-            let turn = ChatTurn(role: .echo, text: book.enforce(r.text), source: .knowledge, card: r.card)
+            if quietIfNothing && !r.found {
+                await MainActor.run { self.thinking = false; self.streaming = nil; self.saveHistory() }
+                return
+            }
+            let text = quietIfNothing ? "我再上網查了一下，補充幾個資料：\n\n" + r.text : r.text
+            let turn = ChatTurn(role: .echo, text: book.enforce(text), source: .knowledge, card: r.card)
             await MainActor.run { self.finish(turn) }
         }
     }
