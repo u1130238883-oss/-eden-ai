@@ -240,3 +240,24 @@ final class SelfTuningTests: XCTestCase {
         XCTAssertEqual(try! JSONDecoder().decode(SelfTuning.State.self, from: d), t.state)
     }
 }
+
+/// 思考習慣：反過來想、有自己的看法、揣測對方、知錯能改
+final class MindTests: XCTestCase {
+    func testHabits() {
+        let sents: [(text: String, host: String)] = [
+            ("貓發出呼嚕聲通常表示放鬆。", "a.com"),
+            ("不過貓在受傷或緊張時也會發出呼嚕聲，並不一定代表開心。", "b.org"),
+            ("狗會搖尾巴。", "c.com"),
+        ]
+        let other = Mind.otherSide(sents, topic: ["呼嚕"], exclude: [])
+        XCTAssertEqual(other.count, 1)
+        XCTAssertTrue(other[0].contains("受傷"))
+        let v = Mind.view(want: .compare("A", "B"), answered: true, sources: 1, trusted: [], disagree: false, recent: false)
+        XCTAssertTrue(v.contains("不會把話說死") && v.contains("關鍵是你重視什麼"), v)
+        XCTAssertTrue(Mind.view(want: nil, answered: false, sources: 0, trusted: [], disagree: false, recent: false).contains("寧可說不知道"))
+        XCTAssertFalse(Mind.followUps(Understanding.frame("富士山在哪裡")).isEmpty)
+        XCTAssertTrue(Mind.isCorrection("不對吧"))
+        XCTAssertTrue(Mind.isCorrection("你答錯了"))
+        XCTAssertFalse(Mind.isCorrection("對不對的問題我也不知道要怎麼跟他說才好"))
+    }
+}

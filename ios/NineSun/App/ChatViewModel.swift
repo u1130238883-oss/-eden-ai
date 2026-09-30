@@ -119,6 +119,14 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
+        // 知錯能改：剛剛上網查的答案被說「不對」→ 反省用過的來源、扣分，避開它們換個查法重查
+        if Mind.isCorrection(text), let last = turns.dropLast().suffix(3).last(where: { $0.role == .echo && $0.query != nil }), let q = last.query {
+            let hosts = SelfTuning.hosts(in: last.text)
+            SelfTuning.shared.feedback(kind: SelfTuning.kind(Understanding.frame(q).want), hosts: hosts, positive: false)
+            lookupWeb(q, autoDetect ? Lang.detect(q, fallback: language) : language, avoid: hosts, reflect: true)
+            return
+        }
+
         let history = turns
         let ctx = EchoEngine.Context(profile: profile, rules: rules, now: Date(), language: language, autoDetect: autoDetect)
         queue.async {
@@ -148,11 +156,11 @@ final class ChatViewModel: ObservableObject {
     }
 
     /// 問題交給 NineSun 自己上網找（理解 → 搜尋 → 讀網頁 → 比對 → 回答），每次都即時查
-    private func lookupWeb(_ q: String, _ L: Lang, quietIfNothing: Bool = false) {
+    private func lookupWeb(_ q: String, _ L: Lang, quietIfNothing: Bool = false, avoid: [String] = [], reflect: Bool = false) {
         let book = rules
         thinking = true
         Task { [self] in
-            let r = await WebAgent.run(q, facts: nil, lang: L)
+            let r = await WebAgent.run(q, facts: nil, lang: L, avoid: avoid, reflect: reflect)
             if quietIfNothing && (!r.found || !r.answered) {
                 await MainActor.run { self.saveFile(SelfTuning.shared.state, Self.tuningURL); self.thinking = false; self.streaming = nil; self.saveHistory() }
                 return

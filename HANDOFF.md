@@ -184,3 +184,10 @@ Factual questions are no longer answered from hand-written entries. The flow is:
 5. "我的思路" shows ① 理解 (the restated question) and ⑥ 檢查 (whether the evidence answered it).
 
 The chat bank keeps only things a search cannot answer: crisis safety, riddles, ethics/philosophy views, and questions about NineSun itself. Unit tests: `Tests/EchoCoreTests/UnderstandingTests.swift`.
+
+## Thinking habits and self-upgrade (Web/Mind.swift, Web/SelfTuning.swift)
+
+- Every web answer is organised as: main answer → 次要・補充 (only sentences about the topic) → 換個角度 (disputes, misconceptions, "但是…" sentences) → 🧭 我的看法 (which source it trusts and why, and when it would change its mind) → 💬 你可能還想知道 (next step the asker probably wants) → confidence.
+- Values used in judging (Mind.values): evidence over claims, official/encyclopedia/majority sources first, say "not sure" when unsure, answer the question first.
+- Correction: "不對／錯了／答錯…" right after a web answer → the hosts used last time are penalised and avoided, the retry wording is used first, and the reply starts with 🔁 反思.
+- Self-upgrade stores no answers: SelfTuning keeps small counters per question type — which websites actually contained the answer, whether the first search round worked — and 👍/👎 on web answers adjust them. Saved in ninesun-selftuning.json (capped).

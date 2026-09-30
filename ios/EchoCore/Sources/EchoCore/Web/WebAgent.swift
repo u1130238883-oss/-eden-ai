@@ -123,7 +123,9 @@ public enum WebAgent {
     // MARK: - 主流程
 
     /// also：命理時同一張盤還要一起查的其他組合
-    public static func run(_ question: String, facts: String? = nil, also: [String] = [], lang L: Lang) async -> Result {
+    /// avoid：上次答錯時用過的網站（反思後這次避開）；reflect：被指正後重查，先用備用查法
+    public static func run(_ question: String, facts: String? = nil, also: [String] = [], lang L: Lang,
+                           avoid: [String] = [], reflect: Bool = false) async -> Result {
         let fortune = facts != nil
         let plan = understand(question, L: L, fortune: fortune)
         let zh = L == .zh
@@ -144,7 +146,10 @@ public enum WebAgent {
         var learnedNotes: [String] = []
         var firstQs: [String] = fr.map { Understanding.uniq(Array($0.searches.prefix(strat.angles.isEmpty ? 2 : 1)) + (strat.angles.isEmpty ? [plan.queries.first ?? ""] : [])) }
             ?? Array(plan.queries.prefix(strat.angles.isEmpty ? (canon == nil ? 2 : 1) : 1))
-        if let fr, let k = tuneKind, tuning.startWithRetry(kind: k), let extra = fr.retry.first, !firstQs.contains(extra) {
+        if reflect, let fr {
+            // 被指正：這次先換個查法
+            firstQs = Understanding.uniq(Array(fr.retry.prefix(2)) + firstQs)
+        } else if let fr, let k = tuneKind, tuning.startWithRetry(kind: k), let extra = fr.retry.first, !firstQs.contains(extra) {
             firstQs.append(extra)
             learnedNotes.append("過去這類問題第一輪常常查不到，這次一開始就多查「\(extra)」")
         }
@@ -190,6 +195,8 @@ public enum WebAgent {
                 // 網路上很多是簡體，先轉成繁體再判斷有沒有關係
                 let h = zh ? WebSearch.Hit(title: WebStrategy.toTraditional(raw.title), snippet: WebStrategy.toTraditional(raw.snippet),
                                            url: raw.url, engine: raw.engine) : raw
+                // 反思：上次答錯時用過的網站，這次不用
+                if avoid.contains(WebSearch.host(h.url)) { continue }
                 guard score(h.title + " " + h.snippet, terms) >= need || h.engine == "Google 新聞" else {
                     if dropped.count < 6 { dropped.append("[\(tag)] " + String(h.title.prefix(40))) }
                     continue
@@ -447,8 +454,17 @@ public enum WebAgent {
         } else if let fr, solved?.ok == true, { if case .list = fr.want { return true }; if case .steps = fr.want { return true }; return false }() {
             // 名單、步驟已經是完整的答案，不用再附一堆零散的句子
         } else if !(plan.kind == .weather && lead != nil) {
-            let pts = take(ranked, fr != nil && solved?.ok == true ? 2 : 4)
-            if !pts.isEmpty { sections.append((plan.kind == .method ? "步驟／做法" : "重點", pts)) }
+            // 分主次：回答是主要的；補充只留真的講到主題的，當作次要
+            let topicTerms: Set<String> = fr.map { termSet(Understanding.plain($0.subject)).filter { $0.contains(where: isCJK) } } ?? []
+            let side = topicTerms.isEmpty ? ranked : ranked.filter { score($0.text, topicTerms) >= 1 }
+            let pts = take(side, fr != nil && solved?.ok == true ? 2 : 3)
+            if !pts.isEmpty { sections.append((plan.kind == .method ? "步驟／做法" : (fr != nil ? "次要・補充" : "重點"), pts)) }
+        }
+        // 反過來想：找爭議、誤解、轉折的說法
+        if zh, let fr, !fortune, plan.kind != .news, plan.kind != .weather {
+            let topicTerms = termSet(Understanding.plain(fr.subject)).filter { $0.contains(where: isCJK) }
+            let other = Mind.otherSide(findings.map { ($0.text, $0.host) }, topic: topicTerms, exclude: used)
+            if !other.isEmpty { sections.append(("換個角度（也有這些說法）", other)) }
         }
 
         // ④ 命理：逐句對照你的盤
@@ -492,6 +508,10 @@ public enum WebAgent {
             tuning.record(kind: k, firstRoundOK: firstRoundOK, answered: solved?.ok ?? !answer.isEmpty, read: readHosts, used: usedHosts)
         }
         var t = ""
+        if zh && reflect {
+            t += "🔁 反思：你說上次的答案不對。" + (avoid.isEmpty ? "" : "我上次主要用了 " + avoid.prefix(3).joined(separator: "、") + " 的資料，可能不可靠或跟你問的對不上，")
+                + "這次避開它們、換個查法重新查。\n\n"
+        }
         if zh {
             t += "🔎 我的思路\n"
             if let fr {
@@ -515,6 +535,7 @@ public enum WebAgent {
                 + (common.isEmpty ? "各來源說法比較分散，挑最相關的整理。" : "好幾個來源都提到「" + common.prefix(4).joined(separator: "」「") + "」。") + "\n"
             if !checkNote.isEmpty { t += "⑥ 檢查：" + checkNote + "\n" }
             if !learnedNotes.isEmpty { t += "🧠 經驗：" + learnedNotes.joined(separator: "；") + "。\n" }
+            if fr != nil && !fortune { t += "⑦ 原則：" + Mind.values.joined(separator: "、") + "。\n" }
             if facts != nil { t += "⑥ 對照：把每一句網路說法放到你的盤上檢查——喜忌、身強身弱、命宮主星、化忌宮位對不對得上，對不上的就排除。\n" }
             t += "\n📌 " + (fortune ? "網路上的說法" : "回答") + "\n" + answer
             for (title, pts) in sections {
@@ -523,6 +544,13 @@ public enum WebAgent {
             }
             if let note = strat.note { t += "\n\n" + note }
             if !fortuneBlock.isEmpty { t += "\n\n" + fortuneBlock }
+            if let fr, !fortune {
+                let disagree = answer.contains("也有 ") && answer.contains("的說法")
+                t += "\n\n🧭 我的看法：" + Mind.view(want: fr.want, answered: solved?.ok ?? true, sources: sources.count,
+                                                    trusted: trustedHosts, disagree: disagree, recent: fr.recent)
+                let more = Mind.followUps(fr)
+                if !more.isEmpty { t += "\n💬 你可能還想知道：" + more.joined(separator: "／") }
+            }
             t += "\n\n🤔 我的判斷：把握程度\(confidence)。"
             if !gaps.isEmpty { t += "還不確定的地方：" + gaps.joined(separator: "；") + "。" }
             if covered == 0 && lead == nil && solved?.ok != true { t += "這題網路上的資料跟你問的不太對得上，可以換個說法或講得更具體一點，我再查一次。" }
