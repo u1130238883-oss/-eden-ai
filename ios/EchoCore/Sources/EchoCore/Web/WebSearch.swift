@@ -529,19 +529,29 @@ public enum WebSearch {
         ["zh": "zh-TW", "en": "en-US", "es": "es-ES", "it": "it-IT"][L.rawValue] ?? "en-US"
     }
 
+    /// 維基百科要求程式用自己的名字當 User-Agent，用瀏覽器的名字反而容易被擋
+    static let wikiUA = "NineSun/1.0 (iOS companion app; https://github.com/u1130238883-oss/-eden-ai) URLSession"
+
     static func request(_ url: URL, _ L: Lang, ua: String) -> URLRequest {
         var req = URLRequest(url: url, timeoutInterval: 6)
-        req.setValue(ua, forHTTPHeaderField: "User-Agent")
+        let isWiki = url.host?.hasSuffix("wikipedia.org") == true
+        req.setValue(isWiki ? wikiUA : ua, forHTTPHeaderField: "User-Agent")
         req.setValue(L == .zh ? "zh-TW,zh;q=0.9,en;q=0.6" : "\(L.rawValue),en;q=0.6", forHTTPHeaderField: "Accept-Language")
         req.setValue("text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.8,*/*;q=0.7", forHTTPHeaderField: "Accept")
         return req
     }
 
     static func data(_ req: URLRequest) async -> Data? {
-        guard let res = try? await session.data(for: req) else { return nil }
-        let (d, resp) = res
-        let code = (resp as? HTTPURLResponse)?.statusCode ?? 200
-        return code < 400 ? d : nil
+        // 維基百科偶爾回 429（太頻繁），等一下再試一次
+        for attempt in 0..<2 {
+            guard let res = try? await session.data(for: req) else { return nil }
+            let (d, resp) = res
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? 200
+            if code < 400 { return d }
+            guard attempt == 0, code == 429 || code == 503, req.url?.host?.hasSuffix("wikipedia.org") == true else { return nil }
+            try? await Task.sleep(nanoseconds: 700_000_000)
+        }
+        return nil
     }
 
     static func text(_ req: URLRequest) async -> String? {

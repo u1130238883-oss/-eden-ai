@@ -119,6 +119,9 @@ final class WebThinkingTests: XCTestCase {
 
 /// 模擬真人提問：整段對話走 EchoEngine → 需要時 WebAgent 上網（CI 用 NINESUN_LIVE=1 執行）
 final class WebConversationLiveTests: XCTestCase {
+    /// 直接寫到 stderr（不經過緩衝，測試結束時才不會掉字）
+    func say(_ s: String) { FileHandle.standardError.write((s + "\n").data(using: .utf8)!) }
+
     func testLiveConversation() async throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["NINESUN_LIVE"] == "1", "live test")
         #if os(Linux)
@@ -142,21 +145,21 @@ final class WebConversationLiveTests: XCTestCase {
             let t0 = Date()
             let r = engine.reply(to: q, history: history, context: ctx)
             history += [ChatTurn(role: .user, text: q), r.turn]
-            print("LIVE ===== 問：\(q)")
-            print(r.turn.text.split(separator: "\n").prefix(8).map { "LIVE | " + $0 }.joined(separator: "\n"))
+            say("LIVE ===== 問：\(q)")
+            say(r.turn.text.split(separator: "\n").prefix(8).map { "LIVE | " + $0 }.joined(separator: "\n"))
             if let wq = r.webQuery {
                 let w = await WebAgent.run(wq, lang: .zh)
                 let secs = Date().timeIntervalSince(t0)
                 if secs > 15 { slow += 1 }
-                print("LIVE --- 上網查「\(wq)」 用了 \(String(format: "%.1f", secs)) 秒 found=\(w.found)")
-                if !w.debug.isEmpty { print("LIVE DEBUG " + w.debug) }
+                say("LIVE --- 上網查「\(wq)」 用了 \(String(format: "%.1f", secs)) 秒 found=\(w.found)")
+                if !w.debug.isEmpty { say("LIVE DEBUG " + w.debug) }
                 // 只印回答和判斷，思路那段略過
                 let lines = w.text.split(separator: "\n").map(String.init)
                 let from = lines.firstIndex { $0.hasPrefix("📌") } ?? 0
-                print(lines[from...].prefix(14).map { "LIVE | " + $0 }.joined(separator: "\n"))
+                say(lines[from...].prefix(14).map { "LIVE | " + $0 }.joined(separator: "\n"))
             }
         }
-        print("LIVE-CONVERSATION: \(conversation.count) questions, \(slow) slower than 15s")
+        say("LIVE-CONVERSATION: \(conversation.count) questions, \(slow) slower than 15s")
     }
 }
 
