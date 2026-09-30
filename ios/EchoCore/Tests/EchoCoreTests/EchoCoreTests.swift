@@ -749,6 +749,11 @@ final class EchoCoreTests: XCTestCase {
         }
         XCTAssertEqual(EchoEngine.substituteAnaphor("那這些國家都是哪些國家", previous: "歐洲有多少個國家"), "歐洲國家都是哪些國家")
         XCTAssertNil(EchoEngine.substituteAnaphor("這個人很煩怎麼辦", previous: "歐洲有多少個國家"))
+        // 句子開頭的「他／她／它」接上一題的主題；不是問句（在講自己的事）就不接
+        let he = EchoEngine.substituteAnaphor("他寫過哪些詩？", previous: "李白是誰？")
+        XCTAssertTrue(he?.contains("李白") == true && he?.hasPrefix("他") == false, he ?? "nil")
+        XCTAssertNil(EchoEngine.substituteAnaphor("她今天對我很兇", previous: "李白是誰？"))
+        XCTAssertNil(EchoEngine.substituteAnaphor("其他的呢", previous: "李白是誰？"))
         XCTAssertEqual(EchoEngine.substituteAnaphor("那這些國家都是哪些國家", previous: "歐洲有多少個國家？"), "歐洲國家都是哪些國家")
         XCTAssertTrue(WebAgent.isQuestionOrFluff("本文將透過地理分區、政治實體等不同角度，帶你詳細瞭解歐洲到底包含哪些國家。"))
         XCTAssertTrue(WebAgent.looksLikeJunk("title=歐洲國家和地區列表&oldid=12345678"))

@@ -34,23 +34,32 @@ class ReaderTokenizer:
 
     @staticmethod
     def norm(s):
-        return s.lower().replace("　", " ")
+        """逐字小寫、全形空白換成半形；每個字各自轉，長度不變（和 Swift 的 Brain.norm 一樣）。"""
+        out = []
+        for c in s:
+            if c == "　":
+                out.append(" ")
+                continue
+            lc = c.lower()
+            out.append(lc if len(lc) == 1 else c)
+        return out
 
     def encode(self, s):
         return [self.stoi.get(c, UNK) for c in self.norm(s)]
 
 
-def match_features(q_ids, p_ids, skip=frozenset()):
-    """每個字有沒有出現在另一邊：2＝同一個雙字詞，1＝同一個字（標點、特殊符號不算），0＝沒有。"""
+def match_features(q_chars, p_chars, skip=frozenset()):
+    """每個字有沒有出現在另一邊：2＝同一個雙字詞，1＝同一個字（標點、空白不算），0＝沒有。
+    比的是字本身（不是字表編號），所以字表裡沒有的罕見字（人名、地名）也對得到。"""
     def grams(a):
         return {(a[i], a[i + 1]) for i in range(len(a) - 1)}
-    qs, ps = set(q_ids), set(p_ids)
-    qg, pg = grams(q_ids), grams(p_ids)
+    qs, ps = set(q_chars), set(p_chars)
+    qg, pg = grams(q_chars), grams(p_chars)
 
     def feat(a, other_set, other_grams):
         out = []
         for i, t in enumerate(a):
-            if t <= 3 or t in skip:
+            if t in skip or t.isspace():
                 out.append(0)
             elif (i > 0 and (a[i - 1], t) in other_grams) or (i + 1 < len(a) and (t, a[i + 1]) in other_grams):
                 out.append(2)
@@ -59,7 +68,7 @@ def match_features(q_ids, p_ids, skip=frozenset()):
             else:
                 out.append(0)
         return out
-    return feat(q_ids, ps, pg), feat(p_ids, qs, qg)
+    return feat(q_chars, ps, pg), feat(p_chars, qs, qg)
 
 
 class Reader:

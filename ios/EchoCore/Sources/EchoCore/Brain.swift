@@ -52,7 +52,7 @@ public final class Brain {
     let qMax: Int
     let wte, wpe, wse, wme, lnfg, lnfb, wspan, bspan: [Float]
     /// 標點：不算「跟問題一樣的字」
-    let punctIDs: Set<Int>
+    let punct: Set<String>
     let layers: [Layer]
 
     public init(weights: Data, metaJSON: Data) throws {
@@ -65,7 +65,7 @@ public final class Brain {
         stoi = map
         unk = meta.specials.unk; cls = meta.specials.cls; sep = meta.specials.sep
         qMax = meta.q_max ?? 48
-        punctIDs = Set((meta.punct ?? []).compactMap { map[$0] })
+        punct = Set(meta.punct ?? [])
         // float16 → float32
         let floats: [Float] = weights.withUnsafeBytes { raw in
             let n = raw.count / 2
@@ -126,8 +126,13 @@ public final class Brain {
 
     // MARK: - 分詞（逐字、小寫；和 Python 一樣以 Unicode 字元為單位）
 
+    /// 逐字小寫、全形空白換成半形；每個字各自轉，長度不變（和 Python 的 ReaderTokenizer.norm 一樣）
     static func norm(_ s: String) -> [String] {
-        s.lowercased().replacingOccurrences(of: "\u{3000}", with: " ").unicodeScalars.map { String($0) }
+        s.unicodeScalars.map { u in
+            if u == "\u{3000}" { return " " }
+            let l = String(u).lowercased()
+            return l.unicodeScalars.count == 1 ? l : String(u)
+        }
     }
 
     func ids(_ chars: [String]) -> [Int] { chars.map { stoi[$0] ?? unk } }
@@ -136,9 +141,11 @@ public final class Brain {
 
     /// 讀一段文字，找出最像答案的那幾個字。長文章會切成幾段（有重疊）分別讀，取最有把握的。
     public func read(question: String, passage: String, maxAnswer: Int = 40) -> Span? {
-        let q = Array(ids(Brain.norm(question)).prefix(qMax))
+        let qChars = Array(Brain.norm(question).prefix(qMax))
+        let q = ids(qChars)
         let scalars = Array(passage.unicodeScalars)
-        let pc = ids(Brain.norm(passage))
+        let pChars = Brain.norm(passage)
+        let pc = ids(pChars)
         guard !pc.isEmpty, pc.count == scalars.count else { return nil }
         let L = config.n_ctx - 3 - q.count
         guard L > 8 else { return nil }
@@ -149,7 +156,7 @@ public final class Brain {
             let piece = Array(pc[start..<min(start + L, pc.count)])
             let tokens = [cls] + q + [sep] + piece + [sep]
             let segs = [Int](repeating: 0, count: q.count + 2) + [Int](repeating: 1, count: piece.count + 1)
-            let (mq, mp) = matchFeatures(q, piece)
+            let (mq, mp) = matchFeatures(qChars, Array(pChars[start..<min(start + L, pChars.count)]))
             let base = q.count + 2
             let (ls, le) = logits(tokens, segs, [0] + mq + [0] + mp + [0])
             let none = ls[0] + le[0]
@@ -174,16 +181,16 @@ public final class Brain {
         return best
     }
 
-    /// 前向傳播：回傳每個位置「答案從這裡開始／到這裡結束」的分數
-    /// 每個字有沒有出現在另一邊：2＝同一個雙字詞，1＝同一個字，0＝沒有（和 Python 的 match_features 一樣）
-    func matchFeatures(_ q: [Int], _ p: [Int]) -> ([Int], [Int]) {
-        struct Pair: Hashable { let a: Int, b: Int }
-        func grams(_ x: [Int]) -> Set<Pair> { x.count < 2 ? [] : Set((0..<(x.count - 1)).map { Pair(a: x[$0], b: x[$0 + 1]) }) }
+    /// 每個字有沒有出現在另一邊：2＝同一個雙字詞，1＝同一個字，0＝沒有（和 Python 的 match_features 一樣）。
+    /// 比的是字本身，不是字表編號，所以字表裡沒有的罕見字（人名、地名）也對得到；標點、空白不算。
+    func matchFeatures(_ q: [String], _ p: [String]) -> ([Int], [Int]) {
+        struct Pair: Hashable { let a: String, b: String }
+        func grams(_ x: [String]) -> Set<Pair> { x.count < 2 ? [] : Set((0..<(x.count - 1)).map { Pair(a: x[$0], b: x[$0 + 1]) }) }
         let qs = Set(q), ps = Set(p), qg = grams(q), pg = grams(p)
-        func feat(_ a: [Int], _ set: Set<Int>, _ g: Set<Pair>) -> [Int] {
+        func feat(_ a: [String], _ set: Set<String>, _ g: Set<Pair>) -> [Int] {
             a.indices.map { i in
                 let t = a[i]
-                if t <= 3 || punctIDs.contains(t) { return 0 }
+                if punct.contains(t) || t.unicodeScalars.allSatisfy({ $0.properties.isWhitespace }) { return 0 }
                 if (i > 0 && g.contains(Pair(a: a[i - 1], b: t))) || (i + 1 < a.count && g.contains(Pair(a: t, b: a[i + 1]))) { return 2 }
                 return set.contains(t) ? 1 : 0
             }
@@ -191,6 +198,7 @@ public final class Brain {
         return (feat(q, ps, pg), feat(p, qs, qg))
     }
 
+    /// 前向傳播：回傳每個位置「答案從這裡開始／到這裡結束」的分數
     func logits(_ tokens: [Int], _ segs: [Int], _ mat: [Int]) -> (start: [Float], end: [Float]) {
         let T = tokens.count, C = config.n_embd, H = config.n_head, D = C / H
         var x = [Float](repeating: 0, count: T * C)

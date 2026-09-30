@@ -207,15 +207,21 @@ public final class EchoEngine {
         // 「這個月」「那個時候」是時間，不是在指上一題；要算運勢的也不接
         let timeWords = ["這個月", "那個月", "這個禮拜", "這個星期", "這個時候", "那個時候", "這個年", "這個週末"]
         if timeWords.contains(where: { t0.contains($0) }) || fortuneIntent(t0) { return nil }
-        guard let a = anaphora.first(where: { t0.contains($0) }) else { return nil }
-        let topic = WebAgent.coreTopic(prev).replacingOccurrences(of: "個", with: "")
-        let main = topic.split(separator: " ").map { String($0.filter { $0.isLetter || $0.isNumber }) }.filter { $0.count >= 2 }
-        guard !main.isEmpty else { return nil }
-        let missing = main.filter { !t0.contains($0) }
-        // 跟上一題有共同的詞（「這些國家」的國家），或是很短的追問（「那些是哪些」），才當成在指上一題
-        guard missing.count < main.count || t0.count <= 6 else { return nil }
         var t = t0
         for w in ["我是說", "我的意思是", "我是問", "那麼", "那"] where t.hasPrefix(w) { t.removeFirst(w.count); break }
+        // 句子開頭的「他／她／它」（「他幾歲」「她演過什麼」）也是在指上一題的主題；「其他」「吉他」不算，因為不在開頭
+        let pronoun = anaphora.first(where: { t0.contains($0) }) == nil
+            && ["他", "她", "它", "牠"].contains(where: { t.hasPrefix($0) }) && !t.hasPrefix("他人") && isQuestion(t0)
+        guard let a = anaphora.first(where: { t0.contains($0) }) ?? (pronoun ? String(t.prefix(1)) : nil) else { return nil }
+        // 「他／她／它」指的是上一題在問的那個人或東西（「李白是誰」→ 李白）
+        let subject = pronoun ? Understanding.frame(prev).subject.filter { $0.isLetter || $0.isNumber } : ""
+        let topic = WebAgent.coreTopic(prev).replacingOccurrences(of: "個", with: "")
+        let main = subject.count >= 2 ? [subject]
+            : topic.split(separator: " ").map { String($0.filter { $0.isLetter || $0.isNumber }) }.filter { $0.count >= 2 }
+        guard !main.isEmpty else { return nil }
+        let missing = main.filter { !t0.contains($0) }
+        // 跟上一題有共同的詞（「這些國家」的國家），或是很短的追問（「那些是哪些」「他幾歲」），才當成在指上一題
+        guard missing.count < main.count || t0.count <= 6 || pronoun else { return nil }
         if let r = t.range(of: a) { t.replaceSubrange(r, with: missing.joined()) }
         return t.isEmpty ? nil : t
     }
