@@ -24,16 +24,26 @@ public enum Think {
         public let hosts: [String]
     }
 
-    /// 把網頁切成段落：一行一行合併，到 120 字以上就成為一段（太長的段落大腦會自己分窗讀）
+    /// 把網頁切成段落：每段兩三句（60～160 字）。段落小一點，一個網頁裡不同的重點才會被分別讀到
     static func passages(_ text: String) -> [String] {
-        var out: [String] = [], cur = ""
+        var sents: [String] = []
         for raw in text.components(separatedBy: "\n") {
             let line = raw.trimmingCharacters(in: .whitespaces)
             guard !line.isEmpty, !line.contains("｜") else { continue }
-            cur += (cur.isEmpty ? "" : "\n") + line
-            if cur.count >= 120 { out.append(String(cur.prefix(600))); cur = "" }
+            var cur = ""
+            for ch in line {
+                cur.append(ch)
+                if "。！？!?；".contains(ch) { sents.append(cur); cur = "" }
+            }
+            if !cur.isEmpty { sents.append(cur) }
         }
-        if cur.count >= 20 { out.append(cur) }
+        var out: [String] = [], cur = ""
+        for s in sents {
+            if !cur.isEmpty && cur.count + s.count > 160 { out.append(cur); cur = "" }
+            cur += s
+            if cur.count >= 60 { out.append(cur); cur = "" }
+        }
+        if cur.count >= 15 { out.append(cur) }
         return out
     }
 
@@ -68,7 +78,7 @@ public enum Think {
     }
 
     public static func conclude(question: String, pages: [Understanding.Evidence], snippets: [Understanding.Evidence],
-                                brain: Brain, budget: Int = 28) -> Conclusion? {
+                                brain: Brain, budget: Int = 40) -> Conclusion? {
         // ① 切段、② 粗挑
         let g = grams(question)
         var cands: [(text: String, host: String, overlap: Int)] = []
