@@ -39,6 +39,9 @@ final class UnderstandingTests: XCTestCase {
         // 主題本身的數字不算（台北101 的 101）
         let t = Understanding.voteNumber([.init(text: "台北101高508公尺，地上101層。", host: "x")], units: ["公尺"], subject: "台北101")
         XCTAssertEqual(t?.shown, "508公尺")
+        let pop: [Understanding.Evidence] = [.init(text: "該里人口密度約是每平方公里113,703人。", host: "zh.wikipedia.org"),
+                                             .init(text: "臺灣總人口約2,334萬人。", host: "www.ris.gov.tw")]
+        XCTAssertEqual(Understanding.voteNumber(pop, units: ["人", "萬", "億"], subject: "台灣人口")?.shown, "2,334萬人")
     }
 
     func testListFromTableAndEnumeration() {
@@ -68,6 +71,8 @@ final class UnderstandingTests: XCTestCase {
         let side = "北歐\n北歐位於歐洲北部。\n資本主義\n市場經濟\n自由市場\n混合經濟\n國家資本主義\n福利資本主義"
         XCTAssertTrue(Understanding.extractList([.init(text: side, host: "w")], noun: "國家", subject: "北歐").items.isEmpty)
         XCTAssertEqual(Understanding.frame("台灣現在人口有多少").subject, "台灣人口")
+        let clauses = "松德海峽大橋開通後，故海關檢查亦隨之鬆綁，瑞典及挪威之間，海關或護照檢查則更加寬鬆，不過北歐公民除護照外，並配合機票，通常亦可放行。"
+        XCTAssertTrue(Understanding.extractList([.init(text: clauses, host: "w")], noun: "國家", subject: "北歐").items.isEmpty)
         let intro = "本文將透過地理分區、政治實體等不同角度，帶你詳細瞭解。"
         XCTAssertTrue(Understanding.extractList([.init(text: intro, host: "y")], noun: "國家", subject: "歐洲").items.isEmpty)
     }

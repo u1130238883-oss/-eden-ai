@@ -226,6 +226,10 @@ extension Understanding {
         for m in re.matches(in: s, range: NSRange(s.startIndex..., in: s)) {
             guard let r = Range(m.range, in: s), let nr = Range(m.range(at: 1), in: s),
                   var v = Double(s[nr].replacingOccurrences(of: ",", with: "")) else { continue }
+            // 「每平方公里 113,703 人」「人口密度」是比率，不是問的那個數量
+            let before = String(s[s.index(r.lowerBound, offsetBy: -min(8, s.distance(from: s.startIndex, to: r.lowerBound)))..<r.lowerBound])
+            let after = String(s[r.upperBound..<s.index(r.upperBound, offsetBy: min(3, s.distance(from: r.upperBound, to: s.endIndex)))])
+            if before.contains("每") || before.contains("密度") || after.hasPrefix("/") || after.hasPrefix("每") || after.hasPrefix("／") { continue }
             if let mr = Range(m.range(at: 2), in: s) { v *= s[mr] == "萬" ? 1e4 : 1e8 }
             out.append((v, String(s[r])))
         }
@@ -290,7 +294,8 @@ extension Understanding {
                     }
                     continue
                 }
-                var parts = line.components(separatedBy: CharacterSet(charactersIn: "、，,"))
+                // 名單是用「、」隔開的；「，」隔開的是一句話裡的子句，不是項目
+                var parts = line.components(separatedBy: "、")
                 if parts.count >= 4 {
                     // 「北歐國家包括挪威、…、冰島等五國。」：去掉開頭的「…包括」和結尾的「等…」
                     if var f = parts.first {
