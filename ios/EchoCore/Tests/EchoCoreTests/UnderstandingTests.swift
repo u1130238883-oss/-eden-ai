@@ -216,3 +216,27 @@ final class ThinkingHabitsTests: XCTestCase {
         XCTAssertTrue(r.turn.text.contains("是指什麼"), r.turn.text)
     }
 }
+
+/// 自我升級：從經驗調整查法，不記答案
+final class SelfTuningTests: XCTestCase {
+    func testLearnsSourcesAndFirstRound() {
+        let t = SelfTuning()
+        for _ in 0..<4 {
+            t.record(kind: "number", firstRoundOK: false, answered: true, read: ["good.gov", "junk.com"], used: ["good.gov"])
+        }
+        XCTAssertEqual(t.bonus("good.gov", kind: "number"), 2)
+        XCTAssertEqual(t.bonus("junk.com", kind: "number"), -3)
+        XCTAssertEqual(t.bonus("good.gov", kind: "reason"), 0, "經驗只用在同一類問題")
+        XCTAssertFalse(t.startWithRetry(kind: "number"), "試不到 5 次先不改")
+        t.record(kind: "number", firstRoundOK: false, answered: true, read: [], used: [])
+        XCTAssertTrue(t.startWithRetry(kind: "number"))
+        // 👎 讓網站扣分
+        for _ in 0..<6 { t.feedback(kind: "reason", hosts: ["blog.tw"], positive: false) }
+        XCTAssertEqual(t.bonus("blog.tw", kind: "reason"), -3)
+        XCTAssertEqual(SelfTuning.hosts(in: "答案：508公尺。（zh.wikipedia.org）\n• 另一句（uptogo.com.tw）"), ["zh.wikipedia.org", "uptogo.com.tw"])
+        // 存下來的只有數字，而且可以讀回來
+        let d = try! JSONEncoder().encode(t.state)
+        XCTAssertLessThan(d.count, 2000)
+        XCTAssertEqual(try! JSONDecoder().decode(SelfTuning.State.self, from: d), t.state)
+    }
+}

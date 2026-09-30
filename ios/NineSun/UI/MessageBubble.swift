@@ -68,7 +68,10 @@ struct MessageBubble: View {
                 .disabled(turn.liked != nil)
             }
             if turn.liked != nil {
-                Text(T("已寫入演化權重", "Written into evolution weights", "Guardado en los pesos de evolución", "Scritto nei pesi di evoluzione")).font(Theme.hud(10)).foregroundColor(Theme.dim)
+                Text(turn.query != nil
+                     ? T("已記進經驗：下次會調整查法和信任的網站", "Learned: I'll adjust how I search next time", "Aprendido: ajustaré cómo busco", "Imparato: cambierò come cerco")
+                     : T("已寫入演化權重", "Written into evolution weights", "Guardado en los pesos de evolución", "Scritto nei pesi di evoluzione"))
+                    .font(Theme.hud(10)).foregroundColor(Theme.dim)
             }
         }
     }

@@ -29,6 +29,8 @@ final class ChatViewModel: ObservableObject {
     private static let historyURL = docs.appendingPathComponent("ninesun-history.json")
     private static let evolutionURL = docs.appendingPathComponent("ninesun-evolution.json")
     private static let coreURL = docs.appendingPathComponent("ninesun-core.json")
+    /// 自我升級的經驗（哪些網站、哪種查法有用），只有幾 KB，不存答案
+    private static let tuningURL = docs.appendingPathComponent("ninesun-selftuning.json")
 
     init() {
         options = load("options") ?? SamplingOptions()
@@ -39,6 +41,9 @@ final class ChatViewModel: ObservableObject {
         UILang.current = language
         // 以前的版本會把上網查過的答案存在手機裡；現在每次都即時上網查，舊檔刪掉
         try? FileManager.default.removeItem(at: Self.docs.appendingPathComponent("ninesun-webmemory.json"))
+        if let d = try? Data(contentsOf: Self.tuningURL), let st = try? JSONDecoder().decode(SelfTuning.State.self, from: d) {
+            SelfTuning.shared.state = st
+        }
         if let data = try? Data(contentsOf: Self.historyURL),
            let saved = try? JSONDecoder().decode([ChatTurn].self, from: data) {
             turns = saved
@@ -149,12 +154,17 @@ final class ChatViewModel: ObservableObject {
         Task { [self] in
             let r = await WebAgent.run(q, facts: nil, lang: L)
             if quietIfNothing && (!r.found || !r.answered) {
-                await MainActor.run { self.thinking = false; self.streaming = nil; self.saveHistory() }
+                await MainActor.run { self.saveFile(SelfTuning.shared.state, Self.tuningURL); self.thinking = false; self.streaming = nil; self.saveHistory() }
                 return
             }
             let text = quietIfNothing ? "我再上網查了一下，補充幾個資料：\n\n" + r.text : r.text
-            let turn = ChatTurn(role: .echo, text: book.enforce(text), source: .knowledge, card: r.card)
-            await MainActor.run { self.finish(turn) }
+            // tokens 設成空的，泡泡才會出現 👍／👎；query 記下問題，回饋時知道是哪一類問題
+            var turn = ChatTurn(role: .echo, text: book.enforce(text), source: .knowledge, card: r.card, tokens: [])
+            turn.query = q
+            await MainActor.run {
+                self.saveFile(SelfTuning.shared.state, Self.tuningURL)
+                self.finish(turn)
+            }
         }
     }
 
@@ -195,8 +205,16 @@ final class ChatViewModel: ObservableObject {
     // MARK: - 演化回饋
 
     func feedback(_ turn: ChatTurn, positive: Bool) {
-        guard let idx = turns.firstIndex(where: { $0.id == turn.id }), turns[idx].liked == nil,
-              let toks = turn.tokens, let engine else { return }
+        guard let idx = turns.firstIndex(where: { $0.id == turn.id }), turns[idx].liked == nil else { return }
+        // 上網查的答案：👍／👎 調整「這類問題該信哪些網站」的經驗
+        if let q = turn.query {
+            turns[idx].liked = positive
+            SelfTuning.shared.feedback(kind: SelfTuning.kind(Understanding.frame(q).want), hosts: SelfTuning.hosts(in: turn.text), positive: positive)
+            saveFile(SelfTuning.shared.state, Self.tuningURL)
+            saveHistory()
+            return
+        }
+        guard let toks = turn.tokens, let engine else { return }
         turns[idx].liked = positive
         queue.async {
             if let v = turn.variant {

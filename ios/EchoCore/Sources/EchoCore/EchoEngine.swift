@@ -27,6 +27,8 @@ public struct ChatTurn: Codable, Equatable, Identifiable {
     public var liked: Bool?
     /// 對話庫／陪伴層的原始回覆（回饋時用來記住「這種說法」好不好）
     public var variant: String?
+    /// 上網查的回覆：當初問的問題（👍／👎 時用來決定要記住還是重查）
+    public var query: String?
 
     public init(role: Role, text: String, source: Source = .neural, card: FortuneCard? = nil,
                 palace: Int? = nil, tokens: [Int]? = nil) {

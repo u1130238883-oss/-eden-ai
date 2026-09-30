@@ -138,8 +138,16 @@ public enum WebAgent {
         // ②③ 拆成幾組關鍵字，同時上網查（tag -1：整體；0…：各個小問題）
         var jobs: [(tag: Int, q: String, full: Bool)] = []
         // 一般問題查 2 組就夠（原句＋換個說法），太多組只會變慢
-        let firstQs: [String] = fr.map { Understanding.uniq(Array($0.searches.prefix(strat.angles.isEmpty ? 2 : 1)) + (strat.angles.isEmpty ? [plan.queries.first ?? ""] : [])) }
+        // 自我升級：從過去的經驗決定查法
+        let tuneKind = fr.map { SelfTuning.kind($0.want) }
+        let tuning = SelfTuning.shared
+        var learnedNotes: [String] = []
+        var firstQs: [String] = fr.map { Understanding.uniq(Array($0.searches.prefix(strat.angles.isEmpty ? 2 : 1)) + (strat.angles.isEmpty ? [plan.queries.first ?? ""] : [])) }
             ?? Array(plan.queries.prefix(strat.angles.isEmpty ? (canon == nil ? 2 : 1) : 1))
+        if let fr, let k = tuneKind, tuning.startWithRetry(kind: k), let extra = fr.retry.first, !firstQs.contains(extra) {
+            firstQs.append(extra)
+            learnedNotes.append("過去這類問題第一輪常常查不到，這次一開始就多查「\(extra)」")
+        }
         for (i, q) in firstQs.enumerated() { jobs.append((-1, q, i == 0 || strat.angles.isEmpty)) }
         if let canon { jobs.append((-1, canon, true)) }
         for q in also.prefix(2) where !jobs.contains(where: { $0.q == q }) { jobs.append((-1, q, true)) }
@@ -199,7 +207,12 @@ public enum WebAgent {
         // ④ 閱讀網頁：整體挑 2 個、每個小問題挑 1 個（可信的來源優先），同時打開
         func pick(_ tag: Int, _ n: Int) -> [WebSearch.Hit] {
             hits.filter { $0.tag == tag && !$0.hit.url.contains("news.google.com") }.map(\.hit)
-                .sorted { (score($0.title + $0.snippet, terms) + (isTrusted($0.url) ? 3 : 0)) > (score($1.title + $1.snippet, terms) + (isTrusted($1.url) ? 3 : 0)) }
+                .sorted { a, b in
+                    // 可信來源加分；過去對這類問題常有答案的網站再加分，常給垃圾的扣分
+                    let ea = tuneKind.map { tuning.bonus(WebSearch.host(a.url), kind: $0) } ?? 0
+                    let eb = tuneKind.map { tuning.bonus(WebSearch.host(b.url), kind: $0) } ?? 0
+                    return (score(a.title + a.snippet, terms) + (isTrusted(a.url) ? 3 : 0) + ea) > (score(b.title + b.snippet, terms) + (isTrusted(b.url) ? 3 : 0) + eb)
+                }
                 .prefix(n).map { $0 }
         }
         var toRead: [WebSearch.Hit] = []
@@ -266,12 +279,15 @@ public enum WebAgent {
         var solved: (text: String, ok: Bool)?
         var checkNote = ""
         var pagesRead = pages.count
+        var firstRoundOK = false
+        var readHosts = pages.map { WebSearch.host($0.0.url) }
         if let fr {
             func ev(_ ps: [(WebSearch.Hit, String)]) -> [Understanding.Evidence] {
                 ps.map { .init(text: zh ? WebStrategy.toTraditional($0.1) : $0.1, host: WebSearch.host($0.0.url)) }
             }
             var snips = findings.map { Understanding.Evidence(text: $0.text, host: $0.host) }
             var s = solve(fr, pages: ev(pages), snippets: snips)
+            firstRoundOK = s.ok
             if !s.ok, !fr.retry.isEmpty {
                 let retryQs = Array(fr.retry.prefix(2))
                 let got = await withTaskGroup(of: WebSearch.Answer?.self) { g -> [WebSearch.Answer] in
@@ -308,6 +324,7 @@ public enum WebAgent {
                     return out
                 }
                 pagesRead += more.count
+                readHosts += more.map { WebSearch.host($0.0.url) }
                 s = solve(fr, pages: ev(pages + more), snippets: snips)
                 checkNote = (s.ok ? "第一輪的資料沒有直接回答，改查「" : "第一輪沒有直接回答，改查「") + retryQs.joined(separator: "」「")
                     + (s.ok ? "」後找到了。" : "」還是沒找到能直接回答的內容。")
@@ -467,6 +484,13 @@ public enum WebAgent {
         if trustedHosts.isEmpty && !strat.trusted.isEmpty { gaps.append("這次沒有查到官方或專業機構的資料") }
         if !gaps.isEmpty && confidence.hasPrefix("高") { confidence = "中（" + gaps.joined(separator: "；") + "）" }
 
+        // 自我升級：記下這次哪些網站真的有用、第一輪有沒有答到（只記數字，不記答案）
+        if let k = tuneKind {
+            let usedHosts = SelfTuning.hosts(in: answer)
+            let known = tuning.trusted(kind: k, among: Array(Set(readHosts)))
+            if !known.isEmpty { learnedNotes.append("根據過去的經驗，先讀了 " + known.prefix(3).joined(separator: "、") + "（這類問題常在這裡找到答案）") }
+            tuning.record(kind: k, firstRoundOK: firstRoundOK, answered: solved?.ok ?? !answer.isEmpty, read: readHosts, used: usedHosts)
+        }
         var t = ""
         if zh {
             t += "🔎 我的思路\n"
@@ -490,6 +514,7 @@ public enum WebAgent {
             t += "⑤ 查證：" + (trustedHosts.isEmpty ? "" : "採用了 " + trustedHosts.prefix(3).joined(separator: "、") + " 等可信來源；")
                 + (common.isEmpty ? "各來源說法比較分散，挑最相關的整理。" : "好幾個來源都提到「" + common.prefix(4).joined(separator: "」「") + "」。") + "\n"
             if !checkNote.isEmpty { t += "⑥ 檢查：" + checkNote + "\n" }
+            if !learnedNotes.isEmpty { t += "🧠 經驗：" + learnedNotes.joined(separator: "；") + "。\n" }
             if facts != nil { t += "⑥ 對照：把每一句網路說法放到你的盤上檢查——喜忌、身強身弱、命宮主星、化忌宮位對不對得上，對不上的就排除。\n" }
             t += "\n📌 " + (fortune ? "網路上的說法" : "回答") + "\n" + answer
             for (title, pts) in sections {
