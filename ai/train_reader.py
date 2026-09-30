@@ -500,7 +500,7 @@ def run_stage(name, model, opt, minutes, peak, warm, make_epoch, step_fn, say, o
             if on_check and next_check and el > next_check * 60:
                 next_check += check_every
                 on_check(step)
-            if ckpt and time.time() - last_save > 600:
+            if ckpt and time.time() - last_save > 300:
                 torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "step": step, "total": total,
                             "ep": ep, "elapsed": el}, ckpt + ".tmp")
                 os.replace(ckpt + ".tmp", ckpt)
