@@ -1,0 +1,62 @@
+name: Wiki corpus
+
+on:
+  push:
+    branches: [corpus-build]
+
+permissions:
+  contents: write
+
+jobs:
+  corpus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Download zh Wikipedia (first part)
+        run: |
+          curl -sL -o wiki.xml.bz2 https://dumps.wikimedia.org/zhwiki/latest/zhwiki-latest-pages-articles1.xml-p1p187712.bz2
+          ls -la wiki.xml.bz2
+      - name: Extract plain text
+        run: |
+          pip install --quiet wikiextractor opencc-python-reimplemented
+          python -m wikiextractor.WikiExtractor wiki.xml.bz2 -o extracted -b 50M --no-templates -q || python -m wikiextractor.WikiExtractor wiki.xml.bz2 -o extracted -b 50M -q
+          du -sh extracted
+      - name: Clean and convert to Traditional
+        run: |
+          python - <<'PY'
+          import glob, os, re
+          from opencc import OpenCC
+          cc = OpenCC("s2t")
+          os.makedirs("out", exist_ok=True)
+          buf, n, total = [], 0, 0
+          def flush():
+              global buf, n
+              if buf:
+                  open(f"out/wiki_{n:02d}.txt", "w", encoding="utf-8").write("\n".join(buf) + "\n")
+                  n += 1; buf = []
+          size = 0
+          for f in sorted(glob.glob("extracted/*/wiki_*")):
+              for line in open(f, encoding="utf-8"):
+                  line = line.strip()
+                  if not line or line.startswith("<doc") or line.startswith("</doc") or len(line) < 30:
+                      continue
+                  if sum(1 for c in line if "一" <= c <= "鿿") < len(line) * 0.5:
+                      continue
+                  t = cc.convert(line)
+                  buf.append(t); size += len(t.encode()); total += len(t)
+                  if size > 45_000_000:
+                      flush(); size = 0
+          flush()
+          print("chars", total, "files", n)
+          PY
+          ls -la out
+      - name: Publish to corpus-data branch
+        run: |
+          cd out
+          git init -q -b corpus-data
+          git config user.name "corpus-bot"; git config user.email "corpus-bot@users.noreply.github.com"
+          git add . && git commit -qm "zh Wikipedia plain text (Traditional)"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" corpus-data
