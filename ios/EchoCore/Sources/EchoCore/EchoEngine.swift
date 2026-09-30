@@ -164,7 +164,7 @@ public final class EchoEngine {
         if timeWords.contains(where: { t0.contains($0) }) || fortuneIntent(t0) { return nil }
         guard let a = anaphora.first(where: { t0.contains($0) }) else { return nil }
         let topic = WebAgent.coreTopic(prev).replacingOccurrences(of: "個", with: "")
-        let main = topic.split(separator: " ").map(String.init).filter { $0.count >= 2 }
+        let main = topic.split(separator: " ").map { String($0.filter { $0.isLetter || $0.isNumber }) }.filter { $0.count >= 2 }
         guard !main.isEmpty else { return nil }
         let missing = main.filter { !t0.contains($0) }
         // 跟上一題有共同的詞（「這些國家」的國家），或是很短的追問（「那些是哪些」），才當成在指上一題

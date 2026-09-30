@@ -754,6 +754,7 @@ final class EchoCoreTests: XCTestCase {
         if !engine.reply(to: "歐盟有幾個國家", context: ctx).turn.text.contains("27") { fails.append("✗ 歐盟有幾個國家") }
         XCTAssertEqual(EchoEngine.substituteAnaphor("那這些國家都是哪些國家", previous: "歐洲有多少個國家"), "歐洲國家都是哪些國家")
         XCTAssertNil(EchoEngine.substituteAnaphor("這個人很煩怎麼辦", previous: "歐洲有多少個國家"))
+        XCTAssertEqual(EchoEngine.substituteAnaphor("那這些國家都是哪些國家", previous: "歐洲有多少個國家？"), "歐洲國家都是哪些國家")
         XCTAssertTrue(WebAgent.isQuestionOrFluff("本文將透過地理分區、政治實體等不同角度，帶你詳細瞭解歐洲到底包含哪些國家。"))
         let phone = engine.reply(to: "iPhone和安卓哪個好", context: ctx)
         if !phone.turn.text.contains("預算") || phone.webQuery != nil { fails.append("✗ iPhone／安卓 → \(phone.turn.text.prefix(30))") }

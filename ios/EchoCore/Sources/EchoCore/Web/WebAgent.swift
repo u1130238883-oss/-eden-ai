@@ -235,7 +235,7 @@ public enum WebAgent {
         var lead2 = lead.map { zh ? WebStrategy.toTraditional($0) : $0 }
         // 百科／DuckDuckGo 的摘要常常是別的條目（問天空卻給「天空色的奇蹟」），不切題就只當一般資料
         let listQ = question.contains("哪些") || question.contains("列表") || question.contains("有什麼")
-        if let l = lead2, leadSource != nil, !leadFits(l, plan: plan, list: listQ) {
+        if let l = lead2, leadSource != nil, !leadFits(l, plan: plan, list: listQ, question: question) {
             findings.append(Finding(text: l, host: leadSource ?? "", url: "", angle: -1, trusted: false))
             lead2 = nil
         }
@@ -246,8 +246,11 @@ public enum WebAgent {
         let trustedHosts = orderedUnique(findings.filter(\.trusted).map(\.host))
 
         // ⑦ 組回答
+        let focusWords = zh ? focus(question, plan: plan) : []
         let ranked = rank(findings, terms: terms, common: common, numeric: plan.numeric, core: plan.core, list: listQ)
             .filter { quality($0.text, terms: terms, numeric: plan.numeric, core: plan.core, list: listQ) > 0 }
+            // 沒講到真正在問的東西（問「發光」卻在講月亮神話、問「綠豆湯」卻在講綠豆餅）就不要
+            .filter { f in focusWords.isEmpty || focusWords.contains { f.text.contains($0) } }
         var answer = ""
         if let lead2 { answer = lead2 }
         else if let first = (strat.angles.isEmpty ? ranked : ranked.filter { $0.angle <= 0 }).first(where: { $0.text.count >= 30 }) ?? ranked.first {
@@ -474,13 +477,39 @@ public enum WebAgent {
                 cur = ""
             }
         }
-        return out.filter { !looksLikeJunk($0) }
+        // 從括號中間切開的半句（「93,000,000英里）被定義為…」）：去掉前面那段殘句
+        let fixed = out.map { t -> String in
+            guard let close = t.firstIndex(where: { $0 == "）" || $0 == ")" }),
+                  !t[..<close].contains(where: { $0 == "（" || $0 == "(" }) else { return t }
+            return String(t[t.index(after: close)...]).trimmingCharacters(in: .whitespaces)
+        }
+        return fixed.filter { $0.count >= 12 && !looksLikeJunk($0) }
+    }
+
+    /// 問題真正在問的東西：「月亮為什麼會發光」→ 發光；「日本有哪些縣」→ 縣；「怎麼煮綠豆湯」→ 綠豆湯
+    static func focus(_ q: String, plan: Plan) -> [String] {
+        let t = q.filter { $0.isLetter || $0.isNumber }
+        func after(_ m: String) -> String? {
+            guard let r = t.range(of: m) else { return nil }
+            var rest = String(t[r.upperBound...])
+            for w in ["會", "是", "要", "都", "呢", "嗎", "的", "有"] where rest.hasPrefix(w) { rest.removeFirst(w.count) }
+            for w in ["呢", "嗎", "啊"] where rest.hasSuffix(w) { rest.removeLast(w.count) }
+            return rest.isEmpty ? nil : rest
+        }
+        if let p = after("為什麼") ?? after("為何") {
+            let c = Array(p)
+            return c.count <= 2 ? [p] : (0..<(c.count - 1)).map { String(c[$0...$0 + 1]) }
+        }
+        if let n = after("哪些") { return [n] }
+        if plan.kind == .method { let c = plan.core.filter { $0.isLetter || $0.isNumber }; return c.count >= 2 ? [c] : [] }
+        return []
     }
 
     /// 直接摘要切不切題：主題的字詞要大多出現；問原因、做法的，摘要裡要真的有原因或做法；問數量的要有數字
-    static func leadFits(_ lead: String, plan: Plan, list: Bool = false) -> Bool {
+    static func leadFits(_ lead: String, plan: Plan, list: Bool = false, question: String? = nil) -> Bool {
         if plan.kind == .weather || plan.kind == .news { return true }
         if isQuestionOrFluff(lead) { return false }
+        if let q = question, case let f = focus(q, plan: plan), !f.isEmpty, !f.contains(where: { lead.contains($0) }) { return false }
         // 問「有哪些」：摘要本身要真的列出好幾個
         if list && lead.components(separatedBy: "、").count < 4 { return false }
         let t = termSet(plan.core)

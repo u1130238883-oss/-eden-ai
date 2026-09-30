@@ -92,6 +92,12 @@ final class WebThinkingTests: XCTestCase {
         XCTAssertEqual(v?.others, ["50個"])
         XCTAssertEqual(WebSearch.wikiTerm("誰發明了電話"), "發明 電話")
         XCTAssertEqual(WebSearch.wikiTerm("地球到月亮有多遠"), "地球 月亮 距離")
+        let moon = WebAgent.understand("月亮為什麼會發光", L: .zh, fortune: false)
+        XCTAssertTrue(WebAgent.focus("月亮為什麼會發光", plan: moon).contains("發光"))
+        XCTAssertFalse(WebAgent.leadFits("雙聖樹後來被米爾寇毀壞，最後一朵花被維拉創造成月亮和太陽。", plan: moon, question: "月亮為什麼會發光"))
+        let jp = WebAgent.understand("日本有哪些縣", L: .zh, fortune: false)
+        XCTAssertFalse(WebAgent.leadFits("國土全境以北海道、本州、四國、九州等4個本島為基礎的14,125座島嶼組成。", plan: jp, list: true, question: "日本有哪些縣"))
+        XCTAssertEqual(WebAgent.sentences("93,000,000英里）被定義為太陽中心到地球中心的平均距離。").first, "被定義為太陽中心到地球中心的平均距離。")
         XCTAssertEqual(WebSearch.wikiTerm("日本的首都是哪裡"), "日本 首都")
         XCTAssertEqual(WebAgent.readablePath("https://zh.wikipedia.org/zh-tw/%E6%AD%90%E6%B4%B2"), "zh-tw/歐洲")
 
@@ -109,11 +115,11 @@ final class WebThinkingTests: XCTestCase {
             XCTAssertNil(r.webQuery, q)
         }
         // 上網的回覆不帶宮位標籤；追問要補主題
-        let a = engine.reply(to: "日本有多少個縣？", context: ctx)
+        let a = engine.reply(to: "加拿大有多少個省？", context: ctx)
         XCTAssertNotNil(a.webQuery)
         XCTAssertNil(a.turn.palace)
-        let b = engine.reply(to: "那這些縣都是哪些縣", history: [ChatTurn(role: .user, text: "日本有多少個縣？"), a.turn], context: ctx)
-        XCTAssertTrue(b.webQuery?.contains("日本") == true, b.webQuery ?? "nil")
+        let b = engine.reply(to: "那這些省都是哪些省", history: [ChatTurn(role: .user, text: "加拿大有多少個省？"), a.turn], context: ctx)
+        XCTAssertTrue(b.webQuery?.contains("加拿大") == true, b.webQuery ?? "nil")
     }
 }
 
@@ -138,6 +144,7 @@ final class WebConversationLiveTests: XCTestCase {
             "台北101有多高", "天空為什麼是藍色的", "感冒了怎麼辦", "誰發明了電話", "地球到月亮有多遠",
             "iPhone和安卓哪個好", "日本的首都是哪裡", "怎麼煮白飯", "老闆不給我加薪怎麼辦",
             "太陽到地球有多遠", "月亮為什麼會發光", "日本有哪些縣", "怎麼煮綠豆湯", "玉山有多高",
+            "加拿大有多少個省", "那這些省都是哪些省", "感冒為什麼會發燒", "貓為什麼會發出呼嚕聲",
         ]
         var history: [ChatTurn] = []
         var slow = 0
