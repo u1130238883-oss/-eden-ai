@@ -143,6 +143,15 @@ public final class EchoEngine {
             lastQuestion = text
             lastQuestionTurn = history.count
         }
+        // 問題太模糊（「它有多高」「那個是什麼」，前面也沒聊過相關的東西）：先問清楚，不要亂查
+        if r.webQuery != nil, text == message, lastWebQuery == nil,
+           ["它", "那個", "這個", "這些", "那些", "他們", "它們"].contains(where: { message.contains($0) }),
+           Understanding.plain(message).count <= 8 {
+            r.webQuery = nil
+            r.turn.palace = nil
+            r.turn.text = "你說的「\(["它", "那個", "這個", "這些", "那些", "他們", "它們"].first { message.contains($0) } ?? "這個")」是指什麼？告訴我名稱，我再幫你查。"
+            return r
+        }
         if let q = r.webQuery {
             // 上網查的回覆不帶宮位感知標籤；追問的代名詞補上前一題的主題
             r.turn.palace = nil

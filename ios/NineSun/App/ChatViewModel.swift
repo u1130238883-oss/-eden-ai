@@ -148,7 +148,7 @@ final class ChatViewModel: ObservableObject {
         thinking = true
         Task { [self] in
             let r = await WebAgent.run(q, facts: nil, lang: L)
-            if quietIfNothing && !r.found {
+            if quietIfNothing && (!r.found || !r.answered) {
                 await MainActor.run { self.thinking = false; self.streaming = nil; self.saveHistory() }
                 return
             }

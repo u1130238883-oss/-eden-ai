@@ -40,6 +40,8 @@ public enum WebAgent {
         public let engines: [String: Int]
         /// 除錯：被丟掉的搜尋結果標題、判斷用的詞
         public var debug: String = ""
+        /// 找到的東西有沒有真的回答問題（沒有的話，補充時就不要再貼上來）
+        public var answered: Bool = true
     }
 
     static let kindName: [Kind: String] = [
@@ -131,7 +133,7 @@ public enum WebAgent {
         let topic = fortune ? WebFortune.base(question) : (canon ?? plan.core)
         let chart = facts.map(WebFortune.parse)
         // ① 先想清楚要什麼樣的答案（數字、名單、原因、做法……），照這個決定怎麼查、怎麼挑
-        let fr = zh && !fortune ? Understanding.frame(question) : nil
+        let fr = zh && !fortune ? Understanding.withRecency(Understanding.frame(question), question: question) : nil
 
         // ②③ 拆成幾組關鍵字，同時上網查（tag -1：整體；0…：各個小問題）
         var jobs: [(tag: Int, q: String, full: Bool)] = []
@@ -332,7 +334,7 @@ public enum WebAgent {
                 answer = WebSearch.clip(f.text, 240) + "（\(f.host)）"
             } else if zh {
                 answer = plan.kind == .reason ? "我在網路上沒找到把原因講清楚的資料，下面是找到的相關內容，僅供參考。"
-                                              : "我在網路上沒找到清楚的步驟，下面是找到的相關內容，僅供參考；你也可以把問題講得更具體（例如用電鍋還是瓦斯爐），我再查一次。"
+                                              : "我在網路上沒找到清楚的步驟，下面是找到的相關內容，僅供參考；你也可以把問題講得更具體一點，我再查一次。"
             }
         }
         // 問「有哪些」：答案要是一份名單，不是介紹文；找不到名單就老實說
@@ -379,6 +381,7 @@ public enum WebAgent {
                 case .list: answer = "我查了兩輪，沒找到一份完整的名單，下面是找到的相關資料。"
                 case .reason: answer = "我查了兩輪，沒找到把原因講清楚的資料，下面是找到的相關內容，僅供參考。"
                 case .steps: answer = "我查了兩輪，沒找到清楚的步驟，下面是找到的相關內容；你也可以講得更具體一點，我再查一次。"
+                case let .compare(a, b): answer = "我查了兩輪，沒找到把「\(a)」和「\(b)」直接放在一起比較的可靠資料。比較這類東西，可以看價格、耐用度、使用習慣、跟你已有的東西合不合；告訴我你的預算和用途，我再幫你查得更準。"
                 default: break
                 }
             }
@@ -492,7 +495,9 @@ public enum WebAgent {
                                headline: canon ?? plan.keywords,
                                details: Array(links.prefix(5)).map { WebSearch.host($0) + "  " + WebSearch.clip(readablePath($0), 40) },
                                link: links.first)
-        return Result(text: t, card: card, found: true, engines: engines)
+        var res = Result(text: t, card: card, found: true, engines: engines)
+        res.answered = solved?.ok ?? true
+        return res
     }
 
     // MARK: - 時間限制

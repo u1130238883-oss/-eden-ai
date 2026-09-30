@@ -26,6 +26,32 @@ public enum Understanding {
         public let retry: [String]
         public let wikiTitles: [String]
         public let restated: String
+        /// 答案會隨時間改變（現任、最新、今年、目前……）：要找最新的資料，並說明資料是哪一年的
+        public var recent: Bool = false
+    }
+
+    static let recentWords = ["現在", "目前", "最新", "今年", "現任", "最近", "現今", "如今", "當前", "今天"]
+
+    /// 對方問的東西會變嗎？會變的話，搜尋要帶上今年，回答要講資料時間
+    public static func withRecency(_ f: Frame, question: String, now: Date = Date()) -> Frame {
+        guard recentWords.contains(where: { question.contains($0) }) else { return f }
+        let y = Calendar(identifier: .gregorian).component(.year, from: now)
+        var g = Frame(subject: f.subject, want: f.want, searches: f.searches.map { "\($0) \(y)" } + f.searches, retry: f.retry,
+                      wikiTitles: f.wikiTitles, restated: f.restated + "這題的答案會隨時間改變，要找最新的資料，並說明是哪一年的。")
+        g.recent = true
+        return g
+    }
+
+    /// 最近的年份（「2024年統計」→ 2024）
+    public static func latestYear(_ s: String) -> Int? {
+        guard let re = try? NSRegularExpression(pattern: #"(19|20)\d{2}(?=\s*年)"#) else { return nil }
+        return re.matches(in: s, range: NSRange(s.startIndex..., in: s)).compactMap { m in Range(m.range, in: s).flatMap { Int(s[$0]) } }.max()
+    }
+
+    /// 官方、學術、百科的來源比一般網站可信，投票時算兩票
+    static func weight(_ host: String) -> Int {
+        let h = host.lowercased()
+        return [".gov", ".edu", "wikipedia.org", ".org.tw", "who.int", ".go.jp", "un.org"].contains { h.contains($0) } ? 2 : 1
     }
 
     static func plain(_ q: String) -> String {
@@ -99,7 +125,7 @@ extension Understanding {
 
         // 名單：X 有哪些 Y
         if let m = match(t, #"^(.*?)哪些(.+)$"#) {
-            var pre = m[1], noun = trimTail(m[2], ["的"])
+            var pre = m[1], noun = trimTail(m[2], ["的", "列表", "名單", "一覽"])
             if pre.isEmpty, let mm = match(noun, #"^(.+?)(?:在|屬於|位於)(.+)$"#) { noun = mm[1]; pre = mm[2] }
             pre = trimTail(pre, ["都是", "都有", "是", "有", "都", "的"])
             if pre.hasSuffix(noun) && pre.count > noun.count { pre.removeLast(noun.count) }
@@ -129,7 +155,7 @@ extension Understanding {
                 return F(subject, .number(attr: noun.isEmpty ? "數量" : noun, units: unitsFor(attr)), [t, "\(subject) \(noun)"], ["\(subject) \(noun) 最新"], [],
                          "你想知道「\(t)」→ 要一個有單位的數字，並說明是哪個來源、哪一年的數字。")
             }
-            return F(subject, .number(attr: noun, units: ["個", "座", "種", "名", noun]), [t, "\(subject) \(noun) 數量"],
+            return F(subject, .number(attr: noun, units: ["個\(noun)", "座\(noun)", "種\(noun)", "名\(noun)", noun]), [t, "\(subject) \(noun) 數量"],
                      ["\(subject)\(noun)列表", "\(subject)行政區劃"], ["\(subject)\(noun)列表", subject],
                      "你想知道「\(subject)」有幾個「\(noun)」→ 先給數字；各來源算法不同時要說明差在哪。")
         }
@@ -219,8 +245,11 @@ extension Understanding {
                 }
             }
         }
-        guard let best = groups.max(by: { $0.hosts.count < $1.hosts.count }) else { return nil }
-        let others = groups.filter { $0.shown != best.shown && $0.hosts.count >= 1 }.prefix(3).map(\.shown)
+        func w(_ g: (value: Double, shown: String, sentence: Evidence, hosts: Set<String>)) -> Int { g.hosts.reduce(0) { $0 + weight($1) } }
+        guard let best = groups.max(by: { w($0) < w($1) }) else { return nil }
+        // 其他說法：同一種單位、而且有一定可信度的才提（換算成英尺、別的數量不算不同說法）
+        func unit(_ x: String) -> String { String(x.drop { $0.isNumber || $0 == "," || $0 == "." || $0 == " " }) }
+        let others = groups.filter { $0.shown != best.shown && unit($0.shown) == unit(best.shown) && w($0) >= 2 }.prefix(3).map(\.shown)
         return (best.shown, best.sentence, best.hosts.count, Array(others))
     }
 
@@ -285,7 +314,13 @@ extension Understanding {
             let fit = g.items.filter { $0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府") }.count
             return fit * 2 >= g.items.count && fit >= 3
         }
-        guard let best = good.max(by: { $0.items.count < $1.items.count }) else { return ([], []) }
+        guard var best = good.max(by: { $0.items.count < $1.items.count }) else { return ([], []) }
+        if let suffix {
+            best.items = best.items.filter { ($0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府")) && !$0.contains("列表") && !$0.hasPrefix(noun) }
+        }
+        // 「都道府縣」「省份及地區」這種總稱不是其中一項
+        let kinds: Set<Character> = ["縣", "省", "州", "市", "區", "都", "道", "府"]
+        best.items = best.items.filter { !$0.contains("列表") && !$0.hasPrefix("按") && $0 != "地區" && Set($0).intersection(kinds).count < 3 }
         // 別組也出現過的項目，補進來（不同來源互相印證）
         var items = best.items
         var hosts = [best.host]
@@ -299,7 +334,7 @@ extension Understanding {
         return (items, hosts)
     }
 
-    static let causal = ["因為", "由於", "原因", "所以", "導致", "造成", "使得", "是因", "引起", "來自", "because"]
+    static let causal = ["因為", "由於", "原因", "所以", "導致", "造成", "使得", "是因", "引起", "來自", "為了", "機制", "反射", "源自", "透過", "是由", "because"]
 
     /// 在講原因的句子：有因果的詞，也有講到問的那件事
     public static func extractReason(_ ev: [Evidence], pred: String) -> [Evidence] {
@@ -309,7 +344,7 @@ extension Understanding {
             .sorted { a, b in grams.filter { a.text.contains($0) }.count > grams.filter { b.text.contains($0) }.count }
     }
 
-    static let stepVerbs = ["加入", "放入", "倒入", "加水", "煮", "蒸", "泡", "洗", "切", "攪拌", "關火", "燜", "開火", "轉小火", "撈", "按下", "點選", "打開", "設定", "輸入"]
+    static let stepVerbs = ["加入", "放入", "倒入", "加水", "煮滾", "煮至", "煮約", "小火煮", "大火", "小火", "蒸", "泡水", "浸泡", "洗淨", "切", "攪拌", "關火", "燜", "開火", "撈", "按下", "點選", "設定", "輸入", "分鐘"]
 
     /// 做法：挑一個講到目標的網頁，照順序拿出一步一步的句子
     public static func extractSteps(_ pages: [Evidence], target: String) -> (steps: [String], host: String)? {
@@ -318,9 +353,10 @@ extension Understanding {
             var steps: [String] = []
             for line in p.text.components(separatedBy: "\n") {
                 let s = line.trimmingCharacters(in: .whitespaces)
-                guard (6...120).contains(s.count), !s.hasSuffix("？"), !s.hasSuffix("?") else { continue }
-                let numbered = s.range(of: #"^(\d{1,2}[\.、．)）]|[①②③④⑤⑥⑦⑧⑨⑩]|步驟\s*\d|Step\s*\d)"#, options: .regularExpression) != nil
-                if numbered || stepVerbs.contains(where: { s.contains($0) }) {
+                guard (8...120).contains(s.count), !s.hasSuffix("？"), !s.hasSuffix("?"), !s.contains("｜"),
+                      !s.contains("做法。"), !s.contains("等做法") else { continue }
+                // 每一步都要有動作（加水、煮、泡……），光有編號或營養成分表不算
+                if stepVerbs.contains(where: { s.contains($0) }) {
                     let clean = s.replacingOccurrences(of: #"^(\d{1,2}[\.、．)）]|[①②③④⑤⑥⑦⑧⑨⑩]|步驟\s*\d+[:：.]?|Step\s*\d+[:：.]?)\s*"#, with: "", options: .regularExpression)
                     if !steps.contains(clean) { steps.append(clean) }
                 }
@@ -350,6 +386,10 @@ extension WebAgent {
             t += v.votes >= 2 ? "（\(v.votes) 個網站都這樣說）。" : "。"
             t += "\n依據：" + WebSearch.clip(v.sentence.text, 200) + "（\(v.sentence.host)）"
             if !v.others.isEmpty { t += "\n也有 " + v.others.joined(separator: "、") + " 的說法，差別通常在計算方式、統計年份或包含的範圍不同。" }
+            if fr.recent {
+                t += Understanding.latestYear(v.sentence.text).map { "\n這筆資料是 \($0) 年的，數字可能已經更新，重要的話請看官方最新公布。" }
+                    ?? "\n這筆資料沒寫是哪一年的，數字可能已經更新，重要的話請看官方最新公布。"
+            }
             if case .number = fr.want, !["數量", "錢", "歲", "距離", "高度", "重量", "深度", "長度", "面積", "時間"].contains(attr) {
                 t += "\n要我把這些\(attr)一個一個列出來嗎？"
             }
@@ -372,6 +412,11 @@ extension WebAgent {
         case let .steps(target):
             guard let s = Understanding.extractSteps(pages, target: target) else { return ("", false) }
             return ("做法（整理自 \(s.host)）：\n" + s.steps.enumerated().map { "\($0.offset + 1). " + WebSearch.clip($0.element, 110) }.joined(separator: "\n"), true)
+        case let .compare(a, b):
+            let ta = termSet(a), tb = termSet(b)
+            let both = sents.filter { score($0.text, ta) > 0 && score($0.text, tb) > 0 }
+            guard !both.isEmpty else { return ("", false) }
+            return ("比較重點：\n" + both.prefix(4).map { "• " + WebSearch.clip($0.text, 150) + "（\($0.host)）" }.joined(separator: "\n"), true)
         default:
             return ("", true)
         }

@@ -8,7 +8,8 @@ final class UnderstandingTests: XCTestCase {
         XCTAssertEqual(want("歐洲有哪些國家"), .list(noun: "國家"))
         XCTAssertEqual(Understanding.frame("歐洲國家都是哪些國家").subject, "歐洲")
         XCTAssertEqual(Understanding.frame("日本有哪些縣？").subject, "日本")
-        XCTAssertEqual(want("加拿大有多少個省"), .number(attr: "省", units: ["個", "座", "種", "名", "省"]))
+        XCTAssertEqual(want("加拿大有多少個省"), .number(attr: "省", units: ["個省", "座省", "種省", "名省", "省"]))
+        XCTAssertEqual(want("加拿大 省 哪些省 列表"), .list(noun: "省"))
         XCTAssertEqual(Understanding.frame("加拿大有多少個省").subject, "加拿大")
         if case let .number(attr, units) = want("太陽到地球有多遠") { XCTAssertEqual(attr, "距離"); XCTAssertTrue(units.contains("公里")) } else { XCTFail() }
         XCTAssertTrue(Understanding.frame("太陽到地球有多遠").searches.contains("太陽 地球 距離"))
@@ -29,7 +30,7 @@ final class UnderstandingTests: XCTestCase {
         let ev: [Understanding.Evidence] = [
             .init(text: "地球與太陽的平均距離約為1.496億公里，也就是一個天文單位。", host: "a.com"),
             .init(text: "日地平均距離大約是 149,600,000 公里。", host: "b.com"),
-            .init(text: "近日點時距離約1.47億公里。", host: "c.com"),
+            .init(text: "近日點時距離約1.47億公里。", host: "nasa.gov"),
         ]
         let v = Understanding.voteNumber(ev, units: ["公里", "km"], subject: "太陽 地球")
         XCTAssertEqual(v?.votes, 2)
@@ -59,6 +60,10 @@ final class UnderstandingTests: XCTestCase {
         let e = Understanding.extractList([.init(text: en, host: "x.com")], noun: "國家", subject: "北歐")
         XCTAssertEqual(e.items.count, 5, "\(e.items)")
         // 不是名單的一串（介紹文）不能當成名單
+        // 日本：表格混了導覽字（「都道府縣列表」「按地區」「島嶼」），只留真的是縣、都、道、府的
+        let jp = "都道府縣列表、按地區、青森縣、北海道、岩手縣、東京都、京都府、島嶼、都道府縣"
+        XCTAssertEqual(Understanding.extractList([.init(text: jp, host: "w")], noun: "縣", subject: "日本").items,
+                       ["青森縣", "北海道", "岩手縣", "東京都", "京都府"])
         let intro = "本文將透過地理分區、政治實體等不同角度，帶你詳細瞭解。"
         XCTAssertTrue(Understanding.extractList([.init(text: intro, host: "y")], noun: "國家", subject: "歐洲").items.isEmpty)
     }
@@ -81,6 +86,8 @@ final class UnderstandingTests: XCTestCase {
         let s = Understanding.extractSteps([.init(text: page, host: "recipe.tw")], target: "綠豆湯")
         XCTAssertEqual(s?.steps.count, 4)
         XCTAssertEqual(s?.steps.first, "綠豆洗淨，泡水 2 小時。")
+        let nutrition = "綠豆\n打開的成熟綠豆豆莢\n綠豆芽可以炒、煮、涼拌、醃製等做法。\n鈣 ｜ 95毫克\n鐵 ｜ 18毫克\n綠豆湯是常見甜品"
+        XCTAssertNil(Understanding.extractSteps([.init(text: nutrition, host: "w")], target: "綠豆湯"))
     }
 
     func testSolveSaysWhenNotAnswered() {
@@ -89,5 +96,31 @@ final class UnderstandingTests: XCTestCase {
         XCTAssertFalse(WebAgent.solve(fr, pages: off, snippets: off).ok)
         let on = [Understanding.Evidence(text: "月亮本身不會發光，我們看到的月光是因為它反射了太陽光。", host: "w")]
         XCTAssertTrue(WebAgent.solve(fr, pages: on, snippets: on).ok)
+    }
+}
+
+final class ThinkingHabitsTests: XCTestCase {
+    func testRecencyAndSources() {
+        let f = Understanding.withRecency(Understanding.frame("台灣現在人口有多少"), question: "台灣現在人口有多少", now: Date(timeIntervalSince1970: 1_790_000_000))
+        XCTAssertTrue(f.recent)
+        XCTAssertTrue(f.searches.first?.hasSuffix("2026") == true, "\(f.searches)")
+        XCTAssertFalse(Understanding.withRecency(Understanding.frame("玉山有多高"), question: "玉山有多高").recent)
+        XCTAssertEqual(Understanding.latestYear("根據2023年與2025年的統計"), 2025)
+        // 一個官方來源勝過一個普通網站
+        let ev: [Understanding.Evidence] = [.init(text: "總人口約2,340萬人。", host: "www.ris.gov.tw"), .init(text: "總人口約2,100萬人。", host: "blog.example.com")]
+        XCTAssertEqual(Understanding.voteNumber(ev, units: ["人"], subject: "台灣")?.shown, "2,340萬人")
+    }
+
+    func testClarifyVaguePronoun() throws {
+        #if os(Linux)
+        let t = EchoCoreTests(name: "helper", testClosure: { _ in })
+        #else
+        let t = EchoCoreTests()
+        #endif
+        let engine = try t.makeEngine(seed: 2)
+        let ctx = EchoEngine.Context(now: t.date(2026, 9, 30, 11))
+        let r = engine.reply(to: "它有多高", context: ctx)
+        XCTAssertNil(r.webQuery)
+        XCTAssertTrue(r.turn.text.contains("是指什麼"), r.turn.text)
     }
 }
