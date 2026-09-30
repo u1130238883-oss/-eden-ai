@@ -27,6 +27,7 @@ public final class Brain {
         let tensors: [Tensor]
         let num_params: Int
         let q_max: Int?
+        let punct: [String]?
     }
 
     struct Layer {
@@ -49,12 +50,14 @@ public final class Brain {
     let stoi: [String: Int]
     let unk: Int, cls: Int, sep: Int
     let qMax: Int
-    let wte, wpe, wse, lnfg, lnfb, wspan, bspan: [Float]
+    let wte, wpe, wse, wme, lnfg, lnfb, wspan, bspan: [Float]
+    /// 標點：不算「跟問題一樣的字」
+    let punctIDs: Set<Int>
     let layers: [Layer]
 
     public init(weights: Data, metaJSON: Data) throws {
         let meta = try JSONDecoder().decode(Meta.self, from: metaJSON)
-        guard meta.format == "reader-f16-v1" else { throw EchoError.badFormat(meta.format) }
+        guard meta.format == "reader-f16-v2" else { throw EchoError.badFormat(meta.format) }
         config = meta.config
         numParams = meta.num_params
         var map: [String: Int] = [:]
@@ -62,6 +65,7 @@ public final class Brain {
         stoi = map
         unk = meta.specials.unk; cls = meta.specials.cls; sep = meta.specials.sep
         qMax = meta.q_max ?? 48
+        punctIDs = Set((meta.punct ?? []).compactMap { map[$0] })
         // float16 → float32
         let floats: [Float] = weights.withUnsafeBytes { raw in
             let n = raw.count / 2
@@ -79,7 +83,7 @@ public final class Brain {
             guard let v = table[k] else { throw EchoError.missing(k) }
             return v
         }
-        wte = try get("wte"); wpe = try get("wpe"); wse = try get("wse")
+        wte = try get("wte"); wpe = try get("wpe"); wse = try get("wse"); wme = try get("wme")
         lnfg = try get("lnf_g"); lnfb = try get("lnf_b")
         wspan = try get("w_span"); bspan = try get("b_span")
         var ls: [Layer] = []
@@ -145,8 +149,9 @@ public final class Brain {
             let piece = Array(pc[start..<min(start + L, pc.count)])
             let tokens = [cls] + q + [sep] + piece + [sep]
             let segs = [Int](repeating: 0, count: q.count + 2) + [Int](repeating: 1, count: piece.count + 1)
+            let (mq, mp) = matchFeatures(q, piece)
             let base = q.count + 2
-            let (ls, le) = logits(tokens, segs)
+            let (ls, le) = logits(tokens, segs, [0] + mq + [0] + mp + [0])
             let none = ls[0] + le[0]
             // 開始、結束各挑分數最高的 20 個位置組合（結束不能在開始之前、長度有上限）
             let pos = Array(base..<(base + piece.count))
@@ -170,11 +175,27 @@ public final class Brain {
     }
 
     /// 前向傳播：回傳每個位置「答案從這裡開始／到這裡結束」的分數
-    func logits(_ tokens: [Int], _ segs: [Int]) -> (start: [Float], end: [Float]) {
+    /// 每個字有沒有出現在另一邊：2＝同一個雙字詞，1＝同一個字，0＝沒有（和 Python 的 match_features 一樣）
+    func matchFeatures(_ q: [Int], _ p: [Int]) -> ([Int], [Int]) {
+        struct Pair: Hashable { let a: Int, b: Int }
+        func grams(_ x: [Int]) -> Set<Pair> { x.count < 2 ? [] : Set((0..<(x.count - 1)).map { Pair(a: x[$0], b: x[$0 + 1]) }) }
+        let qs = Set(q), ps = Set(p), qg = grams(q), pg = grams(p)
+        func feat(_ a: [Int], _ set: Set<Int>, _ g: Set<Pair>) -> [Int] {
+            a.indices.map { i in
+                let t = a[i]
+                if t <= 3 || punctIDs.contains(t) { return 0 }
+                if (i > 0 && g.contains(Pair(a: a[i - 1], b: t))) || (i + 1 < a.count && g.contains(Pair(a: t, b: a[i + 1]))) { return 2 }
+                return set.contains(t) ? 1 : 0
+            }
+        }
+        return (feat(q, ps, pg), feat(p, qs, qg))
+    }
+
+    func logits(_ tokens: [Int], _ segs: [Int], _ mat: [Int]) -> (start: [Float], end: [Float]) {
         let T = tokens.count, C = config.n_embd, H = config.n_head, D = C / H
         var x = [Float](repeating: 0, count: T * C)
         for t in 0..<T {
-            for c in 0..<C { x[t * C + c] = wte[tokens[t] * C + c] + wpe[t * C + c] + wse[segs[t] * C + c] }
+            for c in 0..<C { x[t * C + c] = wte[tokens[t] * C + c] + wpe[t * C + c] + wse[segs[t] * C + c] + wme[mat[t] * C + c] }
         }
         let scale = 1 / Float(D).squareRoot()
         for ly in layers {

@@ -18,7 +18,9 @@ from collections import Counter
 
 import numpy as np
 
-from reader_model import Reader, ReaderTokenizer, AdamW, PAD, CLS, SEP
+from reader_model import Reader, ReaderTokenizer, AdamW, PAD, CLS, SEP, match_features
+
+PUNCT = set("，。、；：？！「」『』（）()《》〈〉,.;:?!\"' \n-—…·")
 
 T_CTX = 256
 Q_MAX = 48
@@ -55,10 +57,12 @@ def windows(tok, q, ctx):
     while True:
         piece = ci[start:start + L]
         ids = [CLS] + qi + [SEP] + piece + [SEP]
+        mq, mp = match_features(qi, piece, tok.punct_ids)
+        mat = [0] + mq + [0] + mp + [0]
         seg = [0] * (len(qi) + 2) + [1] * (len(piece) + 1)
         pad = T_CTX - len(ids)
         cand = [True] + [False] * (len(qi) + 1) + [True] * len(piece) + [False] + [False] * pad
-        out.append((ids + [PAD] * pad, seg + [1] * pad, cand, start, len(qi) + 2, len(piece)))
+        out.append((ids + [PAD] * pad, seg + [1] * pad, cand, start, len(qi) + 2, len(piece), mat + [0] * pad))
         if start + L >= len(ci):
             break
         start += stride
@@ -68,7 +72,7 @@ def windows(tok, q, ctx):
 def featurize(tok, samples, neg_keep=0.3, rand_neg=0.3, seed=0):
     rng = random.Random(seed)
     ctxs = list({s[0] for s in samples})
-    X, S, M, ST, EN = [], [], [], [], []
+    X, S, M, ST, EN, MT = [], [], [], [], [], []
     for ctx, q, a, a0 in samples:
         if a0 < 0:
             continue
@@ -76,22 +80,22 @@ def featurize(tok, samples, neg_keep=0.3, rand_neg=0.3, seed=0):
         # 答案位置對不上原文的（資料錯誤）就跳過
         if ctx[a0:a0 + len(a)] != a:
             continue
-        for ids, seg, cand, off, base, plen in windows(tok, q, ctx):
+        for ids, seg, cand, off, base, plen, mat in windows(tok, q, ctx):
             if off <= a0 and a1 < off + plen:
                 st, en = base + a0 - off, base + a1 - off
             else:
                 if rng.random() > neg_keep:
                     continue
                 st = en = 0
-            X.append(ids); S.append(seg); M.append(cand); ST.append(st); EN.append(en)
+            X.append(ids); S.append(seg); M.append(cand); ST.append(st); EN.append(en); MT.append(mat)
         # 拿別篇文章來問同一個問題：要學會說「這段沒在回答」
         if rng.random() < rand_neg:
             other = rng.choice(ctxs)
             if other != ctx:
-                ids, seg, cand, off, base, _ = rng.choice(windows(tok, q, other))
-                X.append(ids); S.append(seg); M.append(cand); ST.append(0); EN.append(0)
+                ids, seg, cand, off, base, _, mat = rng.choice(windows(tok, q, other))
+                X.append(ids); S.append(seg); M.append(cand); ST.append(0); EN.append(0); MT.append(mat)
     return (np.array(X, np.int32), np.array(S, np.int8), np.array(M, bool),
-            np.array(ST, np.int32), np.array(EN, np.int32))
+            np.array(ST, np.int32), np.array(EN, np.int32), np.array(MT, np.int8))
 
 
 def best_span(ls, le, cand, max_len=40):
@@ -132,7 +136,8 @@ def evaluate(model, tok, samples, limit=600, batch=32):
         ids = np.array([w[0] for w in ws], np.int32)
         seg = np.array([w[1] for w in ws], np.int8)
         cand = np.array([w[2] for w in ws], bool)
-        ls, le = model.forward(ids, seg, cand)
+        mat = np.array([w[6] for w in ws], np.int8)
+        ls, le = model.forward(ids, seg, cand, mat)
         best = None
         for i, w in enumerate(ws):
             b = best_span(ls[i], le[i], cand[i])
@@ -176,8 +181,9 @@ def main():
     dev = load_squad(os.path.join(args.data, "DRCD_dev.json"))
     random.Random(0).shuffle(dev)
     tok = build_vocab(train)
+    tok.punct_ids = frozenset(tok.stoi[c] for c in PUNCT if c in tok.stoi)
     say(f"train {len(train)} dev {len(dev)} vocab {tok.vocab_size}")
-    X, S, M, ST, EN = featurize(tok, train)
+    X, S, M, ST, EN, MT = featurize(tok, train)
     say(f"features {len(X)}  (no-answer {(ST == 0).mean():.2f})")
 
     model = Reader(tok.vocab_size, n_ctx=T_CTX, n_embd=args.embd, n_head=4, n_layer=args.layers)
@@ -219,7 +225,7 @@ def main():
         T_total = total or 10 ** 9
         warm = 300
         lr = args.lr * min(1.0, (step + 1) / warm) * (0.5 * (1 + np.cos(np.pi * min(1.0, step / max(T_total, 1)))) * 0.95 + 0.05)
-        loss = model.forward(X[b, :Tb], S[b, :Tb], M[b, :Tb], ST[b], EN[b])
+        loss = model.forward(X[b, :Tb], S[b, :Tb], M[b, :Tb], MT[b, :Tb], ST[b], EN[b])
         g = model.backward()
         # 梯度裁剪
         norm = np.sqrt(sum(float((v * v).sum()) for v in g.values()))
@@ -243,7 +249,7 @@ def main():
             if f > best_f1:
                 best_f1 = f
                 model.export(os.path.join(args.out, "reader.bin"), os.path.join(args.out, "reader.json"), tok,
-                             extra={"dev_em": em, "dev_f1": f, "step": step, "t_ctx": T_CTX, "q_max": Q_MAX})
+                             extra={"dev_em": em, "dev_f1": f, "step": step, "t_ctx": T_CTX, "q_max": Q_MAX, "punct": sorted(PUNCT)})
                 say(f"exported (best F1 {f:.3f})")
         if done:
             break

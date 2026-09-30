@@ -40,6 +40,28 @@ class ReaderTokenizer:
         return [self.stoi.get(c, UNK) for c in self.norm(s)]
 
 
+def match_features(q_ids, p_ids, skip=frozenset()):
+    """每個字有沒有出現在另一邊：2＝同一個雙字詞，1＝同一個字（標點、特殊符號不算），0＝沒有。"""
+    def grams(a):
+        return {(a[i], a[i + 1]) for i in range(len(a) - 1)}
+    qs, ps = set(q_ids), set(p_ids)
+    qg, pg = grams(q_ids), grams(p_ids)
+
+    def feat(a, other_set, other_grams):
+        out = []
+        for i, t in enumerate(a):
+            if t <= 3 or t in skip:
+                out.append(0)
+            elif (i > 0 and (a[i - 1], t) in other_grams) or (i + 1 < len(a) and (t, a[i + 1]) in other_grams):
+                out.append(2)
+            elif t in other_set:
+                out.append(1)
+            else:
+                out.append(0)
+        return out
+    return feat(q_ids, ps, pg), feat(p_ids, qs, qg)
+
+
 class Reader:
     def __init__(self, vocab_size, n_ctx=256, n_embd=192, n_head=4, n_layer=4, seed=0):
         self.cfg = dict(vocab_size=vocab_size, n_ctx=n_ctx, n_embd=n_embd, n_head=n_head, n_layer=n_layer)
@@ -51,7 +73,8 @@ class Reader:
         def w(*shape, s=std):
             return (rng.standard_normal(shape) * s).astype(np.float32)
 
-        p = {"wte": w(vocab_size, C), "wpe": w(n_ctx, C), "wse": w(2, C)}
+        # wme：這個字有沒有出現在另一邊（0 沒有、1 同一個字、2 同一個雙字詞）——讀文章時先找跟問題一樣的詞
+        p = {"wte": w(vocab_size, C), "wpe": w(n_ctx, C), "wse": w(2, C), "wme": w(3, C)}
         for l in range(n_layer):
             p[f"h{l}.ln1_g"] = np.ones(C, np.float32)
             p[f"h{l}.ln1_b"] = np.zeros(C, np.float32)
@@ -75,7 +98,7 @@ class Reader:
         return sum(v.size for v in self.p.values())
 
     # ---------------- forward
-    def forward(self, idx, seg, cand, starts=None, ends=None):
+    def forward(self, idx, seg, cand, mat, starts=None, ends=None):
         """idx: (B,T) token；seg: (B,T) 0=問題 1=段落；cand: (B,T) 可以當答案的位置（段落的字＋[CLS]）。
         有 starts/ends 就回傳 loss（並保留 cache 給 backward），沒有就回傳 (start_logits, end_logits)。"""
         p, cfg = self.p, self.cfg
@@ -86,7 +109,7 @@ class Reader:
         # 雙向注意力：每個字都能看整段；只遮掉 <pad>
         kmask = np.where(idx == PAD, np.float32(-1e9), np.float32(0))[:, None, None, :]
 
-        x = p["wte"][idx] + p["wpe"][:T] + p["wse"][seg]
+        x = p["wte"][idx] + p["wpe"][:T] + p["wse"][seg] + p["wme"][mat]
         caches = []
         for l in range(cfg["n_layer"]):
             pre = f"h{l}."
@@ -119,13 +142,13 @@ class Reader:
         ps[rows, starts] -= 1.0
         pe[rows, ends] -= 1.0
         dlog = np.stack([ps, pe], -1) / np.float32(2 * B)
-        self._cache = (idx, seg, caches, xf, c_lnf, dlog)
+        self._cache = (idx, seg, mat, caches, xf, c_lnf, dlog)
         return loss
 
     # ---------------- backward（手推梯度）
     def backward(self):
         p, cfg = self.p, self.cfg
-        idx, seg, caches, xf, c_lnf, dlog = self._cache
+        idx, seg, mat, caches, xf, c_lnf, dlog = self._cache
         B, T = idx.shape
         C, H = cfg["n_embd"], cfg["n_head"]
         D = C // H
@@ -170,13 +193,15 @@ class Reader:
         grads["wpe"][:T] = dx.sum(0)
         grads["wse"] = np.zeros_like(p["wse"])
         np.add.at(grads["wse"], seg.reshape(-1), dx.reshape(-1, C))
+        grads["wme"] = np.zeros_like(p["wme"])
+        np.add.at(grads["wme"], mat.reshape(-1), dx.reshape(-1, C))
         grads["wte"] = np.zeros_like(p["wte"])
         np.add.at(grads["wte"], idx.reshape(-1), dx.reshape(-1, C))
         return grads
 
     # ---------------- 匯出給 iOS
     def order(self):
-        names = ["wte", "wpe", "wse"]
+        names = ["wte", "wpe", "wse", "wme"]
         for l in range(self.cfg["n_layer"]):
             names += [f"h{l}.{n}" for n in ("ln1_g", "ln1_b", "w_qkv", "b_qkv", "w_o", "b_o",
                                              "ln2_g", "ln2_b", "w_fc", "b_fc", "w_proj", "b_proj")]
@@ -191,7 +216,7 @@ class Reader:
                 fh.write(arr.tobytes())
                 tensors.append({"name": name, "shape": list(arr.shape), "offset": offset})
                 offset += arr.size
-        meta = {"format": "reader-f16-v1", "config": self.cfg, "vocab": tokenizer.itos,
+        meta = {"format": "reader-f16-v2", "config": self.cfg, "vocab": tokenizer.itos,
                 "specials": {"pad": PAD, "unk": UNK, "cls": CLS, "sep": SEP},
                 "tensors": tensors, "num_params": int(self.num_params())}
         if extra:
@@ -210,16 +235,17 @@ def gradcheck():
     seg = np.zeros_like(idx); seg[:, 5:] = 1
     cand = seg.astype(bool) & (idx != PAD); cand[:, 0] = True
     st, en = np.array([6, 0]), np.array([8, 0])
-    m.forward(idx, seg, cand, st, en)
+    mat = rng.integers(0, 3, idx.shape)
+    m.forward(idx, seg, cand, mat, st, en)
     g = m.backward()
     worst = 0.0
-    for name in ["wte", "h0.w_qkv", "h1.w_fc", "w_span", "wse", "h0.ln1_g"]:
+    for name in ["wte", "h0.w_qkv", "h1.w_fc", "w_span", "wse", "wme", "h0.ln1_g"]:
         arr = m.p[name]
         for _ in range(4):
             i = tuple(rng.integers(0, s) for s in arr.shape)
             old = arr[i]
-            arr[i] = old + 1e-5; lp = m.forward(idx, seg, cand, st, en)
-            arr[i] = old - 1e-5; lm = m.forward(idx, seg, cand, st, en)
+            arr[i] = old + 1e-5; lp = m.forward(idx, seg, cand, mat, st, en)
+            arr[i] = old - 1e-5; lm = m.forward(idx, seg, cand, mat, st, en)
             arr[i] = old
             num = (lp - lm) / 2e-5
             worst = max(worst, abs(num - g[name][i]) / max(1e-6, abs(num) + abs(g[name][i])))
