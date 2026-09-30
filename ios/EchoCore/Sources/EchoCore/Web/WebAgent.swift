@@ -133,7 +133,8 @@ public enum WebAgent {
 
         // ②③ 拆成幾組關鍵字，同時上網查（tag -1：整體；0…：各個小問題）
         var jobs: [(tag: Int, q: String, full: Bool)] = []
-        for (i, q) in plan.queries.prefix(strat.angles.isEmpty ? 3 : 1).enumerated() { jobs.append((-1, q, i == 0 || strat.angles.isEmpty)) }
+        // 一般問題查 2 組就夠（原句＋換個說法），太多組只會變慢
+        for (i, q) in plan.queries.prefix(strat.angles.isEmpty ? (canon == nil ? 2 : 1) : 1).enumerated() { jobs.append((-1, q, i == 0 || strat.angles.isEmpty)) }
         if let canon { jobs.append((-1, canon, true)) }
         for q in also.prefix(2) where !jobs.contains(where: { $0.q == q }) { jobs.append((-1, q, true)) }
         for (i, a) in strat.angles.enumerated() { jobs.append((i, topic + a.suffix, false)) }
@@ -144,7 +145,10 @@ public enum WebAgent {
             let batch = Array(jobs.enumerated())[start..<min(jobs.count, start + 2)]
             let got = await withTaskGroup(of: (Int, Int, WebSearch.Answer).self) { g -> [(Int, Int, WebSearch.Answer)] in
                 for (n, j) in batch {
-                    g.addTask { (n, j.tag, await WebSearch.search(j.q, lang: L, news: plan.kind == .news && n == 0, light: !j.full)) }
+                    g.addTask {
+                        let a = await within(9) { await WebSearch.search(j.q, lang: L, news: plan.kind == .news && n == 0, light: !j.full) }
+                        return (n, j.tag, a ?? WebSearch.Answer(lead: nil, leadSource: nil, hits: [], engines: [:]))
+                    }
                 }
                 var out: [(Int, Int, WebSearch.Answer)] = []
                 for await a in g { out.append(a) }
@@ -194,7 +198,8 @@ public enum WebAgent {
         var toRead: [WebSearch.Hit] = pick(-1, strat.angles.isEmpty ? 3 : 2)
         for i in strat.angles.indices { for h in pick(i, 1) where !toRead.contains(where: { $0.url == h.url }) { toRead.append(h) } }
         let pages = await withTaskGroup(of: (WebSearch.Hit, String?).self) { g -> [(WebSearch.Hit, String)] in
-            for h in toRead.prefix(7) { g.addTask { (h, await WebSearch.pageText(h.url, L)) } }
+            // 最多打開幾個網頁，每個最多等 6 秒（慢的網站就跳過，不讓使用者一直等）
+            for h in toRead.prefix(strat.angles.isEmpty ? 3 : 5) { g.addTask { (h, await within(6) { await WebSearch.pageText(h.url, L) } ?? nil) } }
             var out: [(WebSearch.Hit, String)] = []
             for await (h, t) in g { if let t { out.append((h, t)) } }
             return out
@@ -218,10 +223,15 @@ public enum WebAgent {
             }
         }
         for (tag, h) in hits where !h.snippet.isEmpty {
-            let s = zh ? WebStrategy.toTraditional(h.snippet) : h.snippet
-            let a = angleOf(s, default: -1)
-            findings.append(Finding(text: s, host: WebSearch.host(h.url), url: h.url, angle: a == -1 && tag >= 0 ? -1 : a, trusted: isTrusted(h.url)))
+            let whole = zh ? WebStrategy.toTraditional(h.snippet) : h.snippet
+            // 摘要也要拆成一句一句，才不會把「你知道…嗎？」這種開場白當成答案
+            let parts = sentences(whole)
+            for s in (parts.isEmpty ? [whole] : parts) where !isQuestionOrFluff(s) {
+                let a = angleOf(s, default: -1)
+                findings.append(Finding(text: s, host: WebSearch.host(h.url), url: h.url, angle: a == -1 && tag >= 0 ? -1 : a, trusted: isTrusted(h.url)))
+            }
         }
+        findings.removeAll { isQuestionOrFluff($0.text) }
         let lead2 = lead.map { zh ? WebStrategy.toTraditional($0) : $0 }
 
         // ⑤ 查證：交叉比對
@@ -230,8 +240,9 @@ public enum WebAgent {
         let trustedHosts = orderedUnique(findings.filter(\.trusted).map(\.host))
 
         // ⑦ 組回答
-        let ranked = rank(findings, terms: terms, common: common, numeric: plan.numeric, core: plan.core)
-            .filter { quality($0.text, terms: terms, numeric: plan.numeric, core: plan.core) > 0 }
+        let listQ = question.contains("哪些") || question.contains("列表") || question.contains("有什麼")
+        let ranked = rank(findings, terms: terms, common: common, numeric: plan.numeric, core: plan.core, list: listQ)
+            .filter { quality($0.text, terms: terms, numeric: plan.numeric, core: plan.core, list: listQ) > 0 }
         var answer = ""
         if let lead2 { answer = lead2 }
         else if let first = (strat.angles.isEmpty ? ranked : ranked.filter { $0.angle <= 0 }).first(where: { $0.text.count >= 30 }) ?? ranked.first {
@@ -241,6 +252,17 @@ public enum WebAgent {
         if plan.numeric, plan.kind != .weather, !hasNumber(answer, besides: plan.core),
            let withNum = ranked.first(where: { hasNumber($0.text, besides: plan.core) }) {
             answer = WebSearch.clip(withNum.text, 240) + "（\(withNum.host)）" + (lead2.map { "\n\n" + $0 } ?? "")
+        }
+        // 問數量：看各來源說的數字，多數決，並說明為什麼會有不同說法
+        if plan.numeric, plan.kind != .weather, lead2 == nil, let vote = numberVote(ranked, core: plan.core) {
+            var head = "多數來源的說法是 \(vote.best)（\(vote.bestCount) 個來源）"
+            if !vote.others.isEmpty { head += "；也有 " + vote.others.joined(separator: "、") + " 的說法，通常是計算標準不同" }
+            head += "。"
+            if let s = ranked.first(where: { $0.text.contains(vote.best) }) {
+                answer = head + "\n" + WebSearch.clip(s.text, 220) + "（\(s.host)）"
+            } else {
+                answer = head + (answer.isEmpty ? "" : "\n" + answer)
+            }
         }
         var used: [String] = [answer]
         func take(_ fs: [Finding], _ n: Int) -> [String] {
@@ -342,9 +364,57 @@ public enum WebAgent {
         let links = orderedUnique(ranked.filter(\.trusted).map(\.url) + ranked.map(\.url) + hits.map(\.hit.url))
         let card = FortuneCard(title: fortune ? (zh ? "網路資料對照" : "Web check") : (zh ? "上網查到的資料" : "From the web"),
                                headline: canon ?? plan.keywords,
-                               details: Array(links.prefix(5)).map { WebSearch.host($0) + "  " + $0 },
+                               details: Array(links.prefix(5)).map { WebSearch.host($0) + "  " + WebSearch.clip(readablePath($0), 40) },
                                link: links.first)
         return Result(text: t, card: card, found: true, engines: engines)
+    }
+
+    // MARK: - 時間限制
+
+    /// 在 seconds 秒內做完就回傳結果，超過就放棄（回傳 nil）
+    static func within<T>(_ seconds: Double, _ work: @escaping () async -> T) async -> T? {
+        await withTaskGroup(of: T?.self) { g in
+            g.addTask { await work() }
+            g.addTask { try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000)); return nil }
+            let first = await g.next() ?? nil
+            g.cancelAll()
+            return first
+        }
+    }
+
+    /// 網址看得懂的部分（解碼中文、去掉 https://）
+    static func readablePath(_ url: String) -> String {
+        var u = url.removingPercentEncoding ?? url
+        for p in ["https://", "http://", "www."] where u.hasPrefix(p) { u.removeFirst(p.count) }
+        if let slash = u.firstIndex(of: "/") { u = String(u[u.index(after: slash)...]) }
+        return u.isEmpty ? url : u
+    }
+
+    /// 反問句、開場白（「你知道歐洲有多少個國家嗎？」「大家都知道……」）不能當答案
+    static func isQuestionOrFluff(_ s: String) -> Bool {
+        let t = s.trimmingCharacters(in: .whitespaces)
+        if t.hasSuffix("？") || t.hasSuffix("?") || t.hasSuffix("嗎") { return true }
+        let fluff = ["你知道", "您知道", "大家都知道", "相信大家", "想必", "各位", "你是否", "有沒有想過", "今天就來", "今天要來", "本文", "這篇文章", "小編"]
+        return fluff.contains { t.hasPrefix($0) }
+    }
+
+    /// 各來源說的數字（「46 個」「約 50 個」），一個來源一票
+    static func numberVote(_ fs: [Finding], core: String) -> (best: String, bestCount: Int, others: [String])? {
+        guard let re = try? NSRegularExpression(pattern: #"(\d[\d,\.]*)\s*(個|座|公尺|米|公里|歲|年|人|萬|億|%|度|天|小時|分鐘|公斤|元)"#) else { return nil }
+        var votes: [String: Set<String>] = [:]
+        for f in fs.prefix(20) {
+            let t = f.text.replacingOccurrences(of: core, with: "")
+            for m in re.matches(in: t, range: NSRange(t.startIndex..., in: t)) {
+                guard let r = Range(m.range, in: t) else { continue }
+                let v = String(t[r]).replacingOccurrences(of: " ", with: "")
+                votes[v, default: []].insert(f.host)
+            }
+        }
+        let sorted = votes.map { ($0.key, $0.value.count) }.sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0 < $1.0 }
+        guard let top = sorted.first, top.1 >= 2 || sorted.count == 1 else { return nil }
+        let unit = top.0.drop { $0.isNumber || $0 == "," || $0 == "." }
+        let others = sorted.dropFirst().filter { $0.1 >= 1 && $0.0.hasSuffix(unit) }.prefix(2).map { $0.0 }
+        return (top.0, top.1, Array(others))
     }
 
     // MARK: - 挑句子
@@ -405,7 +475,7 @@ public enum WebAgent {
         s.replacingOccurrences(of: core, with: "").contains(where: \.isNumber)
     }
 
-    static func quality(_ s: String, terms: Set<String>, numeric: Bool, core: String = "") -> Int {
+    static func quality(_ s: String, terms: Set<String>, numeric: Bool, core: String = "", list: Bool = false) -> Int {
         let hit = score(s, terms)
         guard hit > 0 else { return 0 }
         var q = hit * 4
@@ -414,7 +484,8 @@ public enum WebAgent {
         let listy = s.components(separatedBy: "｜").count + s.components(separatedBy: "|").count - 2
             + (s.range(of: #"\d+\.\s*\D+\s*\d+\.\s"#, options: .regularExpression) != nil ? 3 : 0)
             + s.components(separatedBy: "、").count / 6
-        q -= listy * 3
+        // 問「有哪些」的時候，列出很多項目的句子反而是好答案
+        q += list ? min(8, s.components(separatedBy: "、").count - 1) : -listy * 3
         if s.count > 160 { q -= 2 }
         if s.count < 20 { q -= 2 }
         if s.hasSuffix("?") || s.hasSuffix("？") { q -= 6 }
@@ -434,9 +505,9 @@ public enum WebAgent {
             .sorted { $0.1 > $1.1 }.prefix(n).map { $0.0 }
     }
 
-    static func rank(_ fs: [Finding], terms: Set<String>, common: [String], numeric: Bool, core: String) -> [Finding] {
+    static func rank(_ fs: [Finding], terms: Set<String>, common: [String], numeric: Bool, core: String, list: Bool = false) -> [Finding] {
         fs.map { f -> (Finding, Int) in
-            (f, quality(f.text, terms: terms, numeric: numeric, core: core) * 2 + common.filter { f.text.contains($0) }.count * 2)
+            (f, quality(f.text, terms: terms, numeric: numeric, core: core, list: list) * 2 + common.filter { f.text.contains($0) }.count * 2)
         }.sorted { $0.1 > $1.1 }.map { $0.0 }
     }
 

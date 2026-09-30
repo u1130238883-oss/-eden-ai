@@ -4,7 +4,7 @@ import Foundation
 /// 命中就直接用人寫好的答案回答；沒命中就交給下一層，不亂編。可以隨時擴充 chat_bank.json，不用重新訓練。
 public final class ChatBank {
     /// k：思路庫的關鍵詞（換句話說時，命中關鍵詞也算同一題）
-    struct Entry: Decodable { let q: [String]; let a: [String]; let k: [String]? }
+    struct Entry: Decodable { let q: [String]; let a: [String]; let k: [String]?; let w: Bool? }
     struct Hit { let entry: Entry; let score: Double }
 
     let entries: [Lang: [Entry]]
@@ -102,4 +102,10 @@ public final class ChatBank {
 
     /// 只看思路庫（有關鍵詞的那些）：實用型問題的寫好答案
     public func playbook(_ text: String, _ L: Lang) -> [String]? { match(text, L, onlyPlaybook: true)?.entry.a }
+
+    /// 思路庫答案＋要不要再上網補充（腦筋急轉彎、常識題本地就答完了，不用上網）
+    public func playbookEntry(_ text: String, _ L: Lang) -> (answers: [String], web: Bool)? {
+        guard let e = match(text, L, onlyPlaybook: true)?.entry else { return nil }
+        return (e.a, e.w ?? true)
+    }
 }

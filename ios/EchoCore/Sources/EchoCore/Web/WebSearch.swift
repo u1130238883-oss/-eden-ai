@@ -33,8 +33,8 @@ public enum WebSearch {
 
     static let session: URLSession = {
         let c = URLSessionConfiguration.ephemeral
-        c.timeoutIntervalForRequest = 10
-        c.timeoutIntervalForResource = 15
+        c.timeoutIntervalForRequest = 6
+        c.timeoutIntervalForResource = 9
         c.requestCachePolicy = .reloadIgnoringLocalCacheData
         c.urlCache = nil
         c.httpShouldSetCookies = false
@@ -516,7 +516,7 @@ public enum WebSearch {
     }
 
     static func request(_ url: URL, _ L: Lang, ua: String) -> URLRequest {
-        var req = URLRequest(url: url, timeoutInterval: 10)
+        var req = URLRequest(url: url, timeoutInterval: 6)
         req.setValue(ua, forHTTPHeaderField: "User-Agent")
         req.setValue(L == .zh ? "zh-TW,zh;q=0.9,en;q=0.6" : "\(L.rawValue),en;q=0.6", forHTTPHeaderField: "Accept-Language")
         req.setValue("text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.8,*/*;q=0.7", forHTTPHeaderField: "Accept")

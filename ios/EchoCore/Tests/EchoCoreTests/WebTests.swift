@@ -73,6 +73,90 @@ final class WebRoutingTests: XCTestCase {
     }
 }
 
+/// 追問、反問句過濾、數字多數決、腦筋急轉彎（不用連網）
+final class WebThinkingTests: XCTestCase {
+    func testFollowUpAndFiltering() throws {
+        XCTAssertEqual(EchoEngine.resolveFollowUp("那這些國家都是哪些國家", query: "那這些國家都是哪些國家", previous: "歐洲有多少個國家", gap: 2),
+                       "歐洲 國家 哪些國家 列表")
+        XCTAssertTrue(EchoEngine.resolveFollowUp("我是說這些歐洲國家是哪些國家？", query: "我是說這些歐洲國家是哪些國家", previous: "歐洲有多少個國家", gap: 2)
+            .hasPrefix("歐洲國家"))
+        XCTAssertEqual(EchoEngine.resolveFollowUp("台北101有多高", query: "台北101有多高", previous: "歐洲有多少個國家", gap: 2), "台北101有多高")
+        XCTAssertTrue(WebAgent.isQuestionOrFluff("知道歐洲有多少個國家嗎？"))
+        XCTAssertTrue(WebAgent.isQuestionOrFluff("大家都知道，在我們認知的世界上，有個地方叫歐洲"))
+        XCTAssertFalse(WebAgent.isQuestionOrFluff("歐洲共有46個國家，按地理位置通常分為五個地區。"))
+        let fs = [WebAgent.Finding(text: "歐洲共有46個國家", host: "a.com", url: "https://a.com"),
+                  WebAgent.Finding(text: "目前歐洲有46個國家和地區", host: "b.com", url: "https://b.com"),
+                  WebAgent.Finding(text: "歐洲約有50個國家", host: "c.com", url: "https://c.com")]
+        let v = WebAgent.numberVote(fs, core: "歐洲")
+        XCTAssertEqual(v?.best, "46個")
+        XCTAssertEqual(v?.others, ["50個"])
+        XCTAssertEqual(WebAgent.readablePath("https://zh.wikipedia.org/zh-tw/%E6%AD%90%E6%B4%B2"), "zh-tw/歐洲")
+
+        // 腦筋急轉彎：本地直接答，不用上網
+        #if os(Linux)
+        let t = EchoCoreTests(name: "helper", testClosure: { _ in })
+        #else
+        let t = EchoCoreTests()
+        #endif
+        let engine = try t.makeEngine(seed: 3)
+        let ctx = EchoEngine.Context(now: t.date(2026, 9, 30, 11))
+        for (q, must) in [("把冰箱放進大象裡需要多少步", "打開大象"), ("把大象放進冰箱需要幾步", "三步"), ("一公斤的鐵和一公斤的棉花哪個重", "一樣重")] {
+            let r = engine.reply(to: q, context: ctx)
+            XCTAssertTrue(r.turn.text.contains(must), "\(q) → \(r.turn.text.prefix(40))")
+            XCTAssertNil(r.webQuery, q)
+        }
+        // 上網的回覆不帶宮位標籤；追問要補主題
+        let a = engine.reply(to: "歐洲有多少個國家？", context: ctx)
+        XCTAssertNotNil(a.webQuery)
+        XCTAssertNil(a.turn.palace)
+        let b = engine.reply(to: "那這些國家都是哪些國家", history: [ChatTurn(role: .user, text: "歐洲有多少個國家？"), a.turn], context: ctx)
+        XCTAssertTrue(b.webQuery?.contains("歐洲") == true, b.webQuery ?? "nil")
+    }
+}
+
+/// 模擬真人提問：整段對話走 EchoEngine → 需要時 WebAgent 上網（CI 用 NINESUN_LIVE=1 執行）
+final class WebConversationLiveTests: XCTestCase {
+    func testLiveConversation() async throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["NINESUN_LIVE"] == "1", "live test")
+        #if os(Linux)
+        let t = EchoCoreTests(name: "helper", testClosure: { _ in })
+        #else
+        let t = EchoCoreTests()
+        #endif
+        let engine = try t.makeEngine(seed: 5)
+        var ctx = EchoEngine.Context(now: t.date(2026, 9, 30, 11))
+        ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 7, minute: 0, male: true)
+        let conversation = [
+            "把冰箱放進大象裡需要多少步", "把大象放進冰箱裡需要幾步",
+            "歐洲有多少個國家？", "那這些國家都是哪些國家", "我是說這些歐洲國家是哪些國家？",
+            "台北101有多高", "天空為什麼是藍色的", "感冒了怎麼辦", "誰發明了電話", "地球到月亮有多遠",
+            "iPhone和安卓哪個好", "日本的首都是哪裡", "怎麼煮白飯", "老闆不給我加薪怎麼辦",
+        ]
+        var history: [ChatTurn] = []
+        var slow = 0
+        for q in conversation {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            let t0 = Date()
+            let r = engine.reply(to: q, history: history, context: ctx)
+            history += [ChatTurn(role: .user, text: q), r.turn]
+            print("LIVE ===== 問：\(q)")
+            print(r.turn.text.split(separator: "\n").prefix(8).map { "LIVE | " + $0 }.joined(separator: "\n"))
+            if let wq = r.webQuery {
+                let w = await WebAgent.run(wq, lang: .zh)
+                let secs = Date().timeIntervalSince(t0)
+                if secs > 15 { slow += 1 }
+                print("LIVE --- 上網查「\(wq)」 用了 \(String(format: "%.1f", secs)) 秒 found=\(w.found)")
+                if !w.debug.isEmpty { print("LIVE DEBUG " + w.debug) }
+                // 只印回答和判斷，思路那段略過
+                let lines = w.text.split(separator: "\n").map(String.init)
+                let from = lines.firstIndex { $0.hasPrefix("📌") } ?? 0
+                print(lines[from...].prefix(14).map { "LIVE | " + $0 }.joined(separator: "\n"))
+            }
+        }
+        print("LIVE-CONVERSATION: \(conversation.count) questions, \(slow) slower than 15s")
+    }
+}
+
 /// 真的連上網路測試（CI 用 NINESUN_LIVE=1 執行；平常跳過）
 final class WebLiveTests: XCTestCase {
     func testLiveSearch() async throws {

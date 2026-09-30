@@ -124,9 +124,49 @@ public final class EchoEngine {
     static let selfDayQ = ["你今天心情", "你今天好嗎", "你今天怎麼樣", "你心情如何", "你今天運勢", "你今天的日宮"]
     static let portraitQ = ["你了解我", "我的畫像", "你覺得我是怎樣的人", "分析我", "你對我的印象", "你懂我"]
 
+    /// 上一次上網查的問題（追問「那這些國家是哪些」時補上主題）
+    var lastWebQuery: String?
+    var lastWebTurn = -100
+
     /// 逐字產生回覆。`onToken` 每產生一個字就回呼一次。
     public func reply(to message: String, history: [ChatTurn] = [], context: Context,
                       onToken: ((String) -> Void)? = nil) -> Reply {
+        var r = replyCore(to: message, history: history, context: context, onToken: onToken)
+        if let q = r.webQuery {
+            // 上網查的回覆不帶宮位感知標籤；追問的代名詞補上前一題的主題
+            r.turn.palace = nil
+            let resolved = EchoEngine.resolveFollowUp(message, query: q, previous: lastWebQuery, gap: history.count - lastWebTurn)
+            r.webQuery = resolved
+            lastWebQuery = resolved
+            lastWebTurn = history.count
+        }
+        return r
+    }
+
+    static let anaphora = ["這些", "那些", "這個", "那個", "它們", "他們", "牠們", "其中", "剛剛說的", "剛才說的", "上面說的"]
+
+    /// 追問：「那這些國家都是哪些國家」→「歐洲 國家 哪些國家 列表」
+    static func resolveFollowUp(_ text: String, query q: String, previous: String?, gap: Int) -> String {
+        var cur = q
+        let refers = anaphora.contains { text.contains($0) }
+        if refers {
+            for w in anaphora + ["我是說", "我的意思是", "都是", "那"] { cur = cur.replacingOccurrences(of: w, with: " ") }
+        }
+        var tokens = cur.split(separator: " ").map(String.init).filter { !$0.isEmpty }
+        if refers, let prev = previous, gap <= 8 {
+            let topic = WebAgent.coreTopic(prev).replacingOccurrences(of: "個", with: "")
+            let main = topic.split(separator: " ").map(String.init).filter { $0.count >= 2 }
+            // 只補這一句還沒講到的主題詞（「這些歐洲國家」已經有歐洲，就不用補）
+            let missing = main.filter { m in !tokens.contains { $0.contains(m) } }
+            tokens = missing + tokens
+        }
+        var out = tokens.joined(separator: " ")
+        if refers && text.contains("哪些") && !out.contains("列表") { out += " 列表" }
+        return out.isEmpty ? q : out
+    }
+
+    func replyCore(to message: String, history: [ChatTurn] = [], context: Context,
+                   onToken: ((String) -> Void)? = nil) -> Reply {
         var ctx = context
         let text = message.trimmingCharacters(in: .whitespacesAndNewlines)
         let L = ctx.autoDetect ? Lang.detect(text, fallback: ctx.language) : ctx.language
@@ -250,12 +290,12 @@ public final class EchoEngine {
         }
 
         // 5.5) 實用型問題（沒有要算運勢）：用思路庫寫好的答案，不要被主題、宮位搶走
-        if EchoEngine.isQuestion(text), !EchoEngine.fortuneIntent(text), let opts = chatBank?.playbook(text, .zh) {
-            let raw = choose(opts)
+        if EchoEngine.isQuestion(text), !EchoEngine.fortuneIntent(text), let pb = chatBank?.playbookEntry(text, .zh) {
+            let raw = choose(pb.answers)
             var r = done(raw, .neural)
             r.turn.tokens = []
             r.turn.variant = raw
-            if !EchoEngine.addressedToMe(text) { r.webQuery = EchoEngine.searchQuery(text) }
+            if pb.web && !EchoEngine.addressedToMe(text) { r.webQuery = EchoEngine.searchQuery(text) }
             return r
         }
 
@@ -356,13 +396,13 @@ public final class EchoEngine {
         let raw: String
         let asksMe = EchoEngine.addressedToMe(text)
         let asking = EchoEngine.isQuestion(text)
-        if asking, let opts = chatBank?.playbook(text, L) {
-            // 思路庫：先用寫好的思路回答（前提 → 原因 → 做法 → 下一步），再上網查最新資料補充
-            let a = choose(opts)
-            var r = done(a, .neural, palace)
+        if asking, let pb = chatBank?.playbookEntry(text, L) {
+            // 思路庫：先用寫好的思路回答（前提 → 原因 → 做法 → 下一步），需要的話再上網查最新資料補充
+            let a = choose(pb.answers)
+            var r = done(a, .neural, nil)
             r.turn.tokens = []
             r.turn.variant = a
-            if !asksMe { r.webQuery = EchoEngine.searchQuery(text) }
+            if pb.web && !asksMe { r.webQuery = EchoEngine.searchQuery(text) }
             return r
         }
         if let c = companionReply(text, L, ctx: ctx, palace: palace) {

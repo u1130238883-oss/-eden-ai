@@ -31,7 +31,7 @@ public enum Loc {
         "webResult": ["我上網查了「%@」，整理給你：", "I searched the web for “%@”. Here's what I found:",
                       "Busqué «%@» en la web. Esto encontré:", "Ho cercato «%@» sul web. Ecco cosa ho trovato:"],
         "webSources": ["來源", "Sources", "Fuentes", "Fonti"],
-        "webFail": ["網路上暫時查不到「%@」（可能沒有網路），換個說法或稍後再試？", "I couldn't find “%@” online right now (maybe no connection). Try rephrasing or later?",
+        "webFail": ["網路上沒找到跟「%@」直接相關的資料。可以換個說法、講得具體一點，或確認手機有連上網路，我再查一次。", "I couldn't find “%@” online right now (maybe no connection). Try rephrasing or later?",
                     "No encontré «%@» en línea ahora (quizá sin conexión). ¿Otra forma o más tarde?", "Non trovo «%@» online ora (forse senza connessione). Riformuli o riprovi dopo?"],
         "webNone": ["維基百科也找不到「%@」，換個關鍵字試試？", "Wikipedia doesn't have “%@” either. Try another keyword?",
                     "Wikipedia tampoco tiene «%@». ¿Otra palabra clave?", "Neanche Wikipedia ha «%@». Provi un'altra parola?"],
