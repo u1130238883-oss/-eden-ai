@@ -106,6 +106,23 @@ class TorchReader(torch.nn.Module):
 
 
 # ------------------------------------------------------------------ 分詞
+def load_wiki(d, limit):
+    """維基百科純文字（一行一段）：接成 300～600 字一篇，讀到 limit 個字為止"""
+    import glob
+    out, cur, total = [], "", 0
+    for f in sorted(glob.glob(os.path.join(d, "wiki_*.txt"))):
+        for line in open(f, encoding="utf-8"):
+            line = line.strip()
+            if not line:
+                continue
+            cur += line
+            if len(cur) >= 300:
+                out.append(cur[:600]); total += len(out[-1]); cur = ""
+                if total >= limit:
+                    return out
+    return out
+
+
 def build_vocab(texts, min_count=2):
     c = Counter()
     for t in texts:
@@ -504,6 +521,9 @@ def main():
     ap.add_argument("--tokens", type=int, default=12288, help="每批大約幾個字")
     ap.add_argument("--eval-limit", type=int, default=1000)
     ap.add_argument("--skip-pretrain", action="store_true", help="沿用 out/pretrained.pt")
+    ap.add_argument("--wiki", default="", help="維基百科純文字資料夾（wiki_*.txt），讀書階段多讀這些")
+    ap.add_argument("--wiki-chars", type=int, default=40_000_000, help="最多讀幾個字的維基百科")
+    ap.add_argument("--wiki-per-epoch", type=int, default=8_000_000, help="每一輪讀書抽幾個字的維基百科")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     torch.set_num_threads(os.cpu_count() or 4)
@@ -519,7 +539,17 @@ def main():
     train, dev, _ = all_sets(args.data, simplified_to_traditional())
     random.Random(0).shuffle(dev)
     texts = pretrain_texts(train)
+    wiki = load_wiki(args.wiki, args.wiki_chars) if args.wiki else []
+    # 字表：教材＋問題＋一部分維基百科（維基的罕見字要出現 5 次以上才收）
     tok = build_vocab(texts + [q for _, q, _, _ in train])
+    if wiki:
+        c = Counter()
+        for t in wiki[:len(wiki) // 3]:
+            c.update(ReaderTokenizer.norm(t))
+        extra = sorted(ch for ch, n in c.items() if n >= 5 and ch not in tok.stoi and ch != "\n")
+        tok = ReaderTokenizer([x for x in tok.itos[4:] if x != MASK_NAME] + extra)
+        tok.itos.append(MASK_NAME); tok.stoi[MASK_NAME] = len(tok.itos) - 1
+    say(f"wiki texts {len(wiki)} ({sum(map(len, wiki)):,} chars)")
     mask_id = tok.stoi[MASK_NAME]
     say(f"train {len(train)} dev {len(dev)} texts {len(texts)} ({sum(map(len, texts)):,} chars) vocab {tok.vocab_size}")
 
@@ -544,7 +574,11 @@ def main():
         opt = make_opt(model, list(model.parameters()), 1e-3)
 
         def mlm_epoch(ep):
-            smp = mlm_samples(tok, texts, rng, mask_id)
+            ep_texts = list(texts)
+            if wiki:
+                k = min(len(wiki), args.wiki_per_epoch // 450)
+                ep_texts += rng.sample(wiki, k)
+            smp = mlm_samples(tok, ep_texts, rng, mask_id)
             say(f"[read] epoch {ep}: {len(smp)} passages")
             for b in batches([(s[0],) for s in smp], rng, args.tokens):
                 yield (smp, b)
