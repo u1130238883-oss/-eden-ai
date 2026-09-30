@@ -110,7 +110,9 @@ public enum Understanding {
 
 extension Understanding {
     public static func frame(_ question: String) -> Frame {
-        let t = plain(question)
+        // 「現在」「目前」只說明要最新的資料，不是主題的一部分
+        var t = plain(question)
+        for w in recentWords where t.count > w.count + 2 { t = t.replacingOccurrences(of: w, with: "") }
         func F(_ subject: String, _ want: Want, _ s: [String], _ r: [String], _ wiki: [String], _ restated: String) -> Frame {
             Frame(subject: subject, want: want, searches: uniq(s), retry: uniq(r), wikiTitles: uniq(wiki).filter { $0.count >= 2 }, restated: restated)
         }
@@ -249,7 +251,7 @@ extension Understanding {
         guard let best = groups.max(by: { w($0) < w($1) }) else { return nil }
         // 其他說法：同一種單位、而且有一定可信度的才提（換算成英尺、別的數量不算不同說法）
         func unit(_ x: String) -> String { String(x.drop { $0.isNumber || $0 == "," || $0 == "." || $0 == " " }) }
-        let others = groups.filter { $0.shown != best.shown && unit($0.shown) == unit(best.shown) && w($0) >= 2 }.prefix(3).map(\.shown)
+        let others = groups.filter { $0.shown != best.shown && unit($0.shown) == unit(best.shown) && $0.hosts.count >= 2 }.prefix(3).map(\.shown)
         return (best.shown, best.sentence, best.hosts.count, Array(others))
     }
 
@@ -269,13 +271,23 @@ extension Understanding {
     /// 從網頁裡找出名單：表格第一欄、「、」隔開的一串、連續的短行
     public static func extractList(_ pages: [Evidence], noun: String, subject: String) -> (items: [String], hosts: [String]) {
         let suffix = ["縣", "省", "州", "市", "區", "島", "山", "河", "湖", "星", "洲", "洋"].first { noun.hasSuffix($0) }
-        var groups: [(items: [String], host: String)] = []
+        var groups: [(items: [String], host: String, ctx: Bool)] = []
+        let subj = subject.filter { $0.isLetter || $0.isNumber }
         for p in pages {
             var run: [String] = [], table: [String] = []
-            func flush() { if run.count >= 5 { groups.append((run, p.host)) }; run = [] }
+            // 這一串前面幾行有沒有提到主題（「北歐國家包括…」）；側欄、導覽列通常不會
+            var recent: [String] = []
+            var tableCtx = false
+            func near() -> Bool { !subj.isEmpty && recent.suffix(6).contains { $0.contains(subj) } }
+            // 連續短行多半是導覽列、側欄：只有字尾明確（縣、省……）的名單才採用，所以不算有主題脈絡
+            func flush() { if run.count >= 5 { groups.append((run, p.host, false)) }; run = [] }
             for line in p.text.components(separatedBy: "\n") {
+                defer { recent.append(line) }
                 if line.contains("｜") {
-                    if let first = line.components(separatedBy: "｜").lazy.compactMap({ item($0) }).first { table.append(first) }
+                    if let first = line.components(separatedBy: "｜").lazy.compactMap({ item($0) }).first {
+                        if table.isEmpty { tableCtx = near() }
+                        table.append(first)
+                    }
                     continue
                 }
                 var parts = line.components(separatedBy: CharacterSet(charactersIn: "、，,"))
@@ -292,7 +304,7 @@ extension Understanding {
                         parts[parts.count - 1] = l
                     }
                     let its = parts.compactMap { item($0) }
-                    if its.count >= 4 { groups.append((its, p.host)) }
+                    if its.count >= 4 { groups.append((its, p.host, line.contains(subj) || near())) }
                     flush()
                 } else if let it = item(line) {
                     run.append(it)
@@ -301,16 +313,17 @@ extension Understanding {
                 }
             }
             flush()
-            if table.count >= 4 { groups.append((table, p.host)) }
+            if table.count >= 4 { groups.append((table, p.host, tableCtx)) }
         }
         // 一組算不算這一類：有明確字尾（縣、省……）就要多數符合；否則要夠長
-        let good = groups.map { g -> (items: [String], host: String) in
+        let good = groups.map { g -> (items: [String], host: String, ctx: Bool) in
             var seen = Set<String>()
             // 表頭（「省份」「國家名稱」）不是項目
             let header = { (x: String) in x.hasPrefix(noun) && x.count <= noun.count + 2 }
-            return (g.items.filter { $0 != noun && $0 != subject && !header($0) && seen.insert($0).inserted }, g.host)
+            return (g.items.filter { $0 != noun && $0 != subject && !header($0) && seen.insert($0).inserted }, g.host, g.ctx)
         }.filter { g in
-            guard let suffix else { return g.items.count >= 4 }
+            // 沒有明確字尾（國家、景點……）時，這一串前後一定要提到主題，不然很可能是側欄
+            guard let suffix else { return g.items.count >= 4 && g.ctx }
             let fit = g.items.filter { $0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府") }.count
             return fit * 2 >= g.items.count && fit >= 3
         }

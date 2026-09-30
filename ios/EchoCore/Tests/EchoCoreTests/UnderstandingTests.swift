@@ -34,7 +34,7 @@ final class UnderstandingTests: XCTestCase {
         ]
         let v = Understanding.voteNumber(ev, units: ["公里", "km"], subject: "太陽 地球")
         XCTAssertEqual(v?.votes, 2)
-        XCTAssertEqual(v?.others.first, "1.47億公里")
+        XCTAssertTrue(v?.others.isEmpty == true, "只有一個網站說的數字不算另一種說法")
         XCTAssertTrue(v?.shown.contains("1.496億公里") == true, v?.shown ?? "nil")
         // 主題本身的數字不算（台北101 的 101）
         let t = Understanding.voteNumber([.init(text: "台北101高508公尺，地上101層。", host: "x")], units: ["公尺"], subject: "台北101")
@@ -64,6 +64,10 @@ final class UnderstandingTests: XCTestCase {
         let jp = "都道府縣列表、按地區、青森縣、北海道、岩手縣、東京都、京都府、島嶼、都道府縣"
         XCTAssertEqual(Understanding.extractList([.init(text: jp, host: "w")], noun: "縣", subject: "日本").items,
                        ["青森縣", "北海道", "岩手縣", "東京都", "京都府"])
+        // 同一頁的側欄（經濟學導覽）沒有提到北歐，不能當成北歐的國家
+        let side = "北歐\n北歐位於歐洲北部。\n資本主義\n市場經濟\n自由市場\n混合經濟\n國家資本主義\n福利資本主義"
+        XCTAssertTrue(Understanding.extractList([.init(text: side, host: "w")], noun: "國家", subject: "北歐").items.isEmpty)
+        XCTAssertEqual(Understanding.frame("台灣現在人口有多少").subject, "台灣人口")
         let intro = "本文將透過地理分區、政治實體等不同角度，帶你詳細瞭解。"
         XCTAssertTrue(Understanding.extractList([.init(text: intro, host: "y")], noun: "國家", subject: "歐洲").items.isEmpty)
     }
