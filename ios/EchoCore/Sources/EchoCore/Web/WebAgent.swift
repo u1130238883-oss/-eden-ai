@@ -577,7 +577,7 @@ public enum WebAgent {
                 let url: String = String(p.0.url.suffix(30))
                 parts.append(WebSearch.host(p.0.url) + "[" + url + "] lines=\(lines.count) table=\(rows.count) head=" + head)
             }
-            res.debug = "pages=" + parts.joined(separator: " || ") + " LIST " + Understanding.lastListDebug
+            res.debug = String(("pages=" + parts.joined(separator: " || ") + " LIST " + Understanding.lastListDebug).prefix(2500))
         }
         res.answered = solved?.ok ?? true
         return res

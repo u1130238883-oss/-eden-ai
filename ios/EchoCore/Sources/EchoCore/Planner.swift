@@ -118,7 +118,7 @@ public enum Planner {
         case .days(let p, let topic):
             return days(D, palace: p, topic: topic, now: now, R)
         case .compareYears(let ys):
-            return compare(ys.map { y in (label: "\(y)年", row: D.year(y), extra: D.luckPeriod(y).row) }, kind: "流年", R)
+            return compareYears(D, ys, R)
         case .compareMonths(let ms):
             return compare(ms.map { (y, m) in (label: "\(y)年\(m)月", row: D.month(m, year: y), extra: D.year(y)) }, kind: "流月", R)
         }
@@ -164,6 +164,71 @@ public enum Planner {
         }
         let card = FortuneCard(title: "比較 · \(kind)", headline: items.map(\.label).joined(separator: " vs "),
                                details: items.map { "\($0.label) \(NT.label($0.row.palace)) \($0.row.reading.text)" })
+        return ReaderOutput(text: R.polish(text), card: card, follow: nil)
+    }
+
+    /// 比較流年：不只看流年本身，還要看每一年引動了大運的哪些方面（幾個、好壞、各代表什麼），再從含義下結論
+    static func compareYears(_ D: Destiny, _ ys: [Int], _ R: Reader) -> ReaderOutput {
+        struct Y { let y: Int; let row: NTRow; let trig: [NTRow]; let good: Int; let bad: Int; let score: Double }
+        let items: [Y] = ys.map { y in
+            let row = D.year(y), trig = D.triggeredAspects(y)
+            let g = trig.filter { $0.reading.verdict == .good }.count, b = trig.filter { $0.reading.verdict == .bad }.count
+            // 流年本身的好壞佔一部分；被引動的方面越多好的、越少壞的越順
+            let base = Double([2, 1, 0][row.reading.verdict.rawValue])
+            return Y(y: y, row: row, trig: trig, good: g, bad: b, score: base + 1.2 * Double(g) - 1.0 * Double(b) + 0.3 * Double(trig.count - g - b))
+        }
+        var text = "比較看看（先看流年本身，再看它引動了大運的哪些方面）：\n"
+        for it in items {
+            text += "\n【\(it.y)年】流年在\(NT.label(it.row.palace))，判讀「\(it.row.reading.text)」——\(R.verdictLine(it.row.reading.verdict, it.row.palace))\n"
+            if it.trig.isEmpty {
+                text += "這一年沒有引動大運的任何方面，比較平淡，變化主要來自流年本身。\n"
+            } else {
+                let neutral = it.trig.count - it.good - it.bad
+                text += "引動大運 \(it.trig.count) 個方面（好 \(it.good)、壞 \(it.bad)" + (neutral > 0 ? "、平 \(neutral)" : "") + "）：\n"
+                for a in it.trig {
+                    text += "• 第\(a.palace)方面 \(NT.label(a.palace))「\(a.reading.text)」：" + FlowReading.interpret(a) + "\n"
+                }
+            }
+        }
+        let ranked = items.sorted { $0.score > $1.score }
+        if let a = ranked.first, let b = ranked.dropFirst().first {
+            text += "\n🧭 結論："
+            if a.score - b.score < 0.5 {
+                text += "兩年差不多，差別在哪些方面被引動——"
+            } else {
+                text += "\(a.y)年比較好。"
+            }
+            // 從被引動的方面的含義說明為什麼
+            func themes(_ rows: [NTRow], _ v: NTVerdict) -> String {
+                rows.filter { $0.reading.verdict == v }.map { NT.palaceName($0.palace) }.joined(separator: "、")
+            }
+            for it in [a, b] {
+                let good = themes(it.trig, .good), bad = themes(it.trig, .bad)
+                var line = "\(it.y)年"
+                if it.trig.isEmpty { line += "沒有引動，看流年本身" }
+                else {
+                    if !good.isEmpty { line += "可以把握「\(good)」" }
+                    if !bad.isEmpty { line += (good.isEmpty ? "" : "，") + "要小心「\(bad)」" }
+                    if good.isEmpty && bad.isEmpty { line += "引動的方面都是平的，不好不壞" }
+                }
+                text += line + "；"
+            }
+            text.removeLast()
+            text += "。"
+            // 被引動的方面如果起因都在同一宮，那一宮就是這一年的關鍵
+            for it in items where it.trig.count >= 2 {
+                let causes = Dictionary(grouping: it.trig, by: { $0.reading.cause })
+                if let (c, rows) = causes.max(by: { $0.value.count < $1.value.count }), rows.count * 2 > it.trig.count {
+                    text += "\n\(it.y)年被引動的方面，起因\(rows.count == it.trig.count ? "全部" : "大多")在\(NT.label(c))（\(NT.keywords(c, 3))），"
+                        + "所以這一年的起伏關鍵在「\(NT.palaceName(c))」這件事上，處理好了，其他方面也會跟著順。"
+                }
+            }
+            if a.good > 0 && a.row.reading.verdict == .bad {
+                text += "雖然\(a.y)年流年本身判讀是壞，但引動的方面裡有好的，代表有機會可以把握，不是一路不順。"
+            }
+        }
+        let card = FortuneCard(title: "比較 · 流年", headline: ys.map { "\($0)年" }.joined(separator: " vs "),
+                               details: items.map { "\($0.y)年 \(NT.label($0.row.palace)) \($0.row.reading.text)・引動\($0.trig.count)（好\($0.good) 壞\($0.bad)）" })
         return ReaderOutput(text: R.polish(text), card: card, follow: nil)
     }
 

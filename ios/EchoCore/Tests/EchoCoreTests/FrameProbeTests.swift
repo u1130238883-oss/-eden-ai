@@ -13,3 +13,13 @@ final class FrameProbeTests: XCTestCase {
 }
 
 
+
+final class CompareProbeTests: XCTestCase {
+    func testCompareProbe() throws {
+        guard ProcessInfo.processInfo.environment["PROBE_CMP"] != nil else { throw XCTSkip("probe") }
+        let D = Destiny(BirthDay(year: 2006, month: 1, day: 14))
+        for y in [2026, 2027] {
+            FileHandle.standardError.write("C> \(y) year=\(D.year(y).text) trig=\(D.triggeredAspects(y).map(\.text))\n".data(using: .utf8)!)
+        }
+    }
+}

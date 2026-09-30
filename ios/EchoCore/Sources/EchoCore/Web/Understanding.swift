@@ -368,8 +368,15 @@ extension Understanding {
             var recent: [String] = []
             // 這一頁的開頭就在講主題（「歐洲國家列表」），頁面裡的表格就算有脈絡
             func near() -> Bool { !subj.isEmpty && recent.suffix(6).contains { $0.contains(subj) } }
+            // 手機版維基的表格：每一格各自一行，一列變成一小串短行（「阿爾巴尼亞／地拉那／東歐…」），
+            // 列和列之間被數字（人口、面積）隔開。把這些小串收集起來，連續很多串就是一張表，每串的第一個就是名稱
+            var rowRuns: [[String]] = []
             // 連續短行多半是導覽列、側欄：只有字尾明確（縣、省……）的名單才採用，所以不算有主題脈絡
-            func flush() { if run.count >= 5 { groups.append((run, p.host, false)) }; run = [] }
+            func flush() {
+                if run.count >= 5 { groups.append((run, p.host, false)) }
+                if run.count >= 2 && run.count <= 8 { rowRuns.append(run) } else if !rowRuns.isEmpty && run.count > 8 { rowRuns.append([]) }
+                run = []
+            }
             for line in p.text.components(separatedBy: "\n") {
                 defer { recent.append(line) }
                 if line.contains("｜") {
@@ -422,6 +429,20 @@ extension Understanding {
             }
             flush()
             flushTable()
+            // 把連續的小串（每一列）的第一個拿出來組成一欄；夠多列才算一張表
+            var col: [String] = []
+            func flushCol() {
+                if col.count >= 8 {
+                    let pageAbout = !subj.isEmpty && p.text.components(separatedBy: "\n").prefix(20).contains { $0.contains(subj) }
+                    groups.append((col, pageAbout ? "★" + p.host : p.host, pageAbout))
+                }
+                col = []
+            }
+            for r in rowRuns {
+                if r.isEmpty { flushCol(); continue }
+                col.append(r[0])
+            }
+            flushCol()
             // 作品、書、電影、歌：直接收講到主題的句子裡的《書名》
             if ["作品", "書", "小說", "電影", "歌", "專輯", "劇", "著作", "名著", "戲劇"].contains(where: { noun.contains($0) }) {
                 var titles: [String] = []
@@ -448,7 +469,8 @@ extension Understanding {
             // 沒有明確字尾（國家、景點……）時，這一串前後一定要提到主題，不然很可能是側欄
             guard let suffix else { return g.items.count >= 4 && g.ctx }
             let fit = g.items.filter { $0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府") }.count
-            return fit * 2 >= g.items.count && fit >= 3
+            // 多數符合，或是符合的夠多（一張表裡混了「地區」也沒關係，後面只留符合的）
+            return (fit * 2 >= g.items.count && fit >= 3) || fit >= 5
         }
         // 沒有字尾可以檢查時，要有第二份資料印證：另一串（另一句、另一個網站、表格）至少有兩個相同的項目
         var confirmed = good
@@ -458,7 +480,12 @@ extension Understanding {
         }
         lastListDebug = "groups=" + groups.map { "\($0.host):\($0.items.count):\($0.items.prefix(3).joined(separator: "/"))" }.joined(separator: " | ")
             + " good=\(good.count) confirmed=\(confirmed.count)"
-        guard var best = confirmed.max(by: { $0.items.count < $1.items.count }) else { return ([], []) }
+        // 有字尾時比「符合的有幾個」，不是比整串多長（城市清單很長，但裡面的「省」很少）
+        func fitCount(_ g: (items: [String], host: String, ctx: Bool)) -> Int {
+            guard let suffix else { return g.items.count }
+            return g.items.filter { $0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府") }.count
+        }
+        guard var best = confirmed.max(by: { fitCount($0) < fitCount($1) }) else { return ([], []) }
         if let suffix {
             best.items = best.items.filter { ($0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府")) && !$0.contains("列表") && !$0.hasPrefix(noun) }
         }

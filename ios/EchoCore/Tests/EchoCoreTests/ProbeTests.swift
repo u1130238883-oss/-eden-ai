@@ -13,9 +13,12 @@ final class ProbeTests: XCTestCase {
         let engine = try t.makeEngine(seed: 5)
         var ctx = EchoEngine.Context(now: t.date(2026, 9, 30, 11))
         ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 7, minute: 0, male: true)
+        var history: [ChatTurn] = []
+        let keep = ProcessInfo.processInfo.environment["PROBE_HIST"] != nil
         for q in qs.split(separator: "|").map(String.init) {
-            let r = engine.reply(to: q, context: ctx)
-            FileHandle.standardError.write("PROBE> \(q)\n[\(r.turn.source.rawValue)] web=\(r.webQuery ?? "-")\n\(r.turn.text.prefix(160))\n\n".data(using: .utf8)!)
+            let r = engine.reply(to: q, history: keep ? history : [], context: ctx)
+            history += [ChatTurn(role: .user, text: q), r.turn]
+            FileHandle.standardError.write("PROBE> \(q)\n[\(r.turn.source.rawValue)] web=\(r.webQuery ?? "-")\n\(r.turn.text.prefix(ProcessInfo.processInfo.environment["PROBE_FULL"] != nil ? 3000 : 160))\n\n".data(using: .utf8)!)
         }
     }
 }

@@ -175,8 +175,9 @@ struct FortuneCardView: View {
                         ForEach(0..<60, id: \.self) { _ in Rectangle().fill(color.opacity(0.05)).frame(height: 1) }
                     }
                 }
-                .clipped()
             )
+            // 掃描線比內容高時會往上溢出、蓋住標題列（「上網查到的資料」只剩一半）：背景要裁在內容範圍內
+            .clipped()
         }
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(color.opacity(0.7), lineWidth: 1.5))

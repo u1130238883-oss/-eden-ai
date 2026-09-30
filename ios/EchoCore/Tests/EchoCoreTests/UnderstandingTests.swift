@@ -97,6 +97,19 @@ final class UnderstandingTests: XCTestCase {
         XCTAssertTrue(Understanding.extractList([.init(text: lone, host: "w")], noun: "國家", subject: "北歐").items.isEmpty)
         let works = "莎士比亞的作品有《哈姆雷特》、《馬克白》、《李爾王》、《奧賽羅》。"
         XCTAssertEqual(Understanding.extractList([.init(text: works, host: "w")], noun: "作品", subject: "莎士比亞").items.first, "《哈姆雷特》")
+        // 手機版維基：每一格一行、列和列之間被數字隔開 → 每列第一個就是國家
+        var flat = "歐洲國家和地區列表\n以下是位於歐洲的國家列表\n"
+        for (c, cap) in [("阿爾巴尼亞", "地拉那"), ("安道爾", "安道爾城"), ("奧地利", "維也納"), ("比利時", "布魯塞爾"), ("保加利亞", "索菲亞"),
+                         ("克羅埃西亞", "札格瑞布"), ("捷克", "布拉格"), ("丹麥", "哥本哈根"), ("愛沙尼亞", "塔林"), ("芬蘭", "赫爾辛基")] {
+            flat += "\(c)\n\(cap)\n歐洲\n歐元\n28748\n"
+        }
+        let fe = Understanding.extractList([.init(text: flat, host: "zh.wikipedia.org")], noun: "國家", subject: "歐洲")
+        XCTAssertEqual(fe.items.count, 10, "\(fe.items)")
+        XCTAssertEqual(fe.items.first, "阿爾巴尼亞")
+        // 加拿大：一張表混了「地區」、另一串是很長的城市清單 → 要的是「省」最多的那張
+        let ca = "省（10）\n安大略省\n魁北克省\n新斯科細亞省\n新布藍茲維省\n曼尼托巴省\n卑詩省\n愛德華王子島省\n薩斯喀徹溫省\n亞伯達省\n紐芬蘭與拉布拉多省\n育空地區\n西北地區\n努納福特地區\n主要城市\n多倫多\n蒙特婁\n溫哥華\n卡加利\n渥太華\n艾德蒙頓\n魁北克市\n溫尼伯\n漢米爾頓\n基奇納\n倫敦\n維多利亞\n哈利法克斯"
+        let cr = Understanding.extractList([.init(text: ca, host: "zh.wikipedia.org")], noun: "省", subject: "加拿大")
+        XCTAssertEqual(cr.items.count, 10, "\(cr.items)")
         let intro = "本文將透過地理分區、政治實體等不同角度，帶你詳細瞭解。"
         XCTAssertTrue(Understanding.extractList([.init(text: intro, host: "y")], noun: "國家", subject: "歐洲").items.isEmpty)
     }
@@ -266,5 +279,27 @@ final class MindTests: XCTestCase {
         XCTAssertTrue(Mind.isCorrection("不對吧"))
         XCTAssertTrue(Mind.isCorrection("你答錯了"))
         XCTAssertFalse(Mind.isCorrection("對不對的問題我也不知道要怎麼跟他說才好"))
+    }
+}
+
+/// 比較流年要看引動：2006-01-14 生，2026 引動 2 個（都壞），2027 引動 4 個（好 1、壞 1、平 2）
+final class YearCompareTests: XCTestCase {
+    func testTriggersInComparison() throws {
+        let D = Destiny(BirthDay(year: 2006, month: 1, day: 14))
+        XCTAssertEqual(D.triggeredAspects(2026).count, 2)
+        XCTAssertEqual(D.triggeredAspects(2027).count, 4)
+        #if os(Linux)
+        let t = EchoCoreTests(name: "helper", testClosure: { _ in })
+        #else
+        let t = EchoCoreTests()
+        #endif
+        let engine = try t.makeEngine(seed: 1)
+        var ctx = EchoEngine.Context(now: t.date(2026, 9, 30, 11))
+        ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 7, minute: 0, male: true)
+        let r = engine.reply(to: "今年和明年哪個好", context: ctx).turn.text
+        XCTAssertTrue(r.contains("引動大運 2 個方面（好 0、壞 2）"), r)
+        XCTAssertTrue(r.contains("引動大運 4 個方面（好 1、壞 1、平 2）"), r)
+        XCTAssertTrue(r.contains("起因全部在7宮"), r)
+        XCTAssertTrue(r.contains("結論"), r)
     }
 }
