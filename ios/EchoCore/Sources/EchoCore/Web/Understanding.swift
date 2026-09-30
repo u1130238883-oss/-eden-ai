@@ -367,6 +367,7 @@ extension Understanding {
                 if tableStarted { flushTable() }
                 // 名單是用「、」隔開的；「，」隔開的是一句話裡的子句，不是項目
                 var parts = line.components(separatedBy: "、")
+                let rawFirst = parts.first ?? ""
                 if parts.count >= 4 {
                     // 「北歐國家包括挪威、…、冰島等五國。」：去掉開頭的「…包括」和結尾的「等…」
                     if var f = parts.first {
@@ -394,8 +395,8 @@ extension Understanding {
                     // 「北歐國家包括…」「北歐五國是…」這種開頭本身就是在列名單，不用別的資料印證
                     // 「北歐國家包括」「北歐五國是」「北歐理事會成員國包括」：主題後面不遠處出現名詞（或它的第一個字），接著是在列名單的字
                     let key1 = NSRegularExpression.escapedPattern(for: String(noun.prefix(1)))
-                    let intro = !subj.isEmpty && line.range(of: NSRegularExpression.escapedPattern(for: subj) + "[^，。、]{0,8}" + key1
-                        + "[^，。、]{0,3}(包括|包含|分別是|分別為|有|是|為|：|:)", options: .regularExpression) != nil
+                    let intro = !subj.isEmpty && rawFirst.range(of: NSRegularExpression.escapedPattern(for: subj) + "[^，。、]{0,8}" + key1
+                        + "[^，。、]{0,3}(包括|包含|分別是|分別為|有|是|為|：|:)[^，。、]{1,8}$", options: .regularExpression) != nil
                     if its.count >= 4 { groups.append((its, intro ? "★" + p.host : p.host, line.contains(subj) && line.contains(noun) || intro)) }
                     flush()
                 } else if let it = item(line) {
@@ -546,7 +547,8 @@ extension WebAgent {
         case let .list(noun):
             let r = Understanding.extractList(pages, noun: noun, subject: fr.subject)
             guard r.items.count >= 4 else { return ("", false) }
-            return ("一共找到 \(r.items.count) 個\(noun)：\n" + r.items.joined(separator: "、")
+            let head = r.items.count >= 10 ? "一共找到 \(r.items.count) 個\(noun)：" : "我找到的\(noun)有這些（不一定是全部）："
+            return (head + "\n" + r.items.joined(separator: "、")
                     + "\n（名單整理自 " + r.hosts.joined(separator: "、") + "；不同資料的算法可能略有差異）", true)
         case let .reason(pred):
             let rs = Understanding.extractReason(sents, pred: pred)
@@ -564,8 +566,35 @@ extension WebAgent {
         case .place:
             // 問首都、位置：句子要講到這個地方本身，還要有「首都」「位於」這類字
             let marks = fr.searches.first?.contains("首都") == true ? ["首都"] : ["位於", "位在", "坐落", "在"]
-            // 最好的句子是直接說「法國的首都是巴黎」「東京是日本的首都」；「位於法國首都巴黎的足球俱樂部」只是順帶提到
+            // 問首都：把每一句「法國首都巴黎…」「東京是日本的首都」裡的地名抓出來投票，比挑一句話可靠
             let sj = fr.subject
+            if marks == ["首都"] {
+                var votes: [String: Int] = [:]
+                let esc = NSRegularExpression.escapedPattern(for: sj)
+                for e in sents {
+                    for pat in [esc + "的?首都(?:是|為|在)?([\\p{Han}]{2,4})", "([\\p{Han}]{2,4})(?:是|為)" + esc + "的?首都"] {
+                        guard let re = try? NSRegularExpression(pattern: pat) else { continue }
+                        for m in re.matches(in: e.text, range: NSRange(e.text.startIndex..., in: e.text)) {
+                            guard let r = Range(m.range(at: 1), in: e.text) else { continue }
+                            let cand = String(e.text[r])
+                            // 「巴黎舉辦」「巴黎的足」：每個前綴都投一票，最後取出現最多、又最長的那個
+                            for n in 2...cand.count { votes[String(cand.prefix(n)), default: 0] += 1 }
+                        }
+                    }
+                }
+                let bad = ["首都", "圈", "都會", "城市", "地區", "中心"]
+                if let top = votes.filter({ k, _ in !bad.contains { k.contains($0) } }).max(by: { ($0.value, $0.key.count) < ($1.value, $1.key.count) }),
+                   top.value >= 1 {
+                    // 同樣票數時，較長的名字只有在不是「名字＋雜字」時才採用
+                    let name = votes.filter { $0.value == top.value && top.key.hasPrefix($0.key) }.min(by: { $0.key.count < $1.key.count })?.key ?? top.key
+                    // 依據挑最直接的那句（「東京是日本的首都」勝過「日本的首都圈…」）
+                    let direct = ["\(name)是\(sj)的首都", "\(sj)的首都是\(name)", "\(sj)首都是\(name)", "\(sj)的首都為\(name)"]
+                    let ex = sents.first { e in direct.contains { e.text.contains($0) } }
+                        ?? sents.first { $0.text.contains(name) && $0.text.contains("首都") && !$0.text.contains("圈") }
+                        ?? sents.first { $0.text.contains(name) && $0.text.contains("首都") }
+                    return ("答案：\(name)（\(top.value) 句資料都這樣寫）" + (ex.map { "\n依據：" + WebSearch.clip($0.text, 160) + "（\($0.host)）" } ?? ""), true)
+                }
+            }
             let best = marks.flatMap { m in ["\(sj)的\(m)是", "\(sj)\(m)是", "\(sj)的\(m)為", "\(sj)\(m)為", "是\(sj)的\(m)", "為\(sj)的\(m)", "\(sj)，\(m)", "\(sj)的\(m)：", "\(m)：", "\(m)為"] }
             let direct = marks.map { sj + $0 } + marks.map { sj + "的" + $0 }
             guard let e = sents.first(where: { e in best.contains { e.text.contains($0) } && !e.text.contains("圈") })

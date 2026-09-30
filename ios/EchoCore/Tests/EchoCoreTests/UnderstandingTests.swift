@@ -126,12 +126,16 @@ final class UnderstandingTests: XCTestCase {
         let fr = Understanding.frame("法國的首都是哪裡")
         let c = [Understanding.Evidence(text: "巴黎聖日耳曼是一家位於法國首都巴黎的足球俱樂部。", host: "w"),
                  Understanding.Evidence(text: "法國的首都是巴黎。", host: "w")]
-        XCTAssertEqual(WebAgent.solve(fr, pages: c, snippets: c).text, "答案：法國的首都是巴黎。（w）")
+        XCTAssertTrue(WebAgent.solve(fr, pages: c, snippets: c).text.hasPrefix("答案：巴黎"), WebAgent.solve(fr, pages: c, snippets: c).text)
+        let olympic = [Understanding.Evidence(text: "2024年夏季奧運會在法國首都巴黎舉辦。", host: "w"),
+                       Understanding.Evidence(text: "法蘭西島是法國首都巴黎的首都圈。", host: "w")]
+        XCTAssertTrue(WebAgent.solve(fr, pages: olympic, snippets: olympic).text.hasPrefix("答案：巴黎（"), WebAgent.solve(fr, pages: olympic, snippets: olympic).text)
         let jp = Understanding.frame("日本的首都是哪裡")
         let j = [Understanding.Evidence(text: "日本的首都圈指的是以首都東京為中心的都會區。", host: "w"),
                  Understanding.Evidence(text: "東京是日本的首都。", host: "w")]
+        XCTAssertTrue(WebAgent.solve(jp, pages: j, snippets: j).text.hasPrefix("答案：東京"), WebAgent.solve(jp, pages: j, snippets: j).text)
         XCTAssertTrue(WebAgent.solve(jp, pages: j, snippets: j).text.contains("東京是日本的首都"))
-        let nordic = "北歐理事會的成員國包括丹麥、芬蘭、冰島、挪威和瑞典。\n瑞典的移民多數來自北歐國家、芬蘭、土耳其、德國、伊朗。"
+        let nordic = "北歐理事會的成員國包括丹麥、芬蘭、冰島、挪威和瑞典。\n北歐國家中瑞典人口最多，移民多數來自芬蘭、土耳其、德國、伊朗。"
         XCTAssertEqual(Understanding.extractList([.init(text: nordic, host: "w")], noun: "國家", subject: "北歐").items, ["丹麥", "芬蘭", "冰島", "挪威", "瑞典"])
     }
 

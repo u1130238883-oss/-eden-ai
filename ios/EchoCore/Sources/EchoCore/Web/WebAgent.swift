@@ -380,6 +380,15 @@ public enum WebAgent {
                 answer = "我在網路上沒找到確切的數字，下面是找到的相關資料，建議再確認。"
             }
         }
+        // 一般問題：開頭那句至少要講到主題（問感冒卻回咖啡豆保存法的，換成真的講到主題的句子）
+        if let fr, case .open = fr.want, zh, !answer.isEmpty {
+            let key = termSet(Understanding.plain(fr.subject)).filter { $0.contains(where: isCJK) }
+            let mentions = { (t: String) in key.isEmpty || score(t, key) >= max(1, key.count / 3) }
+            if !mentions(answer) {
+                if let f = ranked.first(where: { mentions($0.text) && $0.text.count >= 20 }) { answer = WebSearch.clip(f.text, 240) + "（\(f.host)）" }
+                else { answer = "我找到的資料跟你問的主題對不太上，下面是比較接近的內容，僅供參考。" }
+            }
+        }
         if let fr, let s = solved {
             if s.ok && !s.text.isEmpty { answer = s.text }
             else if !s.ok {
