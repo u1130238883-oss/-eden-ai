@@ -90,7 +90,7 @@ public enum Understanding {
         "長": ("長度", ["公里", "公尺", "米"]),
         "大": ("面積", ["平方公里", "公頃"]),
         "久": ("時間", ["年", "天", "小時", "分鐘"]),
-        "快": ("速度", ["公里", "公尺", "km/s", "km/h", "英里"]),
+        "快": ("速度", ["公里", "公尺", "米", "km/s", "km/h", "m/s", "英里"]),
     ]
 
     static func unitsFor(_ attr: String) -> [String] {
@@ -153,7 +153,8 @@ extension Understanding {
         // 要一個名稱：「世界上最高的山是哪座」「美國總統是誰」
         if let m = match(t, #"^(.+?)是(?:哪座|哪一座|哪個|哪一個|哪位|哪一位|誰|哪國|哪家|哪一家)$"#) {
             let who = t.hasSuffix("誰") || t.hasSuffix("位")
-            return F(m[1], who ? .person : .open, [m[1], t], ["\(m[1]) 是"], [m[1]],
+            let compact = m[1].replacingOccurrences(of: "上", with: "").replacingOccurrences(of: "的", with: "")
+            return F(m[1], who ? .person : .open, [m[1], t], [compact, compact.hasSuffix("山") ? String(compact.dropLast()) + "峰" : compact + " 是"], [m[1]],
                      "你想知道「\(m[1])」是\(who ? "誰" : "哪一個") → 要一個明確的名稱，再說明根據。")
         }
 
@@ -265,11 +266,12 @@ extension Understanding {
     /// 數字＋單位（「38.4萬公里」「384,400 公里」），換算成同一個數值方便比對
     static func numbers(_ s: String, units: [String], rates: Bool = false) -> [(value: Double, shown: String)] {
         let alt = units.sorted { $0.count > $1.count }.map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|")
-        guard !alt.isEmpty, let re = try? NSRegularExpression(pattern: #"(\d[\d,]*(?:\.\d+)?)\s*(萬|億)?\s*(?:"# + alt + ")") else { return [] }
+        // 「299,792,458」「299 792 458」（千位用逗號或空格）、「1.496」都要認得
+        guard !alt.isEmpty, let re = try? NSRegularExpression(pattern: #"(\d{1,3}(?:[, \x{2009}\x{202F}\x{00A0}]\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*(萬|億)?\s*(?:"# + alt + ")") else { return [] }
         var out: [(Double, String)] = []
         for m in re.matches(in: s, range: NSRange(s.startIndex..., in: s)) {
             guard let r = Range(m.range, in: s), let nr = Range(m.range(at: 1), in: s),
-                  var v = Double(s[nr].replacingOccurrences(of: ",", with: "")) else { continue }
+                  var v = Double(String(s[nr].filter { $0.isNumber || $0 == "." })) else { continue }
             // 「每平方公里 113,703 人」「人口密度」是比率，不是問的那個數量
             let before = String(s[s.index(r.lowerBound, offsetBy: -min(8, s.distance(from: s.startIndex, to: r.lowerBound)))..<r.lowerBound])
             let after = String(s[r.upperBound..<s.index(r.upperBound, offsetBy: min(3, s.distance(from: r.upperBound, to: s.endIndex)))])
@@ -288,6 +290,8 @@ extension Understanding {
         for e in ev {
             // 「比實際數值低了26%」這種歷史上的估計不是答案
             if ["比實際", "當時估計", "古代", "曾估計", "誤差"].contains(where: { e.text.contains($0) }) { continue }
+            // 「19世紀…得出 315000 km/s」：講歷史上怎麼測出來的，不是現在的答案
+            if e.text.contains("世紀") && ["得出", "計算出", "測得", "估算", "測量法"].contains(where: { e.text.contains($0) }) { continue }
             // 主題本身的數字（「台北101」的 101）不算
             let body = e.text.replacingOccurrences(of: subject, with: "")
             // 「1公尺」這種定義用的數字通常不是答案

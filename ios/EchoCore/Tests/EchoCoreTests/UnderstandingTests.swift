@@ -71,6 +71,7 @@ final class UnderstandingTests: XCTestCase {
         let side = "北歐\n北歐位於歐洲北部。\n資本主義\n市場經濟\n自由市場\n混合經濟\n國家資本主義\n福利資本主義"
         XCTAssertTrue(Understanding.extractList([.init(text: side, host: "w")], noun: "國家", subject: "北歐").items.isEmpty)
         XCTAssertEqual(Understanding.frame("台灣現在人口有多少").subject, "台灣人口")
+        XCTAssertTrue(Understanding.frame("世界上最高的山是哪座").retry.contains("世界最高峰"))
         let clauses = "松德海峽大橋開通後，故海關檢查亦隨之鬆綁，瑞典及挪威之間，海關或護照檢查則更加寬鬆，不過北歐公民除護照外，並配合機票，通常亦可放行。"
         XCTAssertTrue(Understanding.extractList([.init(text: clauses, host: "w")], noun: "國家", subject: "北歐").items.isEmpty)
         let desc = "歐洲全稱歐羅巴洲、是世界人口第三多的洲、僅次於亞洲和非洲、最北端是挪威的北角、其與亞洲合稱為歐亞大陸"
@@ -118,6 +119,8 @@ final class UnderstandingTests: XCTestCase {
     func testSolveNumbersAndPlaces() {
         let light = Understanding.frame("光速有多快")
         let ev = [Understanding.Evidence(text: "惠更斯計算出光速大約為220000 km/s，比實際數值低了26%。", host: "zh.wikipedia.org"),
+                  Understanding.Evidence(text: "斐索在19世紀發明了飛行時間測量法，並得出315000 km/s的光速數值。", host: "zh.wikipedia.org"),
+                  Understanding.Evidence(text: "真空中的光速為299 792 458米/秒。", host: "zh.wikipedia.org"),
                   Understanding.Evidence(text: "光速在真空中為每秒299,792,458公尺，這是精確值，1公尺的定義就是根據光速。", host: "zh.wikipedia.org")]
         XCTAssertTrue(WebAgent.solve(light, pages: ev, snippets: ev).text.contains("299,792,458"), WebAgent.solve(light, pages: ev, snippets: ev).text)
         let w = Understanding.frame("台北101多重")

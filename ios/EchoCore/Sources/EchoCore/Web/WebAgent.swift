@@ -388,6 +388,8 @@ public enum WebAgent {
                 case .list: answer = "我查了兩輪，沒找到一份完整的名單，下面是找到的相關資料。"
                 case .reason: answer = "我查了兩輪，沒找到把原因講清楚的資料，下面是找到的相關內容，僅供參考。"
                 case .steps: answer = "我查了兩輪，沒找到清楚的步驟，下面是找到的相關內容；你也可以講得更具體一點，我再查一次。"
+                case .open where fr.restated.contains("明確的名稱"):
+                    answer = "我查了兩輪，沒找到直接回答「\(fr.subject)是哪一個」的資料，下面是找到的相關內容；你也可以換個說法再問我一次。"
                 case let .compare(a, b): answer = "我查了兩輪，沒找到把「\(a)」和「\(b)」直接放在一起比較的可靠資料。比較這類東西，可以看價格、耐用度、使用習慣、跟你已有的東西合不合；告訴我你的預算和用途，我再幫你查得更準。"
                 default: break
                 }
