@@ -82,8 +82,11 @@ final class UnderstandingTests: XCTestCase {
         // 同一句沒同時講到主題和名詞的一串，不算名單
         let states = "春秋時期有秦國、曹國、鄭國、梁國等諸侯國。\n北歐的氣候寒冷。"
         XCTAssertTrue(Understanding.extractList([.init(text: states, host: "w")], noun: "國家", subject: "北歐").items.isEmpty)
-        let nordic = "北歐國家包括挪威、瑞典、芬蘭、丹麥、冰島。"
+        let nordic = "北歐國家包括挪威、瑞典、芬蘭、丹麥、冰島。\n北歐國家的首都：挪威、瑞典、丹麥、芬蘭、冰島都有自己的首都。"
         XCTAssertEqual(Understanding.extractList([.init(text: nordic, host: "w")], noun: "國家", subject: "北歐").items.count, 5)
+        // 只有一串、沒人印證的不算（「經濟競爭力、公民自由…」）
+        let lone = "北歐國家在經濟競爭力、公民自由、社會福利、教育水準方面都名列前茅。"
+        XCTAssertTrue(Understanding.extractList([.init(text: lone, host: "w")], noun: "國家", subject: "北歐").items.isEmpty)
         let works = "莎士比亞的作品有《哈姆雷特》、《馬克白》、《李爾王》、《奧賽羅》。"
         XCTAssertEqual(Understanding.extractList([.init(text: works, host: "w")], noun: "作品", subject: "莎士比亞").items.first, "《哈姆雷特》")
         let intro = "本文將透過地理分區、政治實體等不同角度，帶你詳細瞭解。"
@@ -114,17 +117,19 @@ final class UnderstandingTests: XCTestCase {
 
     func testSolveNumbersAndPlaces() {
         let light = Understanding.frame("光速有多快")
-        let ev = [Understanding.Evidence(text: "光速在真空中為每秒299,792,458公尺，這是精確值，1公尺的定義就是根據光速。", host: "zh.wikipedia.org")]
+        let ev = [Understanding.Evidence(text: "惠更斯計算出光速大約為220000 km/s，比實際數值低了26%。", host: "zh.wikipedia.org"),
+                  Understanding.Evidence(text: "光速在真空中為每秒299,792,458公尺，這是精確值，1公尺的定義就是根據光速。", host: "zh.wikipedia.org")]
         XCTAssertTrue(WebAgent.solve(light, pages: ev, snippets: ev).text.contains("299,792,458"), WebAgent.solve(light, pages: ev, snippets: ev).text)
         let w = Understanding.frame("台北101多重")
         let jet = [Understanding.Evidence(text: "台北國際航太展上，發動機推力為4,200公斤。", host: "w")]
         XCTAssertFalse(WebAgent.solve(w, pages: jet, snippets: jet).ok)
         let fr = Understanding.frame("法國的首都是哪裡")
-        let cap = [Understanding.Evidence(text: "部分國家政治中心與經濟中心分離，例如美國的首都為華盛頓。", host: "w"),
+        let cap = [Understanding.Evidence(text: "在大部分國家，首都是國家最大的城市，如英國倫敦、法國巴黎等。", host: "w"),
                    Understanding.Evidence(text: "法國的首都是巴黎，也是最大的城市。", host: "w")]
         XCTAssertTrue(WebAgent.solve(fr, pages: cap, snippets: cap).text.contains("巴黎"))
         let mt = Understanding.frame("世界上最高的山是哪座")
         let m = [Understanding.Evidence(text: "世界上已知最高的石筍高達70米。", host: "w"),
+                 Understanding.Evidence(text: "2013年山同洞被評為世界上最大的洞穴。", host: "w"),
                  Understanding.Evidence(text: "珠穆朗瑪峰是世界上最高的山峰，海拔8,849公尺。", host: "w")]
         XCTAssertTrue(WebAgent.solve(mt, pages: m, snippets: m).text.contains("珠穆朗瑪峰"), WebAgent.solve(mt, pages: m, snippets: m).text)
     }

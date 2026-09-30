@@ -284,20 +284,27 @@ extension Understanding {
     public static func voteNumber(_ ev: [Evidence], units: [String], subject: String, rates: Bool = false)
         -> (shown: String, sentence: Evidence, votes: Int, others: [String])? {
         var groups: [(value: Double, shown: String, sentence: Evidence, hosts: Set<String>)] = []
+        var mentions: [Int] = []
         for e in ev {
+            // 「比實際數值低了26%」這種歷史上的估計不是答案
+            if ["比實際", "當時估計", "古代", "曾估計", "誤差"].contains(where: { e.text.contains($0) }) { continue }
             // 主題本身的數字（「台北101」的 101）不算
             let body = e.text.replacingOccurrences(of: subject, with: "")
             // 「1公尺」這種定義用的數字通常不是答案
             for n in numbers(body, units: units, rates: rates) where n.value > 1 {
                 if let i = groups.firstIndex(where: { abs($0.value - n.value) / max($0.value, n.value) < 0.015 }) {
                     groups[i].hosts.insert(e.host)
+                    mentions[i] += 1
                 } else {
                     groups.append((n.value, n.shown, e, [e.host]))
+                    mentions.append(1)
                 }
             }
         }
         func w(_ g: (value: Double, shown: String, sentence: Evidence, hosts: Set<String>)) -> Int { g.hosts.reduce(0) { $0 + weight($1) } }
-        guard let best = groups.max(by: { w($0) < w($1) }) else { return nil }
+        // 先看幾個網站（官方算兩票），一樣的話看被提到幾次（正確的數值通常一再出現，歷史上的估計只提一次）
+        guard let bi = groups.indices.max(by: { (w(groups[$0]), mentions[$0]) < (w(groups[$1]), mentions[$1]) }) else { return nil }
+        let best = groups[bi]
         // 其他說法：同一種單位、而且有一定可信度的才提（換算成英尺、別的數量不算不同說法）
         func unit(_ x: String) -> String { String(x.drop { $0.isNumber || $0 == "," || $0 == "." || $0 == " " }) }
         let others = groups.filter { $0.shown != best.shown && unit($0.shown) == unit(best.shown) && $0.hosts.count >= 2 }.prefix(3).map(\.shown)
@@ -334,7 +341,8 @@ extension Understanding {
                 return cells.prefix(3).contains { $0.contains(noun) || $0.contains(key) || $0 == "名稱" || $0 == "名字" || $0.hasPrefix(String(noun.prefix(1))) && $0.count <= 4 }
             }
             func flushTable() {
-                if table.count >= 4 { groups.append((table, p.host, tableHeaderOK)) }
+                // 表頭對得上的表格本身就是名單（★ 表示不用再找別的資料印證）
+                if table.count >= 4 { groups.append((table, tableHeaderOK ? "★" + p.host : p.host, tableHeaderOK)) }
                 table = []; tableStarted = false; tableHeaderOK = false
             }
             // 這一串前面幾行有沒有提到主題（「北歐國家包括…」）；側欄、導覽列通常不會
@@ -370,7 +378,11 @@ extension Understanding {
                     let its = parts.compactMap { item($0) }
                     // 沒有明確字尾時，同一句要同時講到主題和名詞（「北歐國家包括…」），才算這一類的名單
                     let key = String(noun.prefix(1))
-                    if its.count >= 4 { groups.append((its, p.host, line.contains(subj) && (line.contains(noun) || line.contains(key)))) }
+                    _ = key
+                    // 「北歐國家包括…」「北歐五國是…」這種開頭本身就是在列名單，不用別的資料印證
+                    let intro = !subj.isEmpty && line.range(of: NSRegularExpression.escapedPattern(for: subj) + ".{0,4}(" + NSRegularExpression.escapedPattern(for: noun)
+                        + "|[一二三四五六七八九十\\d]+[國個])" + ".{0,3}(包括|包含|分別是|有|是|為|：|:)", options: .regularExpression) != nil
+                    if its.count >= 4 { groups.append((its, intro ? "★" + p.host : p.host, line.contains(subj) && line.contains(noun) || intro)) }
                     flush()
                 } else if let it = item(line) {
                     run.append(it)
@@ -383,7 +395,9 @@ extension Understanding {
             // 作品、書、電影、歌：直接收講到主題的句子裡的《書名》
             if ["作品", "書", "小說", "電影", "歌", "專輯", "劇", "著作", "名著", "戲劇"].contains(where: { noun.contains($0) }) {
                 var titles: [String] = []
-                for line in p.text.components(separatedBy: "\n") where line.contains(subj) {
+                let made = ["作品", "劇", "詩", "寫", "創作", "著", "喜劇", "悲劇", "小說", "專輯", "電影", "執導", "主演"]
+                for line in p.text.components(separatedBy: "\n") where line.contains(subj) && made.contains(where: { line.contains($0) })
+                    && !["譯", "翻譯", "引進", "介紹"].contains(where: { line.contains($0) }) {
                     var rest = Substring(line)
                     while let a = rest.firstIndex(of: "《"), let b = rest[a...].firstIndex(of: "》") {
                         let t = String(rest[rest.index(after: a)..<b])
@@ -391,7 +405,7 @@ extension Understanding {
                         rest = rest[rest.index(after: b)...]
                     }
                 }
-                if titles.count >= 3 { groups.append((titles.map { "《\($0)》" }, p.host, true)) }
+                if titles.count >= 3 { groups.append((titles.prefix(40).map { "《\($0)》" }, p.host, true)) }
             }
         }
         // 一組算不算這一類：有明確字尾（縣、省……）就要多數符合；否則要夠長
@@ -406,7 +420,14 @@ extension Understanding {
             let fit = g.items.filter { $0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府") }.count
             return fit * 2 >= g.items.count && fit >= 3
         }
-        guard var best = good.max(by: { $0.items.count < $1.items.count }) else { return ([], []) }
+        // 沒有字尾可以檢查時，要有第二份資料印證：另一串（另一句、另一個網站、表格）至少有兩個相同的項目
+        var confirmed = good
+        if suffix == nil {
+            confirmed = good.enumerated().filter { i, g in
+                g.host.hasPrefix("★") || g.items.first?.hasPrefix("《") == true || good.enumerated().contains { j, h in j != i && Set(h.items).intersection(g.items).count >= 2 }
+            }.map { $0.element }
+        }
+        guard var best = confirmed.max(by: { $0.items.count < $1.items.count }) else { return ([], []) }
         if let suffix {
             best.items = best.items.filter { ($0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府")) && !$0.contains("列表") && !$0.hasPrefix(noun) }
         }
@@ -423,7 +444,7 @@ extension Understanding {
             }
         }
         items = Array(items.prefix(80))
-        return (items, hosts)
+        return (items, hosts.map { $0.hasPrefix("★") ? String($0.dropFirst()) : $0 })
     }
 
     static let causal = ["因為", "由於", "原因", "所以", "導致", "造成", "使得", "是因", "引起", "來自", "為了", "機制", "反射", "源自", "透過", "是由", "because"]
@@ -518,12 +539,20 @@ extension WebAgent {
         case .place:
             // 問首都、位置：句子要講到這個地方本身，還要有「首都」「位於」這類字
             let marks = fr.searches.first?.contains("首都") == true ? ["首都"] : ["位於", "位在", "坐落", "在"]
-            guard let e = sents.first(where: { e in marks.contains { e.text.contains($0) } }) else { return ("", false) }
+            let direct = marks.map { fr.subject + $0 } + marks.map { fr.subject + "的" + $0 }
+            guard let e = sents.first(where: { e in direct.contains { e.text.contains($0) } })
+                    ?? sents.first(where: { e in marks.contains { e.text.contains($0) } && !e.text.contains("大部分") && !e.text.contains("例如") && !e.text.contains("如英國") })
+            else { return ("", false) }
             return ("答案：" + WebSearch.clip(e.text, 200) + "（\(e.host)）", true)
         case .open where fr.restated.contains("明確的名稱"):
             // 「世界上最高的山是哪座」：句子要有主題的關鍵詞和那一類東西（山、行星……）
+            // 「最高的山」：句子要有同樣的「最高」和「山／峰」，只有「山」字（山同洞）不算
             let head = String(fr.subject.last ?? " ")
-            guard let e = sents.first(where: { $0.text.contains(head) }) else { return ("", false) }
+            let heads = head == "山" ? ["山", "峰"] : [head]
+            let sup = Understanding.match(fr.subject, #"(最.)"#)?[1]
+            guard let e = sents.first(where: { e in (sup.map { e.text.contains($0) } ?? true)
+                && heads.contains { h in sup.map { e.text.contains($0 + "的" + h) || e.text.contains($0 + h) } ?? e.text.contains(h) } })
+            else { return ("", false) }
             return ("答案：" + WebSearch.clip(e.text, 200) + "（\(e.host)）", true)
         case let .compare(a, b):
             let ta = termSet(a), tb = termSet(b)
