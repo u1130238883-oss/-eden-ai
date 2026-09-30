@@ -75,6 +75,10 @@ final class UnderstandingTests: XCTestCase {
         XCTAssertTrue(Understanding.extractList([.init(text: clauses, host: "w")], noun: "國家", subject: "北歐").items.isEmpty)
         let desc = "歐洲全稱歐羅巴洲、是世界人口第三多的洲、僅次於亞洲和非洲、最北端是挪威的北角、其與亞洲合稱為歐亞大陸"
         XCTAssertTrue(Understanding.extractList([.init(text: desc, host: "w")], noun: "國家", subject: "歐洲").items.isEmpty)
+        // 國家名單：表頭有「國家」的表格才算；導覽框表格（沒有表頭）不算
+        let wiki = "歐洲國家列表\n國家 ｜ 首都 ｜ 人口\n阿爾巴尼亞 ｜ 地拉那 ｜ 280萬\n安道爾 ｜ 安道爾城 ｜ 8萬\n奧地利 ｜ 維也納 ｜ 900萬\n比利時 ｜ 布魯塞爾 ｜ 1100萬\n保加利亞 ｜ 索菲亞 ｜ 650萬\n相關條目\n聯賽A ｜ 葡萄牙 ｜ 決賽\n聯賽B ｜ 賽季 ｜ 成立\n聯賽C ｜ 附加賽 ｜ 賽事\n聯賽D ｜ 足球 ｜ 俱樂部"
+        let eu = Understanding.extractList([.init(text: wiki, host: "zh.wikipedia.org")], noun: "國家", subject: "歐洲")
+        XCTAssertEqual(eu.items, ["阿爾巴尼亞", "安道爾", "奧地利", "比利時", "保加利亞"])
         let intro = "本文將透過地理分區、政治實體等不同角度，帶你詳細瞭解。"
         XCTAssertTrue(Understanding.extractList([.init(text: intro, host: "y")], noun: "國家", subject: "歐洲").items.isEmpty)
     }

@@ -90,6 +90,7 @@ public enum Understanding {
         "長": ("長度", ["公里", "公尺", "米"]),
         "大": ("面積", ["平方公里", "公頃"]),
         "久": ("時間", ["年", "天", "小時", "分鐘"]),
+        "快": ("速度", ["公里", "公尺", "km/s", "km/h", "英里"]),
     ]
 
     static func unitsFor(_ attr: String) -> [String] {
@@ -137,18 +138,30 @@ extension Understanding {
         }
 
         // 比較：A 和 B 哪個好
-        if let m = match(t, #"^(.+?)(?:和|跟|與|還是)(.+?)(?:哪個|哪一個)(?:比較)?(?:好|強|適合|划算)"#)
+        if let m = match(t, #"^(.+?)(?:和|跟|與|還是)(.+?)(?:哪個|哪一個)(?:比較|更)?.+"#)
             ?? match(t, #"^(.+?)(?:和|跟|與)(.+?)(?:的)?(?:差別|區別|不同|差異)"#) {
             let a = m[1], b = m[2]
             return F("\(a)、\(b)", .compare(a, b), ["\(a) \(b) 比較", "\(a) \(b) 優缺點"], ["\(a) vs \(b)"], [],
                      "你想比較「\(a)」和「\(b)」→ 要並排比較優缺點、各適合誰，不是只介紹其中一個。")
         }
 
+        // 誰創立、誰發明……的：「蘋果公司是誰創立的」
+        if let m = match(t, #"^(.+?)是誰(創立|創辦|發明|發現|寫|畫|設計|建立|提出|導演|唱)的?$"#) {
+            return F(m[1], .person, ["\(m[1]) \(m[2])人", "\(m[1]) 創辦人 歷史"], ["\(m[1]) 歷史"], [m[1]],
+                     "你想知道「\(m[1])」是誰\(m[2])的 → 要一個名字，有爭議的話要說明。")
+        }
+        // 要一個名稱：「世界上最高的山是哪座」「美國總統是誰」
+        if let m = match(t, #"^(.+?)是(?:哪座|哪一座|哪個|哪一個|哪位|哪一位|誰|哪國|哪家|哪一家)$"#) {
+            let who = t.hasSuffix("誰") || t.hasSuffix("位")
+            return F(m[1], who ? .person : .open, [m[1], t], ["\(m[1]) 是"], [m[1]],
+                     "你想知道「\(m[1])」是\(who ? "誰" : "哪一個") → 要一個明確的名稱，再說明根據。")
+        }
+
         // 名單：X 有哪些 Y
         if let m = match(t, #"^(.*?)哪些(.+)$"#) {
             var pre = m[1], noun = trimTail(m[2], ["的", "列表", "名單", "一覽"])
             if pre.isEmpty, let mm = match(noun, #"^(.+?)(?:在|屬於|位於)(.+)$"#) { noun = mm[1]; pre = mm[2] }
-            pre = trimTail(pre, ["都是", "都有", "是", "有", "都", "的"])
+            pre = trimTail(pre, ["都是", "都有", "是", "有", "都", "的", "了", "寫", "畫", "拍", "唱", "做", "出版", "發明", "演"])
             if pre.hasSuffix(noun) && pre.count > noun.count { pre.removeLast(noun.count) }
             pre = trimTail(pre, ["的"])
             let full = pre + noun
@@ -159,7 +172,7 @@ extension Understanding {
         }
 
         // 多遠、多高……
-        if let m = match(t, #"^(.+?)(?:有|大概|大約)?多(遠|高|重|深|長|大|久)"#), let d = dims[m[2]] {
+        if let m = match(t, #"^(.+?)(?:有|大概|大約)?多(遠|高|重|深|長|大|久|快)"#), let d = dims[m[2]] {
             let subject = trimTail(m[1], ["有", "大概", "大約", "的"])
             var spaced = subject
             for w in ["到", "離", "和", "跟"] { spaced = spaced.replacingOccurrences(of: w, with: " ") }
@@ -169,8 +182,20 @@ extension Understanding {
 
         // 數量：X 有多少（個）Y
         if let m = match(t, #"^(.+?)(?:一共|總共)?有?(?:多少|幾)(?:個|座|名|位|種|條)?(.*)$"#) {
-            let subject = trimTail(m[1], ["一共", "總共", "有", "的"])
-            let noun = m[2]
+            let subject = trimTail(m[1], ["一共", "總共", "有", "是", "的"])
+            var noun = m[2]
+            // 「幾度」「幾天」「幾塊骨頭」「幾歲過世」：這是量詞，單位就是它本身
+            let measures = ["度", "天", "年", "歲", "小時", "分鐘", "秒", "公斤", "公尺", "公里", "倍", "%", "次", "代", "層", "樓"]
+            if let u = measures.first(where: { noun.hasPrefix($0) }) {
+                return F(subject, .number(attr: noun, units: [u]), [t, "\(subject) \(noun)"], ["\(subject)\(noun) 多少"], [subject],
+                         "你想知道「\(subject)」是幾\(noun) → 要一個以「\(u)」為單位的數字。")
+            }
+            if let c = noun.first, "塊隻顆本條張座間棵根台輛艘架位名家所種".contains(c), noun.count >= 2 {
+                let thing = String(noun.dropFirst())
+                noun = thing
+                return F(subject, .number(attr: thing, units: ["\(c)\(thing)", "\(c)"]), [t, "\(subject) \(thing) 數量"], ["\(subject)有多少\(c)\(thing)"], [subject],
+                         "你想知道「\(subject)」有幾\(c)\(thing) → 要一個數字；常見說法不同時要說明原因。")
+            }
             if noun.isEmpty || noun == "錢" || noun == "歲" {
                 let attr = subject + noun
                 return F(subject, .number(attr: noun.isEmpty ? "數量" : noun, units: unitsFor(attr)), [t, "\(subject) \(noun)"], ["\(subject) \(noun) 最新"], [],
@@ -202,7 +227,7 @@ extension Understanding {
                 food = m[2].first.map { "煮做烤炒蒸泡滷煎燉".contains($0) } ?? false
             }
             if !target.isEmpty {
-                let s = food ? ["\(target) 做法", "\(target) 食譜 步驟"] : ["如何\(t.replacingOccurrences(of: "怎麼", with: ""))", "\(target) 方法 步驟"]
+                let s = food ? ["\(target) 做法", "\(target) 食譜 步驟"] : ["如何\(target)", "\(target) 方法 步驟"]
                 return F(target, .steps(target: target), s, ["\(target) 教學"], [],
                          "你想知道怎麼\(food ? "做" : "處理")「\(target)」→ 要一步一步、照順序的做法。")
             }
@@ -288,7 +313,7 @@ extension Understanding {
         s = s.trimmingCharacters(in: .whitespaces)
         // 名字不會有「是、的、於、為、比、稱、僅、最」這些句子用的字（「是世界人口第三多的洲」是一句話，不是一個國家）
         guard (2...12).contains(s.count), !s.contains(where: { "。，：:；;？?！!".contains($0) }),
-              !["是", "的", "於", "為", "比", "稱", "僅", "最", "次", "約", "被", "將", "把", "也"].contains(where: { s.contains($0) }),
+              !["是", "的", "僅", "稱為", "之一", "位於", "次於", "約為", "大約", "合稱", "全稱", "最北", "最南", "最大", "最高", "第三", "第二"].contains(where: { s.contains($0) }),
               s.filter(\.isNumber).count <= 1, !stop.contains(s) else { return nil }
         return s
     }
@@ -300,22 +325,33 @@ extension Understanding {
         let subj = subject.filter { $0.isLetter || $0.isNumber }
         for p in pages {
             var run: [String] = [], table: [String] = []
+            // 一個表格算不算這一類的名單：表頭要有這個名詞（「國家」「省份」「名稱」）。導覽框、側欄的表格沒有這種表頭
+            var tableHeaderOK = false, tableStarted = false
+            func headerFits(_ row: String) -> Bool {
+                let cells = row.components(separatedBy: "｜").map { $0.trimmingCharacters(in: .whitespaces) }
+                let key = noun.count >= 2 ? String(noun.prefix(2)) : noun
+                return cells.prefix(3).contains { $0.contains(noun) || $0.contains(key) || $0 == "名稱" || $0 == "名字" || $0.hasPrefix(String(noun.prefix(1))) && $0.count <= 4 }
+            }
+            func flushTable() {
+                if table.count >= 4 { groups.append((table, p.host, tableHeaderOK)) }
+                table = []; tableStarted = false; tableHeaderOK = false
+            }
             // 這一串前面幾行有沒有提到主題（「北歐國家包括…」）；側欄、導覽列通常不會
             var recent: [String] = []
             // 這一頁的開頭就在講主題（「歐洲國家列表」），頁面裡的表格就算有脈絡
-            var tableCtx = !subj.isEmpty && p.text.components(separatedBy: "\n").prefix(15).contains { $0.contains(subj) }
             func near() -> Bool { !subj.isEmpty && recent.suffix(6).contains { $0.contains(subj) } }
             // 連續短行多半是導覽列、側欄：只有字尾明確（縣、省……）的名單才採用，所以不算有主題脈絡
             func flush() { if run.count >= 5 { groups.append((run, p.host, false)) }; run = [] }
             for line in p.text.components(separatedBy: "\n") {
                 defer { recent.append(line) }
                 if line.contains("｜") {
-                    if let first = line.components(separatedBy: "｜").lazy.compactMap({ item($0) }).first {
-                        if table.isEmpty && !tableCtx { tableCtx = near() }
-                        table.append(first)
-                    }
+                    if !tableStarted { tableStarted = true; tableHeaderOK = headerFits(line); if tableHeaderOK { continue } }
+                    // 只看第一欄（名稱），第一欄不像名稱的那一列就跳過，不去拿別欄（首都、人口）
+                    if let cell = line.components(separatedBy: "｜").map({ $0.trimmingCharacters(in: .whitespaces) }).first(where: { !$0.isEmpty }),
+                       let first = item(cell) { table.append(first) }
                     continue
                 }
+                if tableStarted { flushTable() }
                 // 名單是用「、」隔開的；「，」隔開的是一句話裡的子句，不是項目
                 var parts = line.components(separatedBy: "、")
                 if parts.count >= 4 {
@@ -340,7 +376,7 @@ extension Understanding {
                 }
             }
             flush()
-            if table.count >= 4 { groups.append((table, p.host, tableCtx)) }
+            flushTable()
         }
         // 一組算不算這一類：有明確字尾（縣、省……）就要多數符合；否則要夠長
         let good = groups.map { g -> (items: [String], host: String, ctx: Bool) in
@@ -413,8 +449,16 @@ extension Understanding {
 extension WebAgent {
     /// 照「要的答案」從讀到的東西裡找答案；找不到回傳 ok = false（交給下一輪或老實說）
     static func solve(_ fr: Understanding.Frame, pages: [Understanding.Evidence], snippets: [Understanding.Evidence]) -> (text: String, ok: Bool) {
-        let subjTerms = termSet(fr.subject)
-        func relevant(_ s: String) -> Bool { subjTerms.isEmpty || score(s, subjTerms) >= max(1, min(2, subjTerms.count / 2)) }
+        // 主題裡的中文詞一定要出現（「台北101」只對到「101」的句子，可能在講舉重 101 公斤）
+        let subjTerms = termSet(fr.subject).filter { $0.contains(where: isCJK) }
+        var predTerms = Set<String>()
+        if case let .reason(pred) = fr.want { predTerms = termSet(pred) }
+        func relevant(_ s: String) -> Bool {
+            if subjTerms.isEmpty { return true }
+            if score(s, subjTerms) >= max(1, min(2, subjTerms.count / 2)) { return true }
+            // 問原因時，句子講到「發燒」「呼嚕」這件事本身也算（發燒的原因不一定會重提感冒）
+            return !predTerms.isEmpty && score(s, predTerms) >= max(1, predTerms.count / 2)
+        }
         var sents: [Understanding.Evidence] = []
         for p in pages { for s in sentences(p.text) where relevant(s) { sents.append(.init(text: s, host: p.host)) } }
         for s in snippets where relevant(s.text) && !isQuestionOrFluff(s.text) { sents.append(s) }

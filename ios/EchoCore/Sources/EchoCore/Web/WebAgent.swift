@@ -290,6 +290,13 @@ public enum WebAgent {
                     }
                 }
                 var reread = Array(newHits.prefix(2))
+                // 要名單時，直接問維基百科「有沒有這個列表的條目」，比猜條目名稱準
+                if case .list = fr.want, zh, let q = fr.searches.first {
+                    let wk = await within(6) { await WebSearch.wikiSearch(q, L) } ?? []
+                    for h in wk.prefix(2) where !reread.contains(where: { $0.url == h.url }) && seenURL.insert(WebSearch.normURL(h.url)).inserted {
+                        reread.insert(h, at: 0)
+                    }
+                }
                 for t in fr.wikiTitles where !wikiTried.contains(t) && reread.count < 4 {
                     if case .list = fr.want { reread.insert(wikiHit(t), at: 0) }
                     else if case .number = fr.want { reread.insert(wikiHit(t), at: 0) }
