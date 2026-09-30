@@ -51,7 +51,8 @@ public enum Understanding {
     /// 官方、學術、百科的來源比一般網站可信，投票時算兩票
     static func weight(_ host: String) -> Int {
         let h = host.lowercased()
-        return [".gov", ".edu", "wikipedia.org", ".org.tw", "who.int", ".go.jp", "un.org"].contains { h.contains($0) } ? 2 : 1
+        if Cite.isLowQuality(h) { return 0 }
+        return Cite.isPrimary(h) || [".org.tw"].contains(where: { h.contains($0) }) ? 2 : 1
     }
 
     static func plain(_ q: String) -> String {
@@ -575,11 +576,17 @@ extension WebAgent {
 
         switch fr.want {
         case let .number(attr, units):
-            guard let v = Understanding.voteNumber(sents, units: units, subject: fr.subject, rates: attr == "速度") else { return ("", false) }
+            // 會變的資料：只用最新年份的句子（有寫年份的話）
+            var pool = sents
+            if fr.recent, let newest = sents.compactMap({ Understanding.latestYear($0.text) }).max() {
+                let fresh = sents.filter { (Understanding.latestYear($0.text) ?? 0) >= newest }
+                if !fresh.isEmpty { pool = fresh }
+            }
+            guard let v = Understanding.voteNumber(pool, units: units, subject: fr.subject, rates: attr == "速度") else { return ("", false) }
             var t = "答案：\(v.shown)"
             t += v.votes >= 2 ? "（\(v.votes) 個網站都這樣說）。" : "。"
-            t += "\n依據：" + WebSearch.clip(v.sentence.text, 200) + "（\(v.sentence.host)）"
-            if !v.others.isEmpty { t += "\n也有 " + v.others.joined(separator: "、") + " 的說法，差別通常在計算方式、統計年份或包含的範圍不同。" }
+            t += "\n依據：" + Cite.quote(v.sentence.text, host: v.sentence.host, focus: [v.shown])
+            if !v.others.isEmpty { t += "\n⚠️ 來源說法不一：也有 " + v.others.joined(separator: "、") + " 的說法，差別通常在計算方式、統計年份或包含的範圍不同。" }
             if fr.recent {
                 t += Understanding.latestYear(v.sentence.text).map { "\n這筆資料是 \($0) 年的，數字可能已經更新，重要的話請看官方最新公布。" }
                     ?? "\n這筆資料沒寫是哪一年的，數字可能已經更新，重要的話請看官方最新公布。"
@@ -597,16 +604,21 @@ extension WebAgent {
         case let .reason(pred):
             let rs = Understanding.extractReason(sents, pred: pred)
             guard let first = rs.first else { return ("", false) }
-            var t = "簡單說：" + WebSearch.clip(first.text, 200) + "（\(first.host)）"
+            // 用自己的話帶出來，只引一小段（少於 15 字）；每個網站最多引一句
+            let focus = Understanding.causal + [pred]
+            var t = "簡單說，原因跟" + Cite.quote(first.text, host: first.host, focus: focus) + "有關。"
+            var quotedHosts: Set<String> = [first.host]
             var used = [String(first.text.prefix(12))]
             for e in rs.dropFirst() where used.count < 3 && !used.contains(String(e.text.prefix(12))) {
                 used.append(String(e.text.prefix(12)))
-                t += "\n• " + WebSearch.clip(e.text, 150) + "（\(e.host)）"
+                guard quotedHosts.insert(e.host).inserted else { continue }
+                t += "\n• 另外也有說法指出" + Cite.quote(e.text, host: e.host, focus: focus)
             }
             return (t, true)
         case let .steps(target):
             guard let s = Understanding.extractSteps(pages, target: target) else { return ("", false) }
-            return ("做法（整理自 \(s.host)）：\n" + s.steps.enumerated().map { "\($0.offset + 1). " + WebSearch.clip($0.element, 110) }.joined(separator: "\n"), true)
+            // 步驟用重點動作簡短列出（不照抄整句），來源標在最前面
+            return ("做法重點（參考 \(s.host)）：\n" + s.steps.enumerated().map { "\($0.offset + 1). " + Cite.fragment($0.element, focus: Understanding.stepVerbs) }.joined(separator: "\n"), true)
         case .place:
             // 問首都、位置：句子要講到這個地方本身，還要有「首都」「位於」這類字
             let marks = fr.searches.first?.contains("首都") == true ? ["首都"] : ["位於", "位在", "坐落", "在"]
@@ -636,7 +648,7 @@ extension WebAgent {
                     let ex = sents.first { e in direct.contains { e.text.contains($0) } }
                         ?? sents.first { $0.text.contains(name) && $0.text.contains("首都") && !$0.text.contains("圈") }
                         ?? sents.first { $0.text.contains(name) && $0.text.contains("首都") }
-                    return ("答案：\(name)（\(top.value) 句資料都這樣寫）" + (ex.map { "\n依據：" + WebSearch.clip($0.text, 160) + "（\($0.host)）" } ?? ""), true)
+                    return ("答案：\(name)（\(top.value) 句資料都這樣寫）" + (ex.map { "\n依據：" + Cite.quote($0.text, host: $0.host, focus: [name]) } ?? ""), true)
                 }
             }
             let best = marks.flatMap { m in ["\(sj)的\(m)是", "\(sj)\(m)是", "\(sj)的\(m)為", "\(sj)\(m)為", "是\(sj)的\(m)", "為\(sj)的\(m)", "\(sj)，\(m)", "\(sj)的\(m)：", "\(m)：", "\(m)為"] }
@@ -645,7 +657,7 @@ extension WebAgent {
                     ?? sents.first(where: { e in direct.contains { e.text.contains($0) } && !e.text.contains("圈") && !e.text.contains("俱樂部") && !e.text.contains("位於") })
                     ?? sents.first(where: { e in marks.contains { e.text.contains($0) } && !e.text.contains("大部分") && !e.text.contains("例如") && !e.text.contains("如英國") })
             else { return ("", false) }
-            return ("答案：" + WebSearch.clip(e.text, 200) + "（\(e.host)）", true)
+            return ("答案：" + Cite.quote(e.text, host: e.host, focus: marks), true)
         case .open where fr.restated.contains("明確的名稱"):
             // 「世界上最高的山是哪座」：句子要有主題的關鍵詞和那一類東西（山、行星……）
             // 「最高的山」：句子要有同樣的「最高」和「山／峰」，只有「山」字（山同洞）不算
@@ -655,12 +667,14 @@ extension WebAgent {
             guard let e = sents.first(where: { e in (sup.map { e.text.contains($0) } ?? true)
                 && heads.contains { h in sup.map { e.text.contains($0 + "的" + h) || e.text.contains($0 + h) } ?? e.text.contains(h) } })
             else { return ("", false) }
-            return ("答案：" + WebSearch.clip(e.text, 200) + "（\(e.host)）", true)
+            return ("答案：" + Cite.quote(e.text, host: e.host, focus: (sup.map { [$0] } ?? []) + heads), true)
         case let .compare(a, b):
             let ta = termSet(a), tb = termSet(b)
             let both = sents.filter { score($0.text, ta) > 0 && score($0.text, tb) > 0 }
             guard !both.isEmpty else { return ("", false) }
-            return ("比較重點：\n" + both.prefix(4).map { "• " + WebSearch.clip($0.text, 150) + "（\($0.host)）" }.joined(separator: "\n"), true)
+            var seenHosts = Set<String>()
+            let pts = both.filter { seenHosts.insert($0.host).inserted }.prefix(4).map { "• " + Cite.quote($0.text, host: $0.host, focus: [a, b]) }
+            return ("比較重點：\n" + pts.joined(separator: "\n"), true)
         default:
             return ("", true)
         }

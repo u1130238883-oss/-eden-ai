@@ -303,3 +303,18 @@ final class YearCompareTests: XCTestCase {
         XCTAssertTrue(r.contains("結論"), r)
     }
 }
+
+/// 搜尋與回答的規則：短引文、每個來源一句、查詢短而且不重複、原始來源優先、讀使用者給的網址
+final class CiteRulesTests: XCTestCase {
+    func testRules() {
+        let q = Cite.quote("台北101（英語：TAIPEI 101）是位於臺灣臺北市信義區的超高層摩天大樓，作為主體建築的塔樓高508公尺，地上101層。", host: "zh.wikipedia.org", focus: ["508公尺"])
+        XCTAssertTrue(q.contains("508公尺"), q)
+        XCTAssertLessThanOrEqual(Cite.fragment("作為主體建築的塔樓高508公尺，地上101層", focus: ["508"]).count, 14)
+        XCTAssertEqual(Cite.fragment("珠穆朗瑪峰是世界上最高的山峰，海拔8,849公尺。", focus: ["最高"]).prefix(5), "珠穆朗瑪峰")
+        XCTAssertEqual(Cite.distinct(["歐洲國家列表", "歐洲國家 列表", "歐洲有哪些國家"]).count, 2)
+        XCTAssertTrue(Cite.isLowQuality("zhidao.baidu.com"))
+        XCTAssertTrue(Cite.isPrimary("www.ris.gov.tw"))
+        XCTAssertEqual(WebAgent.firstURL("幫我看這篇 https://example.com/a?b=1 謝謝"), "https://example.com/a?b=1")
+        XCTAssertNil(WebAgent.firstURL("沒有網址"))
+    }
+}

@@ -148,6 +148,14 @@ public final class EchoEngine {
             lastQuestion = text
             lastQuestionTurn = history.count
         }
+        // 使用者給了網址：一定去讀那個網頁
+        if let url = WebAgent.firstURL(message) {
+            r.webQuery = url
+            r.turn.palace = nil
+            r.turn.text = "好，我去讀這個網頁…"
+            r.turn.source = .tool
+            return r
+        }
         // 沒有主語的問題（「名字叫什麼」「多少錢」）：接上一題的主題；問的是個人資料就是在問我；都不是就先問清楚
         if r.webQuery != nil, let miss = Understanding.missingSubject(message) {
             if miss == .generic, let prev = prevQuestion, Understanding.missingSubject(prev) == nil, history.count - prevQuestionTurn <= 4 {

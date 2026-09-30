@@ -21,7 +21,7 @@ public enum Mind {
             guard topic.isEmpty || WebAgent.score(s.text, topic) >= 1 else { continue }
             let key = String(s.text.prefix(14))
             if exclude.contains(where: { $0.contains(key) }) || out.contains(where: { $0.contains(key) }) { continue }
-            out.append(WebSearch.clip(s.text, 150) + "（\(s.host)）")
+            out.append(Cite.quote(s.text, host: s.host, focus: contrast))
         }
         return out
     }

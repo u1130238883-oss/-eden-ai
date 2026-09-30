@@ -123,9 +123,46 @@ public enum WebAgent {
     // MARK: - 主流程
 
     /// also：命理時同一張盤還要一起查的其他組合
+    /// 訊息裡的第一個網址
+    public static func firstURL(_ text: String) -> String? {
+        guard let re = try? NSRegularExpression(pattern: #"https?://[^\s，。、「」（）]+"#),
+              let m = re.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              let r = Range(m.range, in: text) else { return nil }
+        return String(text[r])
+    }
+
+    /// 讀使用者給的網頁：說它在講什麼、重點是什麼（引文少於 15 字、只引一句，其餘用關鍵詞和數字整理）
+    static func readLink(_ url: String, lang L: Lang) async -> Result {
+        let host = WebSearch.host(url)
+        guard let page = await within(10, { await WebSearch.pageText(url, L) }) ?? nil, !page.isEmpty else {
+            return Result(text: "這個網頁我打不開（可能需要登入、被擋，或網址有誤）。你可以把重點內容貼給我，我再幫你整理。", card: nil, found: false, engines: [:])
+        }
+        let text = L == .zh ? WebStrategy.toTraditional(page) : page
+        let lines = text.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let title = lines.first(where: { $0.count >= 4 && $0.count <= 40 }) ?? host
+        let sents = sentences(text)
+        // 最常出現的詞＝這頁的主題
+        let findings = sents.map { Finding(text: $0, host: host, url: url) }
+        let topics = consensus(findings, exclude: "", cjkOnly: L == .zh).prefix(6)
+        // 數字、日期這類具體資料
+        let facts = sents.filter { $0.contains(where: \.isNumber) && topics.contains(where: $0.contains) }.prefix(3)
+        let central = sents.max(by: { score($0, Set(topics)) < score($1, Set(topics)) })
+        var t = "📄 這個網頁（\(host)）的標題是「\(Cite.fragment(title, focus: []))」。"
+        if !topics.isEmpty { t += "\n主要在講：" + topics.joined(separator: "、") + "。" }
+        if let c = central { t += "\n最核心的一句提到" + Cite.quote(c, host: host, focus: Array(topics)) + "。" }
+        if !facts.isEmpty {
+            t += "\n裡面的具體數字：" + facts.map { Cite.fragment($0, focus: Array(topics)) }.joined(separator: "；") + "。"
+        }
+        t += "\n\n要我針對哪一部分說明、或幫你查證裡面的說法嗎？\n來源：\(host)"
+        let card = FortuneCard(title: "讀網頁", headline: host, details: Array(topics).map { "• " + $0 }, link: url)
+        return Result(text: t, card: card, found: true, engines: [:])
+    }
+
     /// avoid：上次答錯時用過的網站（反思後這次避開）；reflect：被指正後重查，先用備用查法
     public static func run(_ question: String, facts: String? = nil, also: [String] = [], lang L: Lang,
                            avoid: [String] = [], reflect: Bool = false) async -> Result {
+        // 使用者給了網址：直接讀那個網頁
+        if facts == nil, let url = firstURL(question), url.count >= question.count - 2 { return await readLink(url, lang: L) }
         let fortune = facts != nil
         let plan = understand(question, L: L, fortune: fortune)
         let zh = L == .zh
@@ -153,6 +190,8 @@ public enum WebAgent {
             firstQs.append(extra)
             learnedNotes.append("過去這類問題第一輪常常查不到，這次一開始就多查「\(extra)」")
         }
+        // 查詢要短、而且每一組要跟前一組實質不同（換詞、換角度），重複的措辭不用再查
+        if zh && !fortune { firstQs = Cite.distinct(firstQs) }
         for (i, q) in firstQs.enumerated() { jobs.append((-1, q, i == 0 || strat.angles.isEmpty)) }
         if let canon { jobs.append((-1, canon, true)) }
         for q in also.prefix(2) where !jobs.contains(where: { $0.q == q }) { jobs.append((-1, q, true)) }
@@ -218,7 +257,10 @@ public enum WebAgent {
                     // 可信來源加分；過去對這類問題常有答案的網站再加分，常給垃圾的扣分
                     let ea = tuneKind.map { tuning.bonus(WebSearch.host(a.url), kind: $0) } ?? 0
                     let eb = tuneKind.map { tuning.bonus(WebSearch.host(b.url), kind: $0) } ?? 0
-                    return (score(a.title + a.snippet, terms) + (isTrusted(a.url) ? 3 : 0) + ea) > (score(b.title + b.snippet, terms) + (isTrusted(b.url) ? 3 : 0) + eb)
+                    // 原始來源（官方、政府、學術、百科）優先；問答網站、論壇、內容農場放最後
+                    let qa = (Cite.isPrimary(WebSearch.host(a.url)) ? 3 : 0) - (Cite.isLowQuality(WebSearch.host(a.url)) ? 5 : 0)
+                    let qb = (Cite.isPrimary(WebSearch.host(b.url)) ? 3 : 0) - (Cite.isLowQuality(WebSearch.host(b.url)) ? 5 : 0)
+                    return (score(a.title + a.snippet, terms) + (isTrusted(a.url) ? 3 : 0) + ea + qa) > (score(b.title + b.snippet, terms) + (isTrusted(b.url) ? 3 : 0) + eb + qb)
                 }
                 .prefix(n).map { $0 }
         }
@@ -274,6 +316,8 @@ public enum WebAgent {
             }
         }
         findings.removeAll { isQuestionOrFluff($0.text) }
+        // 論壇、問答網站、內容農場：別的來源夠多時就不用
+        if findings.filter({ !Cite.isLowQuality($0.host) }).count >= 3 { findings.removeAll { Cite.isLowQuality($0.host) } }
         var lead2 = lead.map { zh ? WebStrategy.toTraditional($0) : $0 }
         // 百科／DuckDuckGo 的摘要常常是別的條目（問天空卻給「天空色的奇蹟」），不切題就只當一般資料
         let listQ = question.contains("哪些") || question.contains("列表") || question.contains("有什麼")
@@ -296,7 +340,7 @@ public enum WebAgent {
             var s = solve(fr, pages: ev(pages), snippets: snips)
             firstRoundOK = s.ok
             if !s.ok, !fr.retry.isEmpty {
-                let retryQs = Array(fr.retry.prefix(2))
+                let retryQs = Array(Cite.distinct(fr.retry).filter { r in !jobs.contains { Cite.similar($0.q, r) } }.prefix(2))
                 let got = await withTaskGroup(of: WebSearch.Answer?.self) { g -> [WebSearch.Answer] in
                     for q in retryQs { g.addTask { await within(8) { await WebSearch.search(q, lang: L, news: false, light: true) } ?? nil } }
                     var out: [WebSearch.Answer] = []
@@ -352,17 +396,19 @@ public enum WebAgent {
             .filter { quality($0.text, terms: terms, numeric: plan.numeric, core: plan.core, list: listQ) > 0 }
             // 沒講到真正在問的東西（問「發光」卻在講月亮神話、問「綠豆湯」卻在講綠豆餅）就不要
             .filter { f in focusWords.isEmpty || focusWords.contains { f.text.contains($0) } }
+        // 引用的焦點：主題詞（引文只取包含主題的那一小段）
+        let qFocus = [fr?.subject ?? plan.core] + plan.core.split(separator: " ").map(String.init)
         var answer = ""
-        if let lead2 { answer = lead2 }
+        if let lead2 { answer = zh ? Cite.quote(lead2, host: leadSource ?? "", focus: qFocus) : lead2 }
         else if let first = (strat.angles.isEmpty ? ranked : ranked.filter { $0.angle <= 0 }).first(where: { $0.text.count >= 30 }) ?? ranked.first {
-            answer = WebSearch.clip(first.text, 240) + "（\(first.host)）"
+            answer = zh ? Cite.quote(first.text, host: first.host, focus: qFocus) : WebSearch.clip(first.text, 240) + "（\(first.host)）"
         }
         // 問為什麼：開頭那句要真的在講原因；問做法：要真的有步驟。找不到就老實說，不拿不相關的句子充數
         if lead2 == nil, plan.kind == .reason || plan.kind == .method {
             let markers = plan.kind == .reason ? ["因為", "由於", "原因", "所以", "導致", "造成", "散射", "是因"]
                                                : ["步驟", "先", "再", "然後", "接著", "最後", "分鐘", "加入", "放入", "倒入", "按下"]
             if let f = ranked.first(where: { r in markers.contains { r.text.contains($0) } }) {
-                answer = WebSearch.clip(f.text, 240) + "（\(f.host)）"
+                answer = zh ? Cite.quote(f.text, host: f.host, focus: qFocus) : WebSearch.clip(f.text, 240) + "（\(f.host)）"
             } else if zh {
                 answer = plan.kind == .reason ? "我在網路上沒找到把原因講清楚的資料，下面是找到的相關內容，僅供參考。"
                                               : "我在網路上沒找到清楚的步驟，下面是找到的相關內容，僅供參考；你也可以把問題講得更具體一點，我再查一次。"
@@ -381,7 +427,7 @@ public enum WebAgent {
         // 問數量：直接答案裡沒有數字，就改用有數字、最相關的那句
         if plan.numeric, plan.kind != .weather, !hasNumber(answer, besides: plan.core),
            let withNum = ranked.first(where: { hasNumber($0.text, besides: plan.core) }) {
-            answer = WebSearch.clip(withNum.text, 240) + "（\(withNum.host)）" + (lead2.map { "\n\n" + $0 } ?? "")
+            answer = (zh ? Cite.quote(withNum.text, host: withNum.host, focus: qFocus) : WebSearch.clip(withNum.text, 240) + "（\(withNum.host)）")
         }
         // 問數量：看各來源說的數字，多數決，並說明為什麼會有不同說法
         if plan.numeric, plan.kind != .weather, lead2 == nil, let vote = numberVote(ranked, core: plan.core) {
@@ -389,7 +435,7 @@ public enum WebAgent {
             if !vote.others.isEmpty { head += "；也有 " + vote.others.joined(separator: "、") + " 的說法，通常是計算標準不同" }
             head += "。"
             if let s = ranked.first(where: { $0.text.contains(vote.best) }) {
-                answer = head + "\n" + WebSearch.clip(s.text, 220) + "（\(s.host)）"
+                answer = head + "\n依據：" + Cite.quote(s.text, host: s.host, focus: [vote.best])
             } else {
                 answer = head + (answer.isEmpty ? "" : "\n" + answer)
             }
@@ -399,7 +445,7 @@ public enum WebAgent {
                                             ("多重", ["公斤", "噸", "克", "kg"]), ("多深", ["公尺", "米"]), ("多長", ["公里", "公尺", "米"])]
             .first(where: { question.contains($0.0) })?.1, !units.contains(where: { answer.contains($0) }) {
             if let f = ranked.first(where: { r in units.contains { r.text.contains($0) } && hasNumber(r.text, besides: plan.core) }) {
-                answer = WebSearch.clip(f.text, 240) + "（\(f.host)）"
+                answer = zh ? Cite.quote(f.text, host: f.host, focus: qFocus) : WebSearch.clip(f.text, 240) + "（\(f.host)）"
             } else {
                 answer = "我在網路上沒找到確切的數字，下面是找到的相關資料，建議再確認。"
             }
@@ -409,7 +455,7 @@ public enum WebAgent {
             let key = termSet(Understanding.plain(fr.subject)).filter { $0.contains(where: isCJK) }
             let mentions = { (t: String) in key.isEmpty || score(t, key) >= max(1, key.count / 3) }
             if !mentions(answer) {
-                if let f = ranked.first(where: { mentions($0.text) && $0.text.count >= 20 }) { answer = WebSearch.clip(f.text, 240) + "（\(f.host)）" }
+                if let f = ranked.first(where: { mentions($0.text) && $0.text.count >= 20 }) { answer = zh ? Cite.quote(f.text, host: f.host, focus: qFocus) : WebSearch.clip(f.text, 240) + "（\(f.host)）" }
                 else { answer = "我找到的資料跟你問的主題對不太上，下面是比較接近的內容，僅供參考。" }
             }
         }
@@ -429,14 +475,24 @@ public enum WebAgent {
             }
         }
         var used: [String] = [answer]
+        // 每個網站最多引一句（回答裡已經引過的網站，補充就不再引它）
+        var quotedHosts = Set(SelfTuning.hosts(in: answer))
         func take(_ fs: [Finding], _ n: Int) -> [String] {
             var out: [String] = []
             for f in fs where out.count < n {
-                let s = WebSearch.clip(f.text, 150)
-                let key = String(s.prefix(14))
+                let key = String(f.text.prefix(14))
                 if used.contains(where: { $0.contains(key) }) { continue }
-                used.append(s)
-                out.append(s + "（\(f.host)）")
+                if zh {
+                    guard quotedHosts.insert(f.host).inserted else { continue }
+                    let q = Cite.quote(f.text, host: f.host, focus: qFocus)
+                    guard !q.isEmpty else { continue }
+                    used.append(f.text)
+                    out.append(q)
+                } else {
+                    let s = WebSearch.clip(f.text, 150)
+                    used.append(s)
+                    out.append(s + "（\(f.host)）")
+                }
             }
             return out
         }
@@ -460,8 +516,17 @@ public enum WebAgent {
             let pts = take(side, fr != nil && solved?.ok == true ? 2 : 3)
             if !pts.isEmpty { sections.append((plan.kind == .method ? "步驟／做法" : (fr != nil ? "次要・補充" : "重點"), pts)) }
         }
-        // 反過來想：找爭議、誤解、轉折的說法
-        if zh, let fr, !fortune, plan.kind != .news, plan.kind != .weather {
+        // 長度看問題：簡單的事實題（數字、地點、人、時間）答到就好，不附一堆補充；大題目才展開
+        var simpleFact = false
+        if let fr, solved?.ok == true {
+            switch fr.want {
+            case .number, .place, .person, .time: simpleFact = true
+            default: break
+            }
+        }
+        if simpleFact { sections.removeAll() }
+        // 反過來想：找爭議、誤解、轉折的說法（簡單的事實題不用）
+        if zh, !simpleFact, let fr, !fortune, plan.kind != .news, plan.kind != .weather {
             let topicTerms = termSet(Understanding.plain(fr.subject)).filter { $0.contains(where: isCJK) }
             let other = Mind.otherSide(findings.map { ($0.text, $0.host) }, topic: topicTerms, exclude: used)
             if !other.isEmpty { sections.append(("換個角度（也有這些說法）", other)) }
@@ -476,7 +541,7 @@ public enum WebAgent {
             for f in ranked.prefix(24) where seenJ.insert(String(f.text.prefix(14))).inserted {
                 total += 1
                 let (v, why) = WebFortune.judge(f.text, chart)
-                let line = "• " + WebSearch.clip(f.text, 90) + "\n  → " + why
+                let line = "• " + Cite.quote(f.text, host: f.host, focus: qFocus) + "\n  → " + why
                 if v == .fits && ok.count < 4 { ok.append(line) }
                 if v == .conflicts && bad.count < 3 { bad.append(line) }
             }
@@ -513,48 +578,37 @@ public enum WebAgent {
                 + "這次避開它們、換個查法重新查。\n\n"
         }
         if zh {
-            t += "🔎 我的思路\n"
-            if let fr {
-                t += "① 理解：" + fr.restated + "\n"
-            } else {
-                t += "① 釐清：這是\(kindName[plan.kind] ?? "一般")的問題，主題是「\(fortune ? orderedUnique([topic] + also.map(WebFortune.base)).joined(separator: "、") : plan.core)」"
-                if let canon { t += "（正式名稱：\(canon)）" }
-                t += "。\n"
-            }
-            if !strat.angles.isEmpty {
-                t += "② 拆解：分成「" + strat.angles.map(\.title).joined(separator: "」→「") + "」幾個小問題，分開上網查。\n"
-            } else {
-                t += "② 搜尋：" + jobs.prefix(3).map { "「\($0.q)」" }.joined(separator: "、") + "。\n"
-            }
-            let names = engines.filter { $0.value > 0 && !["instant", "weather"].contains($0.key) }.keys.sorted()
-            t += "③ 蒐集：查了 \(jobs.count) 組關鍵字" + (names.isEmpty ? "" : "，從 " + names.joined(separator: "、")) + " 留下 \(hits.count) 個跟主題有關的結果"
-            if let leadSource, lead != nil { t += "，另外取得 \(leadSource) 的直接資料" }
-            t += "。\n"
-            t += "④ 閱讀：打開 \(pagesRead) 個網頁，只留下真的在回答問題的句子。\n"
-            t += "⑤ 查證：" + (trustedHosts.isEmpty ? "" : "採用了 " + trustedHosts.prefix(3).joined(separator: "、") + " 等可信來源；")
-                + (common.isEmpty ? "各來源說法比較分散，挑最相關的整理。" : "好幾個來源都提到「" + common.prefix(4).joined(separator: "」「") + "」。") + "\n"
-            if !checkNote.isEmpty { t += "⑥ 檢查：" + checkNote + "\n" }
-            if !learnedNotes.isEmpty { t += "🧠 經驗：" + learnedNotes.joined(separator: "；") + "。\n" }
-            if fr != nil && !fortune { t += "⑦ 原則：" + Mind.values.joined(separator: "、") + "。\n" }
-            if facts != nil { t += "⑥ 對照：把每一句網路說法放到你的盤上檢查——喜忌、身強身弱、命宮主星、化忌宮位對不對得上，對不上的就排除。\n" }
-            t += "\n📌 " + (fortune ? "網路上的說法" : "回答") + "\n" + answer
+            // 手機上先給答案，不重述問題、不寒暄；思路放最後、精簡成幾行
+            t += "📌 " + (fortune ? "網路上的說法" : "回答") + "\n" + answer
             for (title, pts) in sections {
                 let numbered = plan.kind == .method || title == "可以怎麼做" || title == "步驟"
                 t += "\n\n【\(title)】\n" + pts.enumerated().map { numbered ? "\($0.offset + 1). \($0.element)" : "• \($0.element)" }.joined(separator: "\n")
             }
             if let note = strat.note { t += "\n\n" + note }
+            if !fortune, let warn = Cite.skepticNote(question) { t += "\n\n" + warn }
             if !fortuneBlock.isEmpty { t += "\n\n" + fortuneBlock }
             if let fr, !fortune {
-                let disagree = answer.contains("也有 ") && answer.contains("的說法")
+                let disagree = answer.contains("來源說法不一")
                 t += "\n\n🧭 我的看法：" + Mind.view(want: fr.want, answered: solved?.ok ?? true, sources: sources.count,
                                                     trusted: trustedHosts, disagree: disagree, recent: fr.recent)
-                let more = Mind.followUps(fr)
-                if !more.isEmpty { t += "\n💬 你可能還想知道：" + more.joined(separator: "／") }
+                // 只提一個最可能的下一步
+                if let more = Mind.followUps(fr).first { t += "\n💬 你可能還想知道：" + more }
             }
-            t += "\n\n🤔 我的判斷：把握程度\(confidence)。"
-            if !gaps.isEmpty { t += "還不確定的地方：" + gaps.joined(separator: "；") + "。" }
+            // 我的思路（精簡版）
+            t += "\n\n🔎 我的思路："
+            if let fr { t += fr.restated } else { t += "這是\(kindName[plan.kind] ?? "一般")的問題，主題是「\(fortune ? orderedUnique([topic] + also.map(WebFortune.base)).joined(separator: "、") : plan.core)」。" }
+            t += "查了" + jobs.prefix(3).map { "「\($0.q)」" }.joined(separator: "、") + "，讀了 \(pagesRead) 個網頁"
+            if !trustedHosts.isEmpty { t += "（以 " + trustedHosts.prefix(2).joined(separator: "、") + " 這類原始來源為主）" }
+            t += "。"
+            if !checkNote.isEmpty { t += checkNote }
+            if !learnedNotes.isEmpty { t += "\n🧠 經驗：" + learnedNotes.joined(separator: "；") + "。" }
+            if facts != nil { t += "\n對照方式：把每一句網路說法放到你的盤上檢查——喜忌、身強身弱、命宮主星、化忌宮位對不對得上，對不上的就排除。" }
+            t += "\n🤔 把握程度\(confidence)。"
+            if !gaps.isEmpty { t += "還不確定：" + gaps.joined(separator: "；") + "。" }
             if covered == 0 && lead == nil && solved?.ok != true { t += "這題網路上的資料跟你問的不太對得上，可以換個說法或講得更具體一點，我再查一次。" }
-            t += "\n來源：" + sources.prefix(5).joined(separator: "、")
+            // 來源清單：只列真的引用到的網站
+            let cited = SelfTuning.hosts(in: t)
+            t += "\n來源：" + (cited.isEmpty ? Array(sources.prefix(3)) : cited).joined(separator: "、")
         } else {
             t += Loc.s("webResult", L, plan.keywords) + "\n\n" + answer
             for (_, pts) in sections { t += "\n\n" + pts.map { "• " + $0 }.joined(separator: "\n") }
