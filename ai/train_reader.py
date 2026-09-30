@@ -446,12 +446,20 @@ def make_opt(model, params, lr):
                              lr=lr, betas=(0.9, 0.98), eps=1e-8)
 
 
-def run_stage(name, model, opt, minutes, peak, warm, make_epoch, step_fn, say, on_check=None, check_every=None):
+def run_stage(name, model, opt, minutes, peak, warm, make_epoch, step_fn, say, on_check=None, check_every=None, ckpt=None):
+    """ckpt：每 10 分鐘存一次進度（模型、優化器、第幾步、用了多久），容器重開後從這裡接著練"""
     t0 = time.time()
     budget = minutes * 60
     step, total, losses = 0, None, []
     ep = 0
-    next_check = check_every
+    if ckpt and os.path.exists(ckpt):
+        z = torch.load(ckpt)
+        model.load_state_dict(z["model"]); opt.load_state_dict(z["opt"])
+        step, total, ep = z["step"], z["total"], z["ep"] - 1
+        t0 -= z["elapsed"]
+        say(f"[{name}] resumed at step {step} ({z['elapsed'] / 60:.0f} min done)")
+    next_check = check_every and ((time.time() - t0) // 60 // check_every + 1) * check_every
+    last_save = time.time()
     while True:
         ep += 1
         for batch in make_epoch(ep):
@@ -475,6 +483,11 @@ def run_stage(name, model, opt, minutes, peak, warm, make_epoch, step_fn, say, o
             if on_check and next_check and el > next_check * 60:
                 next_check += check_every
                 on_check(step)
+            if ckpt and time.time() - last_save > 600:
+                torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "step": step, "total": total,
+                            "ep": ep, "elapsed": el}, ckpt + ".tmp")
+                os.replace(ckpt + ".tmp", ckpt)
+                last_save = time.time()
             if el > budget:
                 return step
 
@@ -523,7 +536,7 @@ def main():
 
     # ---- 1. 讀書
     pre_path = os.path.join(args.out, "pretrained.pt")
-    if args.skip_pretrain and os.path.exists(pre_path):
+    if (args.skip_pretrain or os.path.exists(os.path.join(args.out, "pretrain.done"))) and os.path.exists(pre_path):
         model.load_state_dict(torch.load(pre_path))
         say("loaded pretrained weights")
     elif args.pretrain_min > 0:
@@ -545,8 +558,10 @@ def main():
                 logits = model.mlm_logits(xf[sel])
             return F.cross_entropy(logits.float(), lab[sel])
 
-        run_stage("read", model, opt, args.pretrain_min, 1e-3, 500, mlm_epoch, mlm_step, say)
+        run_stage("read", model, opt, args.pretrain_min, 1e-3, 500, mlm_epoch, mlm_step, say,
+                  ckpt=os.path.join(args.out, "read.ckpt"))
         torch.save(model.state_dict(), pre_path)
+        open(os.path.join(args.out, "pretrain.done"), "w").write("ok")
         say("saved pretrained weights")
 
     # ---- 2. 閱讀測驗
@@ -585,7 +600,8 @@ def main():
             say("exported reader.bin / reader.json")
 
     model.train()
-    run_stage("quiz", model, opt, args.finetune_min, 5e-4, 300, qa_epoch, qa_step, say, on_check=check, check_every=20)
+    run_stage("quiz", model, opt, args.finetune_min, 5e-4, 300, qa_epoch, qa_step, say, on_check=check, check_every=20,
+              ckpt=os.path.join(args.out, "quiz.ckpt"))
     check("final")
 
 
