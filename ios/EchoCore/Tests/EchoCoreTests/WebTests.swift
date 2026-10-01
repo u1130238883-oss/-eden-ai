@@ -139,6 +139,7 @@ final class WebConversationLiveTests: XCTestCase {
         var ctx = EchoEngine.Context(now: t.date(2026, 9, 30, 11))
         ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 7, minute: 0, male: true)
         let conversation = [
+            "三島由紀夫的書都講了什麼", "金閣寺在講什麼",
             "把冰箱放進大象裡需要多少步", "把大象放進冰箱裡需要幾步",
             "歐洲有多少個國家？", "那這些國家都是哪些國家", "我是說這些歐洲國家是哪些國家？",
             "台北101有多高", "天空為什麼是藍色的", "感冒了怎麼辦", "誰發明了電話", "地球到月亮有多遠",
@@ -148,6 +149,10 @@ final class WebConversationLiveTests: XCTestCase {
             "台灣現在人口有多少", "北歐有哪些國家", "名字叫什麼", "歐洲有什麼國家", "歐洲國家是哪些國家", "台北101有多高", "那多重",
             "世界上最高的山是哪座", "光速有多快", "水的沸點是幾度", "人體有幾塊骨頭", "誰畫了蒙娜麗莎", "法國的首都是哪裡", "狗為什麼會搖尾巴", "莎士比亞寫了哪些作品",
         ]
+        // 上網查到的內容由大腦來讀（和 App 一樣）
+        let res = EchoCoreTests.resources
+        Brain.shared = try? Brain(weights: Data(contentsOf: res.appendingPathComponent("reader.bin")),
+                                  metaJSON: Data(contentsOf: res.appendingPathComponent("reader.json")))
         var history: [ChatTurn] = []
         var slow = 0
         for q in conversation {

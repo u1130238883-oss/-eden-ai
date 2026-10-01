@@ -94,12 +94,16 @@ public enum Think {
         guard !chosen.isEmpty else { return nil }
 
         // ③ 每一段都讓大腦讀
-        var readings: [Reading] = []
+        var all: [Reading] = []
         for c in chosen {
-            if let sp = brain.read(question: question, passage: c.text), sp.score > 0 {
-                readings.append(Reading(passage: c.text, host: c.host, span: sp))
-            }
+            if let sp = brain.read(question: question, passage: c.text) { all.append(Reading(passage: c.text, host: c.host, span: sp)) }
         }
+        // 哪些段落算「在回答問題」：大腦有把握的（分數 > 0），或是明顯比其他段落高、又不會低得離譜的
+        // （描述型的問題「他的書在講什麼」，相關段落常是 -3，不相關的是 -10 以下）
+        let bestScore = all.map(\.span.score).max() ?? -100
+        let floor: Float = -6
+        let readings = all.filter { $0.span.score > 0 || ($0.span.score > floor && $0.span.score > bestScore - 4) }
+        let unsure = bestScore <= 0
         let allHosts = Array(Set(readings.map(\.host)))
         guard !readings.isEmpty else {
             return Conclusion(text: "", confident: false, read: chosen.count, relevant: 0, hosts: [])
@@ -118,7 +122,7 @@ public enum Think {
             }
         }
         func weight(_ g: Group) -> Float {
-            g.best.values.reduce(0) { $0 + min($1.span.score, 8) / 8 * hostWeight($1.host) + 0.2 }
+            g.best.values.reduce(0) { $0 + (min($1.span.score, 8) - floor) / (8 - floor) * hostWeight($1.host) + 0.2 }
         }
         groups.sort { weight($0) > weight($1) }
         guard let top = groups.first else { return nil }
@@ -159,6 +163,7 @@ public enum Think {
                 t += "\n\(n). \(gp.shown) —— " + cite(r)
             }
         }
+        if unsure { t = "（我讀到的資料沒有直接講明，下面是最接近的內容，把握不高）\n" + t }
         return Conclusion(text: t, confident: true, read: chosen.count, relevant: readings.count, hosts: allHosts)
     }
 }
