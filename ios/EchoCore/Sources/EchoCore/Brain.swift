@@ -183,7 +183,13 @@ public final class Brain {
 
     /// 每個字有沒有出現在另一邊：2＝同一個雙字詞，1＝同一個字，0＝沒有（和 Python 的 match_features 一樣）。
     /// 比的是字本身，不是字表編號，所以字表裡沒有的罕見字（人名、地名）也對得到；標點、空白不算。
-    func matchFeatures(_ q: [String], _ p: [String]) -> ([Int], [Int]) {
+    /// 異體字：比對時當成同一個字（問「台北」、維基寫「臺北」）。和 Python 的 VARIANTS 一樣
+    static let variants: [String: String] = ["臺": "台", "裏": "裡", "着": "著", "爲": "為", "衆": "眾", "綫": "線", "峯": "峰", "羣": "群",
+                                             "册": "冊", "啓": "啟", "牀": "床", "敎": "教", "眞": "真", "鷄": "雞", "麪": "麵",
+                                             "衞": "衛", "銹": "鏽", "竪": "豎", "滙": "匯"]
+
+    func matchFeatures(_ q0: [String], _ p0: [String]) -> ([Int], [Int]) {
+        let q = q0.map { Brain.variants[$0] ?? $0 }, p = p0.map { Brain.variants[$0] ?? $0 }
         struct Pair: Hashable { let a: String, b: String }
         func grams(_ x: [String]) -> Set<Pair> { x.count < 2 ? [] : Set((0..<(x.count - 1)).map { Pair(a: x[$0], b: x[$0 + 1]) }) }
         let qs = Set(q), ps = Set(p), qg = grams(q), pg = grams(p)

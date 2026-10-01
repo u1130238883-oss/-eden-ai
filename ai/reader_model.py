@@ -48,18 +48,27 @@ class ReaderTokenizer:
         return [self.stoi.get(c, UNK) for c in self.norm(s)]
 
 
+# 異體字：比對問題和段落時當成同一個字（問「台北」、維基寫「臺北」）。Swift 的 Brain.variants 要一樣
+VARIANTS = {"臺": "台", "裏": "裡", "着": "著", "爲": "為", "衆": "眾", "綫": "線", "峯": "峰", "羣": "群",
+            "册": "冊", "啓": "啟", "牀": "床", "敎": "教", "眞": "真", "鷄": "雞", "麪": "麵",
+            "衞": "衛", "銹": "鏽", "竪": "豎", "滙": "匯"}
+
+
 def match_features(q_chars, p_chars, skip=frozenset()):
     """每個字有沒有出現在另一邊：2＝同一個雙字詞，1＝同一個字（標點、空白不算），0＝沒有。
     比的是字本身（不是字表編號），所以字表裡沒有的罕見字（人名、地名）也對得到。"""
     def grams(a):
         return {(a[i], a[i + 1]) for i in range(len(a) - 1)}
+    raw_q, raw_p = q_chars, p_chars
+    q_chars = [VARIANTS.get(c, c) for c in q_chars]
+    p_chars = [VARIANTS.get(c, c) for c in p_chars]
     qs, ps = set(q_chars), set(p_chars)
     qg, pg = grams(q_chars), grams(p_chars)
 
     def feat(a, other_set, other_grams):
         out = []
         for i, t in enumerate(a):
-            if t in skip or t.isspace():
+            if t in skip or t.isspace():  # 標點用原字判斷（異體字表裡沒有標點）
                 out.append(0)
             elif (i > 0 and (a[i - 1], t) in other_grams) or (i + 1 < len(a) and (t, a[i + 1]) in other_grams):
                 out.append(2)

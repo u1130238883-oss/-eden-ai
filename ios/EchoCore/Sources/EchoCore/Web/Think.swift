@@ -22,6 +22,8 @@ public enum Think {
         public let read: Int
         public let relevant: Int
         public let hosts: [String]
+        /// 沒有任何一段讓大腦有把握（只是挑了最接近的）
+        public var unsure: Bool = false
     }
 
     /// 把網頁切成段落：每段兩三句（60～160 字）。段落小一點，一個網頁裡不同的重點才會被分別讀到
@@ -50,10 +52,14 @@ public enum Think {
     /// 問題裡的雙字詞（「三島」「由紀」「小說」……），用來粗略挑段落
     static func grams(_ q: String) -> Set<String> {
         let skip: Set<Character> = ["什", "麼", "嗎", "呢", "的", "是", "了", "哪", "誰", "為", "怎", "吧", "啊", "有", "個", "些", "都", "在"]
-        let c = Array(q.filter { !$0.isWhitespace && !$0.isPunctuation && !skip.contains($0) })
+        let c = Array(q.filter { !$0.isWhitespace && !$0.isPunctuation && !skip.contains($0) }.map(canon))
         guard c.count >= 2 else { return Set(c.map(String.init)) }
         return Set((0..<(c.count - 1)).map { String(c[$0...$0 + 1]) })
     }
+
+    /// 異體字當成同一個字（問「台北」、網頁寫「臺北」）
+    static func canon(_ c: Character) -> Character { Brain.variants[String(c)].flatMap(\.first) ?? c }
+    static func canonText(_ s: String) -> String { String(s.map(canon)) }
 
     /// 答案附近的那句話（給使用者看依據）
     static func sentence(around span: Brain.Span, in passage: String) -> String {
@@ -85,7 +91,8 @@ public enum Think {
         var seen = Set<String>()
         for p in pages + snippets {
             for para in passages(p.text) where seen.insert(String(para.prefix(40))).inserted {
-                let n = g.filter { para.contains($0) }.count
+                let cp = canonText(para)
+                let n = g.filter { cp.contains($0) }.count
                 if n > 0 { cands.append((para, p.host, n)) }
             }
         }
@@ -102,7 +109,10 @@ public enum Think {
         // （描述型的問題「他的書在講什麼」，相關段落常是 -3，不相關的是 -10 以下）
         let bestScore = all.map(\.span.score).max() ?? -100
         let floor: Float = -6
-        let readings = all.filter { $0.span.score > 0 || ($0.span.score > floor && $0.span.score > bestScore - 4) }
+        // 有把握的段落就只用它們；一段都沒有時，才退一步取最接近的兩三段（分數離最高分 2 分以內）
+        let sure = all.filter { $0.span.score > 0 }
+        let readings = !sure.isEmpty ? sure
+            : Array(all.filter { $0.span.score > floor && $0.span.score > bestScore - 2 }.sorted { $0.span.score > $1.span.score }.prefix(3))
         let unsure = bestScore <= 0
         let allHosts = Array(Set(readings.map(\.host)))
         guard !readings.isEmpty else {
@@ -132,22 +142,29 @@ public enum Think {
 
         // ⑤ 下結論
         var t = ""
-        let clear = topW >= 0.45 * total || groups.count <= 2
+        // 大腦有把握時，最好的那個說法就是答案（其他列為補充或不同說法）；沒把握時才整理成幾個重點
+        let clear = !unsure || topW >= 0.45 * total || groups.count <= 2
         if clear {
             let lead = top.best.values.max { $0.span.score < $1.span.score }!
             t = "答案：\(top.shown)"
             if top.best.count >= 2 { t += "（\(top.best.count) 個網站都這樣說）" }
             t += "\n依據：" + cite(lead)
             // 說法不一：第二名也有一定份量，而且不是同一件事
-            if let second = groups.dropFirst().first, weight(second) >= 0.5 * topW {
-                let r = second.best.values.max { $0.span.score < $1.span.score }!
+            // 只有第二名也很有把握、分數和第一名差不多時，才算說法不一（不然只是不相干的數字）
+            let leadScore = lead.span.score
+            func bestOf(_ g: Group) -> Reading { g.best.values.max { $0.span.score < $1.span.score }! }
+            if let second = groups.dropFirst().first, weight(second) >= 0.5 * topW,
+               bestOf(second).span.score > 1, bestOf(second).span.score >= leadScore - 1 {
+                let r = bestOf(second)
                 t += "\n⚠️ 來源說法不一：也有說是「\(second.shown)」，" + cite(r)
             }
             // 補充：其他在回答這個問題、但講法不同的段落（每個網站最多一句）
             var used = Set(top.best.keys)
             var more: [String] = []
             for gp in groups.dropFirst() where more.count < 2 {
-                guard let r = gp.best.values.max(by: { $0.span.score < $1.span.score }), used.insert(r.host).inserted else { continue }
+                // 補充也要夠相關：分數離答案不能太遠
+                guard let r = gp.best.values.max(by: { $0.span.score < $1.span.score }), r.span.score >= leadScore - 2,
+                      used.insert(r.host).inserted else { continue }
                 more.append("• " + cite(r))
             }
             if !more.isEmpty { t += "\n\n我還讀到：\n" + more.joined(separator: "\n") }
@@ -164,6 +181,6 @@ public enum Think {
             }
         }
         if unsure { t = "（我讀到的資料沒有直接講明，下面是最接近的內容，把握不高）\n" + t }
-        return Conclusion(text: t, confident: true, read: chosen.count, relevant: readings.count, hosts: allHosts)
+        return Conclusion(text: t, confident: true, read: chosen.count, relevant: readings.count, hosts: allHosts, unsure: unsure)
     }
 }

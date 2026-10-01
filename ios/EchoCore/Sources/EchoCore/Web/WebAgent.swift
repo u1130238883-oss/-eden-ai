@@ -343,7 +343,12 @@ public enum WebAgent {
             func judge(_ ps: [Understanding.Evidence], _ sn: [Understanding.Evidence]) -> (text: String, ok: Bool) {
                 if let brain = Brain.shared, let c = Think.conclude(question: question, pages: ps, snippets: sn, brain: brain) {
                     brainNote = "用大腦讀了 \(c.read) 段文字，判斷其中 \(c.relevant) 段在回答問題" + (c.hosts.isEmpty ? "" : "（來自 \(c.hosts.count) 個網站）") + "。"
+                    // 大腦有把握：用它的答案。沒把握時，舊方法有明確答案（數字、名單、地名）就用舊的，沒有才用大腦最接近的
+                    if c.confident && !c.unsure { brainAnswered = true; return (c.text, true) }
+                    let old = solve(fr, pages: ps, snippets: sn)
+                    if old.ok && !old.text.isEmpty { brainAnswered = false; return old }
                     if c.confident { brainAnswered = true; return (c.text, true) }
+                    return old
                 }
                 brainAnswered = false
                 return solve(fr, pages: ps, snippets: sn)
