@@ -361,21 +361,43 @@ public enum WebAgent {
                 }
             }()
             func judge(_ ps: [Understanding.Evidence], _ sn: [Understanding.Evidence]) -> (text: String, ok: Bool) {
-                if typedQ {
-                    let old = solve(fr, pages: ps, snippets: sn)
-                    if old.ok && !old.text.isEmpty { brainAnswered = false; return old }
-                }
-                if let brain = Brain.shared, let c = Think.conclude(question: question, pages: ps, snippets: sn, brain: brain, accept: accept) {
-                    brainNote = "用大腦讀了 \(c.read) 段文字，判斷其中 \(c.relevant) 段在回答問題" + (c.hosts.isEmpty ? "" : "（來自 \(c.hosts.count) 個網站）") + "。"
-                    // 大腦有把握：用它的答案。沒把握時，舊方法有明確答案（數字、名單、地名）就用舊的，沒有才用大腦最接近的
-                    if c.confident && !c.unsure { brainAnswered = true; return (c.text, true) }
-                    let old = solve(fr, pages: ps, snippets: sn)
-                    if old.ok && !old.text.isEmpty { brainAnswered = false; return old }
-                    if c.confident { brainAnswered = true; return (c.text, true) }
+                let old = solve(fr, pages: ps, snippets: sn)
+                let oldOK = old.ok && !old.text.isEmpty
+                guard let brain = Brain.shared,
+                      let c = Think.conclude(question: question, pages: ps, snippets: sn, brain: brain, accept: accept) else {
+                    brainAnswered = false
                     return old
                 }
+                brainNote = "用大腦讀了 \(c.read) 段文字，判斷其中 \(c.relevant) 段在回答問題" + (c.hosts.isEmpty ? "" : "（來自 \(c.hosts.count) 個網站）") + "。"
+                // 名單、步驟、原因：大腦一次只挑一段，交給會整理的方法
+                let needsAssembly: Bool = { switch fr.want { case .list, .steps, .reason: return true; default: return false } }()
+                if needsAssembly && oldOK { brainAnswered = false; return old }
+                let brainSure = c.confident && !c.unsure
+                // 兩邊互相檢查：投票的方法和大腦各提一個答案
+                if typedQ && oldOK && brainSure {
+                    let oldAns = Think.key(Understanding.match(old.text, #"答案：([^（。\n]+)"#)?[1] ?? "")
+                    let brainAns = Think.key(c.answer)
+                    if !oldAns.isEmpty && !brainAns.isEmpty && (oldAns.contains(brainAns) || brainAns.contains(oldAns)) {
+                        brainNote += "兩種方法得到同一個答案，互相印證。"
+                        brainAnswered = false
+                        return old
+                    }
+                    // 說法不同：大腦很有把握、而且不只一段文字支持時採用大腦的，否則用投票的；另一個說法也列出來
+                    if c.topScore >= 4 && c.support >= 2 || oldAns.isEmpty {
+                        brainNote += "投票的方法得到「\(oldAns)」，但大腦讀到更多、更有把握的說法，採用大腦的。"
+                        brainAnswered = true
+                        return (c.text + (oldAns.isEmpty ? "" : "\n⚠️ 也有資料指向「\(oldAns)」，兩者不一致，建議再確認。"), true)
+                    }
+                    brainNote += "大腦讀到的是「\(c.answer)」，和投票結果不同，但把握不夠，採用投票的。"
+                    brainAnswered = false
+                    return (old.text + "\n⚠️ 也有資料指向「\(c.answer)」，兩者不一致，建議再確認。", true)
+                }
+                if typedQ && oldOK { brainAnswered = false; return old }
+                if brainSure { brainAnswered = true; return (c.text, true) }
+                if oldOK { brainAnswered = false; return old }
+                if c.confident { brainAnswered = true; return (c.text, true) }
                 brainAnswered = false
-                return solve(fr, pages: ps, snippets: sn)
+                return old
             }
             var s = judge(ev(pages), snips)
             firstRoundOK = s.ok

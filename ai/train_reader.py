@@ -607,6 +607,12 @@ def main():
     rng = random.Random(2)
     opt = make_opt(model, core, 5e-4)
     best = {"f1": -1}
+    # 接著練的時候記得之前最好的成績，才不會拿比較差的版本蓋掉
+    prev = os.path.join(args.out, "reader.json")
+    if os.path.exists(prev):
+        pm = json.load(open(prev, encoding="utf-8"))
+        best["f1"] = pm.get("dev_f1", -1) + pm.get("dev_pick_mix", 0)
+        say(f"best so far f1 {pm.get('dev_f1', 0):.3f}")
 
     def qa_epoch(ep):
         smp = epoch_samples(tok, pools, contexts, ctx_items, rng)

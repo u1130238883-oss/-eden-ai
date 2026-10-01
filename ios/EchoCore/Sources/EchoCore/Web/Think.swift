@@ -24,6 +24,10 @@ public enum Think {
         public let hosts: [String]
         /// 沒有任何一段讓大腦有把握（只是挑了最接近的）
         public var unsure: Bool = false
+        /// 大腦選出的答案、它的把握（分數）、有幾段文字支持
+        public var answer: String = ""
+        public var topScore: Float = 0
+        public var support: Int = 0
     }
 
     /// 把網頁切成段落：每段兩三句（60～160 字）。段落小一點，一個網頁裡不同的重點才會被分別讀到
@@ -187,6 +191,8 @@ public enum Think {
             }
         }
         if unsure { t = "（我讀到的資料沒有直接講明，下面是最接近的內容，把握不高）\n" + t }
-        return Conclusion(text: t, confident: true, read: chosen.count, relevant: readings.count, hosts: allHosts, unsure: unsure)
+        let topBest = top.best.values.map(\.span.score).max() ?? 0
+        return Conclusion(text: t, confident: true, read: chosen.count, relevant: readings.count, hosts: allHosts, unsure: unsure,
+                          answer: top.shown, topScore: topBest, support: top.count)
     }
 }
