@@ -84,7 +84,7 @@ public enum Think {
     }
 
     public static func conclude(question: String, pages: [Understanding.Evidence], snippets: [Understanding.Evidence],
-                                brain: Brain, budget: Int = 40) -> Conclusion? {
+                                brain: Brain, budget: Int = 40, accept: ((String) -> Bool)? = nil) -> Conclusion? {
         // ① 切段、② 粗挑
         let g = grams(question)
         var cands: [(text: String, host: String, overlap: Int)] = []
@@ -103,7 +103,10 @@ public enum Think {
         // ③ 每一段都讓大腦讀
         var all: [Reading] = []
         for c in chosen {
-            if let sp = brain.read(question: question, passage: c.text) { all.append(Reading(passage: c.text, host: c.host, span: sp)) }
+            // accept：答案要像這題要的東西（問距離要有數字和單位……），不像的不算
+            if let sp = brain.read(question: question, passage: c.text), accept?(sp.text) ?? true {
+                all.append(Reading(passage: c.text, host: c.host, span: sp))
+            }
         }
         // 哪些段落算「在回答問題」：大腦有把握的（分數 > 0），或是明顯比其他段落高、又不會低得離譜的
         // （描述型的問題「他的書在講什麼」，相關段落常是 -3，不相關的是 -10 以下）
@@ -120,19 +123,22 @@ public enum Think {
         }
 
         // ④ 比對：同一個說法（或一個包含另一個）算一組；每個網站在一組裡只算一次，取最有把握的那段
-        struct Group { var shown: String; var key: String; var best: [String: Reading] }
+        struct Group { var shown: String; var key: String; var best: [String: Reading]; var count = 1 }
         var groups: [Group] = []
         for r in readings.sorted(by: { $0.span.score > $1.span.score }) {
             let k = key(r.span.text)
             guard !k.isEmpty else { continue }
             if let i = groups.firstIndex(where: { $0.key == k || ($0.key.count >= 2 && k.contains($0.key)) || (k.count >= 2 && $0.key.contains(k)) }) {
                 if groups[i].best[r.host] == nil { groups[i].best[r.host] = r }
+                groups[i].count += 1
             } else {
                 groups.append(Group(shown: r.span.text, key: k, best: [r.host: r]))
             }
         }
         func weight(_ g: Group) -> Float {
+            // 每個網站算一次（取最有把握的那段），同一個說法被越多段落提到份量越重
             g.best.values.reduce(0) { $0 + (min($1.span.score, 8) - floor) / (8 - floor) * hostWeight($1.host) + 0.2 }
+                + 0.25 * Float(min(g.count - 1, 4))
         }
         groups.sort { weight($0) > weight($1) }
         guard let top = groups.first else { return nil }

@@ -340,8 +340,26 @@ public enum WebAgent {
             }
             var snips = findings.map { Understanding.Evidence(text: $0.text, host: $0.host) }
             // 先讓大腦讀：每一段都由它判斷有沒有在回答問題、答案是什麼；它沒把握才用舊的規則
+            // 檢查答案像不像這題要的東西（像人回答前會先想：問距離，答案要有公里）
+            let accept: ((String) -> Bool)? = {
+                switch fr.want {
+                case let .number(_, units):
+                    return { a in a.contains(where: \.isNumber) && units.contains { a.contains($0) } || a.contains(where: \.isNumber) && units.isEmpty }
+                case .time:
+                    return { a in a.contains(where: \.isNumber) || ["年", "月", "日", "世紀", "朝"].contains { a.contains($0) } }
+                case .person, .place:
+                    return { a in a.count <= 16 && !a.contains(where: \.isNumber) }
+                default: return nil
+                }
+            }()
+            // 名單：大腦一次只挑一段，整理名單交給會讀表格的方法；它找不到才讓大腦試
+            let listQ: Bool = { if case .list = fr.want { return true }; return false }()
             func judge(_ ps: [Understanding.Evidence], _ sn: [Understanding.Evidence]) -> (text: String, ok: Bool) {
-                if let brain = Brain.shared, let c = Think.conclude(question: question, pages: ps, snippets: sn, brain: brain) {
+                if listQ {
+                    let old = solve(fr, pages: ps, snippets: sn)
+                    if old.ok && !old.text.isEmpty { brainAnswered = false; return old }
+                }
+                if let brain = Brain.shared, let c = Think.conclude(question: question, pages: ps, snippets: sn, brain: brain, accept: accept) {
                     brainNote = "用大腦讀了 \(c.read) 段文字，判斷其中 \(c.relevant) 段在回答問題" + (c.hosts.isEmpty ? "" : "（來自 \(c.hosts.count) 個網站）") + "。"
                     // 大腦有把握：用它的答案。沒把握時，舊方法有明確答案（數字、名單、地名）就用舊的，沒有才用大腦最接近的
                     if c.confident && !c.unsure { brainAnswered = true; return (c.text, true) }
