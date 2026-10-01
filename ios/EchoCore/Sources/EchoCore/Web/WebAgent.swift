@@ -352,10 +352,16 @@ public enum WebAgent {
                 default: return nil
                 }
             }()
-            // 名單：大腦一次只挑一段，整理名單交給會讀表格的方法；它找不到才讓大腦試
-            let listQ: Bool = { if case .list = fr.want { return true }; return false }()
+            // 要特定形式答案的題目（數字、地名、人名、時間、名單、原因、步驟）：先用跨來源投票、讀表格的方法，
+            // 它找不到才讓大腦讀；開放的題目（「X 在講什麼」「X 是什麼」、比較）由大腦主導
+            let typedQ: Bool = {
+                switch fr.want {
+                case .number, .place, .person, .time, .list, .reason, .steps: return true
+                default: return false
+                }
+            }()
             func judge(_ ps: [Understanding.Evidence], _ sn: [Understanding.Evidence]) -> (text: String, ok: Bool) {
-                if listQ {
+                if typedQ {
                     let old = solve(fr, pages: ps, snippets: sn)
                     if old.ok && !old.text.isEmpty { brainAnswered = false; return old }
                 }
