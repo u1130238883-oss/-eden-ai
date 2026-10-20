@@ -78,6 +78,32 @@ public enum Think {
         return out.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// 段落的第一句（給「次要・補充」用，最多 80 字）
+    static func lead(_ passage: String) -> String {
+        var out = ""
+        for ch in passage {
+            out.append(ch)
+            if "。！？!?；".contains(ch) || out.count >= 80 { break }
+        }
+        return out.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// 主次：大腦判斷「講的是同一件事、但不是直接回答」的段落，當成次要・補充（每個網站一段、最多兩段）
+    static func secondary(_ all: [Reading], excluding used: [Reading]) -> [String] {
+        guard all.contains(where: { $0.span.main >= 0 }) else { return [] }
+        var seen = Set(used.map { String($0.passage.prefix(30)) })
+        var hosts = Set<String>()
+        var out: [String] = []
+        let cands = all.filter { $0.span.side > 0.3 && $0.span.side + $0.span.main > 2 * $0.span.none }
+            .sorted { $0.span.side + $0.span.main > $1.span.side + $1.span.main }
+        for r in cands where out.count < 2 {
+            guard seen.insert(String(r.passage.prefix(30))).inserted, hosts.insert(r.host).inserted else { continue }
+            let l = lead(r.passage)
+            if l.count >= 8 { out.append("• 「\(l)」（\(r.host)）") }
+        }
+        return out
+    }
+
     static func key(_ s: String) -> String {
         s.lowercased().filter { !$0.isWhitespace && !$0.isPunctuation && !"「」『』《》()（）".contains($0) }
     }
@@ -118,8 +144,10 @@ public enum Think {
         let floor: Float = -6
         // 有把握的段落就只用它們；一段都沒有時，才退一步取最接近的兩三段（分數離最高分 2 分以內）
         let sure = all.filter { $0.span.score > 0 }
+        // 主次判斷：大腦覺得「跟這題無關」的段落（無關的機率過半）就不拿來湊答案
+        let related = all.filter { $0.span.main < 0 || $0.span.none < 0.5 }
         let readings = !sure.isEmpty ? sure
-            : Array(all.filter { $0.span.score > floor && $0.span.score > bestScore - 2 }.sorted { $0.span.score > $1.span.score }.prefix(3))
+            : Array(related.filter { $0.span.score > floor && $0.span.score > bestScore - 2 }.sorted { $0.span.score > $1.span.score }.prefix(3))
         let unsure = bestScore <= 0
         let allHosts = Array(Set(readings.map(\.host)))
         guard !readings.isEmpty else {
@@ -190,6 +218,8 @@ public enum Think {
                 t += "\n\(n). \(gp.shown) —— " + cite(r)
             }
         }
+        let side = secondary(all, excluding: readings)
+        if !side.isEmpty { t += "\n\n【次要・補充】\n" + side.joined(separator: "\n") }
         if unsure { t = "（我讀到的資料沒有直接講明，下面是最接近的內容，把握不高）\n" + t }
         let topBest = top.best.values.map(\.span.score).max() ?? 0
         return Conclusion(text: t, confident: true, read: chosen.count, relevant: readings.count, hosts: allHosts, unsure: unsure,

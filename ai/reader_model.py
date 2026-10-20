@@ -110,6 +110,9 @@ class Reader:
         p["lnf_b"] = np.zeros(C, np.float32)
         p["w_span"] = w(C, 2)
         p["b_span"] = np.zeros(2, np.float32)
+        # 主次判斷：看 [CLS]，這段對這個問題是 0 無關、1 次要（同一件事的補充）、2 主要（直接回答）
+        p["w_rel"] = w(C, 3)
+        p["b_rel"] = np.zeros(3, np.float32)
         self.p = p
 
     def num_params(self):
@@ -153,6 +156,7 @@ class Reader:
         ls = logits[..., 0] + neg
         le = logits[..., 1] + neg
         if starts is None:
+            self._xf = xf
             return ls, le
         ps, pe = softmax(ls), softmax(le)
         rows = np.arange(B)
@@ -162,6 +166,11 @@ class Reader:
         dlog = np.stack([ps, pe], -1) / np.float32(2 * B)
         self._cache = (idx, seg, mat, caches, xf, c_lnf, dlog)
         return loss
+
+    def relevance(self):
+        """上一次 forward 的主次判斷：每一筆 (無關, 次要, 主要) 的機率"""
+        z = self._xf[:, 0] @ self.p["w_rel"] + self.p["b_rel"]
+        return softmax(z)
 
     # ---------------- backward（手推梯度）
     def backward(self):
@@ -223,7 +232,7 @@ class Reader:
         for l in range(self.cfg["n_layer"]):
             names += [f"h{l}.{n}" for n in ("ln1_g", "ln1_b", "w_qkv", "b_qkv", "w_o", "b_o",
                                              "ln2_g", "ln2_b", "w_fc", "b_fc", "w_proj", "b_proj")]
-        return names + ["lnf_g", "lnf_b", "w_span", "b_span"]
+        return names + ["lnf_g", "lnf_b", "w_span", "b_span", "w_rel", "b_rel"]
 
     def export(self, bin_path, json_path, tokenizer, extra=None):
         """權重存成 float16（檔案小一半），Swift 讀進來再轉回 float32。"""

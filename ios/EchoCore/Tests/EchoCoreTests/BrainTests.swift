@@ -11,6 +11,9 @@ final class BrainTests: XCTestCase {
         let score: Float
         let start: Int
         let end: Int
+        let main: Float?
+        let side: Float?
+        let none: Float?
     }
 
     static let resources = EchoCoreTests.resources
@@ -33,6 +36,12 @@ final class BrainTests: XCTestCase {
             XCTAssertEqual(got?.text, c.text, c.question)
             XCTAssertEqual(got?.start, c.start, c.question)
             XCTAssertEqual(got?.score ?? 0, c.score, accuracy: max(0.05, abs(c.score) * 0.01), c.question)
+            // 主次判斷（主要／次要／無關）也要和 Python 一樣
+            if let m = c.main, let sd = c.side, let n = c.none {
+                XCTAssertEqual(got?.main ?? -1, m, accuracy: 0.01, c.question)
+                XCTAssertEqual(got?.side ?? -1, sd, accuracy: 0.01, c.question)
+                XCTAssertEqual(got?.none ?? -1, n, accuracy: 0.01, c.question)
+            }
         }
     }
 

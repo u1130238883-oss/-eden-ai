@@ -31,6 +31,10 @@ final class ChatViewModel: ObservableObject {
     private static let coreURL = docs.appendingPathComponent("ninesun-core.json")
     /// 自我升級的經驗（哪些網站、哪種查法有用），只有幾 KB，不存答案
     private static let tuningURL = docs.appendingPathComponent("ninesun-selftuning.json")
+    /// 知識筆記本：查證過的答案（拿來對照，不直接拿來回答）
+    private static let notebookURL = docs.appendingPathComponent("ninesun-notebook.json")
+    /// 上一個上網查的問題（「繼續查」用）
+    private var lastWebQuestion: String?
 
     init() {
         options = load("options") ?? SamplingOptions()
@@ -43,6 +47,9 @@ final class ChatViewModel: ObservableObject {
         try? FileManager.default.removeItem(at: Self.docs.appendingPathComponent("ninesun-webmemory.json"))
         if let d = try? Data(contentsOf: Self.tuningURL), let st = try? JSONDecoder().decode(SelfTuning.State.self, from: d) {
             SelfTuning.shared.state = st
+        }
+        if let d = try? Data(contentsOf: Self.notebookURL), let st = try? JSONDecoder().decode(Notebook.State.self, from: d) {
+            Notebook.shared.state = st
         }
         if let data = try? Data(contentsOf: Self.historyURL),
            let saved = try? JSONDecoder().decode([ChatTurn].self, from: data) {
@@ -121,10 +128,25 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
+        // 知識筆記：看看它學到了什麼
+        if ["知識筆記", "你的筆記", "你學到了什麼", "你學到什麼"].contains(where: { text.contains($0) }) {
+            finish(ChatTurn(role: .echo, text: Notebook.shared.summary(), source: .tool))
+            return
+        }
+
+        // 不放棄：「繼續查」→ 換個方向把上一題再查一次
+        if ["繼續查", "再查一次", "再查查", "繼續研究"].contains(text), let q = lastWebQuestion {
+            lookupWeb(q, autoDetect ? Lang.detect(q, fallback: language) : language, reflect: true)
+            return
+        }
+
         // 知錯能改：剛剛上網查的答案被說「不對」→ 反省用過的來源、扣分，避開它們換個查法重查
         if Mind.isCorrection(text), let last = turns.dropLast().suffix(3).last(where: { $0.role == .echo && $0.query != nil }), let q = last.query {
             let hosts = SelfTuning.hosts(in: last.text)
             SelfTuning.shared.feedback(kind: SelfTuning.kind(Understanding.frame(q).want), hosts: hosts, positive: false)
+            // 記進筆記：這題被說不對（有說正確答案的話也記下來，下次查證）
+            Notebook.shared.dispute(q, userSaid: Mind.claim(text))
+            saveFile(Notebook.shared.state, Self.notebookURL)
             lookupWeb(q, autoDetect ? Lang.detect(q, fallback: language) : language, avoid: hosts, reflect: true)
             return
         }
@@ -161,8 +183,10 @@ final class ChatViewModel: ObservableObject {
     private func lookupWeb(_ q: String, _ L: Lang, quietIfNothing: Bool = false, avoid: [String] = [], reflect: Bool = false) {
         let book = rules
         thinking = true
+        lastWebQuestion = q
+        let asker = profile.birthday.map { Destiny($0).type }
         Task { [self] in
-            let r = await WebAgent.run(q, facts: nil, lang: L, avoid: avoid, reflect: reflect)
+            let r = await WebAgent.run(q, facts: nil, lang: L, avoid: avoid, reflect: reflect, asker: asker)
             if quietIfNothing && (!r.found || !r.answered) {
                 await MainActor.run { self.saveFile(SelfTuning.shared.state, Self.tuningURL); self.thinking = false; self.streaming = nil; self.saveHistory() }
                 return
@@ -173,6 +197,7 @@ final class ChatViewModel: ObservableObject {
             turn.query = q
             await MainActor.run {
                 self.saveFile(SelfTuning.shared.state, Self.tuningURL)
+                self.saveFile(Notebook.shared.state, Self.notebookURL)
                 self.finish(turn)
             }
         }

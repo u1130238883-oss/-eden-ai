@@ -159,8 +159,9 @@ public enum WebAgent {
     }
 
     /// avoid：上次答錯時用過的網站（反思後這次避開）；reflect：被指正後重查，先用備用查法
+    /// asker：問問題的人的九型（從他的生日算出來），用他在意的方式交代重點
     public static func run(_ question: String, facts: String? = nil, also: [String] = [], lang L: Lang,
-                           avoid: [String] = [], reflect: Bool = false) async -> Result {
+                           avoid: [String] = [], reflect: Bool = false, asker: Int? = nil) async -> Result {
         // 使用者給了網址：直接讀那個網頁
         if facts == nil, let url = firstURL(question), url.count >= question.count - 2 { return await readLink(url, lang: L) }
         let fortune = facts != nil
@@ -643,7 +644,14 @@ public enum WebAgent {
         }
         if zh {
             // 手機上先給答案，不重述問題、不寒暄；思路放最後、精簡成幾行
+            // 聽起來在擔心：先接住，再講重點
+            if !fortune && Mind.worried(question) { t += "💛 聽起來你有點擔心，我先把查到的重點講清楚：\n\n" }
             t += "📌 " + (fortune ? "網路上的說法" : "回答") + "\n" + answer
+            // 收集知識：有把握的答案記進筆記本；以前記過的拿來對照（筆記不直接拿來回答，每次都重新查證）
+            if !fortune, let fr, solved?.ok == true, let short = Understanding.match(answer, #"答案：([^（。\n⚠]+)"#)?[1],
+               let line = Notebook.shared.compare(question, answer: short, hosts: SelfTuning.hosts(in: answer), recent: fr.recent) {
+                t += "\n" + line
+            }
             for (title, pts) in sections {
                 let numbered = plan.kind == .method || title == "可以怎麼做" || title == "步驟"
                 t += "\n\n【\(title)】\n" + pts.enumerated().map { numbered ? "\($0.offset + 1). \($0.element)" : "• \($0.element)" }.joined(separator: "\n")
@@ -657,6 +665,7 @@ public enum WebAgent {
                                                     trusted: trustedHosts, disagree: disagree, recent: fr.recent)
                 // 只提一個最可能的下一步
                 if let more = Mind.followUps(fr).first { t += "\n💬 你可能還想知道：" + more }
+                if let mine = Mind.forAsker(type: asker, want: fr.want) { t += "\n" + mine }
             }
             // 我的思路（精簡版）
             t += "\n\n🔎 我的思路："

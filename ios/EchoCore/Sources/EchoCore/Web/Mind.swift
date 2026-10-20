@@ -64,6 +64,39 @@ public enum Mind {
         }
     }
 
+    /// 揣測問問題的人：用他自己的九型（生日算出來的），把同一個答案用他在意的方式交代重點
+    public static func forAsker(type t: Int?, want: Understanding.Want?) -> String? {
+        guard let t, (1...9).contains(t) else { return nil }
+        let name = NT.typeName(t)
+        let tip: String
+        switch t {
+        case 1: tip = "你在意正確和細節：答案都附了來源，說法不一致的地方我也標出來了，可以照來源核對"
+        case 2: tip = "如果你是幫別人查的，「回答」那段可以直接轉給對方，來源也在裡面"
+        case 3: tip = "重點一句話：看「回答」那一行就夠了，補充的需要時再看"
+        case 4: tip = "除了答案本身，「換個角度」和「次要・補充」裡的故事和不同看法，可能更合你的胃口"
+        case 5: tip = "想深入的話，可以讀我列的原始來源；「我的思路」裡寫了我怎麼判斷、哪裡還不確定"
+        case 6: tip = "把握程度和來源可不可靠我都寫出來了；把握不高的地方，建議再向官方或專業的人確認"
+        case 7: tip = "簡單說：看「回答」就好；想多知道一點，可以叫我換個角度再查"
+        case 8: tip = "結論先講：以「回答」為準；有爭議的地方我也直接點出來了"
+        default: tip = "不同的說法我都列了，不用急著選邊，先看大家一致的部分"
+        }
+        var extra = ""
+        if case .compare = want, t == 6 || t == 9 { extra = "；比較類的問題沒有標準答案，選你用起來安心的就好" }
+        return "🎯 給你（第\(t)型・\(name)）的重點：" + tip + extra + "。"
+    }
+
+    /// 聽起來在擔心、心煩：先接住情緒，再講答案
+    public static func worried(_ q: String) -> Bool {
+        ["擔心", "害怕", "好怕", "很怕", "焦慮", "緊張", "好煩", "很煩", "崩潰", "不知道該怎麼辦", "該怎麼辦才好", "嚇死"].contains { q.contains($0) }
+    }
+
+    /// 指正裡帶的正確答案：「不對，是1912年」→「1912年」
+    public static func claim(_ text: String) -> String? {
+        guard let m = Understanding.match(text, #"(?:應該是|其實是|明明是|是)([^，。,.!！?？]{1,20})[。.!！]?$"#)?[1] else { return nil }
+        let c = m.trimmingCharacters(in: .whitespaces)
+        return c.isEmpty || ["這樣", "這個", "那樣"].contains(c) ? nil : c
+    }
+
     /// 使用者在說「你答錯了」
     public static func isCorrection(_ text: String) -> Bool {
         // 「對不對」是在問，不是在指正；指正通常很短（「不對吧」「你答錯了」）

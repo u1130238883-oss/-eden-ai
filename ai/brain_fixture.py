@@ -19,9 +19,12 @@ def load(res_dir, name="reader"):
     raw = np.fromfile(os.path.join(res_dir, name + ".bin"), dtype="<f2").astype(np.float32)
     cfg = meta["config"]
     m = Reader(cfg["vocab_size"], n_ctx=cfg["n_ctx"], n_embd=cfg["n_embd"], n_head=cfg["n_head"], n_layer=cfg["n_layer"])
+    names = set()
     for t in meta["tensors"]:
         n = int(np.prod(t["shape"]))
         m.p[t["name"]] = raw[t["offset"]:t["offset"] + n].reshape(t["shape"])
+        names.add(t["name"])
+    m.has_rel = "w_rel" in names
     stoi = {}
     for i, s in enumerate(meta["vocab"]):
         stoi.setdefault(s, i)
@@ -53,6 +56,7 @@ def read(m, meta, stoi, question, passage, max_answer=40):
         cand = np.ones_like(a, dtype=bool)
         ls, le = m.forward(a, s_, cand, mt)
         ls, le = ls[0], le[0]
+        rel = m.relevance()[0] if getattr(m, "has_rel", False) else None
         none = ls[0] + le[0]
         pos = list(range(base, base + len(piece)))
         s_top = sorted(pos, key=lambda i: -ls[i])[:20]
@@ -64,6 +68,8 @@ def read(m, meta, stoi, question, passage, max_answer=40):
                     if best is None or sc > best["score"]:
                         a0, b0 = start + s - base, start + e - base
                         best = {"text": passage[a0:b0 + 1], "score": sc, "start": a0, "end": b0}
+                        if rel is not None:
+                            best.update(none=float(rel[0]), side=float(rel[1]), main=float(rel[2]))
         if start + L >= len(pc):
             break
         start += stride
@@ -76,6 +82,7 @@ CASES = [
     ("月球距離地球多遠？", "月球是地球唯一的天然衛星。月球與地球的平均距離約為384,400公里，大約是地球直徑的30倍。月球表面布滿了撞擊坑。"),
     ("誰發明了電話？", "電話是一種可以傳送與接收聲音的遠程通訊設備。一般認為亞歷山大·格拉漢姆·貝爾在1876年取得了電話的專利。早期的電話需要接線生轉接。"),
     ("感冒要看哪一科？", "今天天氣很好，我們去公園散步。公園裡有很多人在跑步，還有小朋友在玩溜滑梯。"),
+    ("台北101有多高？", "台北101的外觀設計靈感來自竹子，象徵節節高升。每年跨年夜都會在這裡施放煙火，吸引數十萬人前往觀賞。"),
 ]
 
 
@@ -85,6 +92,6 @@ if __name__ == "__main__":
     rows = []
     for q, p in CASES:
         r = read(m, meta, stoi, q, p)
-        print(q, "→", r and (r["text"], round(r["score"], 2)))
+        print(q, "→", r and (r["text"], round(r["score"], 2), [round(r[k], 2) for k in ("main", "side", "none") if k in r]))
         rows.append({"question": q, "passage": p, **(r or {"text": "", "score": 0, "start": -1, "end": -1})})
     json.dump(rows, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)

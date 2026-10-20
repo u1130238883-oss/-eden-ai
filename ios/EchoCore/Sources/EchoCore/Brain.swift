@@ -43,6 +43,10 @@ public final class Brain {
         /// 答案在段落裡的位置（Unicode 字元）
         public let start: Int
         public let end: Int
+        /// 主次判斷（機率）：這段對問題是主要（直接回答）、次要（同一件事的補充）、無關。舊版大腦沒有這個判斷時是 -1
+        public var main: Float = -1
+        public var side: Float = -1
+        public var none: Float = -1
     }
 
     public let config: Config
@@ -51,6 +55,8 @@ public final class Brain {
     let unk: Int, cls: Int, sep: Int
     let qMax: Int
     let wte, wpe, wse, wme, lnfg, lnfb, wspan, bspan: [Float]
+    /// 主次判斷（看 [CLS]）：(無關, 次要, 主要)；舊版大腦沒有
+    let wrel: [Float]?, brel: [Float]?
     /// 標點：不算「跟問題一樣的字」
     let punct: Set<String>
     let layers: [Layer]
@@ -86,6 +92,7 @@ public final class Brain {
         wte = try get("wte"); wpe = try get("wpe"); wse = try get("wse"); wme = try get("wme")
         lnfg = try get("lnf_g"); lnfb = try get("lnf_b")
         wspan = try get("w_span"); bspan = try get("b_span")
+        wrel = table["w_rel"]; brel = table["b_rel"]
         var ls: [Layer] = []
         for l in 0..<config.n_layer {
             let p = "h\(l)."
@@ -158,7 +165,7 @@ public final class Brain {
             let segs = [Int](repeating: 0, count: q.count + 2) + [Int](repeating: 1, count: piece.count + 1)
             let (mq, mp) = matchFeatures(qChars, Array(pChars[start..<min(start + L, pChars.count)]))
             let base = q.count + 2
-            let (ls, le) = logits(tokens, segs, [0] + mq + [0] + mp + [0])
+            let (ls, le, rel) = logits(tokens, segs, [0] + mq + [0] + mp + [0])
             let none = ls[0] + le[0]
             // 開始、結束各挑分數最高的 20 個位置組合（結束不能在開始之前、長度有上限）
             let pos = Array(base..<(base + piece.count))
@@ -172,6 +179,7 @@ public final class Brain {
                         var text = ""
                         text.unicodeScalars.append(contentsOf: scalars[a...b])
                         best = Span(text: text, score: sc, start: a, end: b)
+                        if let rel { best!.none = rel[0]; best!.side = rel[1]; best!.main = rel[2] }
                     }
                 }
             }
@@ -205,7 +213,7 @@ public final class Brain {
     }
 
     /// 前向傳播：回傳每個位置「答案從這裡開始／到這裡結束」的分數
-    func logits(_ tokens: [Int], _ segs: [Int], _ mat: [Int]) -> (start: [Float], end: [Float]) {
+    func logits(_ tokens: [Int], _ segs: [Int], _ mat: [Int]) -> (start: [Float], end: [Float], rel: [Float]?) {
         let T = tokens.count, C = config.n_embd, H = config.n_head, D = C / H
         var x = [Float](repeating: 0, count: T * C)
         for t in 0..<T {
@@ -247,7 +255,16 @@ public final class Brain {
         }
         let xf = Brain.layerNorm(x, lnfg, lnfb, T, C)
         let lg = Brain.matmul(xf, wspan, bspan, T, C, 2)
-        return ((0..<T).map { lg[$0 * 2] }, (0..<T).map { lg[$0 * 2 + 1] })
+        var rel: [Float]?
+        if let wrel, let brel {
+            // [CLS]（第 0 個位置）→ 三個分數 → 機率
+            let z = Brain.matmul(Array(xf[0..<C]), wrel, brel, 1, C, 3)
+            let m = z.max() ?? 0
+            let e = z.map { exp($0 - m) }
+            let sum = e.reduce(0, +)
+            rel = e.map { $0 / sum }
+        }
+        return ((0..<T).map { lg[$0 * 2] }, (0..<T).map { lg[$0 * 2 + 1] }, rel)
     }
 
     static func layerNorm(_ x: [Float], _ g: [Float], _ b: [Float], _ T: Int, _ C: Int) -> [Float] {

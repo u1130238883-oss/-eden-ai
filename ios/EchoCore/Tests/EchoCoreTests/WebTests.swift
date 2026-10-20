@@ -70,6 +70,55 @@ final class WebRoutingTests: XCTestCase {
         XCTAssertEqual(WebFortune.judge("癸水生於冬月，喜火調候", c).0, .conflicts)
         XCTAssertEqual(WebFortune.judge("身強的癸水喜木火洩秀", c).0, .conflicts)
         XCTAssertEqual(WebStrategy.toTraditional("甲状腺功能减退的症状"), "甲狀腺功能減退的症狀")
+
+        // Google 基本版網頁：/url?q= 換回原網址，Google 自己的連結不算
+        let g = """
+        <div><a href="/url?q=https://zh.wikipedia.org/zh-tw/%E5%8F%B0%E5%8C%97101&amp;sa=U&amp;ved=x"><h3 class="a"><div>台北101 - 維基百科</div></h3></a></div>
+        <div class="s"><div>台北101是位於臺灣臺北市信義區的摩天大樓，樓高508公尺。</div></div>
+        <a href="/url?q=https://support.google.com/websearch&amp;sa=U"><h3>說明</h3></a>
+        <a href="/url?q=https://www.taipei-101.com.tw/&amp;sa=U"><h3>TAIPEI 101 官方網站</h3></a><div>觀景台開放時間與票價</div>
+        """
+        let gh = WebSearch.googleResults(g)
+        XCTAssertEqual(gh.count, 2)
+        XCTAssertEqual(gh.first?.url, "https://zh.wikipedia.org/zh-tw/台北101")
+        XCTAssertEqual(gh.first?.title, "台北101 - 維基百科")
+        XCTAssertTrue(gh.first?.snippet.contains("508公尺") == true, gh.first?.snippet ?? "")
+        XCTAssertEqual(gh.last?.engine, "Google")
+    }
+}
+
+/// 知識筆記、指正、揣測問的人（不用連網）
+final class NotebookTests: XCTestCase {
+    func testNotebookComparesWithWhatItLearned() {
+        let nb = Notebook()
+        let day: TimeInterval = 86_400
+        let t0 = Date(timeIntervalSince1970: 1_800_000_000)
+        // 第一次：只記下來，不多說
+        XCTAssertNil(nb.compare("台北101有多高？", answer: "508公尺", hosts: ["zh.wikipedia.org"], now: t0))
+        // 換個問法、同樣的答案：說出來，查到次數 +1
+        let same = nb.compare("請問台北101有多高啊", answer: "508 公尺", hosts: ["www.taipei-101.com.tw"], now: t0 + 3 * day)
+        XCTAssertTrue(same?.contains("一樣") == true && same?.contains("第 2 次") == true, same ?? "nil")
+        // 不一樣：說出來、以新的為準
+        let diff = nb.compare("台北101有多高", answer: "509公尺", hosts: [], now: t0 + 4 * day)
+        XCTAssertTrue(diff?.contains("不一樣") == true && diff?.contains("508") == true, diff ?? "nil")
+        // 被指正，也說了正確答案：下次查到一樣的，說使用者是對的
+        nb.dispute("台北101有多高", userSaid: "508公尺")
+        let fixed = nb.compare("台北101有多高", answer: "508公尺", hosts: [], now: t0 + 5 * day)
+        XCTAssertTrue(fixed?.contains("你是對的") == true, fixed ?? "nil")
+        XCTAssertTrue(nb.summary().contains("台北101"))
+    }
+
+    func testCorrectionClaimAndAsker() {
+        XCTAssertEqual(Mind.claim("不對，是1912年"), "1912年")
+        XCTAssertEqual(Mind.claim("錯了，應該是唐朝"), "唐朝")
+        XCTAssertNil(Mind.claim("不是這樣"))
+        XCTAssertNil(Mind.claim("你答錯了"))
+        XCTAssertTrue(Mind.worried("我好擔心甲狀腺的問題"))
+        XCTAssertFalse(Mind.worried("台北101有多高"))
+        XCTAssertNil(Mind.forAsker(type: nil, want: .number))
+        let six = Mind.forAsker(type: 6, want: .number) ?? ""
+        XCTAssertTrue(six.contains("第6型") && six.contains("確認"), six)
+        XCTAssertNotEqual(Mind.forAsker(type: 3, want: .number), Mind.forAsker(type: 5, want: .number))
     }
 }
 

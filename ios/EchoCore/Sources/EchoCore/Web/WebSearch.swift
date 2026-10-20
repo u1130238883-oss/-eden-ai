@@ -5,7 +5,7 @@ import FoundationNetworking
 
 /// 上網查資料（全部免費、不需要任何金鑰）。
 /// 同時問好幾個來源，誰有結果就用誰：
-///   Bing（RSS 與網頁）、DuckDuckGo（網頁與即時答案）、維基百科、Google 新聞 RSS、Open-Meteo 天氣。
+///   Bing（RSS 與網頁）、DuckDuckGo（網頁與即時答案）、Yahoo、Google（基本版網頁）、維基百科、Google 新聞 RSS、Open-Meteo 天氣。
 /// 每一次都是即時上網查，不在手機裡存舊答案。
 public enum WebSearch {
     public struct Hit: Equatable {
@@ -50,18 +50,22 @@ public enum WebSearch {
             async let wk = wikiSearch(wikiTerm(q), L)
             let a = await bingRSS(q, L)
             let b: [Hit] = a.count < 3 ? await yahoo(q, L) : []
+            // Bing 跟 Yahoo 都給不出什麼：不放棄，再問 Google
+            let g: [Hit] = a.count + b.count < 3 ? await google(q, L) : []
             let w = await wk
             var seen = Set<String>()
             var hits: [Hit] = []
-            for i in 0..<max(a.count, b.count, w.count) {
-                for l in [a, w, b] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
+            for i in 0..<max(a.count, b.count, w.count, g.count) {
+                for l in [a, w, b, g] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
             }
-            return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)), engines: ["bing": a.count, "yahoo": b.count, "wikipedia": w.count])
+            return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)),
+                          engines: ["bing": a.count, "yahoo": b.count, "google": g.count, "wikipedia": w.count])
         }
         async let rss = bingRSS(q, L)
         async let bh = bingHTML(q, L)
         async let dh = ddgHTML(q, L)
         async let yh = yahoo(q, L)
+        async let gg = google(q, L)
         async let ws = wikiSearch(wikiTerm(q), L)
         async let inst = ddgInstant(q, L)
         async let wk = wikiSummary(wikiTerm(q), L)
@@ -70,7 +74,7 @@ public enum WebSearch {
         async let fx = exchangeIf(q, L)
         async let mk = marketIf(q, L)
 
-        let lists: [(String, [Hit])] = [("news", await nw), ("bing", await rss), ("bing-web", await bh), ("duckduckgo", await dh), ("yahoo", await yh), ("wikipedia", await ws)]
+        let lists: [(String, [Hit])] = [("news", await nw), ("bing", await rss), ("bing-web", await bh), ("duckduckgo", await dh), ("yahoo", await yh), ("google", await gg), ("wikipedia", await ws)]
         var engines: [String: Int] = [:]
         var hits: [Hit] = []
         var seen = Set<String>()
@@ -135,6 +139,34 @@ public enum WebSearch {
         while u.count % 4 != 0 { u += "=" }
         if let d = Data(base64Encoded: u), let s = String(data: d, encoding: .utf8), s.hasPrefix("http") { return s }
         return href
+    }
+
+    // MARK: - Google（基本版網頁，結果連結是 /url?q=原網址；Google 擋自動查詢時就沒有結果，其他來源照常）
+
+    static func google(_ q: String, _ L: Lang) async -> [Hit] {
+        let hl = L == .zh ? "zh-TW" : L.rawValue
+        guard let url = URL(string: "https://www.google.com/search?q=\(enc(q))&hl=\(hl)&gbv=1&num=10&ie=UTF-8"),
+              let html = await text(url, L, ua: "Lynx/2.9.0 libwww-FM/2.14 SSL-MM/1.4.1") else { return [] }
+        return googleResults(html)
+    }
+
+    /// 從 Google 基本版網頁抓出結果（標題、摘要、原網址）
+    static func googleResults(_ html: String) -> [Hit] {
+        var out: [Hit] = []
+        var seen = Set<String>()
+        for block in html.components(separatedBy: "href=\"/url?q=").dropFirst() {
+            guard let end = block.firstIndex(where: { $0 == "&" || $0 == "\"" }) else { continue }
+            let raw = String(block[..<end])
+            let link = raw.removingPercentEncoding ?? raw
+            guard link.hasPrefix("http"), !host(link).hasSuffix("google.com"), seen.insert(link).inserted else { continue }
+            guard let title = first(#"<h3[^>]*>(.*?)</h3>"#, block, group: 1).map(clean), !title.isEmpty else { continue }
+            var snip = ""
+            if let a = block.range(of: "</a>") { snip = clean(String(block[a.upperBound...])) }
+            if snip.hasSuffix("<a") { snip = String(snip.dropLast(2)).trimmingCharacters(in: .whitespaces) }  // 下一個結果的開頭
+            out.append(Hit(title: title, snippet: clip(snip, 300), url: link, engine: "Google"))
+            if out.count >= 8 { break }
+        }
+        return out
     }
 
     // MARK: - Yahoo（台灣用 tw.search.yahoo.com）

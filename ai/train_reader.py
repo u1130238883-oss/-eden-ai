@@ -93,6 +93,10 @@ class TorchReader(torch.nn.Module):
         neg = torch.where(cand, 0.0, -1e9)
         return lg[..., 0] + neg, lg[..., 1] + neg
 
+    def rel_logits(self, xf):
+        """主次判斷：[CLS] → (無關, 次要, 主要)"""
+        return xf[:, 0].float() @ self.P["w_rel"] + self.P["b_rel"]
+
     def mlm_logits(self, xf):
         h = F.gelu(xf @ self.mlm_w + self.mlm_b)
         h = F.layer_norm(h, (h.shape[-1],), self.mlm_g, self.mlm_lb, 1e-5)
@@ -145,15 +149,21 @@ class Item:
 
 
 # ------------------------------------------------------------------ 閱讀測驗的練習題
-def make_sample(qc, qi, pc, pi, ans):
-    """問題＋段落 → (ids, seg, mat, base, plen, start, end)；ans = 段落裡的 (開始, 結束) 或 None（沒在回答）"""
+REL_NONE, REL_SIDE, REL_MAIN = 0, 1, 2
+
+
+def make_sample(qc, qi, pc, pi, ans, rel=None):
+    """問題＋段落 → (ids, seg, mat, base, plen, start, end, rel)；ans = 段落裡的 (開始, 結束) 或 None（沒在回答）。
+    rel：這段對問題是主要（直接回答）、次要（同一篇文章、講同一件事的其他部分）還是無關（別篇文章）"""
     mq, mp = match_features(qc, pc, PUNCT)
     ids = [CLS] + qi + [SEP] + pi + [SEP]
     seg = [0] * (len(qi) + 2) + [1] * (len(pi) + 1)
     mat = [0] + mq + [0] + mp + [0]
     base = len(qi) + 2
     st, en = (base + ans[0], base + ans[1]) if ans else (0, 0)
-    return (np.array(ids, np.int32), np.array(seg, np.int8), np.array(mat, np.int8), base, len(pi), st, en)
+    if rel is None:
+        rel = REL_MAIN if ans else REL_SIDE
+    return (np.array(ids, np.int32), np.array(seg, np.int8), np.array(mat, np.int8), base, len(pi), st, en, rel)
 
 
 def windows(L, n):
@@ -167,6 +177,27 @@ def windows(L, n):
     return out
 
 
+PREFIX = ["請問", "我想知道", "你知道", "可以告訴我", "欸", "問一下", "想問", "那", "所以", "誰知道"]
+SUFFIX = ["呢", "啊", "嗎", "啦", "呀"]
+
+
+def colloquial(q, rng):
+    """把教科書式的問題改成平常講話的樣子（加「請問」「欸」、拿掉問號、句尾加「呢」），讓它聽得懂口語"""
+    r = rng.random()
+    if r > 0.45:
+        return q
+    t = q
+    if rng.random() < 0.6:
+        t = rng.choice(PREFIX) + t
+    if t and t[-1] in "？?":
+        t = t[:-1]
+        if rng.random() < 0.4:
+            t += rng.choice(SUFFIX)
+        if rng.random() < 0.5:
+            t += "？"
+    return t
+
+
 def question_pools(tok, train, seed=0):
     """每一題：答案所在的段落（正例）和同一篇裡沒在回答的段落（反例），兩種切法都有：
        - 整篇文章用 256 字的窗切（跟一般閱讀測驗一樣）
@@ -177,7 +208,7 @@ def question_pools(tok, train, seed=0):
     for ctx, q, a, a0 in train:
         if a0 < 0 or not a:
             continue
-        qitem = Item(tok, q)
+        qitem = Item(tok, colloquial(q, rng))
         qc, qi = qitem.chars[:Q_MAX], qitem.ids[:Q_MAX]
         if ctx not in ctx_cache:
             ctx_cache[ctx] = (Item(tok, ctx), passages(ctx))
@@ -218,7 +249,7 @@ def epoch_samples(tok, pools, contexts, ctx_items, rng, neg_per_q=2, rand_neg=0.
             if psgs:
                 ps, pe = psgs[rng.randrange(len(psgs))]
                 pe = min(pe, ps + T_CTX - 3 - len(qi))
-                out.append(make_sample(qc, qi, item.chars[ps:pe], item.ids[ps:pe], None))
+                out.append(make_sample(qc, qi, item.chars[ps:pe], item.ids[ps:pe], None, REL_NONE))
     return out
 
 
@@ -248,15 +279,17 @@ def collate(samples, idxs):
     cand = np.zeros((B, T), bool)
     st = np.zeros(B, np.int64)
     en = np.zeros(B, np.int64)
+    rel = np.zeros(B, np.int64)
     for r, i in enumerate(idxs):
-        a, s, m, base, plen, s0, e0 = samples[i]
+        a, s, m, base, plen, s0, e0, rl = samples[i]
+        rel[r] = rl
         n = len(a)
         ids[r, :n], seg[r, :n], mat[r, :n] = a, s, m
         cand[r, 0] = True
         cand[r, base:base + plen] = True
         st[r], en[r] = s0, e0
     t = torch.from_numpy
-    return t(ids), t(seg), t(mat), t(cand), t(st), t(en)
+    return t(ids), t(seg), t(mat), t(cand), t(st), t(en), t(rel)
 
 
 # ------------------------------------------------------------------ 讀書（遮字猜字）
@@ -346,15 +379,16 @@ def read_many(model, samples, chunk=256):
     order = sorted(range(len(samples)), key=lambda i: len(samples[i][0]))
     for k in range(0, len(order), chunk):
         idxs = order[k:k + chunk]
-        ids, seg, mat, cand, _, _ = collate(samples, idxs)
+        ids, seg, mat, cand, _, _, _ = collate(samples, idxs)
         with amp():
             xf = model.encode(ids, seg, mat)
         ls, le = model.span_logits(xf, cand)
+        rp = torch.softmax(model.rel_logits(xf), -1).numpy()
         ls, le = ls.float().numpy(), le.float().numpy()
         for r, i in enumerate(idxs):
             base, plen = samples[i][3], samples[i][4]
             b = best_span(ls[r], le[r], base, base + plen)
-            out[i] = None if b is None else (b[0] - base, b[1] - base, b[2])
+            out[i] = (None if b is None else (b[0] - base, b[1] - base, b[2]), rp[r])
     return out
 
 
@@ -409,7 +443,7 @@ def evaluate(model, tok, dev, limit=1000, seed=0):
             psg_meta.append((qi_, c, s, min(e, s + L), is_own))
     got_full = read_many(model, full)
     best = {}
-    for (qi_, s), r in zip(full_idx, got_full):
+    for (qi_, s), (r, _) in zip(full_idx, got_full):
         if r and (qi_ not in best or r[2] > best[qi_][2]):
             best[qi_] = (s + r[0], s + r[1], r[2])
     em = f1s = 0.0
@@ -425,7 +459,9 @@ def evaluate(model, tok, dev, limit=1000, seed=0):
     per_q = {}
     for meta, r in zip(psg_meta, got_psg):
         per_q.setdefault(meta[0], []).append((meta, r))
-    hit_own = hit_mix = hit_first = hit_overlap = n = 0
+    hit_own = hit_mix = hit_first = hit_overlap = hit_rel = n = 0
+    rel_ok = rel_n = 0
+    side_ok = side_n = 0
     for qi_, rows in per_q.items():
         ctx, q, a, a0 = items[qi_]
         a1 = a0 + len(a)
@@ -437,15 +473,25 @@ def evaluate(model, tok, dev, limit=1000, seed=0):
         if not any(has(m) for m, _ in own_rows):
             continue  # 答案被切段切斷了，這題不算
         n += 1
-        sc = lambda x: x[1][2] if x[1] else -1e9
+        sc = lambda x: x[1][0][2] if x[1][0] else -1e9
         hit_own += has(max(own_rows, key=sc)[0])
+        # 主次判斷：答案所在的段落是主要、同一篇的其他段落是次要、別篇是無關
+        hit_rel += has(max(rows, key=lambda x: x[1][1][2])[0])
+        for m, (_, rp) in rows:
+            gold = REL_MAIN if has(m) else (REL_SIDE if m[4] else REL_NONE)
+            rel_ok += int(np.argmax(rp)) == gold
+            rel_n += 1
+            if gold != REL_MAIN:  # 不是答案的段落：分得出「同一件事的補充」和「無關」嗎
+                side_ok += (rp[REL_SIDE] > rp[REL_NONE]) == (gold == REL_SIDE)
+                side_n += 1
         hit_mix += has(max(rows, key=sc)[0])
         hit_first += has(own_rows[0][0])
         texts = [m[1][m[2]:m[3]] for m, _ in rows]
         hit_overlap += has(rows[overlap_pick(q, texts)][0])
     k = max(n, 1)
     return dict(em=em / len(items), f1=f1s / len(items), pick=hit_own / k, pick_mix=hit_mix / k,
-                first=hit_first / k, overlap_mix=hit_overlap / k, n=n)
+                first=hit_first / k, overlap_mix=hit_overlap / k, pick_rel=hit_rel / k,
+                rel_acc=rel_ok / max(rel_n, 1), side_vs_none=side_ok / max(side_n, 1), n=n)
 
 
 # ------------------------------------------------------------------ 訓練迴圈
@@ -521,6 +567,8 @@ def main():
     ap.add_argument("--tokens", type=int, default=12288, help="每批大約幾個字")
     ap.add_argument("--eval-limit", type=int, default=1000)
     ap.add_argument("--skip-pretrain", action="store_true", help="沿用 out/pretrained.pt")
+    ap.add_argument("--init", default="", help="從這個資料夾的 reader.bin / reader.json 接著練（沿用它的字表）")
+    ap.add_argument("--read-lr", type=float, default=1e-3)
     ap.add_argument("--wiki", default="", help="維基百科純文字資料夾（wiki_*.txt），讀書階段多讀這些")
     ap.add_argument("--wiki-chars", type=int, default=40_000_000, help="最多讀幾個字的維基百科")
     ap.add_argument("--wiki-per-epoch", type=int, default=8_000_000, help="每一輪讀書抽幾個字的維基百科")
@@ -549,11 +597,34 @@ def main():
         extra = sorted(ch for ch, n in c.items() if n >= 5 and ch not in tok.stoi and ch != "\n")
         tok = ReaderTokenizer([x for x in tok.itos[4:] if x != MASK_NAME] + extra)
         tok.itos.append(MASK_NAME); tok.stoi[MASK_NAME] = len(tok.itos) - 1
+    init = None
+    if args.init:
+        init = json.load(open(os.path.join(args.init, "reader.json"), encoding="utf-8"))
+        tok = ReaderTokenizer([])
+        tok.itos = list(init["vocab"])
+        tok.stoi = {}
+        for i, c in enumerate(tok.itos):
+            tok.stoi.setdefault(c, i)
+        if MASK_NAME not in tok.stoi:
+            tok.itos.append(MASK_NAME); tok.stoi[MASK_NAME] = len(tok.itos) - 1
+        cfg = init["config"]
+        args.embd, args.layers, args.heads = cfg["n_embd"], cfg["n_layer"], cfg["n_head"]
     say(f"wiki texts {len(wiki)} ({sum(map(len, wiki)):,} chars)")
     mask_id = tok.stoi[MASK_NAME]
     say(f"train {len(train)} dev {len(dev)} texts {len(texts)} ({sum(map(len, texts)):,} chars) vocab {tok.vocab_size}")
 
     model = TorchReader(tok.vocab_size, n_embd=args.embd, n_head=args.heads, n_layer=args.layers)
+    if init:
+        raw = np.fromfile(os.path.join(args.init, "reader.bin"), dtype="<f2").astype(np.float32)
+        with torch.no_grad():
+            for t_ in init["tensors"]:
+                n = int(np.prod(t_["shape"]))
+                w = torch.from_numpy(raw[t_["offset"]:t_["offset"] + n].reshape(t_["shape"]).copy())
+                if t_["name"] == "wte" and w.shape[0] < model.P["wte"].shape[0]:
+                    model.P["wte"][:w.shape[0]] = w  # <mask> 是新加的
+                else:
+                    model.P[t_["name"]].copy_(w)
+        say(f"started from {args.init} (dev f1 {init.get('dev_f1', 0):.3f})")
     core = [model.P[k] for k in model.names]
     say(f"params {sum(p.numel() for p in core):,} (+ reading-practice head)")
 
@@ -571,7 +642,7 @@ def main():
         say("loaded pretrained weights")
     elif args.pretrain_min > 0:
         rng = random.Random(1)
-        opt = make_opt(model, list(model.parameters()), 1e-3)
+        opt = make_opt(model, list(model.parameters()), args.read_lr)
 
         def mlm_epoch(ep):
             ep_texts = list(texts)
@@ -592,7 +663,7 @@ def main():
                 logits = model.mlm_logits(xf[sel])
             return F.cross_entropy(logits.float(), lab[sel])
 
-        run_stage("read", model, opt, args.pretrain_min, 1e-3, 500, mlm_epoch, mlm_step, say,
+        run_stage("read", model, opt, args.pretrain_min, args.read_lr, 500, mlm_epoch, mlm_step, say,
                   ckpt=os.path.join(args.out, "read.ckpt"))
         torch.save(model.state_dict(), pre_path)
         open(os.path.join(args.out, "pretrain.done"), "w").write("ok")
@@ -622,11 +693,12 @@ def main():
 
     def qa_step(batch):
         smp, b = batch
-        ids, seg, mat, cand, st, en = collate(smp, b)
+        ids, seg, mat, cand, st, en, rel = collate(smp, b)
         with amp():
             xf = model.encode(ids, seg, mat)
         ls, le = model.span_logits(xf, cand)
-        return (F.cross_entropy(ls, st) + F.cross_entropy(le, en)) / 2
+        span = (F.cross_entropy(ls, st) + F.cross_entropy(le, en)) / 2
+        return span + 0.5 * F.cross_entropy(model.rel_logits(xf), rel)
 
     def check(step):
         model.eval()
