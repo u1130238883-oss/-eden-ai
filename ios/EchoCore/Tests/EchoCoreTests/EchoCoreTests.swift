@@ -96,6 +96,11 @@ final class EchoCoreTests: XCTestCase {
         let lp = d.luckPeriod(2026)
         XCTAssertEqual(lp.start, 2019); XCTAssertEqual(lp.end, 2027); XCTAssertEqual(lp.row.text, "3宮壞12因7")
         XCTAssertEqual(d.triggeredNatal(2026).map(\.text), ["5宮壞3因8", "11宮壞8因3"])
+        // 本命宮引動的本命宮（Hollow 新版）：其他本命宮中果或因為 p 的；p 宮自己不算（2宮自己的果也是 2）
+        XCTAssertEqual(d.triggeredByNatal(5).map(\.text), ["4宮壞10因5", "10宮好10因5", "6宮正5因7"])
+        XCTAssertEqual(d.triggeredByNatal(2).map(\.text), ["8宮壞9因2"])
+        XCTAssertEqual(d.triggeredByNatal(7).map(\.text), ["3宮壞12因7", "12宮正11因7", "9宮好12因7", "6宮正5因7"])
+        XCTAssertTrue(d.triggeredByNatal(1).isEmpty)
     }
 
     func testFortuneRouterFrames() {
@@ -522,6 +527,8 @@ final class EchoCoreTests: XCTestCase {
         XCTAssertTrue(r.turn.text.contains(natal5.reading.text), r.turn.text)
         XCTAssertTrue(r.turn.text.contains(aspect5.reading.text), r.turn.text)
         XCTAssertTrue(r.turn.text.contains(D.year(2026).reading.text), r.turn.text)
+        // 本命宮引動的本命宮（Hollow 新版）：本命5宮連動 4宮「壞10因5」、10宮「好10因5」、6宮「正5因7」
+        XCTAssertTrue(r.turn.text.contains("本命宮引動的本命宮") && r.turn.text.contains("「壞10因5」"), r.turn.text)
 
         // 追問：為什麼／怎麼辦
         let why = engine.reply(to: "為什麼", history: [ChatTurn(role: .user, text: "我今年感情運如何"), r.turn], context: ctx)

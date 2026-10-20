@@ -156,6 +156,11 @@ public struct Destiny {
         return natal.filter { $0.reading.result == p || $0.reading.cause == p }
     }
 
+    /// 本命宮引動的本命宮（Hollow 新版）：本命 p 宮會引動其他本命宮中果或因為 p 的宮位（不含 p 宮自己）
+    public func triggeredByNatal(_ p: Int) -> [NTRow] {
+        natal.filter { $0.palace != p && ($0.reading.result == p || $0.reading.cause == p) }
+    }
+
     /// 流月
     public func month(_ m: Int, year y: Int) -> NTRow {
         let yr = year(y)

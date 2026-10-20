@@ -167,6 +167,10 @@ class Destiny:
         p = self.luck_period(y)[2].palace
         return [r for r in self.natal if r.reading.result == p or r.reading.cause == p]
 
+    def triggered_by_natal(self, p):
+        """本命宮引動的本命宮（Hollow 新版）：其他本命宮中果或因為 p 的（不含 p 宮自己）"""
+        return [r for r in self.natal if r.palace != p and (r.reading.result == p or r.reading.cause == p)]
+
     def month_chart(self, y):
         _, _, lp = self.luck_period(y)
         yr = self.year(y)

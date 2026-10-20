@@ -365,6 +365,12 @@ public struct Reader {
             }
             if !parts.isEmpty { text += "\n" + parts.joined(separator: L == .zh ? "" : " ") }
         }
+        // 本命宮引動的本命宮（Hollow 新版）：命宮會牽動其他本命宮中果或因為命宮的宮位
+        let linked = D.triggeredByNatal(r0.palace)
+        if !linked.isEmpty && L == .zh {
+            text += "\n命宮\(r0.palace)宮引動的本命宮（其他本命宮中果或因為\(r0.palace)的）："
+                + linked.map { "\(NT.label($0.palace))「\($0.reading.text)」" }.joined(separator: "、") + "，這些方面跟你的「自己」連在一起。"
+        }
         let good = D.natal.filter { $0.reading.verdict == .good }.map { topicShort($0.palace) }
         let bad = D.natal.filter { $0.reading.verdict == .bad }.map { topicShort($0.palace) }
         if !good.isEmpty {
@@ -546,6 +552,13 @@ public struct Reader {
             let byLuck = natal.reading.result == luckP || natal.reading.cause == luckP
             text += (text.isEmpty ? "" : "\n\n") + "【\(name) · \(NT.label(p))】"
             text += "\n本命\(p)宮「\(natal.reading.text)」：" + FlowReading.interpret(natal)
+            // 本命宮引動的本命宮（Hollow 新版）：本命裡果或因是 p 的其他宮位，跟這件事一輩子連動
+            let linked = D.triggeredByNatal(p)
+            if !linked.isEmpty {
+                text += "\n本命宮引動的本命宮：其他本命宮中果或因為\(p)的有 "
+                    + linked.map { "\(NT.label($0.palace))「\($0.reading.text)」" }.joined(separator: "、")
+                    + "——\(name)的狀態會牽動這些方面，這些方面有起伏時也會回頭影響\(name)。"
+            }
 
             // ① 大運本身
             text += "\n\n① 大運本身（\(lp.start)–\(lp.end)）：走\(NT.label(luckP))「\(lp.row.reading.text)」。"
