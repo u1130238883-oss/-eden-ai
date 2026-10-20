@@ -115,10 +115,10 @@ final class NotebookTests: XCTestCase {
         XCTAssertNil(Mind.claim("你答錯了"))
         XCTAssertTrue(Mind.worried("我好擔心甲狀腺的問題"))
         XCTAssertFalse(Mind.worried("台北101有多高"))
-        XCTAssertNil(Mind.forAsker(type: nil, want: .number))
-        let six = Mind.forAsker(type: 6, want: .number) ?? ""
+        XCTAssertNil(Mind.forAsker(type: nil, want: .person))
+        let six = Mind.forAsker(type: 6, want: .person) ?? ""
         XCTAssertTrue(six.contains("第6型") && six.contains("確認"), six)
-        XCTAssertNotEqual(Mind.forAsker(type: 3, want: .number), Mind.forAsker(type: 5, want: .number))
+        XCTAssertNotEqual(Mind.forAsker(type: 3, want: .person), Mind.forAsker(type: 5, want: .person))
     }
 }
 
