@@ -236,20 +236,33 @@ def question_pools(tok, train, seed=0):
     return pools, [c for c in ctx_cache]
 
 
-def epoch_samples(tok, pools, contexts, ctx_items, rng, neg_per_q=2, rand_neg=0.3):
-    """這一輪要練的題目：每題的正例全部、同一篇的反例抽幾個、再從別篇文章抽一段當反例。"""
+def epoch_samples(tok, pools, contexts, ctx_items, rng, neg_per_q=2, other_per_q=2, hard_pool=12):
+    """這一輪要練的題目：每題的正例全部、同一篇的反例抽幾個（次要）、再從別篇文章抽兩段（無關）：
+    一段隨便抽，一段挑跟問題字詞最像的——看起來相關、其實在講別的事，網路上最常見的就是這種。"""
     out = []
+    skip = set("什麼嗎呢的是了哪誰為怎吧啊有個些都在？?，。、 ")
     for qc, qi, pos, neg in pools:
         out.extend(pos)
         if neg:
             out.extend(rng.sample(neg, min(neg_per_q, len(neg))))
-        if rng.random() < rand_neg:
-            other = contexts[rng.randrange(len(contexts))]
-            item, psgs = ctx_items[other]
+        L = T_CTX - 3 - len(qi)
+        qg = {qc[i] + qc[i + 1] for i in range(len(qc) - 1) if qc[i] not in skip and qc[i + 1] not in skip}
+        cands = []
+        for _ in range(hard_pool):
+            item, psgs = ctx_items[contexts[rng.randrange(len(contexts))]]
             if psgs:
                 ps, pe = psgs[rng.randrange(len(psgs))]
-                pe = min(pe, ps + T_CTX - 3 - len(qi))
-                out.append(make_sample(qc, qi, item.chars[ps:pe], item.ids[ps:pe], None, REL_NONE))
+                cands.append((item, ps, min(pe, ps + L)))
+        if not cands:
+            continue
+
+        def overlap(c):
+            item, ps, pe = c
+            ch = item.chars[ps:pe]
+            return sum(1 for i in range(len(ch) - 1) if ch[i] + ch[i + 1] in qg)
+        picks = [cands[0], max(cands[1:] or cands, key=overlap)]
+        for item, ps, pe in picks[:other_per_q]:
+            out.append(make_sample(qc, qi, item.chars[ps:pe], item.ids[ps:pe], None, REL_NONE))
     return out
 
 
