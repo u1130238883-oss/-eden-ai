@@ -513,8 +513,12 @@ extension Understanding {
                     && !["譯", "翻譯", "引進", "介紹"].contains(where: { line.contains($0) }) {
                     var rest = Substring(line)
                     while let a = rest.firstIndex(of: "《"), let b = rest[a...].firstIndex(of: "》") {
+                        // 「福爾蓬奈（英語：Volpone）」→「福爾蓬奈」；「第一對開本」「全集」是合集，不是一部作品
                         let t = String(rest[rest.index(after: a)..<b])
-                        if (1...20).contains(t.count) && !titles.contains(t) { titles.append(t) }
+                            .replacingOccurrences(of: #"（[^）]*）|\([^)]*\)"#, with: "", options: .regularExpression)
+                            .trimmingCharacters(in: .whitespaces)
+                        if (1...20).contains(t.count) && !titles.contains(t)
+                            && !["對開本", "全集", "選集", "文集"].contains(where: { t.contains($0) }) { titles.append(t) }
                         rest = rest[rest.index(after: b)...]
                     }
                 }
@@ -554,6 +558,14 @@ extension Understanding {
         // 「都道府縣」「省份及地區」這種總稱不是其中一項
         let kinds: Set<Character> = ["縣", "省", "州", "市", "區", "都", "道", "府"]
         best.items = best.items.filter { !$0.contains("列表") && !$0.hasPrefix("按") && $0 != "地區" && Set($0).intersection(kinds).count < 3 }
+        // 沒有字尾、又很長的名單（手機版維基把好幾張表疊在一起：「芬蘭／政府首腦／瑞典／議會議長…」）：
+        // 一半以上別的資料都沒提到時，只留別的資料也提到的項目（至少要剩 4 個）
+        if suffix == nil, best.items.count > 12 {
+            var freq: [String: Int] = [:]
+            for g in good { for it in Set(g.items) { freq[it, default: 0] += 1 } }
+            let agreed = best.items.filter { (freq[$0] ?? 0) >= 2 }
+            if agreed.count >= 4 && agreed.count * 2 < best.items.count { best.items = agreed }
+        }
         // 別組也出現過的項目，補進來（不同來源互相印證）
         var items = best.items
         var hosts = [best.host]

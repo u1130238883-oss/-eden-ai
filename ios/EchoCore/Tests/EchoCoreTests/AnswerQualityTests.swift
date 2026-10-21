@@ -140,6 +140,17 @@ final class AnswerQualityTests: XCTestCase {
         XCTAssertEqual(Understanding.item("阿爾巴尼亞"), "阿爾巴尼亞")
     }
 
+    /// 北歐有哪些國家 → 列出 80 個（政府首腦、議會議長、各省…）：手機版維基好幾張表疊在一起
+    func testLongMixedColumnKeepsConfirmedItems() {
+        var lines = ["北歐國家", "北歐理事會的成員國包括丹麥、芬蘭、冰島、挪威和瑞典。"]
+        let rows = [("芬蘭", "赫爾辛基"), ("政府首腦", "總理"), ("冰島", "雷克雅維克"), ("議會議長", "議長"), ("挪威", "奧斯陸"),
+                    ("獨立黨領袖", "主席"), ("瑞典", "斯德哥爾摩"), ("進步黨領袖", "主席"), ("丹麥", "哥本哈根"), ("社會黨領袖", "主席"),
+                    ("格陵蘭", "努克"), ("中央黨領袖", "主席"), ("法羅群島", "托爾斯港"), ("綠黨領袖", "主席")]
+        for (a, b) in rows { lines += [a, b, "550萬"] }
+        let r = Understanding.extractList([.init(text: lines.joined(separator: "\n"), host: "zh.wikipedia.org")], noun: "國家", subject: "北歐")
+        XCTAssertEqual(Set(r.items), ["丹麥", "芬蘭", "冰島", "挪威", "瑞典"], "\(r.items)")
+    }
+
     /// 「我是說這些歐洲國家是哪些國家」→ 查成「列表 歐洲國家…」（上一次查詢加的「列表」被當成主題）
     func testFollowUpIgnoresSearchHelperWords() {
         let q = EchoEngine.resolveFollowUp("我是說這些歐洲國家是哪些國家？", query: "我是說這些歐洲國家是哪些國家",
