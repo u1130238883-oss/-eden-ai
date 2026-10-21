@@ -233,4 +233,22 @@ final class CompareTests: XCTestCase {
         XCTAssertFalse(d.contains("待機模式"), d)
         XCTAssertNil(Think.compareDigest("iPhone", "安卓", pages: [.init(text: "iOS 17 加入待機模式。", host: "w")]))
     }
+
+    /// 歐洲有多少個國家 → 答成「8個國家」（「瑞士8個國家共同經營」是在數別的東西）
+    func testCountRightAfterAnotherNameIsNotTheTotal() {
+        let ev = [Understanding.Evidence(text: "由法國、德國、瑞士8個國家共同經營的歐洲核子研究組織。", host: "w"),
+                  Understanding.Evidence(text: "歐洲目前共有44個國家。", host: "x")]
+        XCTAssertEqual(Understanding.voteNumber(ev, units: ["個國家"], subject: "歐洲")?.shown, "44個國家")
+        XCTAssertEqual(Understanding.voteNumber([.init(text: "加拿大由10個省和3個地區組成。", host: "w")], units: ["個省"], subject: "加拿大")?.shown, "10個省")
+    }
+
+    /// 誰畫了蒙娜麗莎 → 答成「文西」；世界最高的山 → 「珠穆朗瑪峰頂峰」
+    func testBrainSpanIsWidenedToTheWholeName() {
+        let texts = ["片名是指達文西的油畫《蒙娜麗莎》。", "《蒙娜麗莎》是達文西的作品。"]
+        XCTAssertEqual(Think.wholeName("文西", in: texts), "達文西")
+        XCTAssertEqual(Think.wholeName("達文西", in: texts), "達文西")
+        // 「首都東京」「位於東京」：前面的字不一樣，不能亂加
+        XCTAssertEqual(Think.wholeName("東京", in: ["日本首都東京", "位於東京的公司"]), "東京")
+        XCTAssertEqual(Think.wholeName("珠穆朗瑪峰頂峰", in: []), "珠穆朗瑪峰")
+    }
 }

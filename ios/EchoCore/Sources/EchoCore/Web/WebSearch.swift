@@ -8,7 +8,7 @@ import FoundationNetworking
 ///   Bing（RSS 與網頁）、DuckDuckGo（網頁與即時答案）、Yahoo、Google（基本版網頁）、維基百科、Google 新聞 RSS、Open-Meteo 天氣。
 /// 每一次都是即時上網查，不在手機裡存舊答案。
 public enum WebSearch {
-    public struct Hit: Equatable {
+    public struct Hit: Equatable, Sendable {
         public let title: String
         public let snippet: String
         public let url: String
@@ -47,11 +47,11 @@ public enum WebSearch {
     public static func search(_ q: String, lang L: Lang, news: Bool = false, light: Bool = false) async -> Answer {
         if light {
             // 小問題：Bing 一次＋維基百科一次（Bing 不給結果時再問 Yahoo）
-            async let wk = wikiSearch(wikiTerm(q), L)
-            let a = await bingRSS(q, L)
-            let b: [Hit] = a.count < 3 ? await yahoo(q, L) : []
+            async let wk = soon(4, [], { await wikiSearch(wikiTerm(q), L) })
+            let a = await soon(4, [], { await bingRSS(q, L) })
+            let b: [Hit] = a.count < 3 ? await soon(3, [], { await yahoo(q, L) }) : []
             // Bing 跟 Yahoo 都給不出什麼：不放棄，再問 Google
-            let g: [Hit] = a.count + b.count < 3 ? await google(q, L) : []
+            let g: [Hit] = a.count + b.count < 3 ? await soon(3, [], { await google(q, L) }) : []
             let w = await wk
             var seen = Set<String>()
             var hits: [Hit] = []
@@ -61,20 +61,40 @@ public enum WebSearch {
             return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)),
                           engines: ["bing": a.count, "yahoo": b.count, "google": g.count, "wikipedia": w.count])
         }
-        async let rss = bingRSS(q, L)
-        async let bh = bingHTML(q, L)
-        async let dh = ddgHTML(q, L)
-        async let yh = yahoo(q, L)
-        async let gg = google(q, L)
-        async let ws = wikiSearch(wikiTerm(q), L)
-        async let inst = ddgInstant(q, L)
-        async let wk = wikiSummary(wikiTerm(q), L)
-        async let nw = newsIf(news, q, L)
+        async let ws = soon(4, [], { await wikiSearch(wikiTerm(q), L) })
+        async let inst = soon(3, nil, { await ddgInstant(q, L) })
+        async let wk = soon(4, nil, { await wikiSummary(wikiTerm(q), L) })
         async let wx = weatherIf(q, L)
         async let fx = exchangeIf(q, L)
         async let mk = marketIf(q, L)
 
-        let lists: [(String, [Hit])] = [("news", await nw), ("bing", await rss), ("bing-web", await bh), ("duckduckgo", await dh), ("yahoo", await yh), ("google", await gg), ("wikipedia", await ws)]
+        // 各來源一起問；結果夠用了就不再等慢吞吞的來源（以前常常為了一個來源卡 6 秒）
+        var got: [String: [Hit]] = [:]
+        await withTaskGroup(of: (String, [Hit]).self) { g in
+            g.addTask { ("news", await newsIf(news, q, L)) }
+            g.addTask { ("bing", await bingRSS(q, L)) }
+            g.addTask { ("bing-web", await bingHTML(q, L)) }
+            g.addTask { ("duckduckgo", await ddgHTML(q, L)) }
+            g.addTask { ("yahoo", await yahoo(q, L)) }
+            g.addTask { ("google", await google(q, L)) }
+            g.addTask { try? await Task.sleep(nanoseconds: 2_500_000_000); return ("_soft", []) }
+            g.addTask { try? await Task.sleep(nanoseconds: 4_000_000_000); return ("_late", []) }
+            var waiting = 6
+            while waiting > 0, let r = await g.next() {
+                let (name, l) = r
+                if name.hasPrefix("_") {
+                    let have = got.values.reduce(0) { $0 + $1.count }
+                    // 2.5 秒時已經有 6 筆以上、4 秒時有任何結果，就先用手上的
+                    if have >= (name == "_soft" ? 6 : 1) { break }
+                    continue
+                }
+                got[name] = l
+                waiting -= 1
+            }
+            g.cancelAll()
+        }
+        got["wikipedia"] = await ws
+        let lists: [(String, [Hit])] = ["news", "bing", "bing-web", "duckduckgo", "yahoo", "google", "wikipedia"].map { ($0, got[$0] ?? []) }
         var engines: [String: Int] = [:]
         var hits: [Hit] = []
         var seen = Set<String>()
@@ -99,6 +119,17 @@ public enum WebSearch {
         engines["instant"] = lead == nil ? 0 : 1
         if wantsWeather(q) { engines["weather"] = leadSource == "open-meteo.com" ? 1 : 0 }
         return Answer(lead: lead.map { clip($0, 320) }, leadSource: leadSource, hits: Array(hits.prefix(10)), engines: engines)
+    }
+
+    /// 最多等 seconds 秒；來不及就用 fallback（慢的來源不要拖住整個回答）
+    static func soon<T: Sendable>(_ seconds: Double, _ fallback: T, _ op: @escaping @Sendable () async -> T) async -> T {
+        await withTaskGroup(of: T?.self) { g in
+            g.addTask { await op() }
+            g.addTask { try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000)); return nil }
+            let first = await g.next() ?? nil
+            g.cancelAll()
+            return first ?? fallback
+        }
     }
 
     // MARK: - Bing

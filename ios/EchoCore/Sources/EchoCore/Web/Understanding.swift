@@ -366,6 +366,8 @@ extension Understanding {
                 if let r = body.range(of: n.shown) {
                     let pre = body[body.index(r.lowerBound, offsetBy: -min(6, body.distance(from: body.startIndex, to: r.lowerBound)))..<r.lowerBound]
                     if pre.range(of: "[東西南北前後小副]峰", options: .regularExpression) != nil { continue }
+                    // 「瑞士8個國家共同經營」：數字前面緊接著另一個地名，是在數別的東西（問的主題已經先拿掉了）
+                    if n.shown.contains("個"), let c = pre.last, isCJK(c), !countLead.contains(c) { continue }
                     // 「37個國家立法禁止…」：是在數做某件事的國家，不是總共有幾個；「50個以上」也不是確切的數
                     let post = body[r.upperBound...].prefix(4)
                     if ["立法", "禁止", "已經", "已", "採用", "加入", "支持", "承認", "參加", "使用", "實施", "通過", "簽署", "以上", "以下", "曾", "將", "同意", "反對", "允許"]
@@ -391,6 +393,10 @@ extension Understanding {
         let others = groups.filter { $0.shown != best.shown && unit($0.shown) == unit(best.shown) && $0.hosts.count >= 2 }.prefix(3).map(\.shown)
         return (best.shown, best.sentence, best.hosts.count, Array(others))
     }
+
+    /// 「共有 44 個」「由 10 個」：數量前面常見的字；不是這些字（是另一個名字）就不是在數問的東西
+    static let countLead: Set<Character> = Set("有共計約達為是含括由成剩近超逾僅只到至和及與或下中內的了在全總個各這那其每多")
+    static func isCJK(_ c: Character) -> Bool { c.unicodeScalars.first.map { (0x4E00...0x9FFF).contains($0.value) } ?? false }
 
     static let stop: Set<String> = ["名稱", "國旗", "首都", "面積", "人口", "貨幣", "語言", "備註", "地圖", "列表", "編號", "排名", "代碼",
                                    "簡稱", "英文", "中文", "日文", "位置", "區域", "其他", "參見", "參考", "註釋", "外部連結", "合計", "總計"]

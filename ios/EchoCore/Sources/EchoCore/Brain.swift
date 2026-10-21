@@ -37,7 +37,7 @@ public final class Brain {
     /// 讀一段文字的結果
     public struct Span {
         /// 答案（原文裡的那幾個字）
-        public let text: String
+        public var text: String
         /// 有多肯定這段在回答問題：答案分數減掉「這段沒有答案」的分數；大於 0 表示它認為有答案
         public let score: Float
         /// 答案在段落裡的位置（Unicode 字元）

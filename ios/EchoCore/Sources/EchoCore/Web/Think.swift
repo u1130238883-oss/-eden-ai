@@ -7,6 +7,40 @@ import Foundation
 ///   4. 不同網站的答案互相比對：說法一樣的加在一起，官方、百科的份量比較重
 ///   5. 有一個說法明顯勝出 → 那就是答案；幾個說法各有道理 → 整理成幾個重點；說法衝突 → 講出來
 public enum Think {
+    /// 大腦有時只框到名字的一部分（「指達文西」框成「文西」）。資料裡這幾個字每次前面都是同一個字的話，那個字也是名字的一部分。
+    /// 名字後面的「頂峰、山頂」也拿掉（「珠穆朗瑪峰頂峰」→「珠穆朗瑪峰」）。
+    public static func wholeName(_ ans: String, in texts: [String]) -> String {
+        var a = ans
+        guard (1...8).contains(a.count), a.allSatisfy(Understanding.isCJK) else { return a }
+        for suf in ["頂峰", "山頂", "峰頂", "主峰"] where a.hasSuffix(suf) && a.count > suf.count + 1 {
+            let stem = String(a.dropLast(suf.count))
+            if stem.hasSuffix("峰") || stem.hasSuffix("山") { a = stem }
+        }
+        let lead: Set<Character> = Set("的是在和與及或為被由從把將對向於了有指稱叫說即乃之其這那一、都國省市縣")
+        for _ in 0..<2 {
+            var before: [Character: Int] = [:]
+            var total = 0
+            for t in texts {
+                var from = t.startIndex
+                while let r = t.range(of: a, range: from..<t.endIndex) {
+                    total += 1
+                    if r.lowerBound > t.startIndex { before[t[t.index(before: r.lowerBound)], default: 0] += 1 }
+                    from = r.upperBound
+                }
+            }
+            guard total >= 2, before.count == 1, let p = before.first, p.value == total,
+                  Understanding.isCJK(p.key), !lead.contains(p.key) else { break }
+            a = String(p.key) + a
+        }
+        return a
+    }
+
+    static func withWholeName(_ sp: Brain.Span, _ texts: [String]) -> Brain.Span {
+        var s = sp
+        s.text = wholeName(sp.text, in: texts)
+        return s
+    }
+
     public struct Reading {
         public let passage: String
         public let host: String
@@ -184,7 +218,7 @@ public enum Think {
         if ["為什麼", "為何", "原因", "怎麼會"].contains(where: { q.contains($0) }) { return Understanding.causal }
         if ["是什麼", "是啥", "什麼意思", "是指什麼"].contains(where: { q.contains($0) }) { return ["是", "指", "稱為", "一種", "簡稱"] }
         if ["怎麼辦", "該怎麼", "怎麼處理", "建議"].contains(where: { q.contains($0) }) {
-            return ["可以", "應該", "建議", "最好", "記得", "不要", "避免", "休息", "就醫", "找", "先", "試著"]
+            return ["可以", "應該", "建議", "最好", "記得", "不要", "避免", "休息", "就醫", "找", "先", "試著", "治療", "緩解", "多喝", "服用", "補充"]
         }
         if ["怎麼做", "怎麼煮", "如何", "做法", "步驟"].contains(where: { q.contains($0) }) {
             return Understanding.stepVerbs + ["先", "再", "然後", "接著", "最後"]
@@ -357,9 +391,10 @@ public enum Think {
 
         // ③ 每一段都讓大腦讀
         var all: [Reading] = []
+        let texts = chosen.map(\.text)
         for c in chosen {
             // accept：答案要像這題要的東西（問距離要有數字和單位……），不像的不算
-            if let sp = brain.read(question: question, passage: c.text), accept?(sp.text) ?? true, !junk(sp.text),
+            if let sp = brain.read(question: question, passage: c.text).map({ withWholeName($0, texts) }), accept?(sp.text) ?? true, !junk(sp.text),
                !echoes(sp.text, question: question), superlativeFits(question: question, passage: c.text) {
                 all.append(Reading(passage: c.text, host: c.host, span: sp))
             }
