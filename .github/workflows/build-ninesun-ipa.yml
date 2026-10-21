@@ -79,5 +79,7 @@ jobs:
         env:
           NINESUN_LIVE: "1"
         run: |
-          swift test --filter WebConversationLiveTests > live.log 2>&1 || true
-          grep -E "LIVE|error:|Executed" live.log || tail -50 live.log
+          # 回答另外寫到 live-answers.txt（只有這個測試在寫，不會跟其他輸出混在一起）
+          NINESUN_LIVE_OUT="$PWD/live-answers.txt" swift test --filter WebConversationLiveTests > live.log 2>&1 || true
+          if [ -s live-answers.txt ]; then cat live-answers.txt; else grep -a -E "LIVE|error:|Executed" live.log || tail -50 live.log; fi
+          grep -a -E "error:|Executed" live.log | tail -5 || true

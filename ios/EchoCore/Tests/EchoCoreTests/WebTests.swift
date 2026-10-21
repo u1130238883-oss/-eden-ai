@@ -174,8 +174,19 @@ final class WebThinkingTests: XCTestCase {
 
 /// 模擬真人提問：整段對話走 EchoEngine → 需要時 WebAgent 上網（CI 用 NINESUN_LIVE=1 執行）
 final class WebConversationLiveTests: XCTestCase {
-    /// 直接寫到 stderr（不經過緩衝，測試結束時才不會掉字）
-    func say(_ s: String) { FileHandle.standardError.write((s + "\n").data(using: .utf8)!) }
+    /// 直接寫到 stderr（不經過緩衝，測試結束時才不會掉字）；有設定 NINESUN_LIVE_OUT 時也另外寫一份到那個檔案
+    /// （只有這個測試在寫，不會跟其他輸出混在一起；控制字元換成「�」，免得整行被 grep 當成二進位丟掉）
+    lazy var out: FileHandle? = {
+        guard let path = ProcessInfo.processInfo.environment["NINESUN_LIVE_OUT"] else { return nil }
+        FileManager.default.createFile(atPath: path, contents: nil)
+        return FileHandle(forWritingAtPath: path)
+    }()
+    func say(_ s: String) {
+        let safe = String(String.UnicodeScalarView(s.unicodeScalars.map { $0.value < 32 && $0 != "\n" ? "\u{FFFD}" : $0 }))
+        let d = (safe + "\n").data(using: .utf8)!
+        FileHandle.standardError.write(d)
+        out?.write(d)
+    }
 
     func testLiveConversation() async throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["NINESUN_LIVE"] == "1", "live test")
@@ -216,7 +227,7 @@ final class WebConversationLiveTests: XCTestCase {
                 let w = await WebAgent.run(wq, lang: .zh)
                 let secs = Date().timeIntervalSince(t0)
                 if secs > 15 { slow += 1 }
-                say("LIVE --- 上網查「\(wq)」 用了 \(String(format: "%.1f", secs)) 秒 found=\(w.found)")
+                say("LIVE --- 上網查「\(wq)」 用了 \(String(format: "%.1f", secs)) 秒 found=\(w.found) 字數=\(w.text.count) 題型=\(w.want ?? "-")")
                 if !w.debug.isEmpty { say("LIVE DEBUG " + w.debug) }
                 if !w.timing.isEmpty { say("LIVE ⏱ " + w.timing) }
                 if w.text.isEmpty { say("LIVE --- 回答是空的 engines=\(w.engines)") }
