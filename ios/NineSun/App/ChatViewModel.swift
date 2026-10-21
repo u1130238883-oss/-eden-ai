@@ -44,6 +44,8 @@ final class ChatViewModel: ObservableObject {
     private static let notebookURL = docs.appendingPathComponent("ninesun-notebook.json")
     /// 上一個上網查的問題（「繼續查」用）
     private var lastWebQuestion: String?
+    /// 沒設定其他 AI 時，提醒過一次就好
+    private var aiHintShown = false
 
     init() {
         options = load("options") ?? SamplingOptions()
@@ -224,6 +226,7 @@ final class ChatViewModel: ObservableObject {
         lastWebQuestion = q
         let asker = profile.birthday.map { Destiny($0).type }
         let cfg = aiConfig, auto = aiAuto
+        let offerAI = !cfg.enabled && !aiHintShown
         Task { [self] in
             let r = await WebAgent.run(q, facts: nil, lang: L, avoid: avoid, reflect: reflect, asker: asker)
             if quietIfNothing && (!r.found || !r.answered) {
@@ -238,10 +241,18 @@ final class ChatViewModel: ObservableObject {
                 let summary = AskAIs.summarize(question: q, replies: replies, web: r)
                 text = r.confident ? text + "\n\n" + summary : summary + "\n\n———\n📌 我自己在網路上查到的：\n\n" + text
             }
+            // 沒設定其他 AI、這題又沒把握：說一次可以怎麼讓答案更可靠（一次就好，不一直講）
+            var hinted = false
+            if !quietIfNothing, offerAI, !r.confident, AskAIs.shouldAsk(r) {
+                text += "\n\n💡 這題我沒什麼把握。到設定頁「請其他 AI 幫忙」填一把 OpenRouter 金鑰（免費申請），以後遇到沒把握的題目，我會同時問幾家 AI、查證後把結論給你。"
+                hinted = true
+            }
             // tokens 設成空的，泡泡才會出現 👍／👎；query 記下問題，回饋時知道是哪一類問題
             var turn = ChatTurn(role: .echo, text: book.enforce(text), source: .knowledge, card: r.card, tokens: [])
             turn.query = q
+            let didHint = hinted
             await MainActor.run {
+                if didHint { self.aiHintShown = true }
                 self.saveFile(SelfTuning.shared.state, Self.tuningURL)
                 self.saveFile(Notebook.shared.state, Self.notebookURL)
                 self.finish(turn)
