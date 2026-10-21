@@ -91,7 +91,7 @@ struct SettingsView: View {
             Text(found.isEmpty ? T("還沒認出任何金鑰", "No keys recognised yet", "Aún no hay claves", "Nessuna chiave ancora")
                                : T("✓ 認出：", "✓ Recognised: ", "✓ Reconocidas: ", "✓ Riconosciute: ") + found.joined(separator: "、"))
                 .font(.system(size: 12, weight: .bold)).foregroundColor(found.isEmpty ? Theme.dim : Theme.hazard)
-            Text(T("照開頭自動認：AIza…＝Gemini（aistudio.google.com 免費）、sk-ant-…＝Claude、sk-proj-…＝ChatGPT、xai-…＝Grok、gsk_…＝Groq（免費）、sk-or-…＝OpenRouter（一把可以問很多家）、DeepSeek 的 sk-…。有好幾把時每一家都會問。",
+            Text(T("照開頭自動認：AIza… 或 AQ.…＝Gemini（aistudio.google.com 免費）、sk-ant-…＝Claude、sk-proj-…＝ChatGPT、xai-…＝Grok、gsk_…＝Groq（免費）、sk-or-…＝OpenRouter（一把可以問很多家）、DeepSeek 的 sk-…。有好幾把時每一家都會問。",
                    "Detected by prefix: AIza…=Gemini (free at aistudio.google.com), sk-ant-…=Claude, sk-proj-…=ChatGPT, xai-…=Grok, gsk_…=Groq (free), sk-or-…=OpenRouter, DeepSeek sk-….",
                    "Se detectan por el inicio: AIza…=Gemini, sk-ant-…=Claude, sk-proj-…=ChatGPT, xai-…=Grok, gsk_…=Groq, sk-or-…=OpenRouter, DeepSeek sk-….",
                    "Riconosciute dall'inizio: AIza…=Gemini, sk-ant-…=Claude, sk-proj-…=ChatGPT, xai-…=Grok, gsk_…=Groq, sk-or-…=OpenRouter, DeepSeek sk-…."))

@@ -100,6 +100,9 @@ final class AskAIsTests: XCTestCase {
         XCTAssertEqual(c.compat.map(\.name), ["Grok", "Groq", "ChatGPT", "DeepSeek"])
         XCTAssertEqual(c.names, ["Claude", "Grok", "Groq", "ChatGPT", "DeepSeek", "Gemini", "OpenRouter"])
         XCTAssertFalse(AskAIs.Config(keys: ["", " "]).enabled)
+        // Google AI Studio 新格式的金鑰（AQ. 開頭）；認不出的先當 Gemini 試
+        XCTAssertEqual(AskAIs.Config(keys: ["AQ.Ab8RN6Example-Key_123"]).geminiKey, "AQ.Ab8RN6Example-Key_123")
+        XCTAssertEqual(AskAIs.Config(keys: ["SomeNewFormatKey12345"]).names, ["Gemini"])
         let claude = #"{"content":[{"type":"text","text":"結論：東京"}],"stop_reason":"end_turn"}"#.data(using: .utf8)
         XCTAssertEqual(AskAIs.claudeText(claude), "結論：東京")
     }

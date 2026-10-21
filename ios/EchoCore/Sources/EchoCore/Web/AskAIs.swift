@@ -21,7 +21,7 @@ public enum AskAIs {
             var or = openRouterKey.trimmingCharacters(in: .whitespacesAndNewlines)
             var g = geminiKey.trimmingCharacters(in: .whitespacesAndNewlines)
             // Google AI Studio 的金鑰（AIza 開頭）貼錯格子也照樣用：它是 Gemini 的金鑰，不是 OpenRouter 的
-            if or.hasPrefix("AIza") { if g.isEmpty { g = or }; or = "" }
+            if or.hasPrefix("AIza") || or.hasPrefix("AQ.") { if g.isEmpty { g = or }; or = "" }
             if g.hasPrefix("sk-or-") { if or.isEmpty { or = g }; g = "" }
             self.openRouterKey = or
             self.geminiKey = g
@@ -38,14 +38,19 @@ public enum AskAIs {
         /// 貼上好幾把金鑰（一行一把、順序不拘），照開頭認出是哪一家
         public init(keys: [String]) {
             self.init()
+            var unknown: [String] = []
             for raw in keys {
                 let k = raw.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard k.count >= 10 else { continue }
-                if k.hasPrefix("AIza") { if geminiKey.isEmpty { geminiKey = k } }
+                // Google AI Studio 的金鑰：舊的是 AIza 開頭，新的是 AQ. 開頭
+                if k.hasPrefix("AIza") || k.hasPrefix("AQ.") { if geminiKey.isEmpty { geminiKey = k } }
                 else if k.hasPrefix("sk-or-") { if openRouterKey.isEmpty { openRouterKey = k } }
                 else if k.hasPrefix("sk-ant-") { if anthropicKey.isEmpty { anthropicKey = k } }
-                else if let p = Provider.detect(k), !compat.contains(where: { $0.name == p.name }) { compat.append(p) }
+                else if let p = Provider.detect(k) { if !compat.contains(where: { $0.name == p.name }) { compat.append(p) } }
+                else { unknown.append(k) }
             }
+            // 認不出開頭的金鑰：最可能是 Google 換了新格式，先當成 Gemini 的試試看
+            if geminiKey.isEmpty, let k = unknown.first { geminiKey = k }
         }
 
         /// 認出了哪幾家（設定頁顯示用）
