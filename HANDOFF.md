@@ -210,3 +210,36 @@ The chat bank keeps only things a search cannot answer: crisis safety, riddles, 
 - 對照測試：`python3 ai/brain_fixture.py ios/NineSun/Resources ios/EchoCore/Tests/EchoCoreTests/Fixtures/brain.json` 產生 fixture；`BrainTests.swift` 檢查 Swift 讀出來的答案和 Python 一樣。
 - 字的比對（`match_features`）比的是字本身，不是字表編號：字表裡沒有的罕見人名、地名也對得到。
 - 追問：句子開頭的「他／她／它」（「他幾歲？」）會換成上一題的主題（`EchoEngine.substituteAnaphor`）。
+
+## 大腦 v3 與思考能力 — 2026-10-21
+
+### 大腦 v3（`reader.bin`，6 層、約 650 萬參數）
+- 從 v2（部分答對 0.654）接著練：`python3 ai/train_reader.py --data DIR --out DIR --init ios/NineSun/Resources --wiki WIKI --wiki-chars 90000000 --pretrain-min 75 --finetune-min 210 --read-lr 5e-4`
+  1. 再讀 75 分鐘中文維基百科（`corpus-data` 分支的 wiki_*.txt）。
+  2. 閱讀測驗＋**主次判斷**：多一個輸出（看 [CLS]），判斷這段對問題是「主要（直接回答）／次要（同一件事的補充）／無關」。
+     - 主要＝答案所在段落；次要＝同一篇文章的其他段落；無關＝別篇文章（一段隨機、一段挑跟問題字詞最像的）。
+  - 問題會隨機改成口語（「請問…」「欸…」「…呢」、拿掉問號）。
+  - 每 5 分鐘存檔，容器重開後用同一個指令接著練。
+- 考試（DRCD dev 600 題）：
+
+  | 指標 | v3 | v2 |
+  |---|---|---|
+  | 答案字詞 F1／完全答對 | **0.718／0.563** | 0.654／0.478 |
+  | 混進無關文章還挑得到回答的段落 | 0.902 | 0.890 |
+  | 主次判斷（主要／次要／無關）答對 | 0.879 | （沒有） |
+
+- Swift：`Brain.Span` 多了 `main`／`side`／`none`（機率）；舊版大腦沒有這個輸出時是 -1，照舊運作。
+- `Think.conclude`：無關的段落不拿來湊答案；回答後面加【次要・補充】（大腦判斷為次要的段落，每個網站一段、最多兩段）。
+
+### 思考能力（`Web/Mind.swift`、`Web/Notebook.swift`）
+- **知識筆記本**：有把握的答案記下來（答案、日期、網站、查到幾次）。筆記**不直接拿來回答**，每次還是上網查；查完跟筆記對照：一樣就說「第 N 次查到同樣的答案」，不一樣就說出來並以新的為準。存在 `ninesun-notebook.json`。輸入「知識筆記」可以看。
+- **知錯能改**：說「不對，是X」→ 記下這題被指正、使用者說的答案是 X；下次查同一題時對照：資料跟 X 一樣就說「你是對的」並更正筆記。
+- **揣測問的人**：依使用者生日算出的九型，在「我的看法」後面加一句「🎯 給你（第N型）的重點」，同一個答案用他在意的方式交代。聽起來在擔心（擔心、害怕、好煩…）時先接住再講重點。
+- **不放棄**：「繼續查」→ 換個方向把上一題再查一次；Bing、Yahoo 都沒結果時再問 Google。
+- **Google**：`WebSearch.google`（基本版網頁，/url?q= 換回原網址）。Google 擋自動查詢時沒有結果，其他來源照常。
+
+### 融合新版 Hollow（miro 倉庫編出的 Hollow.ipa）
+- 新版只多了一個算法：**本命宮引動的本命宮**（`Destiny.triggeredByNatal(p)`／`ninetwelve.py` 的 `triggered_by_natal`）。
+  - 點本命 P 宮 → 其他本命宮中果或因為 P 的；P 宮自己不算。由反組譯 `Triggers.natal(Destiny, PalaceRow)` 確認（跳過 palace == P，果或因等於 P 的列入）。
+  - 例：2006-01-14 生，本命 5 宮引動 4宮「壞10因5」、10宮「好10因5」、6宮「正5因7」。
+- 本命盤解讀（命宮引動的本命宮）與主題解讀（每一宮的「本命宮引動的本命宮」一行）都用上了。
