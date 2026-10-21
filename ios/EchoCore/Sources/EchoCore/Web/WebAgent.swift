@@ -721,6 +721,7 @@ public enum WebAgent {
             }
             res.debug = String(("pages=" + parts.joined(separator: " || ") + " LIST " + Understanding.lastListDebug).prefix(2500))
         }
+        if let fr, case .number = fr.want { res.debug = "NUM " + Understanding.lastNumberDebug }
         res.answered = solved?.ok ?? true
         res.confident = (solved?.ok ?? !answer.isEmpty) && !confidence.hasPrefix("低") && !confidence.hasPrefix("low")
             && !answer.hasPrefix("（我讀到的資料沒有直接講明")

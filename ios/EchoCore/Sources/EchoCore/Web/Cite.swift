@@ -25,20 +25,31 @@ public enum Cite {
         var clause = pos
         while clause > 0 && !"，；：。、,;:".contains(chars[clause - 1]) { clause -= 1 }
         var start = pos - clause <= 10 ? clause : pos - 6
-        // 關鍵詞本身一定要完整（「508公尺」不能變成「508公」）
-        if focusLen <= maxQuote { start = max(start, pos + focusLen - maxQuote) }
+        // 關鍵詞本身一定要完整（「508公尺」不能變成「508公」）；留一個字給結尾的「…」
+        if focusLen < maxQuote { start = max(start, pos + focusLen - (maxQuote - 1)) }
+        // 數字的一部分（「1,234,567」的「890」）：不要從數字中間開始
+        func inNumber(_ k: Int) -> Bool { k >= 0 && k < chars.count && (chars[k].isNumber || chars[k] == "," || chars[k] == ".") }
+        while start > 0, start < pos, inNumber(start - 1), inNumber(start) { start += 1 }
         var out = ""
         var i = start
         while i < chars.count && out.count < maxQuote {
             let c = chars[i]
             if "。；！？!?".contains(c) { break }
-            if "，,".contains(c) && out.count >= 6 { break }
+            // 「149,597,870」裡的逗號不是子句的分隔
+            if "，,".contains(c) && out.count >= 6 && !(c == "," && inNumber(i - 1) && inNumber(i + 1)) { break }
             out.append(c)
             i += 1
         }
         let trimmed = out.trimmingCharacters(in: CharacterSet(charactersIn: "，、：:；,. "))
-        // 字數到了、句子還沒講完：加「…」，不要讓人以為原文就是這樣（「瑞利散…」）
-        if out.count >= maxQuote, i < chars.count, !"。；！？!?，,、".contains(chars[i]) { return trimmed + "…" }
+        // 字數到了、句子還沒講完：加「…」，不要讓人以為原文就是這樣（「瑞利散…」）；連「…」在內不超過 14 個字
+        if out.count >= maxQuote, i < chars.count, !"。；！？!?，,、".contains(chars[i]) {
+            var cut = String(out.prefix(maxQuote - 1))
+            // 拿掉的那個字還是數字：不要停在數字中間（「1,234,5…」），整個數字一起拿掉
+            if let dropped = out.last, dropped.isNumber || dropped == "," || dropped == "." {
+                while let l = cut.last, l.isNumber || l == "," || l == ".", cut.count > 6 { cut.removeLast() }
+            }
+            return cut.trimmingCharacters(in: CharacterSet(charactersIn: "，、：:；,. ")) + "…"
+        }
         return trimmed
     }
 

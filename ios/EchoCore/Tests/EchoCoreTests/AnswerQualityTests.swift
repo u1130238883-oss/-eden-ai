@@ -25,6 +25,13 @@ final class AnswerQualityTests: XCTestCase {
         XCTAssertEqual(Understanding.numbers("1億4960萬公里", units: ["公里"]).first?.value, 1.496e8)
     }
 
+    /// 玉山有多高 → 答成「3869公尺」（那是玉山東峰）
+    func testSubPeakHeightIsNotTheAnswer() {
+        let ys = [Understanding.Evidence(text: "著名的台灣百岳高峰中，玉山東峰（3,869公尺）、玉山北峰（3,858公尺）都在附近。", host: "w"),
+                  Understanding.Evidence(text: "玉山主峰海拔3,952公尺，是台灣最高峰。", host: "w")]
+        XCTAssertEqual(Understanding.voteNumber(ys, units: ["公尺", "米"], subject: "玉山")?.shown, "3,952公尺")
+    }
+
     /// 世界上最高的山 → 答成「唐古拉站」（世界上海拔最高的火車站）
     func testSuperlativeMustBeTheSameKindOfThing() {
         let q = "世界上最高的山是哪座"
@@ -95,6 +102,12 @@ final class AnswerQualityTests: XCTestCase {
     func testOtherSideDeduplicates() {
         let dup: [(text: String, host: String)] = [("但其實天空是無色的，我們看到的藍色來自散射。", "a"), ("但其實天空是無色的。", "b")]
         XCTAssertEqual(Mind.otherSide(dup, topic: ["天空"], exclude: []).count, 1)
+    }
+
+    /// 歐洲國家名單的第一項變成「聯合國地理分區將歐洲分為」
+    func testListItemsAreNamesNotClauses() {
+        XCTAssertNil(Understanding.item("聯合國地理分區將歐洲分為"))
+        XCTAssertEqual(Understanding.item("阿爾巴尼亞"), "阿爾巴尼亞")
     }
 
     /// 「我是說這些歐洲國家是哪些國家」→ 查成「列表 歐洲國家…」（上一次查詢加的「列表」被當成主題）

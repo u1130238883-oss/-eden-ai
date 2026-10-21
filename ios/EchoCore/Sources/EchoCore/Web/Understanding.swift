@@ -329,6 +329,9 @@ extension Understanding {
         return votes
     }
 
+    /// 除錯：上一次數字投票的各組（數值×被提到幾次@幾個網站：第一句）
+    nonisolated(unsafe) public static var lastNumberDebug = ""
+
     /// 各來源說的數字，差不到 3% 的算同一個說法；一個網站一票
     public static func voteNumber(_ ev: [Evidence], units: [String], subject: String, rates: Bool = false)
         -> (shown: String, sentence: Evidence, votes: Int, others: [String])? {
@@ -343,6 +346,11 @@ extension Understanding {
             let body = e.text.replacingOccurrences(of: subject, with: "")
             // 「1公尺」這種定義用的數字通常不是答案
             for n in numbers(body, units: units, rates: rates) where n.value > 1 {
+                // 「玉山東峰（3,869公尺）」：講的是旁邊另一座峰（東峰、北峰），不是問的那座
+                if let r = body.range(of: n.shown) {
+                    let pre = body[body.index(r.lowerBound, offsetBy: -min(6, body.distance(from: body.startIndex, to: r.lowerBound)))..<r.lowerBound]
+                    if pre.range(of: "[東西南北前後小副]峰", options: .regularExpression) != nil { continue }
+                }
                 if let i = groups.firstIndex(where: { abs($0.value - n.value) / max($0.value, n.value) < 0.015 }) {
                     groups[i].hosts.insert(e.host)
                     mentions[i] += 1
@@ -353,6 +361,8 @@ extension Understanding {
             }
         }
         func w(_ g: (value: Double, shown: String, sentence: Evidence, hosts: Set<String>)) -> Int { g.hosts.reduce(0) { $0 + weight($1) } }
+        lastNumberDebug = groups.indices.sorted { mentions[$0] > mentions[$1] }.prefix(6)
+            .map { "\(groups[$0].shown)×\(mentions[$0])@\(groups[$0].hosts.count):\(groups[$0].sentence.text.prefix(40))" }.joined(separator: " | ")
         // 先看幾個網站（官方算兩票），一樣的話看被提到幾次（正確的數值通常一再出現，歷史上的估計只提一次）
         guard let bi = groups.indices.max(by: { (w(groups[$0]), mentions[$0]) < (w(groups[$1]), mentions[$1]) }) else { return nil }
         let best = groups[bi]
@@ -372,7 +382,8 @@ extension Understanding {
         s = s.trimmingCharacters(in: .whitespaces)
         // 名字不會有「是、的、於、為、比、稱、僅、最」這些句子用的字（「是世界人口第三多的洲」是一句話，不是一個國家）
         guard (2...12).contains(s.count), !s.contains(where: { "。，：:；;？?！!".contains($0) }),
-              !["是", "的", "僅", "稱為", "之一", "位於", "次於", "約為", "大約", "合稱", "全稱", "最北", "最南", "最大", "最高", "第三", "第二"].contains(where: { s.contains($0) }),
+              !["是", "的", "僅", "稱為", "之一", "位於", "次於", "約為", "大約", "合稱", "全稱", "最北", "最南", "最大", "最高", "第三", "第二",
+                "分為", "劃分", "將", "以下", "如下"].contains(where: { s.contains($0) }),
               s.filter(\.isNumber).count <= 1, !stop.contains(s) else { return nil }
         return s
     }
