@@ -70,6 +70,8 @@ final class AnswerQualityTests: XCTestCase {
         let works = "三島由紀夫的小說常探討美與死亡。《金閣寺》描寫一名年輕僧人對金閣之美的執迷。"
         XCTAssertTrue(Think.onTopic(question: "三島由紀夫的書都講了什麼", sentence: "《金閣寺》描寫一名年輕僧人對金閣之美的執迷。", passage: works))
         XCTAssertTrue(Think.cues("天空為什麼是藍色的").contains("因為"))
+        XCTAssertTrue(Think.cues("甲減是什麼").contains("簡稱"))
+        XCTAssertEqual(Think.chunks("甲減是什麼"), ["甲減"])
     }
 
     /// 「三島由紀夫的書都講了什麼」：先找代表作，再說每一部在講什麼（不是拿「三島由紀夫獎」那句）

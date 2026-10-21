@@ -394,8 +394,11 @@ public enum WebAgent {
                 }
                 let old = solve(fr, pages: ps, snippets: sn)
                 let oldOK = old.ok && !old.text.isEmpty
+                // 要一段說明的題目（在講什麼、怎麼辦、為什麼、X是什麼）：大腦給整句，不切幾個字
+                var explain = Think.wantsSentences(question)
+                if case .definition = fr.want { explain = true }
                 guard let brain = Brain.shared,
-                      let c = Think.conclude(question: question, pages: ps, snippets: sn, brain: brain, accept: accept) else {
+                      let c = Think.conclude(question: question, pages: ps, snippets: sn, brain: brain, accept: accept, explain: explain) else {
                     brainAnswered = false
                     return old
                 }

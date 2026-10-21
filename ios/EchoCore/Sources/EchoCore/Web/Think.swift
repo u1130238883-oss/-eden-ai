@@ -160,6 +160,7 @@ public enum Think {
             return ["講述", "描寫", "描述", "敘述", "故事", "主題", "探討", "內容", "講的是", "寫的是", "主角", "情節"]
         }
         if ["為什麼", "為何", "原因", "怎麼會"].contains(where: { q.contains($0) }) { return Understanding.causal }
+        if ["是什麼", "是啥", "什麼意思", "是指什麼"].contains(where: { q.contains($0) }) { return ["是", "指", "稱為", "一種", "簡稱"] }
         if ["怎麼辦", "該怎麼", "怎麼處理", "建議"].contains(where: { q.contains($0) }) {
             return ["可以", "應該", "建議", "最好", "記得", "不要", "避免", "休息", "就醫", "找", "先", "試著"]
         }
@@ -254,8 +255,9 @@ public enum Think {
         return w == 0 ? 0.3 : Float(w)
     }
 
+    /// explain：要一段說明（整句）而不是幾個字；沒指定時看問題的說法（在講什麼、怎麼辦、為什麼…）
     public static func conclude(question: String, pages: [Understanding.Evidence], snippets: [Understanding.Evidence],
-                                brain: Brain, budget: Int = 40, accept: ((String) -> Bool)? = nil) -> Conclusion? {
+                                brain: Brain, budget: Int = 40, accept: ((String) -> Bool)? = nil, explain: Bool? = nil) -> Conclusion? {
         // ① 切段、② 粗挑
         let g = grams(question)
         var cands: [(text: String, host: String, overlap: Int)] = []
@@ -286,7 +288,7 @@ public enum Think {
         let floor: Float = -6
 
         // 要一段說明的題目（在講什麼、怎麼辦、為什麼）：不切幾個字當答案，給最在回答問題的整句話（每個網站一句、最多兩句）
-        if wantsSentences(question) {
+        if explain ?? wantsSentences(question) {
             func rank(_ r: Reading) -> Float { (r.span.main >= 0 ? r.span.main * 10 : 0) + r.span.score * 0.3 }
             let pool = all.filter { $0.span.main < 0 || $0.span.none < 0.5 }.sorted { rank($0) > rank($1) }
             var lines: [String] = []
