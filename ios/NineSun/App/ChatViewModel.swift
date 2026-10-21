@@ -248,23 +248,22 @@ final class ChatViewModel: ObservableObject {
          "宮位", "算命", "占卜", "日宮", "夜宮", "fortune", "horoscope"].contains { text.lowercased().contains($0) }
     }
 
-    /// 全部交給 AI 回答：問題先很快上網查一下（給 AI 最新的資料），再帶著最近的對話問 Gemini
+    /// 全部交給 AI 回答：直接問（Gemini 會自己用 Google 搜尋），用 NineSun 的口吻、照你的九型交代；好幾家 AI 時融合成一個答案
     private func aiChat(_ text: String, _ L: Lang) {
         let cfg = aiConfig
         let past = turns.dropLast().suffix(10).compactMap { t -> AskAIs.Turn? in
             t.text.isEmpty ? nil : AskAIs.Turn(fromUser: t.role == .user, text: t.text)
         }
-        let isQ = EchoEngine.isQuestion(text)
-        streaming = isQ ? "🔎 先上網查一下，再問 AI…" : "🤖 AI 回答中…"
+        var persona = ""
+        if let bd = profile.birthday {
+            let t = Destiny(bd).type
+            persona = "跟你說話的人是九型十二宮的第\(t)型「\(NT.typeName(t))」（\(NT.typeTagline(t))）。用他聽得進去的方式回答，但不要每次都提到他的型。"
+        }
+        streaming = cfg.names.count > 1 ? "🤖 同時問 " + cfg.names.joined(separator: "、") + "，再融合成我的看法…" : "🤖 思考中…"
         Task { [self] in
-            var evidence: [String] = []
-            if isQ {
-                let r = await WebAgent.run(text, facts: nil, lang: L)
-                evidence = r.evidence
-            }
-            let reply = await AskAIs.chat(text, history: past, evidence: evidence, lang: L, config: cfg)
+            let reply = await AskAIs.chat(text, history: past, evidence: [], lang: L, config: cfg, persona: persona)
             let body = reply.error == nil
-                ? reply.text + "\n\n— 🤖 \(reply.name) 回答" + (evidence.isEmpty ? "" : "（參考了網路上查到的資料）")
+                ? reply.text + "\n\n— 🤖 " + reply.name
                 : "AI 這次沒有回答：\n" + (reply.error ?? "") + "\n\n（可以到設定頁按「測試連線」看看；或把「全部交給 AI 回答」關掉，讓 NineSun 自己回答）"
             await MainActor.run { self.finish(ChatTurn(role: .echo, text: body, source: .knowledge)) }
         }

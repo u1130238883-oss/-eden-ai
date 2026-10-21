@@ -107,6 +107,13 @@ final class AskAIsTests: XCTestCase {
         XCTAssertEqual(AskAIs.claudeText(claude), "結論：東京")
     }
 
+    /// 手機上不顯示 Markdown 符號（之前會看到「**約束權力**」）
+    func testPlainText() {
+        XCTAssertEqual(AskAIs.plain("## 重點\n1. **約束權力**：限制國家權力\n* 社會共識"), "重點\n1. 約束權力：限制國家權力\n• 社會共識")
+        let s = AskAIs.chatSystem(evidence: [], lang: .zh, persona: "跟你說話的人是第5型")
+        XCTAssertTrue(s.contains("九型十二宮") && s.contains("第5型"), s)
+    }
+
     func testWhenToAsk() {
         var r = WebAgent.Result(text: "", card: nil, found: true, engines: [:])
         r.confident = true

@@ -241,14 +241,17 @@ public enum AskAIs {
         public init(fromUser: Bool, text: String) { self.fromUser = fromUser; self.text = text }
     }
 
-    static func chatSystem(evidence: [String], lang L: Lang) -> String {
+    static func chatSystem(evidence: [String], lang L: Lang, persona: String = "") -> String {
         var s: String
         switch L {
-        case .zh: s = "你是 NineSun，一個聰明、貼心、說話直接的 AI 助理。用繁體中文（台灣用語）自然地回答，先給答案再補充重點，不要太長。不確定就說不確定，不要編造數字、日期、人名或出處。"
+        case .zh: s = "你是 NineSun：一個以「九型十二宮」為底層世界觀、有自己見解的 AI。回答前先在心裡從幾個角度想過（正面、反面、實際的做法、對方真正在意的是什麼），"
+            + "再用自己的話給出一個有判斷的答案：先講結論，再講理由和你的看法，必要時點出常見的誤解。像一個有智慧、說話直接又溫暖的朋友，不要像百科全書，也不要條列一大堆。"
+            + "用繁體中文（台灣用語），不要用 Markdown 符號（不要 ** 或 #）。不確定就說不確定，不要編造數字、日期、人名或出處。"
         case .en: s = "You are NineSun, a smart, warm and direct AI assistant. Answer naturally: give the answer first, then the key points, briefly. If unsure, say so; never invent numbers, dates, names or sources."
         case .es: s = "Eres NineSun, un asistente de IA inteligente, cercano y directo. Responde con naturalidad: primero la respuesta, luego lo esencial, sin alargarte. Si no estás seguro, dilo; no inventes datos."
         case .it: s = "Sei NineSun, un assistente IA intelligente, gentile e diretto. Rispondi in modo naturale: prima la risposta, poi i punti chiave, in breve. Se non sei sicuro, dillo; non inventare dati."
         }
+        if !persona.isEmpty { s += "\n\n" + persona }
         if !evidence.isEmpty {
             s += (L == .zh ? "\n\n以下是剛才在網路上查到的資料，可以參考（可能不完整或有錯，跟你知道的不同時以可靠的為準）：\n" : "\n\nWeb results just found (may be incomplete or wrong):\n")
                 + evidence.prefix(8).map { "- " + $0 }.joined(separator: "\n")
@@ -256,37 +259,74 @@ public enum AskAIs {
         return s
     }
 
-    /// 直接請 AI 回答（帶著最近的對話）：先問 Gemini，不行就問 OpenRouter 的模型；回傳第一個成功的回答
-    public static func chat(_ message: String, history: [Turn], evidence: [String], lang L: Lang, config: Config) async -> Reply {
-        let system = chatSystem(evidence: evidence, lang: L)
-        let past = Array(history.suffix(10))
-        var errors: [String] = []
-        if !config.anthropicKey.isEmpty {
-            let r = await claude(system: system, user: message, key: config.anthropicKey, history: past)
-            if r.error == nil { return r }
-            errors.append("Claude：" + (r.error ?? ""))
+    /// 去掉 Markdown 符號（**粗體**、# 標題、* 項目），手機上看起來乾淨
+    public static func plain(_ t: String) -> String {
+        var out: [String] = []
+        for var line in t.components(separatedBy: "\n") {
+            line = line.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "__", with: "")
+            while line.hasPrefix("#") { line.removeFirst() }
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("* ") || trimmed.hasPrefix("- ") { line = "• " + trimmed.dropFirst(2) }
+            out.append(line.trimmingCharacters(in: .whitespaces))
         }
-        for prov in config.compat {
-            let r = await compatible(prov, system: system, user: message, history: past)
-            if r.error == nil { return r }
-            errors.append(prov.name + "：" + (r.error ?? ""))
-        }
-        if !config.geminiKey.isEmpty {
-            let r = await gemini(system: system, user: message, key: config.geminiKey, history: past)
-            if r.error == nil { return r }
-            errors.append("Gemini：" + (r.error ?? ""))
-        }
-        if !config.openRouterKey.isEmpty {
+        return out.joined(separator: "\n").replacingOccurrences(of: "\n\n\n", with: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// 問一家（帶著對話）；Gemini 會自己用 Google 搜尋最新資料
+    static func one(_ who: String, config: Config, system: String, message: String, past: [Turn]) async -> Reply {
+        switch who {
+        case "Claude": return await claude(system: system, user: message, key: config.anthropicKey, history: past)
+        case "Gemini": return await gemini(system: system, user: message, key: config.geminiKey, history: past, search: true)
+        case "OpenRouter":
             let pool = config.models.isEmpty ? await freeModels() : config.models
+            var last = Reply(name: "OpenRouter", text: "", error: "沒有可用的模型")
             for m in pool.prefix(4) {
-                let name = displayNames([m])[0]
-                let r = await openRouter(m, name: name, system: system, user: message, key: config.openRouterKey, history: past)
+                let r = await openRouter(m, name: displayNames([m])[0], system: system, user: message, key: config.openRouterKey, history: past)
                 if r.error == nil { return r }
-                errors.append(name + "：" + (r.error ?? ""))
+                last = r
                 if r.error?.hasPrefix("金鑰不對") == true { break }
             }
+            return last
+        default:
+            guard let p = config.compat.first(where: { $0.name == who }) else { return Reply(name: who, text: "", error: "沒有金鑰") }
+            return await compatible(p, system: system, user: message, history: past)
         }
-        return Reply(name: "AI", text: "", error: errors.isEmpty ? "還沒填金鑰" : errors.joined(separator: "\n"))
+    }
+
+    /// 直接請 AI 回答（帶著最近的對話），用 NineSun 自己的口吻和見解。
+    /// 只有一家：請它從幾個角度想過再給出有判斷的答案。好幾家：每一家都先回答，再請其中一家把大家的說法融合成 NineSun 自己的看法。
+    public static func chat(_ message: String, history: [Turn], evidence: [String], lang L: Lang, config: Config,
+                            persona: String = "") async -> Reply {
+        let system = chatSystem(evidence: evidence, lang: L, persona: persona)
+        let past = Array(history.suffix(10))
+        let who = config.names
+        guard !who.isEmpty else { return Reply(name: "AI", text: "", error: "還沒填金鑰") }
+        if who.count == 1 {
+            let r = await one(who[0], config: config, system: system, message: message, past: past)
+            return r.error == nil ? Reply(name: r.name, text: plain(r.text), error: nil) : r
+        }
+        // 好幾家：同時問
+        let drafts = await withTaskGroup(of: (Int, Reply).self) { g -> [Reply] in
+            for (i, w) in who.enumerated() { g.addTask { (i, await one(w, config: config, system: system, message: message, past: past)) } }
+            var out: [(Int, Reply)] = []
+            for await r in g { out.append(r) }
+            return out.sorted { $0.0 < $1.0 }.map(\.1)
+        }
+        let ok = drafts.filter { $0.error == nil }
+        guard let first = ok.first else {
+            return Reply(name: "AI", text: "", error: drafts.map { $0.name + "：" + ($0.error ?? "") }.joined(separator: "\n"))
+        }
+        if ok.count == 1 { return Reply(name: first.name, text: plain(first.text), error: nil) }
+        // 融合：把各家的回答交給第一家成功的，寫成 NineSun 自己的一個答案
+        let notes = ok.map { "【\($0.name)】\n" + WebSearch.clip($0.text, 1200) }.joined(separator: "\n\n")
+        let fuse = system + "\n\n下面是幾位顧問對同一個問題的回答。請把它們融合成你（NineSun）自己的一個回答："
+            + "先給你的結論；說明大家一致的地方，不同的地方你比較相信哪一個、為什麼；最後加上你自己的見解。不要逐一轉述每一位，也不要提「顧問」這兩個字。\n\n" + notes
+        // 由回答成功的其中一家來融合（有 Claude 就用 Claude）
+        let okWho = who.indices.filter { drafts[$0].error == nil }.map { who[$0] }
+        let writer = okWho.contains("Claude") ? "Claude" : okWho[0]
+        let merged = await one(writer, config: config, system: fuse, message: message, past: past)
+        guard merged.error == nil else { return Reply(name: first.name, text: plain(first.text), error: nil) }
+        return Reply(name: "NineSun（融合 " + ok.map(\.name).joined(separator: "、") + "）", text: plain(merged.text), error: nil)
     }
 
     // MARK: - ChatGPT、Grok、DeepSeek、Groq（跟 OpenAI 一樣的格式）
@@ -492,12 +532,16 @@ public enum AskAIs {
 
     // MARK: - Gemini（選用）
 
-    static func gemini(system: String, user: String, key: String, history: [Turn] = []) async -> Reply {
+    static func gemini(system: String, user: String, key: String, history: [Turn] = [], search: Bool = false) async -> Reply {
         var last: Reply?
         // 一個模型忙線（503）、找不到（404）、次數用完（429）或出錯（500）就換下一個；金鑰錯、地區不支援就不用再試
         let retry = [404, 429, 500, 503].map(httpError)
         for model in ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"] {
-            let r = await geminiCall(model, system: system, user: user, key: key, history: history)
+            var r = await geminiCall(model, system: system, user: user, key: key, history: history, search: search)
+            // 有些模型或帳號不能用 Google 搜尋：不搜尋再問一次
+            if search, r.error?.hasPrefix(httpError(400)) == true {
+                r = await geminiCall(model, system: system, user: user, key: key, history: history, search: false)
+            }
             guard let err = r.error, retry.contains(where: { err.hasPrefix($0) }) else { return r }
             last = r
         }
@@ -505,7 +549,7 @@ public enum AskAIs {
         return Reply(name: "Gemini", text: "", error: "找不到可用的 Gemini 模型")
     }
 
-    static func geminiCall(_ model: String, system: String, user: String, key: String, history: [Turn] = []) async -> Reply {
+    static func geminiCall(_ model: String, system: String, user: String, key: String, history: [Turn] = [], search: Bool = false) async -> Reply {
         guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent") else {
             return Reply(name: "Gemini", text: "", error: "網址錯誤")
         }
@@ -515,12 +559,14 @@ public enum AskAIs {
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         // 能調的安全過濾都調到最低（核心的保護 Google 一定會留著）
         let cats = ["HARM_CATEGORY_HARASSMENT", "HARM_CATEGORY_HATE_SPEECH", "HARM_CATEGORY_SEXUALLY_EXPLICIT", "HARM_CATEGORY_DANGEROUS_CONTENT"]
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "system_instruction": ["parts": [["text": system]]],
             "contents": history.map { ["role": $0.fromUser ? "user" : "model", "parts": [["text": $0.text]]] }
                 + [["role": "user", "parts": [["text": user]]]],
             "safetySettings": cats.map { ["category": $0, "threshold": "BLOCK_NONE"] },
         ]
+        // 讓 Gemini 自己用 Google 搜尋最新的資料
+        if search { body["tools"] = [["google_search": [String: Any]()]] }
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
         let (code, data, failure) = await sendDetailed(req)
         guard code == 200 else { return Reply(name: "Gemini", text: "", error: explain(code: code, data: data, failure: failure)) }
