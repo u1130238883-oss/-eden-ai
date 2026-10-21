@@ -40,6 +40,8 @@ public enum WebAgent {
         public let engines: [String: Int]
         /// 除錯：被丟掉的搜尋結果標題、判斷用的詞
         public var debug: String = ""
+        /// 每一步花了多久（找出慢在哪裡用）
+        public var timing: String = ""
         /// 找到的東西有沒有真的回答問題（沒有的話，補充時就不要再貼上來）
         public var answered: Bool = true
         /// 有沒有把握：有答到，而且把握程度不是「低」（沒把握時才去問其他 AI）
@@ -173,6 +175,8 @@ public enum WebAgent {
         // 使用者給了網址：直接讀那個網頁
         if facts == nil, let url = firstURL(question), url.count >= question.count - 2 { return await readLink(url, lang: L) }
         let fortune = facts != nil
+        let t0 = Date()
+        var clock: [(String, Date)] = []
         let plan = understand(question, L: L, fortune: fortune)
         let zh = L == .zh
         let strat = !zh ? WebStrategy.Strategy(angles: [], trusted: [], note: nil)
@@ -224,6 +228,7 @@ public enum WebAgent {
             answers += got.sorted { $0.0 < $1.0 }.map { ($0.1, $0.2) }
             start += 2
         }
+        clock.append(("查詢\(jobs.count)組", Date()))
 
         // ④ 只留下跟主題有關的結果
         var terms = termSet(plan.core)
@@ -307,6 +312,7 @@ public enum WebAgent {
             for await (h, t) in g { if let t { out.append((h, t)) } }
             return out
         }
+        clock.append(("讀\(pages.count)頁", Date()))
 
         // 每一句都判斷：在回答哪一個小問題
         func angleOf(_ s: String, default d: Int) -> Int {
@@ -433,6 +439,7 @@ public enum WebAgent {
                 return old
             }
             var s = judge(ev(pages), snips)
+            clock.append(("思考", Date()))
             firstRoundOK = s.ok
             if !s.ok, !fr.retry.isEmpty {
                 let retryQs = Array(Cite.distinct(fr.retry).filter { r in !jobs.contains { Cite.similar($0.q, r) } }.prefix(2))
@@ -740,6 +747,9 @@ public enum WebAgent {
             res.debug = String(("pages=" + parts.joined(separator: " || ") + " LIST " + Understanding.lastListDebug).prefix(2500))
         }
         if let fr, case .number = fr.want { res.debug = "NUM " + Understanding.lastNumberDebug }
+        clock.append(("整理", Date()))
+        var last = t0
+        res.timing = clock.map { name, t in defer { last = t }; return name + String(format: " %.1fs", t.timeIntervalSince(last)) }.joined(separator: " · ")
         res.answered = solved?.ok ?? true
         res.confident = (solved?.ok ?? !answer.isEmpty) && !confidence.hasPrefix("低") && !confidence.hasPrefix("low")
             && !answer.hasPrefix("（我讀到的資料沒有直接講明")
