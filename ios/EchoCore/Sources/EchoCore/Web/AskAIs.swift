@@ -220,6 +220,8 @@ public enum AskAIs {
         case 402: return "這個模型要付費（帳戶需要儲值）"
         case 404: return "找不到這個模型"
         case 429: return "今天的免費次數用完了，或問得太頻繁"
+        case 500: return "對方伺服器出錯"
+        case 503: return "對方忙線中（用的人太多）"
         default: return "沒回應（\(code)）"
         }
     }
@@ -301,9 +303,11 @@ public enum AskAIs {
 
     static func gemini(system: String, user: String, key: String) async -> Reply {
         var last: Reply?
-        for model in ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"] {
+        // 一個模型忙線（503）、找不到（404）、次數用完（429）或出錯（500）就換下一個；金鑰錯、地區不支援就不用再試
+        let retry = [404, 429, 500, 503].map(httpError)
+        for model in ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"] {
             let r = await geminiCall(model, system: system, user: user, key: key)
-            if r.error?.hasPrefix(httpError(404)) != true { return r }
+            guard let err = r.error, retry.contains(where: { err.hasPrefix($0) }) else { return r }
             last = r
         }
         if let last { return last }
