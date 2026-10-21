@@ -78,26 +78,18 @@ struct SettingsView: View {
                    "NineSun busca primero en la web; si no está seguro o hay que razonar, pregunta a otras IA a la vez, las compara, las verifica y te da su conclusión. Usa APIs oficiales; las claves se quedan en este teléfono.",
                    "NineSun cerca prima sul web; se non è sicuro o serve ragionare, chiede ad altre IA insieme, le confronta, le verifica e ti dà la sua conclusione. Usa API ufficiali; le chiavi restano su questo telefono."))
                 .font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
-            keyField(T("OpenRouter 金鑰（sk-or-…）", "OpenRouter key (sk-or-…)", "Clave de OpenRouter (sk-or-…)", "Chiave OpenRouter (sk-or-…)"), $vm.openRouterKey, secure: true)
-            Text(T("免費申請：openrouter.ai → 登入 → Keys → Create Key。沒指定模型時，NineSun 自動挑三個不同家的免費模型（每天有次數上限）；帳戶儲值後，可以在下面指定 Claude、Grok 等付費模型。",
-                   "Free: openrouter.ai → sign in → Keys → Create Key. With no models set, NineSun picks three free models from different makers (daily limits); add credit to name paid models such as Claude or Grok below.",
-                   "Gratis: openrouter.ai → inicia sesión → Keys → Create Key. Sin modelos indicados, NineSun elige tres modelos gratuitos de distintas empresas (con límite diario); con saldo puedes indicar Claude, Grok, etc.",
-                   "Gratis: openrouter.ai → accedi → Keys → Create Key. Senza modelli indicati, NineSun sceglie tre modelli gratuiti di aziende diverse (limite giornaliero); con credito puoi indicare Claude, Grok, ecc."))
+            keyField(T("Gemini 金鑰（AIza…）", "Gemini key (AIza…)", "Clave de Gemini (AIza…)", "Chiave Gemini (AIza…)"), $vm.geminiKey, secure: true)
+            Text(T("免費申請：aistudio.google.com → Get API key → 建立 API 金鑰 → 複製，貼到上面這一格。",
+                   "Free: aistudio.google.com → Get API key → Create API key → copy and paste it above.",
+                   "Gratis: aistudio.google.com → Get API key → Crear clave → cópiala aquí arriba.",
+                   "Gratis: aistudio.google.com → Get API key → Crea chiave → copiala qui sopra."))
                 .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
-            keyField(T("指定模型（選填，逗號分隔；名稱以 OpenRouter 網站為準）", "Models (optional, comma-separated, as listed on OpenRouter)",
-                       "Modelos (opcional, separados por comas, como en OpenRouter)", "Modelli (facoltativo, separati da virgole, come su OpenRouter)"), $vm.aiModels, secure: false)
-            keyField(T("Gemini 金鑰（選用）", "Gemini key (optional)", "Clave de Gemini (opcional)", "Chiave Gemini (facoltativa)"), $vm.geminiKey, secure: true)
             button(vm.aiTesting ? T("測試中…", "Testing…", "Probando…", "Test in corso…") : T("測試連線", "Test connection", "Probar conexión", "Prova connessione"),
                    color: Theme.hazard) { if !vm.aiTesting { vm.testAI() } }
             if !vm.aiTestResult.isEmpty {
                 Text(vm.aiTestResult).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.paper)
                     .textSelection(.enabled)
             }
-            Text(T("OpenRouter 的免費模型：要先到 openrouter.ai/settings/privacy 打開允許免費模型的選項，否則每一家都會回「找不到」。",
-                   "OpenRouter free models only answer after you allow them at openrouter.ai/settings/privacy.",
-                   "Los modelos gratuitos de OpenRouter solo responden si los permites en openrouter.ai/settings/privacy.",
-                   "I modelli gratuiti di OpenRouter rispondono solo se li consenti su openrouter.ai/settings/privacy."))
-                .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
             Toggle(isOn: $vm.aiAlways) {
                 label(T("全部交給 AI 回答（Gemini）", "Let the AI answer everything (Gemini)", "Que la IA responda todo (Gemini)", "Lascia rispondere l'IA a tutto (Gemini)"), "")
             }

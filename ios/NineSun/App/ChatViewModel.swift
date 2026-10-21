@@ -173,7 +173,7 @@ final class ChatViewModel: ObservableObject {
             if aiConfig.enabled {
                 lookupWeb(q, L, forceAI: true)
             } else {
-                finish(ChatTurn(role: .echo, text: "還沒設定其他 AI 的金鑰：到設定頁的「請其他 AI 幫忙」填入 OpenRouter 金鑰（免費申請），我就能同時問幾家 AI、整理後給你。", source: .tool))
+                finish(ChatTurn(role: .echo, text: "還沒設定 AI 的金鑰：到設定頁的「請其他 AI 幫忙」填入 Gemini 金鑰（aistudio.google.com 免費申請），我就能問 Gemini、整理後給你。", source: .tool))
             }
             return
         }
@@ -304,7 +304,7 @@ final class ChatViewModel: ObservableObject {
             // 沒設定其他 AI、這題又沒把握：說一次可以怎麼讓答案更可靠（一次就好，不一直講）
             var hinted = false
             if !quietIfNothing, offerAI, !r.confident, AskAIs.shouldAsk(r) {
-                text += "\n\n💡 這題我沒什麼把握。到設定頁「請其他 AI 幫忙」填一把 OpenRouter 金鑰（免費申請），以後遇到沒把握的題目，我會同時問幾家 AI、查證後把結論給你。"
+                text += "\n\n💡 這題我沒什麼把握。到設定頁「請其他 AI 幫忙」填一把 Gemini 金鑰（aistudio.google.com 免費申請），以後遇到沒把握的題目，我會問 Gemini、查證後把結論給你。"
                 hinted = true
             }
             // tokens 設成空的，泡泡才會出現 👍／👎；query 記下問題，回饋時知道是哪一類問題
