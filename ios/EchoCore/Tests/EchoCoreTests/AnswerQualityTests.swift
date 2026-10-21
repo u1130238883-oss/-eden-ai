@@ -32,6 +32,14 @@ final class AnswerQualityTests: XCTestCase {
         XCTAssertEqual(Understanding.voteNumber(ys, units: ["公尺", "米"], subject: "玉山")?.shown, "3,952公尺")
     }
 
+    /// 歐洲有多少個國家 → 答成「37個國家」（「歐洲有37個國家立法禁止…」是在數做某件事的國家）
+    func testCountOfCountriesDoingSomethingIsNotTheTotal() {
+        let ev = [Understanding.Evidence(text: "歐洲有37個國家立法禁止在公共場所吸菸。", host: "w"),
+                  Understanding.Evidence(text: "歐洲共有46個國家。", host: "x")]
+        XCTAssertEqual(Understanding.voteNumber(ev, units: ["個國家"], subject: "歐洲")?.shown, "46個國家")
+        XCTAssertTrue(Think.looksLikeNoise("（中文） 梁慶標：三島由紀夫《假面自白》主要內容簡介及賞析。"))
+    }
+
     /// 世界上最高的山 → 答成「唐古拉站」（世界上海拔最高的火車站）
     func testSuperlativeMustBeTheSameKindOfThing() {
         let q = "世界上最高的山是哪座"

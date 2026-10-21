@@ -96,6 +96,8 @@ public enum Think {
         let t = s.trimmingCharacters(in: .whitespaces)
         if ["跳至內容", "自由的百科全書", "主條目", "參見：", "另見：", "請參閱", "消歧義", "新增話題", "分類：", "維基百科"].contains(where: { t.contains($0) }) { return true }
         if t.contains("食材：") || (t.contains("讚") && t.contains(where: \.isNumber)) { return true }
+        // 參考書目（「（中文） 梁慶標：三島由紀夫《假面自白》主要內容簡介及賞析」）
+        if t.hasPrefix("（") || t.contains("簡介及賞析") || t.contains("ISBN") || t.contains("出版社") && t.contains("：") { return true }
         if t.hasSuffix("？") || t.hasSuffix("?") || t.hasSuffix("...") || t.hasSuffix("…") { return true }
         if t.contains(" - ") || t.contains("｜") || t.contains(" | ") { return true }
         if t.range(of: #"^\d+(\.\d+)*[\.、]\s*"#, options: .regularExpression) != nil && t.count <= 40 { return true }

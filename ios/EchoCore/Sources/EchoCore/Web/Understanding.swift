@@ -366,6 +366,10 @@ extension Understanding {
                 if let r = body.range(of: n.shown) {
                     let pre = body[body.index(r.lowerBound, offsetBy: -min(6, body.distance(from: body.startIndex, to: r.lowerBound)))..<r.lowerBound]
                     if pre.range(of: "[東西南北前後小副]峰", options: .regularExpression) != nil { continue }
+                    // 「37個國家立法禁止…」：是在數做某件事的國家，不是總共有幾個；「50個以上」也不是確切的數
+                    let post = body[r.upperBound...].prefix(4)
+                    if ["立法", "禁止", "已經", "已", "採用", "加入", "支持", "承認", "參加", "使用", "實施", "通過", "簽署", "以上", "以下", "曾", "將", "同意", "反對", "允許"]
+                        .contains(where: { post.hasPrefix($0) }) { continue }
                 }
                 if let i = groups.firstIndex(where: { abs($0.value - n.value) / max($0.value, n.value) < 0.015 }) {
                     groups[i].hosts.insert(e.host)
@@ -558,8 +562,14 @@ extension Understanding {
             return g.items.filter { $0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府") }.count
         }
         // 先用直接列名單的句子（●），再來是照條件從大表挑出來的（◆），都沒有才比哪一組最多
+        // 直接列名單的句子（●）要有別的資料印證一半以上（或只有它），才不會拿到運動賽事「參賽的歐洲國家包括西德、蘇聯…」這種句子
+        func corroborated(_ g: (items: [String], host: String, ctx: Bool)) -> Bool {
+            let others = good.filter { $0.items != g.items }
+            guard !others.isEmpty else { return true }
+            return g.items.filter { it in others.contains { $0.items.contains(it) } }.count * 2 >= g.items.count
+        }
         let preferred = suffix != nil ? nil
-            : confirmed.first(where: { $0.host.hasPrefix("★●") }) ?? confirmed.first(where: { $0.host.hasPrefix("★◆") })
+            : confirmed.first(where: { $0.host.hasPrefix("★●") && corroborated($0) }) ?? confirmed.first(where: { $0.host.hasPrefix("★◆") })
         guard var best = preferred ?? confirmed.max(by: { fitCount($0) < fitCount($1) }) else { return ([], []) }
         if let suffix {
             best.items = best.items.filter { ($0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府")) && !$0.contains("列表") && !$0.hasPrefix(noun) }

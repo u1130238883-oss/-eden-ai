@@ -624,7 +624,10 @@ public enum WebAgent {
         var sections: [(String, [String])] = []
         if !strat.angles.isEmpty {
             for (i, a) in strat.angles.enumerated() {
-                let fs = ranked.filter { $0.angle == i }.sorted { ($0.trusted ? 1 : 0) > ($1.trusted ? 1 : 0) }
+                // 小問題的補充也要講到主題、不能是網頁雜訊（「上面是兩處疑似是農田的位置」不算在講天空）
+                let angleTopic: Set<String> = fr.map { termSet(Understanding.plain($0.subject)).filter { $0.contains(where: isCJK) } } ?? []
+                let fs = ranked.filter { $0.angle == i && !Think.looksLikeNoise($0.text) && (angleTopic.isEmpty || score($0.text, angleTopic) >= 1) }
+                    .sorted { ($0.trusted ? 1 : 0) > ($1.trusted ? 1 : 0) }
                 let pts = take(fs, i == 0 ? 2 : 3)
                 if !pts.isEmpty { sections.append((a.title, pts)) }
             }
