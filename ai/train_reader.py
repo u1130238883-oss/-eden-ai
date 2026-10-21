@@ -231,21 +231,75 @@ def question_pools(tok, train, seed=0):
                 smp = make_sample(qc, qi, citem.chars[s:e], citem.ids[s:e], ans)
                 (pos if ans else neg).append(smp)
         if pos:
-            pools.append((qc, qi, pos, neg))
+            pools.append((qc, qi, pos, neg, a, ctx))
     rng.shuffle(pools)
     return pools, [c for c in ctx_cache]
 
 
-def epoch_samples(tok, pools, contexts, ctx_items, rng, neg_per_q=2, other_per_q=2, hard_pool=12):
+QSKIP = set("什麼嗎呢的是了哪誰為怎吧啊有個些都在請問我想知道你可以告訴欸一下那所以")
+
+
+def entity_index(contexts):
+    """每個三字詞出現在哪幾篇文章（找「也提到同一個東西、但在講別的事」的段落用）"""
+    idx = {}
+    for ci, c in enumerate(contexts):
+        n = ReaderTokenizer.norm(c)
+        seen = set()
+        for i in range(len(n) - 2):
+            tg = n[i] + n[i + 1] + n[i + 2]
+            if tg in seen or not tg.isalnum():
+                continue
+            seen.add(tg)
+            idx.setdefault(tg, []).append(ci)
+    return idx
+
+
+def entity_negatives(qs, contexts, idx, ctx_items, rng, per_q=4, max_df=300):
+    """網路上最常見的錯：段落提到問題裡的名字（「三島由紀夫」），但在講別的事（「三島由紀夫獎」）。
+    每題找幾段：別篇文章裡、含有問題中最少見的三字詞、又沒有答案的段落。qs = [(問題的字, 答案, 文章)]"""
+    ci_of = {c: i for i, c in enumerate(contexts)}
+    out = []
+    for qc, a, ctx in qs:
+        own = ci_of.get(ctx, -1)
+        tgs = {qc[i] + qc[i + 1] + qc[i + 2] for i in range(len(qc) - 2)}
+        tgs = sorted((t for t in tgs if t.isalnum() and not (set(t) & QSKIP) and t in idx and len(idx[t]) <= max_df),
+                     key=lambda t: len(idx[t]))
+        an = "".join(ReaderTokenizer.norm(a))
+        cands = []
+        for t in tgs:
+            docs = [d for d in idx[t] if d != own]
+            for d in rng.sample(docs, min(3, len(docs))):
+                c = contexts[d]
+                item, psgs = ctx_items[c]
+                text = "".join(item.chars)
+                pos = text.find(t)
+                for ps, pe in psgs:
+                    if ps <= pos < pe:
+                        if not (an and an in text[ps:pe]):
+                            cands.append((c, ps, pe))
+                        break
+            if len(cands) >= per_q:
+                break
+        out.append(cands[:per_q])
+    return out
+
+
+def epoch_samples(tok, pools, contexts, ctx_items, rng, neg_per_q=2, other_per_q=2, hard_pool=12, ent=None, ent_per_q=0):
     """這一輪要練的題目：每題的正例全部、同一篇的反例抽幾個（次要）、再從別篇文章抽兩段（無關）：
-    一段隨便抽，一段挑跟問題字詞最像的——看起來相關、其實在講別的事，網路上最常見的就是這種。"""
+    一段隨便抽，一段挑跟問題字詞最像的——看起來相關、其實在講別的事，網路上最常見的就是這種。
+    ent：別篇文章裡提到同一個名字、但沒在回答的段落（當成次要：講到同一個東西，但不是答案）"""
     out = []
     skip = set("什麼嗎呢的是了哪誰為怎吧啊有個些都在？?，。、 ")
-    for qc, qi, pos, neg in pools:
+    for k, (qc, qi, pos, neg, *_) in enumerate(pools):
         out.extend(pos)
         if neg:
             out.extend(rng.sample(neg, min(neg_per_q, len(neg))))
         L = T_CTX - 3 - len(qi)
+        if ent and ent_per_q and ent[k]:
+            for c, ps, pe in rng.sample(ent[k], min(ent_per_q, len(ent[k]))):
+                item, _ = ctx_items[c]
+                pe = min(pe, ps + L)
+                out.append(make_sample(qc, qi, item.chars[ps:pe], item.ids[ps:pe], None, REL_SIDE))
         qg = {qc[i] + qc[i + 1] for i in range(len(qc) - 1) if qc[i] not in skip and qc[i + 1] not in skip}
         cands = []
         for _ in range(hard_pool):
@@ -433,7 +487,15 @@ def evaluate(model, tok, dev, limit=1000, seed=0):
     同時算「拿開頭那段」和「問題字詞重疊最多」這兩種舊方法當對照。"""
     rng = random.Random(seed)
     items = dev[:limit]
-    dev_ctx = list({c for c, _, _, _ in dev})
+    dev_ctx = sorted({c for c, _, _, _ in dev})
+    # 提到同一個名字、但在講別的事的段落（別篇文章）：pick_ent 看混進這些還挑不挑得到答案，ent_main 看會不會誤判成主要
+    if "ent" not in _EVAL_CACHE or _EVAL_CACHE["ent_key"] != (len(dev), limit):
+        eitems = {c: (Item(tok, c), passages(c)) for c in dev_ctx}
+        eidx = entity_index(dev_ctx)
+        qs = [("".join(Item(tok, q).chars[:Q_MAX]), a, ctx) for ctx, q, a, _ in items]
+        _EVAL_CACHE["ent"] = entity_negatives([(list(x[0]), x[1], x[2]) for x in qs], dev_ctx, eidx, eitems, random.Random(7))
+        _EVAL_CACHE["ent_key"] = (len(dev), limit)
+    ent_negs = _EVAL_CACHE["ent"]
     full, full_idx, psg, psg_meta = [], [], [], []
     for qi_, (ctx, q, a, a0) in enumerate(items):
         qitem = Item(tok, q)
@@ -448,12 +510,13 @@ def evaluate(model, tok, dev, limit=1000, seed=0):
         for oc in rng.sample(dev_ctx, 5):
             if oc != ctx and len(others) < 4:
                 others.append(oc)
-        cands = [(ctx, s, e, True) for s, e in own] + [(oc, s, e, False) for oc in others for s, e in passages(oc)]
-        for c, s, e, is_own in cands:
+        cands = [(ctx, s, e, True, "own") for s, e in own] + [(oc, s, e, False, "mix") for oc in others for s, e in passages(oc)]
+        cands += [(c, s, e, False, "ent") for c, s, e in ent_negs[qi_]]
+        for c, s, e, is_own, kind in cands:
             it = Item(tok, c[s:e])
             ch, ids = it.chars[:L], it.ids[:L]
             psg.append(make_sample(qc, qi, ch, ids, None))
-            psg_meta.append((qi_, c, s, min(e, s + L), is_own))
+            psg_meta.append((qi_, c, s, min(e, s + L), is_own, kind))
     got_full = read_many(model, full)
     best = {}
     for (qi_, s), (r, _) in zip(full_idx, got_full):
@@ -475,13 +538,16 @@ def evaluate(model, tok, dev, limit=1000, seed=0):
     hit_own = hit_mix = hit_first = hit_overlap = hit_rel = n = 0
     rel_ok = rel_n = 0
     side_ok = side_n = 0
-    for qi_, rows in per_q.items():
+    hit_ent = n_ent = ent_main = ent_n = 0
+    for qi_, all_rows in per_q.items():
         ctx, q, a, a0 = items[qi_]
         a1 = a0 + len(a)
 
         def has(meta):
-            _, c, s, e, is_own = meta
+            _, c, s, e, is_own, _k = meta
             return is_own and s <= a0 and a1 <= e
+        rows = [x for x in all_rows if x[0][5] != "ent"]
+        ent_rows = [x for x in all_rows if x[0][5] == "ent"]
         own_rows = [x for x in rows if x[0][4]]
         if not any(has(m) for m, _ in own_rows):
             continue  # 答案被切段切斷了，這題不算
@@ -501,10 +567,20 @@ def evaluate(model, tok, dev, limit=1000, seed=0):
         hit_first += has(own_rows[0][0])
         texts = [m[1][m[2]:m[3]] for m, _ in rows]
         hit_overlap += has(rows[overlap_pick(q, texts)][0])
+        if ent_rows:
+            n_ent += 1
+            hit_ent += has(max(own_rows + ent_rows, key=sc)[0])
+            for m, (_, rp) in ent_rows:
+                ent_main += int(np.argmax(rp)) == REL_MAIN
+                ent_n += 1
     k = max(n, 1)
     return dict(em=em / len(items), f1=f1s / len(items), pick=hit_own / k, pick_mix=hit_mix / k,
                 first=hit_first / k, overlap_mix=hit_overlap / k, pick_rel=hit_rel / k,
-                rel_acc=rel_ok / max(rel_n, 1), side_vs_none=side_ok / max(side_n, 1), n=n)
+                rel_acc=rel_ok / max(rel_n, 1), side_vs_none=side_ok / max(side_n, 1), n=n,
+                pick_ent=hit_ent / max(n_ent, 1), ent_main=ent_main / max(ent_n, 1), n_ent=n_ent)
+
+
+_EVAL_CACHE = {}
 
 
 # ------------------------------------------------------------------ 訓練迴圈
@@ -585,6 +661,8 @@ def main():
     ap.add_argument("--wiki", default="", help="維基百科純文字資料夾（wiki_*.txt），讀書階段多讀這些")
     ap.add_argument("--wiki-chars", type=int, default=40_000_000, help="最多讀幾個字的維基百科")
     ap.add_argument("--wiki-per-epoch", type=int, default=8_000_000, help="每一輪讀書抽幾個字的維基百科")
+    ap.add_argument("--quiz-lr", type=float, default=5e-4, help="閱讀測驗階段的學習率")
+    ap.add_argument("--ent-per-q", type=int, default=0, help="每題加幾段「提到同一個名字、但在講別的事」的段落")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
     torch.set_num_threads(os.cpu_count() or 4)
@@ -688,18 +766,25 @@ def main():
     ctx_items = {c: (Item(tok, c), passages(c)) for c in contexts}
     say(f"question pools {len(pools)} ({time.time() - t:.0f}s), "
         f"{sum(len(p[2]) for p in pools)} answer windows, {sum(len(p[3]) for p in pools)} non-answer windows")
+    ent = None
+    if args.ent_per_q > 0:
+        t = time.time()
+        eidx = entity_index(contexts)
+        ent = entity_negatives([(p[0], p[4], p[5]) for p in pools], contexts, eidx, ctx_items, random.Random(5))
+        del eidx
+        say(f"entity distractors for {sum(1 for e in ent if e)} / {len(ent)} questions ({time.time() - t:.0f}s)")
     rng = random.Random(2)
-    opt = make_opt(model, core, 5e-4)
+    opt = make_opt(model, core, args.quiz_lr)
     best = {"f1": -1}
     # 接著練的時候記得之前最好的成績，才不會拿比較差的版本蓋掉
     prev = os.path.join(args.out, "reader.json")
     if os.path.exists(prev):
         pm = json.load(open(prev, encoding="utf-8"))
-        best["f1"] = pm.get("dev_f1", -1) + pm.get("dev_pick_mix", 0)
+        best["f1"] = pm.get("dev_f1", -1) + pm.get("dev_pick_mix", 0) + pm.get("dev_pick_ent", 0)
         say(f"best so far f1 {pm.get('dev_f1', 0):.3f}")
 
     def qa_epoch(ep):
-        smp = epoch_samples(tok, pools, contexts, ctx_items, rng)
+        smp = epoch_samples(tok, pools, contexts, ctx_items, rng, ent=ent, ent_per_q=args.ent_per_q)
         say(f"[quiz] epoch {ep}: {len(smp)} samples ({sum(1 for s in smp if s[5] == 0) / len(smp):.0%} non-answer)")
         for b in batches(smp, rng, args.tokens):
             yield (smp, b)
@@ -718,14 +803,14 @@ def main():
         m = evaluate(model, tok, dev, limit=args.eval_limit)
         model.train()
         say(f"== step {step} " + " ".join(f"{k} {v:.3f}" if isinstance(v, float) else f"{k} {v}" for k, v in m.items()))
-        score = m["f1"] + m["pick_mix"]
+        score = m["f1"] + m["pick_mix"] + m.get("pick_ent", 0)
         if score > best["f1"]:
             best["f1"] = score
             export("", m)
             say("exported reader.bin / reader.json")
 
     model.train()
-    run_stage("quiz", model, opt, args.finetune_min, 5e-4, 300, qa_epoch, qa_step, say, on_check=check, check_every=20,
+    run_stage("quiz", model, opt, args.finetune_min, args.quiz_lr, 300, qa_epoch, qa_step, say, on_check=check, check_every=20,
               ckpt=os.path.join(args.out, "quiz.ckpt"))
     check("final")
 
