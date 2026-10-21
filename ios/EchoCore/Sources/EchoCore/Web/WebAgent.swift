@@ -276,7 +276,11 @@ public enum WebAgent {
             // 做法題：百科沒有一步一步的做法，食譜、教學網站優先
             if howTo {
                 let page = h.title + h.snippet
-                return (host.contains("wikipedia") ? -2 : 0) + (["做法", "作法", "食譜", "步驟", "教學", "怎麼做", "怎麼煮"].contains { page.contains($0) } ? 2 : 0) - low
+                // 搜尋結果頁、分類頁（「/search/白飯」）是一堆食譜的卡片，不是一份做法
+                let listing: Int = ["/search", "/tag", "/category", "/categories", "?q=", "/list"].contains { h.url.lowercased().contains($0) } ? 3 : 0
+                let wiki: Int = host.contains("wikipedia") ? 2 : 0
+                let recipe: Int = ["做法", "作法", "食譜", "步驟", "教學", "怎麼做", "怎麼煮"].contains { page.contains($0) } ? 2 : 0
+                return recipe - wiki - listing - low
             }
             // 原始來源（官方、政府、學術、百科）優先；問答網站、論壇、內容農場放最後
             return (Cite.isPrimary(host) ? 3 : 0) - low

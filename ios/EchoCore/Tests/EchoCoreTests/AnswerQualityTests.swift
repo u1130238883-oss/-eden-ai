@@ -37,8 +37,28 @@ final class AnswerQualityTests: XCTestCase {
         let q = "世界上最高的山是哪座"
         XCTAssertFalse(Think.superlativeFits(question: q, passage: "唐古拉站是世界上海拔最高的火車站。"))
         XCTAssertTrue(Think.superlativeFits(question: q, passage: "珠穆朗瑪峰是世界上最高的山峰，海拔8848公尺。"))
-        XCTAssertTrue(Think.superlativeFits(question: q, passage: "聖母峰位於中國與尼泊爾邊界。"))
+        XCTAssertTrue(Think.superlativeFits(question: q, passage: "聖母峰為世界第一高峰，位於中國與尼泊爾邊界。"))
+        // 沒講到「最高」的段落不是在回答哪一座最高（之前答成「高山」）
+        XCTAssertFalse(Think.superlativeFits(question: q, passage: "高山的通用定義是突起地形超過300公尺的山峰。"))
+        XCTAssertTrue(Think.echoes("高山", question: q))
+        XCTAssertFalse(Think.echoes("珠穆朗瑪峰", question: q))
+        XCTAssertFalse(Think.echoes("101", question: "台北101有幾層"))
         XCTAssertTrue(Think.superlativeFits(question: "台北101有多高", passage: "唐古拉站是世界上海拔最高的火車站。"))
+    }
+
+    /// 網頁標題、導覽、食譜列表、小標題不是內容（實測時被當成答案引用過的句子）
+    func testNoiseSentences() {
+        for n in ["三島由紀夫 - 維基百科，自由的百科全書跳至內容維基百科，自由的百科全書三島由紀夫1955年",
+                  "19 讚20 分免控火汽化瓦斯爐煮白飯Vodga食材：米、水18 讚10 分鮭魚高麗菜拌飯",
+                  "主條目：豆芽綠豆湯中式綠豆糕綠豆餡印度油餅",
+                  "5.3. 《金閣寺》的結局是在讚美毀滅嗎？",
+                  "三島由紀夫《金閣寺》解析：故事、結局與美／毀滅主題..."] {
+            XCTAssertTrue(Think.looksLikeNoise(n), n)
+        }
+        for ok in ["由於空氣中灰塵對日光的瑞利散射，晴天的天空是藍色的。", "月亮會發光是因為它反射了太陽光。",
+                   "《金閣寺》以1950年的金閣寺縱火事件為題材，描寫一名年輕僧人對金閣之美的執迷。"] {
+            XCTAssertFalse(Think.looksLikeNoise(ok), ok)
+        }
     }
 
     /// 網頁標題、動詞、單一個字不是答案（「維基百科」「認為」「圈」）

@@ -90,6 +90,27 @@ public enum Think {
         return junkWords.contains(k) || junkWords.contains { k.hasPrefix($0) && k.count <= $0.count + 1 }
     }
 
+    /// 不是內容的句子：網頁標題和導覽（「…- 維基百科，自由的百科全書跳至內容」「主條目：…」）、
+    /// 食譜列表的卡片（「19 讚20 分…食材：米、水」）、小標題和問句（「5.3. 結局是在讚美毀滅嗎？」）、文章預告（「…解析：…」結尾是「...」）
+    static func looksLikeNoise(_ s: String) -> Bool {
+        let t = s.trimmingCharacters(in: .whitespaces)
+        if ["跳至內容", "自由的百科全書", "主條目", "參見：", "另見：", "請參閱", "消歧義", "新增話題", "分類：", "維基百科"].contains(where: { t.contains($0) }) { return true }
+        if t.contains("食材：") || (t.contains("讚") && t.contains(where: \.isNumber)) { return true }
+        if t.hasSuffix("？") || t.hasSuffix("?") || t.hasSuffix("...") || t.hasSuffix("…") { return true }
+        if t.contains(" - ") || t.contains("｜") || t.contains(" | ") { return true }
+        if t.range(of: #"^\d+(\.\d+)*[\.、]\s*"#, options: .regularExpression) != nil && t.count <= 40 { return true }
+        let digits = t.filter(\.isNumber).count
+        return t.count >= 10 && digits * 4 > t.count
+    }
+
+    /// 答案的每個字都在問題裡（問「最高的山」答「高山」）：沒有說出新東西；純數字不算
+    static func echoes(_ span: String, question: String) -> Bool {
+        let k = key(span)
+        guard !k.isEmpty, !k.allSatisfy(\.isNumber) else { return false }
+        let q = Set(key(question))
+        return k.allSatisfy { q.contains($0) }
+    }
+
     /// 同類的字（問「山」，「峰」「岳」「嶺」也算）
     static let kin: [String: [String]] = ["山": ["峰", "岳", "嶺", "嶽"], "河": ["江", "川", "溪"], "湖": ["潭", "池", "泊"],
                                           "國家": ["國"], "城市": ["市", "城", "都"], "人": ["者", "家"], "動物": ["獸"], "建築": ["樓", "塔", "大廈"]]
@@ -100,16 +121,15 @@ public enum Think {
         let adj = m[1], noun = m[2]
         guard !adj.isEmpty, !noun.isEmpty else { return true }
         let words = [noun, String(noun.prefix(1))] + (kin[noun] ?? []) + (kin[String(noun.prefix(1))] ?? [])
-        var mentioned = false
         var rest = Substring(p)
         while let r = rest.range(of: "最" + adj) {
-            mentioned = true
             var after = rest[r.upperBound...]
             if after.hasPrefix("的") { after = after.dropFirst() }
             if words.contains(where: { after.hasPrefix($0) }) { return true }
             rest = rest[r.upperBound...]
         }
-        return !mentioned
+        // 「世界第一高峰」也算；完全沒講到「最高」的段落（「高山的定義是…」）不是在回答哪一個最高
+        return words.contains { p.contains("第一" + adj + $0) || p.contains("第一" + adj + "的" + $0) }
     }
 
     /// 要的是一段說明（在講什麼、怎麼做、怎麼辦、為什麼），不是幾個字的答案
@@ -191,7 +211,7 @@ public enum Think {
         for p in pages {
             for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) {
                 let t = raw.trimmingCharacters(in: .whitespaces)
-                if (8...160).contains(t.count), !t.contains("｜") { sents.append((t + "。", p.host)) }
+                if (8...160).contains(t.count), !looksLikeNoise(t) { sents.append((t + "。", p.host)) }
             }
         }
         var count: [String: Int] = [:]
@@ -240,7 +260,7 @@ public enum Think {
             guard seen.insert(String(r.passage.prefix(30))).inserted, hosts.insert(r.host).inserted else { continue }
             let l = lead(r.passage)
             // 網頁標題、導覽列（「…- 維基百科，自由的百科全書跳至內容」）不是內容
-            guard l.count >= 8, !["跳至內容", "自由的百科全書", "維基百科", "新增話題"].contains(where: { l.contains($0) }) else { continue }
+            guard l.count >= 8, !looksLikeNoise(l) else { continue }
             out.append("• 「\(l)」（\(r.host)）")
         }
         return out
@@ -278,7 +298,7 @@ public enum Think {
         for c in chosen {
             // accept：答案要像這題要的東西（問距離要有數字和單位……），不像的不算
             if let sp = brain.read(question: question, passage: c.text), accept?(sp.text) ?? true, !junk(sp.text),
-               superlativeFits(question: question, passage: c.text) {
+               !echoes(sp.text, question: question), superlativeFits(question: question, passage: c.text) {
                 all.append(Reading(passage: c.text, host: c.host, span: sp))
             }
         }
@@ -300,7 +320,7 @@ public enum Think {
                 for r in pool where lines.count < 2 {
                     guard r.span.main < 0 ? r.span.score > floor : r.span.main >= 0.35 else { continue }
                     let s = sentence(around: r.span, in: r.passage)
-                    guard s.count >= 8, !needCue || want.contains(where: { s.contains($0) }),
+                    guard s.count >= 8, !looksLikeNoise(s), !needCue || want.contains(where: { s.contains($0) }),
                           onTopic(question: question, sentence: s, passage: r.passage),
                           !usedHosts.contains(r.host) else { continue }
                     usedHosts.insert(r.host)

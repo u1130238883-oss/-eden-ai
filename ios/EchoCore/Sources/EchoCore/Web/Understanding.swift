@@ -555,6 +555,11 @@ extension Understanding {
         if let suffix {
             best.items = best.items.filter { ($0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府")) && !$0.contains("列表") && !$0.hasPrefix(noun) }
         }
+        // 問國家：「西歐」「東亞」這種地區不是一個國家
+        if noun.contains("國") {
+            let regions = ["東歐", "西歐", "南歐", "北歐", "中歐", "東亞", "西亞", "南亞", "東南亞", "中亞", "北非", "東非", "西非", "南非洲", "中東", "歐洲", "亞洲", "非洲", "美洲", "大洋洲"]
+            best.items = best.items.filter { !regions.contains($0) }
+        }
         // 「都道府縣」「省份及地區」這種總稱不是其中一項
         let kinds: Set<Character> = ["縣", "省", "州", "市", "區", "都", "道", "府"]
         best.items = best.items.filter { !$0.contains("列表") && !$0.hasPrefix("按") && $0 != "地區" && Set($0).intersection(kinds).count < 3 }
@@ -713,7 +718,9 @@ extension WebAgent {
                     let name = votes.filter { $0.value == top.value && top.key.hasPrefix($0.key) }.min(by: { $0.key.count < $1.key.count })?.key ?? top.key
                     // 依據挑最直接的那句（「東京是日本的首都」勝過「日本的首都圈…」）
                     let direct = ["\(name)是\(sj)的首都", "\(sj)的首都是\(name)", "\(sj)首都是\(name)", "\(sj)的首都為\(name)"]
+                    let close = ["\(sj)首都\(name)", "\(sj)的首都\(name)", "\(name)為\(sj)首都", "\(name)為\(sj)的首都"]
                     let ex = sents.first { e in direct.contains { e.text.contains($0) } }
+                        ?? sents.first { e in close.contains { e.text.contains($0) } && !e.text.contains("圈") }
                         ?? sents.first { $0.text.contains(name) && $0.text.contains("首都") && !$0.text.contains("圈") }
                         ?? sents.first { $0.text.contains(name) && $0.text.contains("首都") }
                     return ("答案：\(name)（\(top.value) 句資料都這樣寫）" + (ex.map { "\n依據：" + Cite.quote($0.text, host: $0.host, focus: [name]) } ?? ""), true)
