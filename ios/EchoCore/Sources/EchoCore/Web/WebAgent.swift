@@ -270,7 +270,7 @@ public enum WebAgent {
 
         // ④ 閱讀網頁：整體挑 2 個、每個小問題挑 1 個（可信的來源優先），同時打開
         let howTo: Bool = { if let fr, case .steps = fr.want { return true }; return false }()
-        func quality(_ h: WebSearch.Hit) -> Int {
+        func sourceQuality(_ h: WebSearch.Hit) -> Int {
             let host = WebSearch.host(h.url)
             let low = Cite.isLowQuality(host) ? 5 : 0
             // 做法題：百科沒有一步一步的做法，食譜、教學網站優先
@@ -287,8 +287,8 @@ public enum WebAgent {
                     // 可信來源加分；過去對這類問題常有答案的網站再加分，常給垃圾的扣分
                     let ea = tuneKind.map { tuning.bonus(WebSearch.host(a.url), kind: $0) } ?? 0
                     let eb = tuneKind.map { tuning.bonus(WebSearch.host(b.url), kind: $0) } ?? 0
-                    return (score(a.title + a.snippet, terms) + (isTrusted(a.url) ? 3 : 0) + ea + quality(a))
-                        > (score(b.title + b.snippet, terms) + (isTrusted(b.url) ? 3 : 0) + eb + quality(b))
+                    return (score(a.title + a.snippet, terms) + (isTrusted(a.url) ? 3 : 0) + ea + sourceQuality(a))
+                        > (score(b.title + b.snippet, terms) + (isTrusted(b.url) ? 3 : 0) + eb + sourceQuality(b))
                 }
                 .prefix(n).map { $0 }
         }
