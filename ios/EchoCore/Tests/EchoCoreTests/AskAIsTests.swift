@@ -120,6 +120,22 @@ final class AskAIsTests: XCTestCase {
         XCTAssertEqual(AskAIs.geminiModelIDs(list), ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.5-flash-lite"])
     }
 
+    /// 聊天時 Gemini、Claude 拒絕整個請求的原因：NineSun 開場先講話、連續兩則同一方的話
+    func testHistoryIsShapedForTheAPIs() {
+        typealias T = AskAIs.Turn
+        let h = [T(fromUser: false, text: "你好，我是 NineSun。"), T(fromUser: true, text: "你好"),
+                 T(fromUser: false, text: "好，我上網幫你查一下…"), T(fromUser: false, text: "查到了。"),
+                 T(fromUser: true, text: "那明天呢"), T(fromUser: false, text: "")]
+        let r = AskAIs.shape(h, then: "法律的意義是什麼")
+        XCTAssertEqual(r.past.map(\.fromUser), [true, false], "\(r.past)")
+        XCTAssertEqual(r.past.first?.text, "你好")
+        XCTAssertEqual(r.past.last?.text, "好，我上網幫你查一下…\n\n查到了。")
+        XCTAssertEqual(r.message, "那明天呢\n\n法律的意義是什麼")
+        // 一來一往、第一句是使用者
+        for (i, t) in r.past.enumerated() { XCTAssertEqual(t.fromUser, i % 2 == 0) }
+        XCTAssertTrue(AskAIs.shape([T(fromUser: false, text: "歡迎")], then: "嗨").past.isEmpty)
+    }
+
     func testWhenToAsk() {
         var r = WebAgent.Result(text: "", card: nil, found: true, engines: [:])
         r.confident = true

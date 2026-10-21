@@ -273,6 +273,15 @@ public enum AskAIs {
 
     /// 問一家（帶著對話）；Gemini 會自己用 Google 搜尋最新資料
     static func one(_ who: String, config: Config, system: String, message: String, past: [Turn]) async -> Reply {
+        let r = await oneCall(who, config: config, system: system, message: message, past: past)
+        // 帶著對話被拒絕（格式不對）：不帶對話再問一次
+        if !past.isEmpty, r.error?.hasPrefix(httpError(400)) == true {
+            return await oneCall(who, config: config, system: system, message: message, past: [])
+        }
+        return r
+    }
+
+    static func oneCall(_ who: String, config: Config, system: String, message: String, past: [Turn]) async -> Reply {
         switch who {
         case "Claude": return await claude(system: system, user: message, key: config.anthropicKey, history: past)
         case "Gemini": return await gemini(system: system, user: message, key: config.geminiKey, history: past, search: true)
@@ -292,12 +301,39 @@ public enum AskAIs {
         }
     }
 
+    /// 整理對話給 AI 看：Gemini、Claude 都要求「使用者先講、一來一往」——
+    /// NineSun 開場的招呼、連續兩則（「好，我上網查一下…」再接答案）都會讓整個請求被拒絕
+    public static func shape(_ history: [Turn], then message: String) -> (past: [Turn], message: String) {
+        var out: [Turn] = []
+        for t in history {
+            let text = String(t.text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(1500))
+            guard !text.isEmpty else { continue }
+            if out.isEmpty && !t.fromUser { continue }
+            if let last = out.last, last.fromUser == t.fromUser {
+                out[out.count - 1] = Turn(fromUser: t.fromUser, text: last.text + "\n\n" + text)
+            } else {
+                out.append(Turn(fromUser: t.fromUser, text: text))
+            }
+        }
+        var msg = message
+        // 最後一句也是使用者講的：跟這次的問題併成一句（不能連續兩則都是使用者）
+        if let last = out.last, last.fromUser {
+            msg = last.text + "\n\n" + message
+            out.removeLast()
+        }
+        var past = Array(out.suffix(10))
+        // 截掉前面以後，第一句還是要是使用者講的
+        if let first = past.first, !first.fromUser { past.removeFirst() }
+        return (past, msg)
+    }
+
     /// 直接請 AI 回答（帶著最近的對話），用 NineSun 自己的口吻和見解。
     /// 只有一家：請它從幾個角度想過再給出有判斷的答案。好幾家：每一家都先回答，再請其中一家把大家的說法融合成 NineSun 自己的看法。
     public static func chat(_ message: String, history: [Turn], evidence: [String], lang L: Lang, config: Config,
                             persona: String = "") async -> Reply {
         let system = chatSystem(evidence: evidence, lang: L, persona: persona)
-        let past = Array(history.suffix(10))
+        let shaped = shape(history, then: message)
+        let past = shaped.past, message = shaped.message
         let who = config.names
         guard !who.isEmpty else { return Reply(name: "AI", text: "", error: "還沒填金鑰") }
         if who.count == 1 {
@@ -418,11 +454,22 @@ public enum AskAIs {
     /// 設定頁的「測試連線」：每把金鑰各問一句，把成功或真正的錯誤原因列出來
     public static func test(config: Config) async -> String {
         guard config.enabled else { return "還沒填金鑰。" }
-        let replies = await ask("請只回答兩個字：收到", evidence: [], lang: .zh, config: config)
-        guard !replies.isEmpty else { return "沒有可以問的模型（OpenRouter 的模型清單抓不到）。" }
-        return replies.map { r in
-            r.error == nil ? "✅ \(r.name)：連上了（回答：\(WebSearch.clip(r.text, 30))）" : "❌ \(r.name)：\(r.error!)"
-        }.joined(separator: "\n")
+        // 用跟聊天一樣的方式測（帶著 NineSun 開場、連續兩則的對話），才測得出聊天時會不會失敗
+        let history = [Turn(fromUser: false, text: "你好，我是 NineSun。"), Turn(fromUser: true, text: "你好"),
+                       Turn(fromUser: false, text: "好，我上網幫你查一下…"), Turn(fromUser: false, text: "查到了。")]
+        var lines: [String] = []
+        for who in config.names {
+            var c = Config(keys: [])
+            switch who {
+            case "Claude": c.anthropicKey = config.anthropicKey
+            case "Gemini": c.geminiKey = config.geminiKey
+            case "OpenRouter": c.openRouterKey = config.openRouterKey; c.models = config.models
+            default: c.compat = config.compat.filter { $0.name == who }
+            }
+            let r = await chat("請只回答兩個字：收到", history: history, evidence: [], lang: .zh, config: c)
+            lines.append(r.error == nil ? "✅ \(r.name)：連上了，聊天也正常（回答：\(WebSearch.clip(r.text, 30))）" : "❌ \(who)：\(r.error!)")
+        }
+        return lines.isEmpty ? "還沒填金鑰。" : lines.joined(separator: "\n")
     }
 
     static func openRouterText(_ d: Data?) -> String? {
