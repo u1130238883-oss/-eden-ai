@@ -531,21 +531,61 @@ public enum AskAIs {
 
     // MARK: - Gemini（選用）
 
+    /// 備用名單（抓不到 Google 的模型清單時用）；Google 會一直換新模型、停用舊的，所以平常用即時的清單
+    static let geminiFallback = ["gemini-flash-latest", "gemini-3.5-flash", "gemini-flash-lite-latest", "gemini-3.5-flash-lite", "gemini-2.5-flash"]
+    nonisolated(unsafe) static var geminiCache: (key: String, date: Date, models: [String])?
+
+    /// 問 Google 現在這把金鑰能用哪些 Gemini 模型：挑 flash 系列、能產生文字的，新版本優先，lite 放後面
+    static func geminiModels(key: String) async -> [String] {
+        if let c = geminiCache, c.key == key, Date().timeIntervalSince(c.date) < 86_400, !c.models.isEmpty { return c.models }
+        guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200") else { return geminiFallback }
+        var req = URLRequest(url: url)
+        req.setValue(key, forHTTPHeaderField: "x-goog-api-key")
+        let (code, data) = await send(req)
+        guard code == 200, let found = geminiModelIDs(data), !found.isEmpty else { return geminiFallback }
+        let models = Array((["gemini-flash-latest"] + found + ["gemini-flash-lite-latest"]).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }.prefix(6))
+        geminiCache = (key, Date(), models)
+        return models
+    }
+
+    static func geminiModelIDs(_ d: Data?) -> [String]? {
+        guard let d, let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
+              let list = o["models"] as? [[String: Any]] else { return nil }
+        let ids: [String] = list.compactMap { m in
+            guard let name = m["name"] as? String,
+                  (m["supportedGenerationMethods"] as? [String])?.contains("generateContent") ?? true else { return nil }
+            let id = name.replacingOccurrences(of: "models/", with: "")
+            let l = id.lowercased()
+            guard l.hasPrefix("gemini"), l.contains("flash"),
+                  !["image", "tts", "audio", "live", "embedding", "exp", "preview", "8b"].contains(where: { l.contains($0) }) else { return nil }
+            return id
+        }
+        func version(_ id: String) -> Double { Double(Understanding.match(id, #"gemini-(\d+(?:\.\d+)?)"#)?[1] ?? "") ?? 0 }
+        // 新版本優先；同版本的先 flash 再 flash-lite；有日期後綴的（-001）放後面
+        return ids.sorted { a, b in
+            let la = a.contains("lite"), lb = b.contains("lite")
+            if la != lb { return !la }
+            if version(a) != version(b) { return version(a) > version(b) }
+            return a.count < b.count
+        }
+    }
+
     static func gemini(system: String, user: String, key: String, history: [Turn] = [], search: Bool = false) async -> Reply {
-        var last: Reply?
-        // 一個模型忙線（503）、找不到（404）、次數用完（429）或出錯（500）就換下一個；金鑰錯、地區不支援就不用再試
+        var errors: [Reply] = []
+        // 一個模型忙線（503）、停用或找不到（404）、次數用完（429）或出錯（500）就換下一個；金鑰錯、地區不支援就不用再試
         let retry = [404, 429, 500, 503].map(httpError)
-        for model in ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"] {
+        for model in await geminiModels(key: key) {
             var r = await geminiCall(model, system: system, user: user, key: key, history: history, search: search)
             // 有些模型或帳號不能用 Google 搜尋：不搜尋再問一次
             if search, r.error != nil {
                 r = await geminiCall(model, system: system, user: user, key: key, history: history, search: false)
             }
             guard let err = r.error, retry.contains(where: { err.hasPrefix($0) }) else { return r }
-            last = r
+            errors.append(r)
         }
-        if let last { return last }
-        return Reply(name: "Gemini", text: "", error: "找不到可用的 Gemini 模型")
+        // 都失敗：給最有用的那個原因（「停用、找不到」排最後，忙線或次數用完比較有參考價值）
+        return errors.first { !($0.error ?? "").hasPrefix(httpError(404)) } ?? errors.last
+            ?? Reply(name: "Gemini", text: "", error: "找不到可用的 Gemini 模型")
     }
 
     static func geminiCall(_ model: String, system: String, user: String, key: String, history: [Turn] = [], search: Bool = false) async -> Reply {

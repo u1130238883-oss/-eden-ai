@@ -114,6 +114,12 @@ final class AskAIsTests: XCTestCase {
         XCTAssertTrue(s.contains("NineSun") && s.contains("第5型") && !s.contains("世界觀"), s)
     }
 
+    /// Google 一直停用舊模型（「gemini-2.5-flash-lite is no longer available」）：用即時的模型清單，新的優先
+    func testPicksCurrentGeminiModels() {
+        let list = #"{"models":[{"name":"models/gemini-2.5-flash","supportedGenerationMethods":["generateContent"]},{"name":"models/gemini-3.5-flash-lite","supportedGenerationMethods":["generateContent"]},{"name":"models/gemini-3.5-flash","supportedGenerationMethods":["generateContent","countTokens"]},{"name":"models/gemini-3.5-flash-image","supportedGenerationMethods":["generateContent"]},{"name":"models/text-embedding-004","supportedGenerationMethods":["embedContent"]}]}"#.data(using: .utf8)
+        XCTAssertEqual(AskAIs.geminiModelIDs(list), ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-3.5-flash-lite"])
+    }
+
     func testWhenToAsk() {
         var r = WebAgent.Result(text: "", card: nil, found: true, engines: [:])
         r.confident = true
