@@ -82,6 +82,14 @@ final class AskAIsTests: XCTestCase {
         XCTAssertTrue(e.contains("Gemini 金鑰"), e)
     }
 
+    /// 全部交給 AI：給 AI 的說明有網路上查到的資料；沒填金鑰時講清楚
+    func testChatMode() async {
+        let s = AskAIs.chatSystem(evidence: ["台北101高508公尺（zh.wikipedia.org）"], lang: .zh)
+        XCTAssertTrue(s.contains("NineSun") && s.contains("508公尺"), s)
+        let r = await AskAIs.chat("你好", history: [], evidence: [], lang: .zh, config: AskAIs.Config())
+        XCTAssertEqual(r.error, "還沒填金鑰")
+    }
+
     func testWhenToAsk() {
         var r = WebAgent.Result(text: "", card: nil, found: true, engines: [:])
         r.confident = true

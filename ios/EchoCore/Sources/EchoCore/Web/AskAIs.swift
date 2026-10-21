@@ -162,9 +162,56 @@ public enum AskAIs {
         }
     }
 
+    // MARK: - 全部交給 AI 回答（設定頁的開關打開時）
+
+    /// 對話裡的一句（給 AI 看前後文）
+    public struct Turn: Equatable, Sendable {
+        public let fromUser: Bool
+        public let text: String
+        public init(fromUser: Bool, text: String) { self.fromUser = fromUser; self.text = text }
+    }
+
+    static func chatSystem(evidence: [String], lang L: Lang) -> String {
+        var s: String
+        switch L {
+        case .zh: s = "你是 NineSun，一個聰明、貼心、說話直接的 AI 助理。用繁體中文（台灣用語）自然地回答，先給答案再補充重點，不要太長。不確定就說不確定，不要編造數字、日期、人名或出處。"
+        case .en: s = "You are NineSun, a smart, warm and direct AI assistant. Answer naturally: give the answer first, then the key points, briefly. If unsure, say so; never invent numbers, dates, names or sources."
+        case .es: s = "Eres NineSun, un asistente de IA inteligente, cercano y directo. Responde con naturalidad: primero la respuesta, luego lo esencial, sin alargarte. Si no estás seguro, dilo; no inventes datos."
+        case .it: s = "Sei NineSun, un assistente IA intelligente, gentile e diretto. Rispondi in modo naturale: prima la risposta, poi i punti chiave, in breve. Se non sei sicuro, dillo; non inventare dati."
+        }
+        if !evidence.isEmpty {
+            s += (L == .zh ? "\n\n以下是剛才在網路上查到的資料，可以參考（可能不完整或有錯，跟你知道的不同時以可靠的為準）：\n" : "\n\nWeb results just found (may be incomplete or wrong):\n")
+                + evidence.prefix(8).map { "- " + $0 }.joined(separator: "\n")
+        }
+        return s
+    }
+
+    /// 直接請 AI 回答（帶著最近的對話）：先問 Gemini，不行就問 OpenRouter 的模型；回傳第一個成功的回答
+    public static func chat(_ message: String, history: [Turn], evidence: [String], lang L: Lang, config: Config) async -> Reply {
+        let system = chatSystem(evidence: evidence, lang: L)
+        let past = Array(history.suffix(10))
+        var errors: [String] = []
+        if !config.geminiKey.isEmpty {
+            let r = await gemini(system: system, user: message, key: config.geminiKey, history: past)
+            if r.error == nil { return r }
+            errors.append("Gemini：" + (r.error ?? ""))
+        }
+        if !config.openRouterKey.isEmpty {
+            let pool = config.models.isEmpty ? await freeModels() : config.models
+            for m in pool.prefix(4) {
+                let name = displayNames([m])[0]
+                let r = await openRouter(m, name: name, system: system, user: message, key: config.openRouterKey, history: past)
+                if r.error == nil { return r }
+                errors.append(name + "：" + (r.error ?? ""))
+                if r.error?.hasPrefix("金鑰不對") == true { break }
+            }
+        }
+        return Reply(name: "AI", text: "", error: errors.isEmpty ? "還沒填金鑰" : errors.joined(separator: "\n"))
+    }
+
     // MARK: - OpenRouter
 
-    static func openRouter(_ model: String, name: String, system: String, user: String, key: String) async -> Reply {
+    static func openRouter(_ model: String, name: String, system: String, user: String, key: String, history: [Turn] = []) async -> Reply {
         guard let url = URL(string: "https://openrouter.ai/api/v1/chat/completions") else {
             return Reply(name: name, text: "", error: "網址錯誤")
         }
@@ -173,8 +220,9 @@ public enum AskAIs {
         req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("NineSun", forHTTPHeaderField: "X-Title")
+        let past: [[String: Any]] = history.map { ["role": $0.fromUser ? "user" : "assistant", "content": $0.text] }
         let body: [String: Any] = ["model": model,
-                                   "messages": [["role": "system", "content": system], ["role": "user", "content": user]]]
+                                   "messages": [["role": "system", "content": system]] + past + [["role": "user", "content": user]]]
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
         let (code, data, failure) = await sendDetailed(req)
         guard code == 200 else { return Reply(name: name, text: "", error: explain(code: code, data: data, failure: failure)) }
@@ -301,12 +349,12 @@ public enum AskAIs {
 
     // MARK: - Gemini（選用）
 
-    static func gemini(system: String, user: String, key: String) async -> Reply {
+    static func gemini(system: String, user: String, key: String, history: [Turn] = []) async -> Reply {
         var last: Reply?
         // 一個模型忙線（503）、找不到（404）、次數用完（429）或出錯（500）就換下一個；金鑰錯、地區不支援就不用再試
         let retry = [404, 429, 500, 503].map(httpError)
         for model in ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"] {
-            let r = await geminiCall(model, system: system, user: user, key: key)
+            let r = await geminiCall(model, system: system, user: user, key: key, history: history)
             guard let err = r.error, retry.contains(where: { err.hasPrefix($0) }) else { return r }
             last = r
         }
@@ -314,7 +362,7 @@ public enum AskAIs {
         return Reply(name: "Gemini", text: "", error: "找不到可用的 Gemini 模型")
     }
 
-    static func geminiCall(_ model: String, system: String, user: String, key: String) async -> Reply {
+    static func geminiCall(_ model: String, system: String, user: String, key: String, history: [Turn] = []) async -> Reply {
         guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent") else {
             return Reply(name: "Gemini", text: "", error: "網址錯誤")
         }
@@ -326,7 +374,8 @@ public enum AskAIs {
         let cats = ["HARM_CATEGORY_HARASSMENT", "HARM_CATEGORY_HATE_SPEECH", "HARM_CATEGORY_SEXUALLY_EXPLICIT", "HARM_CATEGORY_DANGEROUS_CONTENT"]
         let body: [String: Any] = [
             "system_instruction": ["parts": [["text": system]]],
-            "contents": [["role": "user", "parts": [["text": user]]]],
+            "contents": history.map { ["role": $0.fromUser ? "user" : "model", "parts": [["text": $0.text]]] }
+                + [["role": "user", "parts": [["text": user]]]],
             "safetySettings": cats.map { ["category": $0, "threshold": "BLOCK_NONE"] },
         ]
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)

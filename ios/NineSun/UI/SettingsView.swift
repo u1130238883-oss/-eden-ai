@@ -98,6 +98,15 @@ struct SettingsView: View {
                    "Los modelos gratuitos de OpenRouter solo responden si los permites en openrouter.ai/settings/privacy.",
                    "I modelli gratuiti di OpenRouter rispondono solo se li consenti su openrouter.ai/settings/privacy."))
                 .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
+            Toggle(isOn: $vm.aiAlways) {
+                label(T("全部交給 AI 回答（Gemini）", "Let the AI answer everything (Gemini)", "Que la IA responda todo (Gemini)", "Lascia rispondere l'IA a tutto (Gemini)"), "")
+            }
+            .tint(Theme.hazard)
+            Text(T("打開：所有的話都由 Gemini（或其他 AI）回答，問題會先上網查一下給它參考；算命、命盤、生日還是 NineSun 自己算。關掉：NineSun 自己回答。",
+                   "On: Gemini (or another AI) answers everything, with a quick web search for questions; fortunes and charts stay with NineSun. Off: NineSun answers.",
+                   "Activado: Gemini (u otra IA) responde todo, con una búsqueda rápida para las preguntas; las lecturas siguen con NineSun. Desactivado: responde NineSun.",
+                   "Attivo: Gemini (o un'altra IA) risponde a tutto, con una ricerca veloce per le domande; le letture restano a NineSun. Disattivo: risponde NineSun."))
+                .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
             Toggle(isOn: $vm.aiAuto) {
                 label(T("沒把握時自動問", "Ask automatically when unsure", "Preguntar solo cuando dude", "Chiedi da solo quando è incerto"), "")
             }

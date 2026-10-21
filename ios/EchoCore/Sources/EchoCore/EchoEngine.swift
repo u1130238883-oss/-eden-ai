@@ -558,7 +558,7 @@ public final class EchoEngine {
                               "what is", "what are", "who is", "how to", "how do", "how does", "why do", "why is", "explain", "tell me about",
                               "qué es", "quién es", "cómo se", "por qué", "explica", "cos'è", "chi è", "come si", "perché", "spiega"]
     /// 是不是問句（問句不該被當成閒聊，用宮位感知亂回）
-    static func isQuestion(_ raw: String) -> Bool {
+    public static func isQuestion(_ raw: String) -> Bool {
         let t = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         let words = ["怎麼", "怎樣", "如何", "要不要", "該不該", "什麼", "為什麼", "哪", "可不可以", "能不能", "有沒有", "多少", "是不是",
                      "才能", "誰", "幾", "多遠", "多高", "多久", "多重", "多大", "多長", "多深", "how", "what", "why", "which", "who", "cómo", "qué", "por qué", "come", "cosa", "perché"]
@@ -566,7 +566,7 @@ public final class EchoEngine {
     }
 
     /// 有沒有要算運勢的意思（有的話交給命理；沒有的話是一般的實用問題）
-    static func fortuneIntent(_ text: String) -> Bool {
+    public static func fortuneIntent(_ text: String) -> Bool {
         let meta = ["哪個準", "哪一個準", "比較準", "可以信", "可不可以信", "準不準", "準嗎"]
         if meta.contains(where: { text.contains($0) }) { return false }
         let words = ["運", "命", "宮", "今年", "明年", "流年", "大運", "流月", "這個月", "下個月", "今天", "明天", "今晚", "順不順", "好不好",

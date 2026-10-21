@@ -14,6 +14,8 @@ final class ChatViewModel: ObservableObject {
     @Published var geminiKey = KeyStore.get("gemini") { didSet { KeyStore.set("gemini", geminiKey.trimmingCharacters(in: .whitespacesAndNewlines)) } }
     @Published var aiAuto = true { didSet { save(aiAuto, "aiAuto") } }
     @Published var aiModels = "" { didSet { save(aiModels, "aiModels") } }
+    /// 打開：除了算命、命盤，所有的話都交給 Gemini（或其他 AI）回答；關掉：NineSun 自己回答
+    @Published var aiAlways = false { didSet { save(aiAlways, "aiAlways") } }
     /// 設定頁「測試連線」的結果
     @Published var aiTestResult = ""
     @Published var aiTesting = false
@@ -67,6 +69,7 @@ final class ChatViewModel: ObservableObject {
         autoDetect = load("autoDetect") ?? true
         aiAuto = load("aiAuto") ?? true
         aiModels = load("aiModels") ?? ""
+        aiAlways = load("aiAlways") ?? false
         UILang.current = language
         // 以前的版本會把上網查過的答案存在手機裡；現在每次都即時上網查，舊檔刪掉
         try? FileManager.default.removeItem(at: Self.docs.appendingPathComponent("ninesun-webmemory.json"))
@@ -198,6 +201,12 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
+        // 全部交給 AI：算命、命盤、生日這些還是 NineSun 自己算（AI 算不出你的盤），其他的都問 Gemini
+        if aiAlways, aiConfig.enabled, !Self.isReading(text) {
+            aiChat(text, autoDetect ? Lang.detect(text, fallback: language) : language)
+            return
+        }
+
         let history = turns
         let ctx = EchoEngine.Context(profile: profile, rules: rules, now: Date(), language: language, autoDetect: autoDetect)
         queue.async {
@@ -223,6 +232,34 @@ final class ChatViewModel: ObservableObject {
                 }
                 self.play(text: reply.turn.text, final: reply.turn)
             }
+        }
+    }
+
+    /// 要 NineSun 自己的命理引擎算的（運勢、命盤、八字、紫微、九型、生日…）
+    static func isReading(_ text: String) -> Bool {
+        ["運勢", "運氣", "命盤", "命宮", "本命", "八字", "紫微", "流年", "大運", "流月", "九型", "第幾型", "十二宮", "卦", "生日",
+         "宮位", "算命", "占卜", "日宮", "夜宮", "fortune", "horoscope"].contains { text.lowercased().contains($0) }
+    }
+
+    /// 全部交給 AI 回答：問題先很快上網查一下（給 AI 最新的資料），再帶著最近的對話問 Gemini
+    private func aiChat(_ text: String, _ L: Lang) {
+        let cfg = aiConfig
+        let past = turns.dropLast().suffix(10).compactMap { t -> AskAIs.Turn? in
+            t.text.isEmpty ? nil : AskAIs.Turn(fromUser: t.role == .user, text: t.text)
+        }
+        let isQ = EchoEngine.isQuestion(text)
+        streaming = isQ ? "🔎 先上網查一下，再問 AI…" : "🤖 AI 回答中…"
+        Task { [self] in
+            var evidence: [String] = []
+            if isQ {
+                let r = await WebAgent.run(text, facts: nil, lang: L)
+                evidence = r.evidence
+            }
+            let reply = await AskAIs.chat(text, history: past, evidence: evidence, lang: L, config: cfg)
+            let body = reply.error == nil
+                ? reply.text + "\n\n— 🤖 \(reply.name) 回答" + (evidence.isEmpty ? "" : "（參考了網路上查到的資料）")
+                : "AI 這次沒有回答：\n" + (reply.error ?? "") + "\n\n（可以到設定頁按「測試連線」看看；或把「全部交給 AI 回答」關掉，讓 NineSun 自己回答）"
+            await MainActor.run { self.finish(ChatTurn(role: .echo, text: body, source: .knowledge)) }
         }
     }
 
