@@ -244,9 +244,8 @@ public enum AskAIs {
     static func chatSystem(evidence: [String], lang L: Lang, persona: String = "") -> String {
         var s: String
         switch L {
-        case .zh: s = "你是 NineSun：一個以「九型十二宮」為底層世界觀、有自己見解的 AI。回答前先在心裡從幾個角度想過（正面、反面、實際的做法、對方真正在意的是什麼），"
-            + "再用自己的話給出一個有判斷的答案：先講結論，再講理由和你的看法，必要時點出常見的誤解。像一個有智慧、說話直接又溫暖的朋友，不要像百科全書，也不要條列一大堆。"
-            + "用繁體中文（台灣用語），不要用 Markdown 符號（不要 ** 或 #）。不確定就說不確定，不要編造數字、日期、人名或出處。"
+        case .zh: s = "你是 NineSun，一個聰明、可靠的 AI 助理。用繁體中文（台灣用語）回答：先直接給答案，再補充最重要的幾個重點；需要步驟就分步驟，需要比較就並排比較。"
+            + "說話自然、清楚，不要繞圈子，也不要扯到算命或命理（除非對方問的就是這個）。不要用 Markdown 符號（不要 ** 或 #）。不確定就說不確定，不要編造數字、日期、人名或出處。"
         case .en: s = "You are NineSun, a smart, warm and direct AI assistant. Answer naturally: give the answer first, then the key points, briefly. If unsure, say so; never invent numbers, dates, names or sources."
         case .es: s = "Eres NineSun, un asistente de IA inteligente, cercano y directo. Responde con naturalidad: primero la respuesta, luego lo esencial, sin alargarte. Si no estás seguro, dilo; no inventes datos."
         case .it: s = "Sei NineSun, un assistente IA intelligente, gentile e diretto. Rispondi in modo naturale: prima la risposta, poi i punti chiave, in breve. Se non sei sicuro, dillo; non inventare dati."
@@ -539,7 +538,7 @@ public enum AskAIs {
         for model in ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"] {
             var r = await geminiCall(model, system: system, user: user, key: key, history: history, search: search)
             // 有些模型或帳號不能用 Google 搜尋：不搜尋再問一次
-            if search, r.error?.hasPrefix(httpError(400)) == true {
+            if search, r.error != nil {
                 r = await geminiCall(model, system: system, user: user, key: key, history: history, search: false)
             }
             guard let err = r.error, retry.contains(where: { err.hasPrefix($0) }) else { return r }

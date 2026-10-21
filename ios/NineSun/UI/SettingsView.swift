@@ -106,7 +106,7 @@ struct SettingsView: View {
                 label(T("全部交給 AI 回答", "Let the AIs answer everything", "Que la IA responda todo", "Lascia rispondere l'IA a tutto"), "")
             }
             .tint(Theme.hazard)
-            Text(T("打開：所有的話都由你填了金鑰的 AI 回答（Claude、ChatGPT、Grok、Gemini…，哪一家先回答就用哪一家），問題會先上網查一下給它參考；算命、命盤、生日還是 NineSun 自己算。關掉：NineSun 自己回答。",
+            Text(T("打開：所有的話都由你填了金鑰的 AI 回答（Claude、ChatGPT、Grok、Gemini…，有好幾家時融合成一個答案；Gemini 會自己用 Google 搜尋最新資料）；算命、命盤、生日還是 NineSun 自己算。關掉：NineSun 自己回答。",
                    "On: Gemini (or another AI) answers everything, with a quick web search for questions; fortunes and charts stay with NineSun. Off: NineSun answers.",
                    "Activado: Gemini (u otra IA) responde todo, con una búsqueda rápida para las preguntas; las lecturas siguen con NineSun. Desactivado: responde NineSun.",
                    "Attivo: Gemini (o un'altra IA) risponde a tutto, con una ricerca veloce per le domande; le letture restano a NineSun. Disattivo: risponde NineSun."))

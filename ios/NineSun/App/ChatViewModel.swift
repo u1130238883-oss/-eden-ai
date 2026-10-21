@@ -254,11 +254,7 @@ final class ChatViewModel: ObservableObject {
         let past = turns.dropLast().suffix(10).compactMap { t -> AskAIs.Turn? in
             t.text.isEmpty ? nil : AskAIs.Turn(fromUser: t.role == .user, text: t.text)
         }
-        var persona = ""
-        if let bd = profile.birthday {
-            let t = Destiny(bd).type
-            persona = "跟你說話的人是九型十二宮的第\(t)型「\(NT.typeName(t))」（\(NT.typeTagline(t))）。用他聽得進去的方式回答，但不要每次都提到他的型。"
-        }
+        let persona = ""
         streaming = cfg.names.count > 1 ? "🤖 同時問 " + cfg.names.joined(separator: "、") + "，再融合成我的看法…" : "🤖 思考中…"
         Task { [self] in
             let reply = await AskAIs.chat(text, history: past, evidence: [], lang: L, config: cfg, persona: persona)

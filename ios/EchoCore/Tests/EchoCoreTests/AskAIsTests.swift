@@ -111,7 +111,7 @@ final class AskAIsTests: XCTestCase {
     func testPlainText() {
         XCTAssertEqual(AskAIs.plain("## 重點\n1. **約束權力**：限制國家權力\n* 社會共識"), "重點\n1. 約束權力：限制國家權力\n• 社會共識")
         let s = AskAIs.chatSystem(evidence: [], lang: .zh, persona: "跟你說話的人是第5型")
-        XCTAssertTrue(s.contains("九型十二宮") && s.contains("第5型"), s)
+        XCTAssertTrue(s.contains("NineSun") && s.contains("第5型") && !s.contains("世界觀"), s)
     }
 
     func testWhenToAsk() {
