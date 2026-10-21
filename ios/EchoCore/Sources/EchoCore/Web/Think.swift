@@ -202,40 +202,74 @@ public enum Think {
         return out
     }
 
+    /// 頁面切成句子（去掉標題、導覽這類不是內容的）
+    static func contentSentences(_ pages: [Understanding.Evidence]) -> [(text: String, host: String)] {
+        var out: [(text: String, host: String)] = []
+        for p in pages {
+            for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) {
+                let t = raw.trimmingCharacters(in: .whitespaces)
+                if (8...160).contains(t.count), !looksLikeNoise(t) { out.append((t + "。", p.host)) }
+            }
+        }
+        return out
+    }
+
+    static let storyCues = ["描寫", "講述", "描述", "敘述", "故事", "主角", "題材", "探討", "主題", "講的是", "寫的是", "刻畫", "內容"]
+    /// 講改編（電影、歌劇）、得獎、翻譯的句子，不是在講作品本身的內容
+    static let adaptation = ["電影", "導演", "上映", "歌劇", "舞台劇", "改編", "拍攝", "翻譯", "譯本", "首映", "色調", "獎", "演出", "劇場"]
+
+    /// 一部作品在講什麼：有《書名》和「描寫、講述…」的句子，書名在句子開頭的優先（它是句子在講的東西）
+    static func describe(_ title: String, in sents: [(text: String, host: String)], canQuote: (String) -> Bool = { _ in true })
+        -> (text: String, host: String)? {
+        let mark = "《\(title)》"
+        func score(_ s: String) -> Int {
+            let head = s.range(of: mark).map { s.distance(from: s.startIndex, to: $0.lowerBound) <= 12 } ?? false
+            return (head ? 3 : 0) + storyCues.filter { s.contains($0) }.count
+        }
+        return sents.filter { s in s.text.contains(mark) && storyCues.contains { s.text.contains($0) }
+            && !adaptation.contains { s.text.contains($0) } && canQuote(s.host) }
+            .max { score($0.text) < score($1.text) }
+    }
+
     /// 「X的書都講了什麼」：先找出講到他的句子裡最常被提到的作品（《書名》），再找每一部「描寫、講述…」的句子，
     /// 加上一句講他整體作品風格、主題的話。維基百科（CC BY-SA）可以引好幾句，其他網站每個只引一句
     public static func worksDigest(question: String, pages: [Understanding.Evidence]) -> String? {
         guard let m = Understanding.match(question, #"^(.{2,12}?)的(書|作品|小說|電影|歌|詩|劇)"#) else { return nil }
         let who = m[1]
-        var sents: [(text: String, host: String)] = []
-        for p in pages {
-            for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) {
-                let t = raw.trimmingCharacters(in: .whitespaces)
-                if (8...160).contains(t.count), !looksLikeNoise(t) { sents.append((t + "。", p.host)) }
-            }
-        }
+        let sents = contentSentences(pages)
         var count: [String: Int] = [:]
         for s in sents where covers(s.text, who, least: true) {
-            for t in titles(s.text) where t != who { count[t, default: 0] += 1 }
+            // 書名裡有他的名字（《三島由紀夫：人間四幕》）是在講他的作品，不是他寫的
+            for t in titles(s.text) where !t.contains(who) && !covers(t, who) { count[t, default: 0] += 1 }
         }
         let top = count.sorted { ($0.value, -$0.key.count) > ($1.value, -$1.key.count) }.prefix(8).map(\.key)
-        let cue = ["描寫", "講述", "描述", "敘述", "故事", "主角", "題材", "探討", "主題", "講的是", "寫的是", "改編自", "刻畫"]
         var quoted: [String: Int] = [:]
         func canQuote(_ h: String) -> Bool { h.contains("wikipedia.org") || (quoted[h] ?? 0) == 0 }
         var lines: [String] = []
         for t in top where lines.count < 3 {
-            guard let s = sents.first(where: { s in s.text.contains("《\(t)》") && cue.contains { s.text.contains($0) }
-                && !s.text.contains("獎") && canQuote(s.host) }) else { continue }
+            guard let s = describe(t, in: sents, canQuote: canQuote) else { continue }
             quoted[s.host, default: 0] += 1
             lines.append("• 《\(t)》：" + Cite.whole(s.text, host: s.host, limit: 70))
         }
-        let overall = sents.first { s in covers(s.text, who) && !s.text.contains("獎") && canQuote(s.host)
+        let overall = sents.first { s in covers(s.text, who) && !adaptation.contains { s.text.contains($0) } && canQuote(s.host)
             && ["作品多", "作品常", "作品大多", "風格", "主題", "擅長", "探討", "美學", "題材"].contains { s.text.contains($0) } }
         guard !lines.isEmpty || overall != nil else { return nil }
         var out: [String] = []
         if let o = overall { out.append(Cite.whole(o.text, host: o.host)) }
         if !lines.isEmpty { out.append("代表作在講什麼：\n" + lines.joined(separator: "\n")) }
         return out.joined(separator: "\n")
+    }
+
+    /// 「金閣寺在講什麼」：資料裡有《金閣寺》這部作品時，用描寫它內容的句子回答（不是寺廟的介紹）
+    public static func aboutWork(question: String, pages: [Understanding.Evidence]) -> String? {
+        guard wantsSentences(question), let m = Understanding.match(question, #"^《?(.{1,12}?)》?(?:是)?(?:在)?(?:講|說)(?:了|些)?什麼"#) else { return nil }
+        let sents = contentSentences(pages)
+        guard let first = describe(m[1], in: sents) else { return nil }
+        var lines = [Cite.whole(first.text, host: first.host)]
+        if let second = describe(m[1], in: sents.filter { $0.host != first.host && $0.text != first.text }) {
+            lines.append("• 另外也有說法：" + Cite.whole(second.text, host: second.host, limit: 70))
+        }
+        return lines.joined(separator: "\n")
     }
 
     /// 段落的第一句（給「次要・補充」用，最多 80 字）

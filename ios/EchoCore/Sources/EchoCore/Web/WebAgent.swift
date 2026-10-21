@@ -400,6 +400,12 @@ public enum WebAgent {
                     brainAnswered = true
                     return (d, true)
                 }
+                // 「金閣寺在講什麼」：有這部作品就講它的內容（同名的寺廟、改編的電影不算）
+                if let d = Think.aboutWork(question: question, pages: ps + sn) {
+                    brainNote = "資料裡有這部作品，挑描寫它內容的句子。"
+                    brainAnswered = true
+                    return (d, true)
+                }
                 let old = solve(fr, pages: ps, snippets: sn)
                 let oldOK = old.ok && !old.text.isEmpty
                 // 要一段說明的題目（在講什麼、怎麼辦、為什麼、X是什麼）：大腦給整句，不切幾個字

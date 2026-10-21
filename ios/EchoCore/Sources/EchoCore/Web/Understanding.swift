@@ -614,6 +614,9 @@ extension Understanding {
                 // 步驟要像一句指示（有編號，或有「，」「。」）
                 let listy = s.filter { $0 == "、" }.count >= 2 && !s.contains("，") && !s.contains("。")
                 guard !listy, numbered || s.contains("，") || s.contains("。") || s.hasSuffix("！") else { continue }
+                // 問答（「A: 可能水太多…」）、文章預告（「本文深入探討…」結尾是「…」）不是步驟
+                let faq = ["A:", "Q:", "A：", "Q：", "答：", "問："].contains { s.hasPrefix($0) }
+                guard !faq, !s.contains("本文"), !s.hasSuffix("…"), !s.hasSuffix("...") else { continue }
                 // 每一步都要有動作（加水、煮、泡……），光有編號或營養成分表不算
                 if stepVerbs.contains(where: { s.contains($0) }) {
                     let clean = s.replacingOccurrences(of: #"^(\d{1,2}[\.、．)）]|[①②③④⑤⑥⑦⑧⑨⑩]|步驟\s*\d+[:：.]?|Step\s*\d+[:：.]?)\s*"#, with: "", options: .regularExpression)

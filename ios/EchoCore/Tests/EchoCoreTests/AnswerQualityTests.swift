@@ -117,6 +117,23 @@ final class AnswerQualityTests: XCTestCase {
         XCTAssertNil(Think.worksDigest(question: "台北101有多高", pages: [.init(text: page, host: "w")]))
     }
 
+    /// 「金閣寺在講什麼」：講小說的內容，不是寺廟的介紹、不是改編的電影
+    func testAboutTheWorkNotTheTemple() {
+        let kp = "金閣寺是位於京都的寺廟，正式名稱是鹿苑寺。\n《金閣寺》是三島由紀夫的小說，描寫一名口吃的年輕僧人溝口對金閣之美的執迷，最後放火燒了金閣。\n電影《炎上》改編自《金閣寺》，由市川崑導演，講述同樣的故事。"
+        let a = Think.aboutWork(question: "金閣寺在講什麼", pages: [.init(text: kp, host: "zh.wikipedia.org")]) ?? ""
+        XCTAssertTrue(a.contains("溝口"), a)
+        XCTAssertFalse(a.contains("炎上"), a)
+        XCTAssertNil(Think.aboutWork(question: "台北101有多高", pages: [.init(text: kp, host: "w")]))
+        // 作品清單：書名裡有作者名字的（傳記電影）不算他的作品
+        let film = "三島由紀夫的代表作有《金閣寺》、《潮騷》。\n電影《三島由紀夫：人間四幕》講述三島由紀夫的一生，並穿插《金閣寺》的故事。\n《潮騷》講述漁村少年與少女的純愛故事。"
+        let d = Think.worksDigest(question: "三島由紀夫的書都講了什麼", pages: [.init(text: film, host: "zh.wikipedia.org")]) ?? ""
+        XCTAssertFalse(d.contains("人間四幕"), d)
+        XCTAssertTrue(d.contains("《潮騷》："), d)
+        // 做法：問答、文章預告不是步驟
+        let steps = "白飯做法\n1. 米洗淨後泡水30分鐘。\n2. 加入1.1倍的水，大火煮滾。\n3. 轉小火煮15分鐘，關火燜10分鐘。\nA: 可能水太多或沒燜飯，調整水量並確保燜10分鐘。\n泡紅豆的水到底要不要倒掉？本文深入探討紅豆浸泡水的利弊…"
+        XCTAssertEqual(Understanding.extractSteps([.init(text: steps, host: "r.tw")], target: "白飯")?.steps.count, 3)
+    }
+
     /// 原因：表格的一列不是說明；有講到主題（感冒）的句子優先；引整句、不切成看不懂的幾個字
     func testReasonPicksAnExplainingSentence() {
         let ev: [Understanding.Evidence] = [
