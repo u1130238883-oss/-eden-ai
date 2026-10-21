@@ -188,6 +188,21 @@ final class AnswerQualityTests: XCTestCase {
         XCTAssertEqual(Set(r.items), ["丹麥", "芬蘭", "冰島", "挪威", "瑞典"], "\(r.items)")
     }
 
+    /// 北歐有哪些國家：「北歐五國，指…」直接列名單；或從歐洲國家大表裡挑「地區」那一格是北歐的列
+    func testNordicFromIntroOrRegionColumn() {
+        let intro = "北歐五國，指丹麥、瑞典、挪威、芬蘭和冰島。"
+        XCTAssertEqual(Set(Understanding.extractList([.init(text: intro, host: "w")], noun: "國家", subject: "北歐").items),
+                       ["丹麥", "瑞典", "挪威", "芬蘭", "冰島"])
+        var table = "歐洲國家列表\n以下是位於歐洲的國家。\n"
+        for (c, cap, r) in [("丹麥", "哥本哈根", "北歐"), ("法國", "巴黎", "西歐"), ("芬蘭", "赫爾辛基", "北歐"), ("德國", "柏林", "西歐"),
+                            ("挪威", "奧斯陸", "北歐"), ("義大利", "羅馬", "南歐"), ("瑞典", "斯德哥爾摩", "北歐"), ("冰島", "雷克雅維克", "北歐")] {
+            table += "\(c)\n\(cap)\n\(r)\n5,800,000\n"
+        }
+        let r = Understanding.extractList([.init(text: table, host: "zh.wikipedia.org")], noun: "國家", subject: "北歐")
+        XCTAssertEqual(r.items, ["丹麥", "芬蘭", "挪威", "瑞典", "冰島"], "\(r.items)")
+        XCTAssertEqual(r.hosts, ["zh.wikipedia.org"])
+    }
+
     /// 「我是說這些歐洲國家是哪些國家」→ 查成「列表 歐洲國家…」（上一次查詢加的「列表」被當成主題）
     func testFollowUpIgnoresSearchHelperWords() {
         let q = EchoEngine.resolveFollowUp("我是說這些歐洲國家是哪些國家？", query: "我是說這些歐洲國家是哪些國家",

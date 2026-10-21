@@ -455,7 +455,7 @@ extension Understanding {
                 if parts.count >= 4 {
                     // 「北歐國家包括挪威、…、冰島等五國。」：去掉開頭的「…包括」和結尾的「等…」
                     if var f = parts.first {
-                        for m in ["包括", "包含", "分別是", "分別為", "有", "為", "是", "：", ":"] {
+                        for m in ["包括", "包含", "分別是", "分別為", "泛指", "是指", "指", "即", "有", "為", "是", "：", ":"] {
                             if let r = f.range(of: m, options: .backwards) { f = String(f[r.upperBound...]) }
                         }
                         parts[0] = f
@@ -480,8 +480,9 @@ extension Understanding {
                     // 「北歐國家包括」「北歐五國是」「北歐理事會成員國包括」：主題後面不遠處出現名詞（或它的第一個字），接著是在列名單的字
                     let key1 = NSRegularExpression.escapedPattern(for: String(noun.prefix(1)))
                     let intro = !subj.isEmpty && rawFirst.range(of: NSRegularExpression.escapedPattern(for: subj) + "[^，。、]{0,8}" + key1
-                        + "[^，。、]{0,3}(包括|包含|分別是|分別為|有|是|為|：|:)[^，。、]{1,8}$", options: .regularExpression) != nil
-                    if its.count >= 4 { groups.append((its, intro ? "★" + p.host : p.host, line.contains(subj) && line.contains(noun) || intro)) }
+                        + "[^。、]{0,3}(包括|包含|分別是|分別為|泛指|是指|指|即|有|是|為|：|:)[^，。、]{1,8}$", options: .regularExpression) != nil
+                    // ●：「北歐五國，指…」這種直接在列名單的句子，最可信
+                    if its.count >= 4 { groups.append((its, intro ? "★●" + p.host : p.host, line.contains(subj) && line.contains(noun) || intro)) }
                     flush()
                 } else if let it = item(line) {
                     run.append(it)
@@ -505,6 +506,11 @@ extension Understanding {
                 col.append(r[0])
             }
             flushCol()
+            // 「北歐有哪些國家」：大表裡每一列是「國家／首都／地區」，挑地區那一格是北歐的列（◆：照條件挑出來的）
+            if !subj.isEmpty {
+                let picked = rowRuns.filter { $0.count >= 2 && $0.dropFirst().contains(subj) }.map { $0[0] }
+                if picked.count >= 3 { groups.append((picked, "★◆" + p.host, true)) }
+            }
             // 作品、書、電影、歌：直接收講到主題的句子裡的《書名》
             if ["作品", "書", "小說", "電影", "歌", "專輯", "劇", "著作", "名著", "戲劇"].contains(where: { noun.contains($0) }) {
                 var titles: [String] = []
@@ -551,7 +557,10 @@ extension Understanding {
             guard let suffix else { return g.items.count }
             return g.items.filter { $0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府") }.count
         }
-        guard var best = confirmed.max(by: { fitCount($0) < fitCount($1) }) else { return ([], []) }
+        // 先用直接列名單的句子（●），再來是照條件從大表挑出來的（◆），都沒有才比哪一組最多
+        let preferred = suffix != nil ? nil
+            : confirmed.first(where: { $0.host.hasPrefix("★●") }) ?? confirmed.first(where: { $0.host.hasPrefix("★◆") })
+        guard var best = preferred ?? confirmed.max(by: { fitCount($0) < fitCount($1) }) else { return ([], []) }
         if let suffix {
             best.items = best.items.filter { ($0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府")) && !$0.contains("列表") && !$0.hasPrefix(noun) }
         }
@@ -581,7 +590,10 @@ extension Understanding {
             }
         }
         items = Array(items.prefix(80))
-        return (items, hosts.map { $0.hasPrefix("★") ? String($0.dropFirst()) : $0 })
+        // 同一個網站只列一次（「zh.wikipedia.org、zh.wikipedia.org」）
+        var shown: [String] = []
+        for h in hosts.map({ h in String(h.drop(while: { "★◆●".contains($0) })) }) where !shown.contains(h) { shown.append(h) }
+        return (items, shown)
     }
 
     static let causal = ["因為", "由於", "原因", "所以", "導致", "造成", "使得", "是因", "引起", "來自", "為了", "機制", "反射", "源自", "透過", "是由", "because"]
@@ -616,7 +628,7 @@ extension Understanding {
                 guard !listy, numbered || s.contains("，") || s.contains("。") || s.hasSuffix("！") else { continue }
                 // 問答（「A: 可能水太多…」）、文章預告（「本文深入探討…」結尾是「…」）不是步驟
                 let faq = ["A:", "Q:", "A：", "Q：", "答：", "問："].contains { s.hasPrefix($0) }
-                guard !faq, !s.contains("本文"), !s.hasSuffix("…"), !s.hasSuffix("...") else { continue }
+                guard !faq, !s.contains("本文"), !s.contains("？"), !s.contains("?"), !s.hasSuffix("…"), !s.hasSuffix("...") else { continue }
                 // 每一步都要有動作（加水、煮、泡……），光有編號或營養成分表不算
                 if stepVerbs.contains(where: { s.contains($0) }) {
                     let clean = s.replacingOccurrences(of: #"^(\d{1,2}[\.、．)）]|[①②③④⑤⑥⑦⑧⑨⑩]|步驟\s*\d+[:：.]?|Step\s*\d+[:：.]?)\s*"#, with: "", options: .regularExpression)
@@ -723,7 +735,7 @@ extension WebAgent {
                     let direct = ["\(name)是\(sj)的首都", "\(sj)的首都是\(name)", "\(sj)首都是\(name)", "\(sj)的首都為\(name)"]
                     let close = ["\(sj)首都\(name)", "\(sj)的首都\(name)", "\(name)為\(sj)首都", "\(name)為\(sj)的首都"]
                     let ex = sents.first { e in direct.contains { e.text.contains($0) } }
-                        ?? sents.first { e in close.contains { e.text.contains($0) } && !e.text.contains("圈") }
+                        ?? sents.first { e in close.contains { e.text.contains($0) } && !["圈", "俱樂部", "足球", "球隊"].contains { e.text.contains($0) } }
                         ?? sents.first { $0.text.contains(name) && $0.text.contains("首都") && !$0.text.contains("圈") }
                         ?? sents.first { $0.text.contains(name) && $0.text.contains("首都") }
                     return ("答案：\(name)（\(top.value) 句資料都這樣寫）" + (ex.map { "\n依據：" + Cite.quote($0.text, host: $0.host, focus: [name]) } ?? ""), true)

@@ -354,7 +354,9 @@ public enum Think {
                 for r in pool where lines.count < 2 {
                     guard r.span.main < 0 ? r.span.score > floor : r.span.main >= 0.35 else { continue }
                     let s = sentence(around: r.span, in: r.passage)
-                    guard s.count >= 8, !looksLikeNoise(s), !needCue || want.contains(where: { s.contains($0) }),
+                    // 「不表示…便可以治療感冒」是在說不行，不是建議
+                    let denies = ["不表示", "並不代表", "不代表", "並不能", "不能用來"].contains { s.contains($0) }
+                    guard s.count >= 8, !looksLikeNoise(s), !needCue || (want.contains(where: { s.contains($0) }) && !denies),
                           onTopic(question: question, sentence: s, passage: r.passage),
                           !usedHosts.contains(r.host) else { continue }
                     usedHosts.insert(r.host)
