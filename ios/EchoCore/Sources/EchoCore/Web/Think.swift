@@ -143,6 +143,12 @@ public enum Think {
     /// 說明題的句子要真的在講問的那件事：最後一個詞組（加薪、發燒、白飯）句子裡要有，其他的（老闆、感冒）段落裡有就好
     /// 「老闆不給我加薪怎麼辦」不能拿「老闆欠薪不給怎麼辦」的句子來回答
     static func onTopic(question: String, sentence: String, passage: String) -> Bool {
+        // 「三島由紀夫的書都講了什麼」：要的是在講他作品的句子（有《書名》、小說、描寫…），段落有提到他就好；
+        // 「三島由紀夫獎…紀念日本作家三島由紀夫」有提到他，但不是在講他的書
+        if let m = Understanding.match(question, #"^(.{2,12}?)的(書|作品|小說|電影|歌|詩|劇)"#) {
+            let works = ["《", "小說", "作品", "描寫", "講述", "描述", "敘述", "故事", "主角", "情節", "主題"]
+            return covers(passage, m[1], least: true) && works.contains { sentence.contains($0) }
+        }
         let cs = chunks(question)
         guard let focus = cs.last else { return true }
         return covers(sentence, focus) && cs.dropLast().allSatisfy { covers(passage, $0, least: true) }
@@ -161,6 +167,54 @@ public enum Think {
             return Understanding.stepVerbs + ["先", "再", "然後", "接著", "最後"]
         }
         return []
+    }
+
+    /// 句子裡的《書名》
+    static func titles(_ s: String) -> [String] {
+        var out: [String] = []
+        var rest = Substring(s)
+        while let a = rest.firstIndex(of: "《"), let b = rest[a...].firstIndex(of: "》") {
+            let t = String(rest[rest.index(after: a)..<b])
+            if (1...20).contains(t.count), !out.contains(t) { out.append(t) }
+            rest = rest[rest.index(after: b)...]
+        }
+        return out
+    }
+
+    /// 「X的書都講了什麼」：先找出講到他的句子裡最常被提到的作品（《書名》），再找每一部「描寫、講述…」的句子，
+    /// 加上一句講他整體作品風格、主題的話。維基百科（CC BY-SA）可以引好幾句，其他網站每個只引一句
+    public static func worksDigest(question: String, pages: [Understanding.Evidence]) -> String? {
+        guard let m = Understanding.match(question, #"^(.{2,12}?)的(書|作品|小說|電影|歌|詩|劇)"#) else { return nil }
+        let who = m[1]
+        var sents: [(text: String, host: String)] = []
+        for p in pages {
+            for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) {
+                let t = raw.trimmingCharacters(in: .whitespaces)
+                if (8...160).contains(t.count), !t.contains("｜") { sents.append((t + "。", p.host)) }
+            }
+        }
+        var count: [String: Int] = [:]
+        for s in sents where covers(s.text, who, least: true) {
+            for t in titles(s.text) where t != who { count[t, default: 0] += 1 }
+        }
+        let top = count.sorted { ($0.value, -$0.key.count) > ($1.value, -$1.key.count) }.prefix(8).map(\.key)
+        let cue = ["描寫", "講述", "描述", "敘述", "故事", "主角", "題材", "探討", "主題", "講的是", "寫的是", "改編自", "刻畫"]
+        var quoted: [String: Int] = [:]
+        func canQuote(_ h: String) -> Bool { h.contains("wikipedia.org") || (quoted[h] ?? 0) == 0 }
+        var lines: [String] = []
+        for t in top where lines.count < 3 {
+            guard let s = sents.first(where: { s in s.text.contains("《\(t)》") && cue.contains { s.text.contains($0) }
+                && !s.text.contains("獎") && canQuote(s.host) }) else { continue }
+            quoted[s.host, default: 0] += 1
+            lines.append("• 《\(t)》：" + Cite.whole(s.text, host: s.host, limit: 70))
+        }
+        let overall = sents.first { s in covers(s.text, who) && !s.text.contains("獎") && canQuote(s.host)
+            && ["作品多", "作品常", "作品大多", "風格", "主題", "擅長", "探討", "美學", "題材"].contains { s.text.contains($0) } }
+        guard !lines.isEmpty || overall != nil else { return nil }
+        var out: [String] = []
+        if let o = overall { out.append(Cite.whole(o.text, host: o.host)) }
+        if !lines.isEmpty { out.append("代表作在講什麼：\n" + lines.joined(separator: "\n")) }
+        return out.joined(separator: "\n")
     }
 
     /// 段落的第一句（給「次要・補充」用，最多 80 字）

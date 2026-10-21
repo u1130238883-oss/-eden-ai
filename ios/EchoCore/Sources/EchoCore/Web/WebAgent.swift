@@ -260,16 +260,26 @@ public enum WebAgent {
         func isTrusted(_ url: String) -> Bool { strat.trusted.contains { url.lowercased().contains($0) } }
 
         // ④ 閱讀網頁：整體挑 2 個、每個小問題挑 1 個（可信的來源優先），同時打開
+        let howTo: Bool = { if let fr, case .steps = fr.want { return true }; return false }()
+        func quality(_ h: WebSearch.Hit) -> Int {
+            let host = WebSearch.host(h.url)
+            let low = Cite.isLowQuality(host) ? 5 : 0
+            // 做法題：百科沒有一步一步的做法，食譜、教學網站優先
+            if howTo {
+                let page = h.title + h.snippet
+                return (host.contains("wikipedia") ? -2 : 0) + (["做法", "作法", "食譜", "步驟", "教學", "怎麼做", "怎麼煮"].contains { page.contains($0) } ? 2 : 0) - low
+            }
+            // 原始來源（官方、政府、學術、百科）優先；問答網站、論壇、內容農場放最後
+            return (Cite.isPrimary(host) ? 3 : 0) - low
+        }
         func pick(_ tag: Int, _ n: Int) -> [WebSearch.Hit] {
             hits.filter { $0.tag == tag && !$0.hit.url.contains("news.google.com") }.map(\.hit)
                 .sorted { a, b in
                     // 可信來源加分；過去對這類問題常有答案的網站再加分，常給垃圾的扣分
                     let ea = tuneKind.map { tuning.bonus(WebSearch.host(a.url), kind: $0) } ?? 0
                     let eb = tuneKind.map { tuning.bonus(WebSearch.host(b.url), kind: $0) } ?? 0
-                    // 原始來源（官方、政府、學術、百科）優先；問答網站、論壇、內容農場放最後
-                    let qa = (Cite.isPrimary(WebSearch.host(a.url)) ? 3 : 0) - (Cite.isLowQuality(WebSearch.host(a.url)) ? 5 : 0)
-                    let qb = (Cite.isPrimary(WebSearch.host(b.url)) ? 3 : 0) - (Cite.isLowQuality(WebSearch.host(b.url)) ? 5 : 0)
-                    return (score(a.title + a.snippet, terms) + (isTrusted(a.url) ? 3 : 0) + ea + qa) > (score(b.title + b.snippet, terms) + (isTrusted(b.url) ? 3 : 0) + eb + qb)
+                    return (score(a.title + a.snippet, terms) + (isTrusted(a.url) ? 3 : 0) + ea + quality(a))
+                        > (score(b.title + b.snippet, terms) + (isTrusted(b.url) ? 3 : 0) + eb + quality(b))
                 }
                 .prefix(n).map { $0 }
         }
@@ -370,6 +380,12 @@ public enum WebAgent {
                 }
             }()
             func judge(_ ps: [Understanding.Evidence], _ sn: [Understanding.Evidence]) -> (text: String, ok: Bool) {
+                // 「X的書都講了什麼」：拆成兩步想——他有哪些代表作、每一部在講什麼
+                if let d = Think.worksDigest(question: question, pages: ps + sn) {
+                    brainNote = "先找出最常被提到的代表作，再找每一部在講什麼的句子。"
+                    brainAnswered = true
+                    return (d, true)
+                }
                 let old = solve(fr, pages: ps, snippets: sn)
                 let oldOK = old.ok && !old.text.isEmpty
                 guard let brain = Brain.shared,
@@ -405,6 +421,8 @@ public enum WebAgent {
                     }
                     brainNote += "大腦讀到的是「\(c.answer)」，和投票結果不同，但把握不夠，採用投票的。"
                     brainAnswered = false
+                    // 只有一段文字這樣說的（「26塊」可能在講腳的骨頭）不算真的有爭議，不用嚇使用者
+                    guard c.support >= 2 else { return old }
                     return (old.text + "\n⚠️ 也有資料指向「\(c.answer)」，兩者不一致，建議再確認。", true)
                 }
                 if typedQ && oldOK { brainAnswered = false; return old }

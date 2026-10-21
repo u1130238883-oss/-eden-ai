@@ -64,7 +64,35 @@ final class AnswerQualityTests: XCTestCase {
         let dal = "在印度，綠豆仁作為一種Dal可燉煮為咖喱和扁豆湯。"
         XCTAssertFalse(Think.onTopic(question: "怎麼煮綠豆湯", sentence: dal, passage: dal))
         XCTAssertTrue(Think.cues("金閣寺在講什麼").contains("講述"))
+        // 三島由紀夫的書都講了什麼 → 答成「紀念日本作家三島由紀夫」（三島由紀夫獎）
+        let prize = "三島由紀夫獎簡稱為三島獎，是一個日本文學獎，由新潮社於1988年開辦，紀念日本作家三島由紀夫。"
+        XCTAssertFalse(Think.onTopic(question: "三島由紀夫的書都講了什麼", sentence: prize, passage: prize))
+        let works = "三島由紀夫的小說常探討美與死亡。《金閣寺》描寫一名年輕僧人對金閣之美的執迷。"
+        XCTAssertTrue(Think.onTopic(question: "三島由紀夫的書都講了什麼", sentence: "《金閣寺》描寫一名年輕僧人對金閣之美的執迷。", passage: works))
         XCTAssertTrue(Think.cues("天空為什麼是藍色的").contains("因為"))
+    }
+
+    /// 「三島由紀夫的書都講了什麼」：先找代表作，再說每一部在講什麼（不是拿「三島由紀夫獎」那句）
+    func testWorksQuestionIsSplitIntoSteps() {
+        let fr = Understanding.frame("三島由紀夫的書都講了什麼")
+        XCTAssertEqual(fr.subject, "三島由紀夫")
+        XCTAssertTrue(fr.searches.contains("三島由紀夫 作品"), "\(fr.searches)")
+        XCTAssertEqual(Understanding.frame("金閣寺在講什麼").subject, "金閣寺")
+        XCTAssertEqual(Understanding.frame("感冒了怎麼辦").subject, "感冒")
+        XCTAssertEqual(Understanding.frame("老闆不給我加薪怎麼辦").subject, "老闆不給我加薪")
+        let page = """
+        三島由紀夫是日本戰後的重要作家，作品常探討美、死亡與肉體。
+        三島由紀夫的代表作有《假面的告白》、《金閣寺》、《潮騷》。
+        《金閣寺》以1950年的金閣寺縱火事件為題材，描寫一名年輕僧人對金閣之美的執迷。
+        《潮騷》講述漁村少年新治與少女初江的純愛故事。
+        三島由紀夫獎是紀念三島由紀夫的文學獎，曾頒給《某某》。
+        """
+        let d = Think.worksDigest(question: "三島由紀夫的書都講了什麼", pages: [.init(text: page, host: "zh.wikipedia.org")]) ?? ""
+        XCTAssertTrue(d.contains("《金閣寺》：") && d.contains("年輕僧人"), d)
+        XCTAssertTrue(d.contains("《潮騷》："), d)
+        XCTAssertTrue(d.contains("美、死亡"), d)
+        XCTAssertFalse(d.contains("文學獎"), d)
+        XCTAssertNil(Think.worksDigest(question: "台北101有多高", pages: [.init(text: page, host: "w")]))
     }
 
     /// 原因：表格的一列不是說明；有講到主題（感冒）的句子優先；引整句、不切成看不懂的幾個字
