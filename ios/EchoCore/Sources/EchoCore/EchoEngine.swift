@@ -200,6 +200,8 @@ public final class EchoEngine {
     }
 
     static let anaphora = ["這些", "那些", "這個", "那個", "它們", "他們", "牠們", "其中", "剛剛說的", "剛才說的", "上面說的"]
+    /// 查詢時自己加上去的詞（不是使用者在問的主題）
+    static let searchHelpers: Set<String> = ["列表", "數量", "做法", "步驟", "原因", "影響", "比較", "注意事項", "優缺點", "差別", "名單"]
 
     /// 追問換成完整的問題：「那這些國家都是哪些國家」（上一題「歐洲有多少個國家」）→「歐洲國家都是哪些國家」
     static func substituteAnaphor(_ text: String, previous prev: String) -> String? {
@@ -217,7 +219,7 @@ public final class EchoEngine {
         let subject = pronoun ? Understanding.frame(prev).subject.filter { $0.isLetter || $0.isNumber } : ""
         let topic = WebAgent.coreTopic(prev).replacingOccurrences(of: "個", with: "")
         let main = subject.count >= 2 ? [subject]
-            : topic.split(separator: " ").map { String($0.filter { $0.isLetter || $0.isNumber }) }.filter { $0.count >= 2 }
+            : topic.split(separator: " ").map { String($0.filter { $0.isLetter || $0.isNumber }) }.filter { $0.count >= 2 && !searchHelpers.contains($0) }
         guard !main.isEmpty else { return nil }
         let missing = main.filter { !t0.contains($0) }
         // 跟上一題有共同的詞（「這些國家」的國家），或是很短的追問（「那些是哪些」「他幾歲」），才當成在指上一題
@@ -236,7 +238,8 @@ public final class EchoEngine {
         var tokens = cur.split(separator: " ").map(String.init).filter { !$0.isEmpty }
         if refers, let prev = previous, gap <= 8 {
             let topic = WebAgent.coreTopic(prev).replacingOccurrences(of: "個", with: "")
-            let main = topic.split(separator: " ").map(String.init).filter { $0.count >= 2 }
+            // 上一次查詢自己加的「列表」「做法」這類詞不是主題（不然會變成「列表 歐洲國家…」）
+            let main = topic.split(separator: " ").map(String.init).filter { $0.count >= 2 && !searchHelpers.contains($0) }
             // 只補這一句還沒講到的主題詞（「這些歐洲國家」已經有歐洲，就不用補）
             let missing = main.filter { m in !tokens.contains { $0.contains(m) } }
             tokens = missing + tokens

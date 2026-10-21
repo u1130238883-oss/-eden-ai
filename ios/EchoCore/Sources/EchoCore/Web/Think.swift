@@ -78,6 +78,91 @@ public enum Think {
         return out.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// 不像答案的字（網頁標題、導覽、動詞、連接詞）：大腦抓到這些就不算
+    static let junkWords: Set<String> = ["維基百科", "自由的百科全書", "百科全書", "認為", "表示", "指出", "列表", "分類", "新增話題", "跳至內容",
+                                         "目錄", "首頁", "編輯", "參考資料", "參考文獻", "外部連結", "相關條目", "本條目", "這個", "那個",
+                                         "其中", "以及", "例如", "我們", "你們", "他們", "所以", "因此", "但是", "然而", "可以", "就是"]
+
+    static func junk(_ span: String) -> Bool {
+        let k = key(span)
+        if k.isEmpty { return true }
+        if k.count == 1 && !k.contains(where: \.isNumber) { return true }
+        return junkWords.contains(k) || junkWords.contains { k.hasPrefix($0) && k.count <= $0.count + 1 }
+    }
+
+    /// 同類的字（問「山」，「峰」「岳」「嶺」也算）
+    static let kin: [String: [String]] = ["山": ["峰", "岳", "嶺", "嶽"], "河": ["江", "川", "溪"], "湖": ["潭", "池", "泊"],
+                                          "國家": ["國"], "城市": ["市", "城", "都"], "人": ["者", "家"], "動物": ["獸"], "建築": ["樓", "塔", "大廈"]]
+
+    /// 「最高的山是哪座」：段落裡的「最高的…」要是「山」（或峰、岳），「最高的火車站」不算；段落沒提到「最高」就不用這條判斷
+    static func superlativeFits(question q: String, passage p: String) -> Bool {
+        guard let m = Understanding.match(q, #"最(\p{Han}{1,2}?)的?(\p{Han}{1,4}?)(?:是|為)?(?:哪|什麼|誰)"#) else { return true }
+        let adj = m[1], noun = m[2]
+        guard !adj.isEmpty, !noun.isEmpty else { return true }
+        let words = [noun, String(noun.prefix(1))] + (kin[noun] ?? []) + (kin[String(noun.prefix(1))] ?? [])
+        var mentioned = false
+        var rest = Substring(p)
+        while let r = rest.range(of: "最" + adj) {
+            mentioned = true
+            var after = rest[r.upperBound...]
+            if after.hasPrefix("的") { after = after.dropFirst() }
+            if words.contains(where: { after.hasPrefix($0) }) { return true }
+            rest = rest[r.upperBound...]
+        }
+        return !mentioned
+    }
+
+    /// 要的是一段說明（在講什麼、怎麼做、怎麼辦、為什麼），不是幾個字的答案
+    static func wantsSentences(_ q: String) -> Bool {
+        ["在講什麼", "講了什麼", "講什麼", "講些什麼", "內容是什麼", "在說什麼", "說了什麼", "是在講", "怎麼辦", "該怎麼", "怎麼做", "怎麼煮",
+         "怎麼處理", "如何", "做法", "步驟", "為什麼", "為何", "原因", "怎麼會", "建議"].contains { q.contains($0) }
+    }
+
+    /// 疑問詞和虛詞：拿來把問題切成幾個內容詞組（長的先切）
+    static let askWords = ["為什麼會", "為什麼是", "為什麼要", "為何會", "怎麼會", "怎麼辦", "怎麼做", "怎麼煮", "怎麼處理", "該怎麼", "要怎麼",
+                           "為什麼", "為何", "如何", "都講了什麼", "都在講什麼", "在講什麼", "講了什麼", "講些什麼", "講什麼", "在說什麼",
+                           "說了什麼", "內容是什麼", "是在講", "是什麼", "什麼", "怎麼", "哪些", "哪裡", "嗎", "呢", "吧", "啊", "我", "你", "的", "了"]
+
+    /// 問題裡的內容詞組：「老闆不給我加薪怎麼辦」→ 老闆不給、加薪；「感冒為什麼會發燒」→ 感冒、發燒
+    static func chunks(_ q: String) -> [String] {
+        var parts = [q.filter { !$0.isPunctuation && !$0.isWhitespace && !$0.isSymbol }]
+        for w in askWords { parts = parts.flatMap { $0.components(separatedBy: w) } }
+        return parts.filter { $0.count >= 2 }
+    }
+
+    /// 這段話有沒有講到這個詞組：短的（三個字以內）要整個出現，長的有一半的雙字詞出現就算；至少要有一個雙字詞時用 least
+    static func covers(_ text: String, _ chunk: String, least: Bool = false) -> Bool {
+        let t = canonText(text), c = Array(canonText(chunk))
+        guard c.count >= 2 else { return true }
+        let gs = (0..<(c.count - 1)).map { String(c[$0...$0 + 1]) }
+        let hit = gs.filter { t.contains($0) }.count
+        if least { return hit >= 1 }
+        return c.count <= 3 ? t.contains(String(c)) : hit * 2 >= gs.count
+    }
+
+    /// 說明題的句子要真的在講問的那件事：最後一個詞組（加薪、發燒、白飯）句子裡要有，其他的（老闆、感冒）段落裡有就好
+    /// 「老闆不給我加薪怎麼辦」不能拿「老闆欠薪不給怎麼辦」的句子來回答
+    static func onTopic(question: String, sentence: String, passage: String) -> Bool {
+        let cs = chunks(question)
+        guard let focus = cs.last else { return true }
+        return covers(sentence, focus) && cs.dropLast().allSatisfy { covers(passage, $0, least: true) }
+    }
+
+    /// 說明題的答案句通常會有的字：在講什麼 → 講述、描寫；為什麼 → 因為、由於；怎麼辦 → 可以、建議；怎麼做 → 加入、煮
+    static func cues(_ q: String) -> [String] {
+        if ["在講什麼", "講了什麼", "講什麼", "講些什麼", "內容是什麼", "在說什麼", "說了什麼", "是在講"].contains(where: { q.contains($0) }) {
+            return ["講述", "描寫", "描述", "敘述", "故事", "主題", "探討", "內容", "講的是", "寫的是", "主角", "情節"]
+        }
+        if ["為什麼", "為何", "原因", "怎麼會"].contains(where: { q.contains($0) }) { return Understanding.causal }
+        if ["怎麼辦", "該怎麼", "怎麼處理", "建議"].contains(where: { q.contains($0) }) {
+            return ["可以", "應該", "建議", "最好", "記得", "不要", "避免", "休息", "就醫", "找", "先", "試著"]
+        }
+        if ["怎麼做", "怎麼煮", "如何", "做法", "步驟"].contains(where: { q.contains($0) }) {
+            return Understanding.stepVerbs + ["先", "再", "然後", "接著", "最後"]
+        }
+        return []
+    }
+
     /// 段落的第一句（給「次要・補充」用，最多 80 字）
     static func lead(_ passage: String) -> String {
         var out = ""
@@ -99,7 +184,9 @@ public enum Think {
         for r in cands where out.count < 2 {
             guard seen.insert(String(r.passage.prefix(30))).inserted, hosts.insert(r.host).inserted else { continue }
             let l = lead(r.passage)
-            if l.count >= 8 { out.append("• 「\(l)」（\(r.host)）") }
+            // 網頁標題、導覽列（「…- 維基百科，自由的百科全書跳至內容」）不是內容
+            guard l.count >= 8, !["跳至內容", "自由的百科全書", "維基百科", "新增話題"].contains(where: { l.contains($0) }) else { continue }
+            out.append("• 「\(l)」（\(r.host)）")
         }
         return out
     }
@@ -134,7 +221,8 @@ public enum Think {
         var all: [Reading] = []
         for c in chosen {
             // accept：答案要像這題要的東西（問距離要有數字和單位……），不像的不算
-            if let sp = brain.read(question: question, passage: c.text), accept?(sp.text) ?? true {
+            if let sp = brain.read(question: question, passage: c.text), accept?(sp.text) ?? true, !junk(sp.text),
+               superlativeFits(question: question, passage: c.text) {
                 all.append(Reading(passage: c.text, host: c.host, span: sp))
             }
         }
@@ -142,6 +230,41 @@ public enum Think {
         // （描述型的問題「他的書在講什麼」，相關段落常是 -3，不相關的是 -10 以下）
         let bestScore = all.map(\.span.score).max() ?? -100
         let floor: Float = -6
+
+        // 要一段說明的題目（在講什麼、怎麼辦、為什麼）：不切幾個字當答案，給最在回答問題的整句話（每個網站一句、最多兩句）
+        if wantsSentences(question) {
+            func rank(_ r: Reading) -> Float { (r.span.main >= 0 ? r.span.main * 10 : 0) + r.span.score * 0.3 }
+            let pool = all.filter { $0.span.main < 0 || $0.span.none < 0.5 }.sorted { rank($0) > rank($1) }
+            var lines: [String] = []
+            var usedHosts = Set<String>()
+            var shownFrom: [Reading] = []
+            // 先找有「講述、描寫」「因為」「可以、建議」這類字的句子（真的在說明），一句都沒有才放寬
+            let want = cues(question)
+            for needCue in (want.isEmpty ? [false] : [true, false]) where lines.isEmpty {
+                for r in pool where lines.count < 2 {
+                    guard r.span.main < 0 ? r.span.score > floor : r.span.main >= 0.35 else { continue }
+                    let s = sentence(around: r.span, in: r.passage)
+                    guard s.count >= 8, !needCue || want.contains(where: { s.contains($0) }),
+                          onTopic(question: question, sentence: s, passage: r.passage),
+                          !usedHosts.contains(r.host) else { continue }
+                    usedHosts.insert(r.host)
+                    lines.append(Cite.whole(s, host: r.host))
+                    shownFrom.append(r)
+                }
+            }
+            if let top = shownFrom.first {
+                let sureEnough = top.span.main >= 0 ? top.span.main >= 0.6 : top.span.score > 0
+                var t = lines.joined(separator: "\n")
+                let side = secondary(all.filter { onTopic(question: question, sentence: lead($0.passage), passage: $0.passage) }, excluding: shownFrom)
+                if !side.isEmpty { t += "\n\n【次要・補充】\n" + side.joined(separator: "\n") }
+                if !sureEnough { t = "（我讀到的資料沒有直接講明，下面是最接近的內容，把握不高）\n" + t }
+                return Conclusion(text: t, confident: true, read: chosen.count, relevant: lines.count,
+                                  hosts: Array(Set(shownFrom.map(\.host))), unsure: !sureEnough, answer: "",
+                                  topScore: top.span.score, support: lines.count)
+            }
+            // 沒有一句真的在講這件事：不要退回去切幾個字當答案（「答案：欠薪」），交給別的方法或老實說沒找到
+            return Conclusion(text: "", confident: false, read: chosen.count, relevant: 0, hosts: [])
+        }
         // 有把握的段落就只用它們；一段都沒有時，才退一步取最接近的兩三段（分數離最高分 2 分以內）
         let sure = all.filter { $0.span.score > 0 }
         // 主次判斷：大腦覺得「跟這題無關」的段落（無關的機率過半）就不拿來湊答案

@@ -211,12 +211,14 @@ final class WebConversationLiveTests: XCTestCase {
             history += [ChatTurn(role: .user, text: q), r.turn]
             say("LIVE ===== 問：\(q)")
             say(r.turn.text.split(separator: "\n").prefix(8).map { "LIVE | " + $0 }.joined(separator: "\n"))
+            if r.webQuery == nil && r.turn.text.contains("上網") { say("LIVE --- 說要上網查，但沒有查詢（webQuery=nil）") }
             if let wq = r.webQuery {
                 let w = await WebAgent.run(wq, lang: .zh)
                 let secs = Date().timeIntervalSince(t0)
                 if secs > 15 { slow += 1 }
                 say("LIVE --- 上網查「\(wq)」 用了 \(String(format: "%.1f", secs)) 秒 found=\(w.found)")
                 if !w.debug.isEmpty { say("LIVE DEBUG " + w.debug) }
+                if w.text.isEmpty { say("LIVE --- 回答是空的 engines=\(w.engines)") }
                 // 只印回答和判斷，思路那段略過
                 let lines = w.text.split(separator: "\n").map(String.init)
                 let from = lines.firstIndex { $0.hasPrefix("📌") } ?? 0

@@ -279,20 +279,54 @@ extension Understanding {
     /// 數字＋單位（「38.4萬公里」「384,400 公里」），換算成同一個數值方便比對
     static func numbers(_ s: String, units: [String], rates: Bool = false) -> [(value: Double, shown: String)] {
         let alt = units.sorted { $0.count > $1.count }.map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|")
-        // 「299,792,458」「299 792 458」（千位用逗號或空格）、「1.496」都要認得
-        guard !alt.isEmpty, let re = try? NSRegularExpression(pattern: #"(\d{1,3}(?:[, \x{2009}\x{202F}\x{00A0}]\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*(萬|億)?\s*(?:"# + alt + ")") else { return [] }
+        // 「299,792,458」「299 792 458」（千位用逗號或空格）、「1.496」都要認得；「1億5000萬km」前面的「1億」也要算進去
+        guard !alt.isEmpty, let re = try? NSRegularExpression(pattern: #"(?:(\d+(?:\.\d+)?)\s*億\s*)?(\d{1,3}(?:[, \x{2009}\x{202F}\x{00A0}]\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s*(萬|億)?\s*(?:"# + alt + ")") else { return [] }
         var out: [(Double, String)] = []
         for m in re.matches(in: s, range: NSRange(s.startIndex..., in: s)) {
-            guard let r = Range(m.range, in: s), let nr = Range(m.range(at: 1), in: s),
+            guard let r = Range(m.range, in: s), let nr = Range(m.range(at: 2), in: s),
                   var v = Double(String(s[nr].filter { $0.isNumber || $0 == "." })) else { continue }
             // 「每平方公里 113,703 人」「人口密度」是比率，不是問的那個數量
             let before = String(s[s.index(r.lowerBound, offsetBy: -min(8, s.distance(from: s.startIndex, to: r.lowerBound)))..<r.lowerBound])
             let after = String(s[r.upperBound..<s.index(r.upperBound, offsetBy: min(3, s.distance(from: r.upperBound, to: s.endIndex)))])
             if !rates && (before.contains("每") || before.contains("密度") || after.hasPrefix("/") || after.hasPrefix("每") || after.hasPrefix("／")) { continue }
-            if let mr = Range(m.range(at: 2), in: s) { v *= s[mr] == "萬" ? 1e4 : 1e8 }
+            if let mr = Range(m.range(at: 3), in: s) { v *= s[mr] == "萬" ? 1e4 : 1e8 }
+            if let yr = Range(m.range(at: 1), in: s), let yi = Double(s[yr]) { v += yi * 1e8 }
             out.append((v, String(s[r])))
         }
         return out
+    }
+
+    /// 不是地名的詞：「首都圈」這類、動詞和虛詞（「一般也認為東京是…」的「認為」）、問句本身的「哪裡」
+    static let notPlace = ["首都", "圈", "都會", "城市", "地區", "中心", "認為", "表示", "指出", "以為", "現在", "目前", "已經", "仍然",
+                           "一直", "當時", "曾經", "因此", "所以", "其中", "之一", "這裡", "那裡", "一般", "通常", "哪裡", "哪個", "什麼"]
+    /// 地名不會用這些字開頭（「為東京」「也東京」「他說東京」）；「都柏林」的「都」不在這裡
+    static let notPlaceHead: Set<Character> = ["也", "還", "就", "又", "才", "再", "更", "是", "為", "的", "前", "在", "說", "和", "與", "及",
+                                               "而", "則", "即", "以", "將", "把", "被", "讓", "給", "對", "從", "向", "當", "但", "並", "且",
+                                               "已", "曾", "仍", "他", "她", "它", "這", "那", "其", "此", "認", "稱"]
+
+    /// 問首都：每一句「法國首都巴黎舉辦…」「一般也認為東京是日本的首都」裡的地名投一票
+    /// 地名在「首都」後面時，每個前綴都投一票（巴黎、巴黎舉…），票一樣多時取最短的；
+    /// 地名在前面時，只投最長、又不是虛詞開頭的那個結尾（「認為東京」→ 東京；「東京都」不會變成「京都」）
+    static func capitalVotes(_ texts: [String], subject sj: String) -> [String: Int] {
+        var votes: [String: Int] = [:]
+        let esc = NSRegularExpression.escapedPattern(for: sj)
+        func ok(_ k: String) -> Bool { !notPlace.contains { k.contains($0) } && !notPlaceHead.contains(k.first ?? "的") }
+        guard let after = try? NSRegularExpression(pattern: esc + "的?首都(?:是|為|在)?([\\p{Han}]{2,4})"),
+              let before = try? NSRegularExpression(pattern: "([\\p{Han}]{2,4})(?:是|為)" + esc + "的?首都") else { return [:] }
+        for t in texts {
+            let all = NSRange(t.startIndex..., in: t)
+            for m in after.matches(in: t, range: all) {
+                guard let r = Range(m.range(at: 1), in: t) else { continue }
+                let cand = String(t[r])
+                for n in 2...cand.count where ok(String(cand.prefix(n))) { votes[String(cand.prefix(n)), default: 0] += 1 }
+            }
+            for m in before.matches(in: t, range: all) {
+                guard let r = Range(m.range(at: 1), in: t) else { continue }
+                let cand = String(t[r])
+                if let k = (2...cand.count).reversed().map({ String(cand.suffix($0)) }).first(where: ok) { votes[k, default: 0] += 1 }
+            }
+        }
+        return votes
     }
 
     /// 各來源說的數字，差不到 3% 的算同一個說法；一個網站一票
@@ -509,11 +543,15 @@ extension Understanding {
     static let causal = ["因為", "由於", "原因", "所以", "導致", "造成", "使得", "是因", "引起", "來自", "為了", "機制", "反射", "源自", "透過", "是由", "because"]
 
     /// 在講原因的句子：有因果的詞，也有講到問的那件事
-    public static func extractReason(_ ev: [Evidence], pred: String) -> [Evidence] {
+    public static func extractReason(_ ev: [Evidence], pred: String, subject: String = "") -> [Evidence] {
         let c = Array(pred)
         let grams = c.count <= 2 ? [pred] : (0..<(c.count - 1)).map { String(c[$0...$0 + 1]) }
-        return ev.filter { e in causal.contains { e.text.contains($0) } && grams.contains { e.text.contains($0) } }
-            .sorted { a, b in grams.filter { a.text.contains($0) }.count > grams.filter { b.text.contains($0) }.count }
+        let subj = Think.chunks(subject).first ?? ""
+        // 表格的一列（「治療 ｜ 治療導致發燒的疾病」）、太短的片段不是在說明原因
+        func rank(_ e: Evidence) -> Int { grams.filter { e.text.contains($0) }.count + (subj.isEmpty || !Think.covers(e.text, subj) ? 0 : 2) }
+        return ev.filter { e in e.text.count >= 10 && !e.text.contains("｜") && !e.text.contains("|")
+            && causal.contains { e.text.contains($0) } && grams.contains { e.text.contains($0) } }
+            .enumerated().sorted { a, b in (rank(a.element), -a.offset) > (rank(b.element), -b.offset) }.map(\.element)
     }
 
     static let stepVerbs = ["加入", "放入", "倒入", "加水", "煮滾", "煮至", "煮約", "小火煮", "大火", "小火", "蒸", "泡水", "浸泡", "洗淨", "切", "攪拌", "關火", "燜", "開火", "撈", "按下", "點選", "設定", "輸入", "分鐘"]
@@ -527,6 +565,11 @@ extension Understanding {
                 let s = line.trimmingCharacters(in: .whitespaces)
                 guard (8...120).contains(s.count), !s.hasSuffix("？"), !s.hasSuffix("?"), !s.contains("｜"),
                       !s.contains("做法。"), !s.contains("等做法") else { continue }
+                let numbered = s.range(of: #"^(\d{1,2}[\.、．)）]|[①②③④⑤⑥⑦⑧⑨⑩]|步驟\s*\d+|Step\s*\d+)"#, options: .regularExpression) != nil
+                // 食材清單（「去骨雞腿肉切塊、高麗菜切塊、蔥花」）、食譜列表上的卡片標題不是步驟：
+                // 步驟要像一句指示（有編號，或有「，」「。」）
+                let listy = s.filter { $0 == "、" }.count >= 2 && !s.contains("，") && !s.contains("。")
+                guard !listy, numbered || s.contains("，") || s.contains("。") || s.hasSuffix("！") else { continue }
                 // 每一步都要有動作（加水、煮、泡……），光有編號或營養成分表不算
                 if stepVerbs.contains(where: { s.contains($0) }) {
                     let clean = s.replacingOccurrences(of: #"^(\d{1,2}[\.、．)）]|[①②③④⑤⑥⑦⑧⑨⑩]|步驟\s*\d+[:：.]?|Step\s*\d+[:：.]?)\s*"#, with: "", options: .regularExpression)
@@ -602,45 +645,30 @@ extension WebAgent {
             return (head + "\n" + r.items.joined(separator: "、")
                     + "\n（名單整理自 " + r.hosts.joined(separator: "、") + "；不同資料的算法可能略有差異）", true)
         case let .reason(pred):
-            let rs = Understanding.extractReason(sents, pred: pred)
+            let rs = Understanding.extractReason(sents, pred: pred, subject: fr.subject)
             guard let first = rs.first else { return ("", false) }
-            // 用自己的話帶出來，只引一小段（少於 15 字）；每個網站最多引一句
-            let focus = Understanding.causal + [pred]
-            var t = "簡單說，原因跟" + Cite.quote(first.text, host: first.host, focus: focus) + "有關。"
+            // 問原因要一段說明：引講原因的那一整句（最多 80 字，切到時加「…」），不切成看不懂的幾個字；每個網站最多一句
+            var t = "簡單說：" + Cite.whole(first.text, host: first.host)
             var quotedHosts: Set<String> = [first.host]
             var used = [String(first.text.prefix(12))]
             for e in rs.dropFirst() where used.count < 3 && !used.contains(String(e.text.prefix(12))) {
                 used.append(String(e.text.prefix(12)))
                 guard quotedHosts.insert(e.host).inserted else { continue }
-                t += "\n• 另外也有說法指出" + Cite.quote(e.text, host: e.host, focus: focus)
+                t += "\n• 另外也有說法：" + Cite.whole(e.text, host: e.host, limit: 60)
             }
             return (t, true)
         case let .steps(target):
             guard let s = Understanding.extractSteps(pages, target: target) else { return ("", false) }
-            // 步驟用重點動作簡短列出（不照抄整句），來源標在最前面
-            return ("做法重點（參考 \(s.host)）：\n" + s.steps.enumerated().map { "\($0.offset + 1). " + Cite.fragment($0.element, focus: Understanding.stepVerbs) }.joined(separator: "\n"), true)
+            // 每一步列出重點（太長的取到前一個「，」，切到時加「…」），來源標在最前面
+            return ("做法重點（參考 \(s.host)）：\n" + s.steps.enumerated().map { "\($0.offset + 1). " + Cite.step($0.element) }.joined(separator: "\n"), true)
         case .place:
             // 問首都、位置：句子要講到這個地方本身，還要有「首都」「位於」這類字
             let marks = fr.searches.first?.contains("首都") == true ? ["首都"] : ["位於", "位在", "坐落", "在"]
             // 問首都：把每一句「法國首都巴黎…」「東京是日本的首都」裡的地名抓出來投票，比挑一句話可靠
             let sj = fr.subject
             if marks == ["首都"] {
-                var votes: [String: Int] = [:]
-                let esc = NSRegularExpression.escapedPattern(for: sj)
-                for e in sents {
-                    for pat in [esc + "的?首都(?:是|為|在)?([\\p{Han}]{2,4})", "([\\p{Han}]{2,4})(?:是|為)" + esc + "的?首都"] {
-                        guard let re = try? NSRegularExpression(pattern: pat) else { continue }
-                        for m in re.matches(in: e.text, range: NSRange(e.text.startIndex..., in: e.text)) {
-                            guard let r = Range(m.range(at: 1), in: e.text) else { continue }
-                            let cand = String(e.text[r])
-                            // 「巴黎舉辦」「巴黎的足」：每個前綴都投一票，最後取出現最多、又最長的那個
-                            for n in 2...cand.count { votes[String(cand.prefix(n)), default: 0] += 1 }
-                        }
-                    }
-                }
-                let bad = ["首都", "圈", "都會", "城市", "地區", "中心"]
-                if let top = votes.filter({ k, _ in !bad.contains { k.contains($0) } }).max(by: { ($0.value, $0.key.count) < ($1.value, $1.key.count) }),
-                   top.value >= 1 {
+                let votes = Understanding.capitalVotes(sents.map(\.text), subject: sj)
+                if let top = votes.max(by: { ($0.value, $0.key.count) < ($1.value, $1.key.count) }), top.value >= 1 {
                     // 同樣票數時，較長的名字只有在不是「名字＋雜字」時才採用
                     let name = votes.filter { $0.value == top.value && top.key.hasPrefix($0.key) }.min(by: { $0.key.count < $1.key.count })?.key ?? top.key
                     // 依據挑最直接的那句（「東京是日本的首都」勝過「日本的首都圈…」）

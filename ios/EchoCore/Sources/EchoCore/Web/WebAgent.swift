@@ -378,10 +378,16 @@ public enum WebAgent {
                     return old
                 }
                 brainNote = "用大腦讀了 \(c.read) 段文字，判斷其中 \(c.relevant) 段在回答問題" + (c.hosts.isEmpty ? "" : "（來自 \(c.hosts.count) 個網站）") + "。"
+                let brainSure = c.confident && !c.unsure
+                // 原因：大腦很有把握時，用它挑的整句話（它讀懂哪一句在回答「為什麼」，規則只會找有「因為」的句子）
+                if case .reason = fr.want, brainSure {
+                    brainNote += "大腦挑出最在回答「為什麼」的句子。"
+                    brainAnswered = true
+                    return (c.text, true)
+                }
                 // 名單、步驟、原因：大腦一次只挑一段，交給會整理的方法
                 let needsAssembly: Bool = { switch fr.want { case .list, .steps, .reason: return true; default: return false } }()
                 if needsAssembly && oldOK { brainAnswered = false; return old }
-                let brainSure = c.confident && !c.unsure
                 // 兩邊互相檢查：投票的方法和大腦各提一個答案
                 if typedQ && oldOK && brainSure {
                     let oldAns = Think.key(Understanding.match(old.text, #"答案：([^（。\n]+)"#)?[1] ?? "")

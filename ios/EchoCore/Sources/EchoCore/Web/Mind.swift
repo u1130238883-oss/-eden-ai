@@ -16,12 +16,17 @@ public enum Mind {
     /// 反過來想：找出講到主題、帶有轉折或反面意思的句子
     public static func otherSide(_ sentences: [(text: String, host: String)], topic: Set<String>, exclude: [String], limit: Int = 2) -> [String] {
         var out: [String] = []
+        var seen = Set<String>()
         for s in sentences where out.count < limit {
             guard contrast.contains(where: { s.text.contains($0) }) else { continue }
-            guard topic.isEmpty || WebAgent.score(s.text, topic) >= 1 else { continue }
+            // 要講到主題（主題有兩個以上的詞時至少要有兩個，「月亮」的神話不算在講「月亮發光」）
+            guard topic.isEmpty || WebAgent.score(s.text, topic) >= min(2, topic.count) else { continue }
             let key = String(s.text.prefix(14))
             if exclude.contains(where: { $0.contains(key) }) || out.contains(where: { $0.contains(key) }) { continue }
-            out.append(Cite.quote(s.text, host: s.host, focus: contrast))
+            // 不同網頁抄同一句話（「但其實天空是無色的」）只列一次
+            let f = Cite.fragment(s.text, focus: contrast)
+            guard !f.isEmpty, seen.insert(Think.key(f)).inserted else { continue }
+            out.append("「\(f)」（\(s.host)）")
         }
         return out
     }

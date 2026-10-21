@@ -2,6 +2,8 @@ import Foundation
 
 /// 引用規則：
 ///   • 引文少於 15 個字，每個來源最多一句引文，其他用自己的話說，不照搬原文的句子結構。
+///     例外：「在講什麼／怎麼辦／為什麼」這類要一段說明的題目，主要回答可以引一整句（最多 80 字，見 Think）。
+///   • 引文沒講完就被切斷時，結尾加「…」，看得出是節錄。
 ///   • 每個來自網路的說法都附上來源標記（「……」（網站）），結尾列出真的用到的來源。
 ///   • 原始來源（官方、政府、學術、百科）優先；問答網站、論壇、內容農場放最後，除非沒有別的資料。
 public enum Cite {
@@ -34,13 +36,34 @@ public enum Cite {
             out.append(c)
             i += 1
         }
-        return out.trimmingCharacters(in: CharacterSet(charactersIn: "，、：:；,. "))
+        let trimmed = out.trimmingCharacters(in: CharacterSet(charactersIn: "，、：:；,. "))
+        // 字數到了、句子還沒講完：加「…」，不要讓人以為原文就是這樣（「瑞利散…」）
+        if out.count >= maxQuote, i < chars.count, !"。；！？!?，,、".contains(chars[i]) { return trimmed + "…" }
+        return trimmed
     }
 
     /// 「短引文」（網站）
     public static func quote(_ sentence: String, host: String, focus: [String]) -> String {
         let f = fragment(sentence, focus: focus)
         return f.isEmpty ? "" : "「\(f)」（\(host)）"
+    }
+
+    /// 說明題的主要回答：引一整句（最多 limit 字，被切斷時加「…」），去掉「[4]」這類註腳
+    public static func whole(_ sentence: String, host: String, limit: Int = 80) -> String {
+        let s = sentence.replacingOccurrences(of: #"\[[^\]]{1,8}\]"#, with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return s.isEmpty ? "" : "「\(WebSearch.clip(s, limit))」（\(host)）"
+    }
+
+    /// 做法的一步：看得懂的一整個動作（「綠豆洗淨，泡水 2 小時。」），太長的取到前一個「，」，再長才切並加「…」
+    public static func step(_ s: String, limit: Int = 40) -> String {
+        let t = s.replacingOccurrences(of: #"\[[^\]]{1,8}\]"#, with: "", options: .regularExpression).trimmingCharacters(in: .whitespaces)
+        guard t.count > limit else { return t }
+        let head = String(t.prefix(limit))
+        if let cut = head.lastIndex(where: { "，。；,;".contains($0) }), head.distance(from: head.startIndex, to: cut) >= 8 {
+            return String(head[..<cut]) + "…"
+        }
+        return head + "…"
     }
 
     /// 問答網站、論壇、內容農場、轉貼站：除非沒有別的資料，不然不用
