@@ -150,7 +150,7 @@ final class ChatViewModel: ObservableObject {
 
     func send(_ raw: String) {
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty, let engine, !thinking else { return }
+        guard !text.isEmpty, engine != nil, !thinking else { return }
         turns.append(ChatTurn(role: .user, text: text))
         thinking = true
         streaming = ""
@@ -214,6 +214,12 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
+        localReply(text)
+    }
+
+    /// NineSun 自己回答（本地的引擎；需要時上網查）
+    private func localReply(_ text: String) {
+        guard let engine else { return }
         let history = turns
         let ctx = EchoEngine.Context(profile: profile, rules: rules, now: Date(), language: language, autoDetect: autoDetect)
         queue.async {
@@ -258,10 +264,16 @@ final class ChatViewModel: ObservableObject {
         streaming = cfg.names.count > 1 ? "🤖 同時問 " + cfg.names.joined(separator: "、") + "，再融合成我的看法…" : "🤖 思考中…"
         Task { [self] in
             let reply = await AskAIs.chat(text, history: past, evidence: [], lang: L, config: cfg, persona: persona)
-            let body = reply.error == nil
-                ? reply.text + "\n\n— 🤖 " + reply.name
-                : "AI 這次沒有回答：\n" + (reply.error ?? "") + "\n\n（可以到設定頁按「測試連線」看看；或把「全部交給 AI 回答」關掉，讓 NineSun 自己回答）"
-            await MainActor.run { self.finish(ChatTurn(role: .echo, text: body, source: .knowledge)) }
+            await MainActor.run {
+                guard reply.error == nil else {
+                    // AI 回答不了（額度用完、忙線…）：不卡住、不報錯，NineSun 自己回答
+                    self.streaming = ""
+                    self.localReply(text)
+                    return
+                }
+                self.streaming = ""
+                self.play(text: reply.text, final: ChatTurn(role: .echo, text: reply.text, source: .knowledge))
+            }
         }
     }
 
@@ -289,8 +301,10 @@ final class ChatViewModel: ObservableObject {
         let asker = profile.birthday.map { Destiny($0).type }
         let cfg = aiConfig, auto = aiAuto
         let offerAI = !cfg.enabled && !aiHintShown
+        // 查資料時一步一步顯示在想什麼（理解問題 → 搜尋 → 閱讀 → 比對），不會像卡住
+        let show: @Sendable (String) -> Void = { [weak self] step in DispatchQueue.main.async { self?.streaming = step } }
         Task { [self] in
-            let r = await WebAgent.run(q, facts: nil, lang: L, avoid: avoid, reflect: reflect, asker: asker)
+            let r = await WebAgent.run(q, facts: nil, lang: L, avoid: avoid, reflect: reflect, asker: asker, progress: quietIfNothing ? nil : show)
             if quietIfNothing && (!r.found || !r.answered) {
                 await MainActor.run { self.saveFile(SelfTuning.shared.state, Self.tuningURL); self.thinking = false; self.streaming = nil; self.saveHistory() }
                 return
@@ -317,7 +331,9 @@ final class ChatViewModel: ObservableObject {
                 if didHint { self.aiHintShown = true }
                 self.saveFile(SelfTuning.shared.state, Self.tuningURL)
                 self.saveFile(Notebook.shared.state, Self.notebookURL)
-                self.finish(turn)
+                // 答案一段一段打出來，比一下子跳出一大段順
+                self.streaming = ""
+                self.play(text: turn.text, final: turn)
             }
         }
     }

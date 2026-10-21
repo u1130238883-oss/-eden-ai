@@ -284,7 +284,8 @@ public enum AskAIs {
     static func oneCall(_ who: String, config: Config, system: String, message: String, past: [Turn]) async -> Reply {
         switch who {
         case "Claude": return await claude(system: system, user: message, key: config.anthropicKey, history: past)
-        case "Gemini": return await gemini(system: system, user: message, key: config.geminiKey, history: past, search: true)
+        // Google 搜尋比較慢：只有要最新資料的問題才讓 Gemini 自己搜尋
+        case "Gemini": return await gemini(system: system, user: message, key: config.geminiKey, history: past, search: needsFresh(message))
         case "OpenRouter":
             let pool = config.models.isEmpty ? await freeModels() : config.models
             var last = Reply(name: "OpenRouter", text: "", error: "沒有可用的模型")
@@ -299,6 +300,12 @@ public enum AskAIs {
             guard let p = config.compat.first(where: { $0.name == who }) else { return Reply(name: who, text: "", error: "沒有金鑰") }
             return await compatible(p, system: system, user: message, history: past)
         }
+    }
+
+    /// 要最新資料的問題（今天、最新、價格、天氣…）
+    public static func needsFresh(_ q: String) -> Bool {
+        ["今天", "今年", "最新", "現在", "目前", "最近", "新聞", "價格", "多少錢", "匯率", "股價", "股票", "天氣", "比賽", "比分",
+         "昨天", "明天", "本週", "這週", "這個月", "上映", "發布", "發表", "選舉", "疫情", "2025", "2026", "2027"].contains { q.contains($0) }
     }
 
     /// 整理對話給 AI 看：Gemini、Claude 都要求「使用者先講、一來一往」——

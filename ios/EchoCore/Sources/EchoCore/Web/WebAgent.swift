@@ -171,7 +171,8 @@ public enum WebAgent {
     /// avoid：上次答錯時用過的網站（反思後這次避開）；reflect：被指正後重查，先用備用查法
     /// asker：問問題的人的九型（從他的生日算出來），用他在意的方式交代重點
     public static func run(_ question: String, facts: String? = nil, also: [String] = [], lang L: Lang,
-                           avoid: [String] = [], reflect: Bool = false, asker: Int? = nil) async -> Result {
+                           avoid: [String] = [], reflect: Bool = false, asker: Int? = nil,
+                           progress: (@Sendable (String) -> Void)? = nil) async -> Result {
         // 使用者給了網址：直接讀那個網頁
         if facts == nil, let url = firstURL(question), url.count >= question.count - 2 { return await readLink(url, lang: L) }
         let fortune = facts != nil
@@ -186,6 +187,8 @@ public enum WebAgent {
         let chart = facts.map(WebFortune.parse)
         // ① 先想清楚要什麼樣的答案（數字、名單、原因、做法……），照這個決定怎麼查、怎麼挑
         let fr = zh && !fortune ? Understanding.withRecency(Understanding.frame(question), question: question) : nil
+        // 讓使用者看到思考的步驟（不會覺得卡住）
+        progress?("① 先想清楚你要的是什麼" + (fr.map { "：" + $0.restated } ?? "…"))
 
         // ②③ 拆成幾組關鍵字，同時上網查（tag -1：整體；0…：各個小問題）
         var jobs: [(tag: Int, q: String, full: Bool)] = []
@@ -233,6 +236,7 @@ public enum WebAgent {
         } while start < fullJobs.count
         let answers: [(Int, WebSearch.Answer)] = got.sorted { $0.0 < $1.0 }.map { ($0.1, $0.2) }
         clock.append(("查詢\(jobs.count)組", Date()))
+        progress?("② 用 \(jobs.count) 組關鍵字上網搜尋，找到 \(answers.reduce(0) { $0 + $1.1.hits.count }) 筆結果，挑可信的來讀…")
 
         // ④ 只留下跟主題有關的結果
         var terms = termSet(plan.core)
@@ -321,6 +325,7 @@ public enum WebAgent {
             return out
         }
         clock.append(("讀\(pages.count)頁", Date()))
+        progress?("③ 讀了 \(pages.count) 個網頁，一段一段判斷哪些真的在回答你的問題…")
 
         // 每一句都判斷：在回答哪一個小問題
         func angleOf(_ s: String, default d: Int) -> Int {
@@ -465,6 +470,7 @@ public enum WebAgent {
             clock.append(("思考", Date()))
             firstRoundOK = s.ok
             if !s.ok, !fr.retry.isEmpty {
+                progress?("④ 第一輪沒找到清楚的答案，換個查法再查一次…")
                 let retryQs = Array(Cite.distinct(fr.retry).filter { r in !jobs.contains { Cite.similar($0.q, r) } }.prefix(2))
                 let got = await withTaskGroup(of: WebSearch.Answer?.self) { g -> [WebSearch.Answer] in
                     for q in retryQs { g.addTask { await within(8) { await WebSearch.search(q, lang: L, news: false, light: true) } ?? nil } }
