@@ -87,6 +87,17 @@ struct SettingsView: View {
             keyField(T("指定模型（選填，逗號分隔；名稱以 OpenRouter 網站為準）", "Models (optional, comma-separated, as listed on OpenRouter)",
                        "Modelos (opcional, separados por comas, como en OpenRouter)", "Modelli (facoltativo, separati da virgole, come su OpenRouter)"), $vm.aiModels, secure: false)
             keyField(T("Gemini 金鑰（選用）", "Gemini key (optional)", "Clave de Gemini (opcional)", "Chiave Gemini (facoltativa)"), $vm.geminiKey, secure: true)
+            button(vm.aiTesting ? T("測試中…", "Testing…", "Probando…", "Test in corso…") : T("測試連線", "Test connection", "Probar conexión", "Prova connessione"),
+                   color: Theme.hazard) { if !vm.aiTesting { vm.testAI() } }
+            if !vm.aiTestResult.isEmpty {
+                Text(vm.aiTestResult).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.paper)
+                    .textSelection(.enabled)
+            }
+            Text(T("OpenRouter 的免費模型：要先到 openrouter.ai/settings/privacy 打開允許免費模型的選項，否則每一家都會回「找不到」。",
+                   "OpenRouter free models only answer after you allow them at openrouter.ai/settings/privacy.",
+                   "Los modelos gratuitos de OpenRouter solo responden si los permites en openrouter.ai/settings/privacy.",
+                   "I modelli gratuiti di OpenRouter rispondono solo se li consenti su openrouter.ai/settings/privacy."))
+                .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
             Toggle(isOn: $vm.aiAuto) {
                 label(T("沒把握時自動問", "Ask automatically when unsure", "Preguntar solo cuando dude", "Chiedi da solo quando è incerto"), "")
             }

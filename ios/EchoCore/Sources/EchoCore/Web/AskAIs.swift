@@ -59,11 +59,45 @@ public enum AskAIs {
     }()
 
     static func send(_ req: URLRequest) async -> (code: Int, data: Data?) {
+        let r = await sendDetailed(req)
+        return (r.code, r.data)
+    }
+
+    /// 連不上時也帶回原因（逾時、沒有網路、找不到伺服器…）
+    static func sendDetailed(_ req: URLRequest) async -> (code: Int, data: Data?, failure: String?) {
         await withCheckedContinuation { c in
-            session.dataTask(with: req) { d, r, _ in
-                c.resume(returning: ((r as? HTTPURLResponse)?.statusCode ?? 0, d))
+            session.dataTask(with: req) { d, r, e in
+                c.resume(returning: ((r as? HTTPURLResponse)?.statusCode ?? 0, d, e.map { ($0 as NSError).localizedDescription }))
             }.resume()
         }
+    }
+
+    /// 伺服器回的錯誤說明（{"error":{"message":…}} 或 {"message":…}）
+    static func serverMessage(_ d: Data?) -> String? {
+        guard let d, let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else {
+            return d.flatMap { String(data: $0.prefix(200), encoding: .utf8) }.flatMap { $0.isEmpty ? nil : $0 }
+        }
+        if let e = o["error"] as? [String: Any], let m = e["message"] as? String { return m }
+        if let e = o["error"] as? String { return e }
+        return o["message"] as? String
+    }
+
+    /// 錯誤代碼＋伺服器說明＋該怎麼辦
+    static func explain(code: Int, data: Data?, failure: String?) -> String {
+        var t = httpError(code)
+        if code == 0, let failure { t += "：\(failure)" }
+        if let m = serverMessage(data) {
+            t += "：\(WebSearch.clip(m, 160))"
+            let l = m.lowercased()
+            if l.contains("data policy") || l.contains("privacy") {
+                t += "\n→ 到 openrouter.ai/settings/privacy，把允許免費模型（Free model publication / training）的選項打開，免費模型才會回答。"
+            } else if l.contains("credit") || l.contains("insufficient") {
+                t += "\n→ 這個模型要付費，或帳戶額度不夠；不指定模型就會用免費的。"
+            } else if l.contains("user not found") || l.contains("invalid") && l.contains("key") {
+                t += "\n→ 金鑰不對：到 openrouter.ai/keys 重新建立一把，整串貼上（sk-or-v1-…）。"
+            }
+        }
+        return t
     }
 
     /// 給每家 AI 的指示：先一句結論，再幾點重點；不確定就說不確定、不要編造
@@ -86,19 +120,31 @@ public enum AskAIs {
     /// 同時問所有設定好的 AI（OpenRouter 最多三個模型＋Gemini），照順序回傳
     public static func ask(_ question: String, evidence: [String], lang L: Lang, config: Config) async -> [Reply] {
         let p = prompt(question, evidence: evidence, lang: L)
-        var models: [String] = []
+        var pool: [String] = []
         if !config.openRouterKey.isEmpty {
-            models = Array((config.models.isEmpty ? await freeModels() : config.models).prefix(3))
+            pool = config.models.isEmpty ? await freeModels() : config.models
         }
-        let names = displayNames(models)
+        // 三個位置：每個先問自己的模型，失敗（下架、次數用完）就換清單裡下一個沒用到的
+        let slots = min(3, pool.count)
         let orKey = config.openRouterKey, gKey = config.geminiKey
+        let models = pool
         return await withTaskGroup(of: (Int, Reply).self) { g -> [Reply] in
-            for (i, m) in models.enumerated() {
-                let name = names[i]
-                g.addTask { (i, await openRouter(m, name: name, system: p.system, user: p.user, key: orKey)) }
+            for i in 0..<slots {
+                let tries = stride(from: i, to: min(models.count, i + 3 * slots), by: slots).map { models[$0] }
+                g.addTask {
+                    var last = Reply(name: displayNames([tries[0]])[0], text: "", error: "沒有回答")
+                    for m in tries {
+                        let r = await openRouter(m, name: displayNames([m])[0], system: p.system, user: p.user, key: orKey)
+                        if r.error == nil { return (i, r) }
+                        last = r
+                        // 金鑰錯、連不上：換模型也沒用
+                        if r.error?.hasPrefix("金鑰不對") == true || r.error?.hasPrefix("連不上") == true { break }
+                    }
+                    return (i, last)
+                }
             }
             if !gKey.isEmpty {
-                let i = models.count
+                let i = slots
                 g.addTask { (i, await gemini(system: p.system, user: p.user, key: gKey)) }
             }
             var out: [(Int, Reply)] = []
@@ -121,10 +167,23 @@ public enum AskAIs {
         let body: [String: Any] = ["model": model,
                                    "messages": [["role": "system", "content": system], ["role": "user", "content": user]]]
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        let (code, data) = await send(req)
-        guard code == 200 else { return Reply(name: name, text: "", error: httpError(code)) }
-        guard let t = openRouterText(data) else { return Reply(name: name, text: "", error: "沒有回答") }
+        let (code, data, failure) = await sendDetailed(req)
+        guard code == 200 else { return Reply(name: name, text: "", error: explain(code: code, data: data, failure: failure)) }
+        // 有時候 200 但內容是錯誤（{"error":…}）
+        guard let t = openRouterText(data) else {
+            return Reply(name: name, text: "", error: serverMessage(data).map { "沒有回答：" + WebSearch.clip($0, 160) } ?? "沒有回答")
+        }
         return Reply(name: name, text: t, error: nil)
+    }
+
+    /// 設定頁的「測試連線」：每把金鑰各問一句，把成功或真正的錯誤原因列出來
+    public static func test(config: Config) async -> String {
+        guard config.enabled else { return "還沒填金鑰。" }
+        let replies = await ask("請只回答兩個字：收到", evidence: [], lang: .zh, config: config)
+        guard !replies.isEmpty else { return "沒有可以問的模型（OpenRouter 的模型清單抓不到）。" }
+        return replies.map { r in
+            r.error == nil ? "✅ \(r.name)：連上了（回答：\(WebSearch.clip(r.text, 30))）" : "❌ \(r.name)：\(r.error!)"
+        }.joined(separator: "\n")
     }
 
     static func openRouterText(_ d: Data?) -> String? {
@@ -168,9 +227,12 @@ public enum AskAIs {
         guard let url = URL(string: "https://openrouter.ai/api/v1/models") else { return fallbackModels }
         let (code, data) = await send(URLRequest(url: url))
         guard code == 200, let ids = freeModelIDs(data), !ids.isEmpty else { return fallbackModels }
+        // 先放挑好的三家，後面接其他免費模型當備用（某個下架或次數用完就換）
         let picked = pickFamilies(ids)
-        cachedFree = (Date(), picked)
-        return picked
+        let rest = ids.filter { id in !picked.contains(id) && !["vision", "-vl", "coder", "embed", "guard", "audio", "image"].contains { id.lowercased().contains($0) } }
+        let all = picked + rest
+        cachedFree = (Date(), all)
+        return all
     }
 
     static func freeModelIDs(_ d: Data?) -> [String]? {
@@ -229,10 +291,13 @@ public enum AskAIs {
     // MARK: - Gemini（選用）
 
     static func gemini(system: String, user: String, key: String) async -> Reply {
-        for model in ["gemini-flash-latest", "gemini-2.5-flash"] {
+        var last: Reply?
+        for model in ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"] {
             let r = await geminiCall(model, system: system, user: user, key: key)
-            if r.error != httpError(404) { return r }
+            if r.error?.hasPrefix(httpError(404)) != true { return r }
+            last = r
         }
+        if let last { return last }
         return Reply(name: "Gemini", text: "", error: "找不到可用的 Gemini 模型")
     }
 
@@ -252,8 +317,8 @@ public enum AskAIs {
             "safetySettings": cats.map { ["category": $0, "threshold": "BLOCK_NONE"] },
         ]
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        let (code, data) = await send(req)
-        guard code == 200 else { return Reply(name: "Gemini", text: "", error: httpError(code)) }
+        let (code, data, failure) = await sendDetailed(req)
+        guard code == 200 else { return Reply(name: "Gemini", text: "", error: explain(code: code, data: data, failure: failure)) }
         let (text, blocked) = geminiText(data)
         if let text { return Reply(name: "Gemini", text: text, error: nil) }
         return Reply(name: "Gemini", text: "", error: blocked ? "被 Gemini 的安全過濾擋下" : "沒有回答")

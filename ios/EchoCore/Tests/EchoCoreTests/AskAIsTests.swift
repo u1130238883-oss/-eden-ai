@@ -59,6 +59,17 @@ final class AskAIsTests: XCTestCase {
         XCTAssertTrue(s2.contains("以有出處的資料為準"), s2)
     }
 
+    /// 連不上時要講出真正的原因和該怎麼辦（之前只顯示「找不到這個模型」）
+    func testExplainsRealErrors() {
+        let policy = #"{"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}"#.data(using: .utf8)
+        let e = AskAIs.explain(code: 404, data: policy, failure: nil)
+        XCTAssertTrue(e.contains("data policy") && e.contains("openrouter.ai/settings/privacy"), e)
+        let key = #"{"error":{"message":"User not found.","code":401}}"#.data(using: .utf8)
+        XCTAssertTrue(AskAIs.explain(code: 401, data: key, failure: nil).contains("重新建立"))
+        XCTAssertTrue(AskAIs.explain(code: 0, data: nil, failure: "The request timed out.").contains("timed out"))
+        XCTAssertEqual(AskAIs.serverMessage(#"{"message":"bad"}"#.data(using: .utf8)), "bad")
+    }
+
     func testWhenToAsk() {
         var r = WebAgent.Result(text: "", card: nil, found: true, engines: [:])
         r.confident = true

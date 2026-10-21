@@ -14,6 +14,18 @@ final class ChatViewModel: ObservableObject {
     @Published var geminiKey = KeyStore.get("gemini") { didSet { KeyStore.set("gemini", geminiKey.trimmingCharacters(in: .whitespacesAndNewlines)) } }
     @Published var aiAuto = true { didSet { save(aiAuto, "aiAuto") } }
     @Published var aiModels = "" { didSet { save(aiModels, "aiModels") } }
+    /// 設定頁「測試連線」的結果
+    @Published var aiTestResult = ""
+    @Published var aiTesting = false
+    func testAI() {
+        let cfg = aiConfig
+        aiTesting = true
+        aiTestResult = "測試中…（最多約一分鐘）"
+        Task { [self] in
+            let r = await AskAIs.test(config: cfg)
+            await MainActor.run { self.aiTestResult = r; self.aiTesting = false }
+        }
+    }
     var aiConfig: AskAIs.Config {
         AskAIs.Config(openRouterKey: openRouterKey, geminiKey: geminiKey,
                       models: aiModels.components(separatedBy: CharacterSet(charactersIn: ",，\n ")))
@@ -138,6 +150,17 @@ final class ChatViewModel: ObservableObject {
             let q = text.replacingOccurrences(of: "重新查", with: "").replacingOccurrences(of: "search again", with: "", options: .caseInsensitive)
                 .trimmingCharacters(in: .whitespaces)
             lookupWeb(q.isEmpty ? text : q, autoDetect ? Lang.detect(text, fallback: language) : language)
+            return
+        }
+
+        // 「測試AI」：馬上試每一把金鑰，把真正的錯誤原因講出來
+        if ["測試ai", "測試 ai", "test ai"].contains(text.trimmingCharacters(in: .whitespaces).lowercased()) {
+            let cfg = aiConfig
+            thinking = true
+            Task { [self] in
+                let r = await AskAIs.test(config: cfg)
+                await MainActor.run { self.finish(ChatTurn(role: .echo, text: "其他 AI 的連線測試：\n" + r, source: .tool)) }
+            }
             return
         }
 
