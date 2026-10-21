@@ -18,8 +18,13 @@ public enum AskAIs {
         public var models: [String]
 
         public init(openRouterKey: String = "", geminiKey: String = "", models: [String] = []) {
-            self.openRouterKey = openRouterKey.trimmingCharacters(in: .whitespacesAndNewlines)
-            self.geminiKey = geminiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+            var or = openRouterKey.trimmingCharacters(in: .whitespacesAndNewlines)
+            var g = geminiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Google AI Studio 的金鑰（AIza 開頭）貼錯格子也照樣用：它是 Gemini 的金鑰，不是 OpenRouter 的
+            if or.hasPrefix("AIza") { if g.isEmpty { g = or }; or = "" }
+            if g.hasPrefix("sk-or-") { if or.isEmpty { or = g }; g = "" }
+            self.openRouterKey = or
+            self.geminiKey = g
             self.models = models.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         }
 
@@ -93,6 +98,10 @@ public enum AskAIs {
                 t += "\n→ 到 openrouter.ai/settings/privacy，把允許免費模型（Free model publication / training）的選項打開，免費模型才會回答。"
             } else if l.contains("credit") || l.contains("insufficient") {
                 t += "\n→ 這個模型要付費，或帳戶額度不夠；不指定模型就會用免費的。"
+            } else if l.contains("missing authentication") || l.contains("no auth") {
+                t += "\n→ 這不是 OpenRouter 的金鑰（OpenRouter 的是 sk-or-v1- 開頭）。Google AI Studio 的金鑰（AIza 開頭）請貼到「Gemini 金鑰」那一格。"
+            } else if l.contains("location") && l.contains("not supported") {
+                t += "\n→ Google 不開放你所在的地區使用 Gemini API（例如香港、中國大陸），請改用 OpenRouter。"
             } else if l.contains("user not found") || l.contains("invalid") && l.contains("key") {
                 t += "\n→ 金鑰不對：到 openrouter.ai/keys 重新建立一把，整串貼上（sk-or-v1-…）。"
             }

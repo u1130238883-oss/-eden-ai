@@ -70,6 +70,18 @@ final class AskAIsTests: XCTestCase {
         XCTAssertEqual(AskAIs.serverMessage(#"{"message":"bad"}"#.data(using: .utf8)), "bad")
     }
 
+    /// Google AI Studio 的金鑰貼到 OpenRouter 那一格：照樣當 Gemini 金鑰用
+    func testKeyInWrongBox() {
+        let c = AskAIs.Config(openRouterKey: " AIzaSyExample_L1A ", geminiKey: "")
+        XCTAssertEqual(c.geminiKey, "AIzaSyExample_L1A")
+        XCTAssertEqual(c.openRouterKey, "")
+        XCTAssertTrue(c.enabled)
+        let d = AskAIs.Config(openRouterKey: "", geminiKey: "sk-or-v1-abc")
+        XCTAssertEqual(d.openRouterKey, "sk-or-v1-abc")
+        let e = AskAIs.explain(code: 401, data: #"{"error":{"message":"Missing Authentication header","code":401}}"#.data(using: .utf8), failure: nil)
+        XCTAssertTrue(e.contains("Gemini 金鑰"), e)
+    }
+
     func testWhenToAsk() {
         var r = WebAgent.Result(text: "", card: nil, found: true, engines: [:])
         r.confident = true
