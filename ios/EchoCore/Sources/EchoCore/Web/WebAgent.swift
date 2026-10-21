@@ -209,12 +209,15 @@ public enum WebAgent {
         if let canon { jobs.append((-1, canon, true)) }
         for q in also.prefix(2) where !jobs.contains(where: { $0.q == q }) { jobs.append((-1, q, true)) }
         for (i, a) in strat.angles.enumerated() { jobs.append((i, topic + a.suffix, false)) }
-        // 一次最多查兩組，查完再查下一批（太密集會被搜尋引擎當成機器人，回一堆無關的結果）
-        var answers: [(Int, WebSearch.Answer)] = []
+        // 完整的搜尋一次最多兩組，查完再查下一批（太密集會被搜尋引擎當成機器人，回一堆無關的結果）；
+        // 小問題的輕量搜尋（Bing＋維基）跟第一批一起查，不用多等一輪
+        let fullJobs = Array(jobs.enumerated().filter { $0.element.full })
+        let lightJobs = Array(jobs.enumerated().filter { !$0.element.full })
+        var got: [(Int, Int, WebSearch.Answer)] = []
         var start = 0
-        while start < jobs.count {
-            let batch = Array(jobs.enumerated())[start..<min(jobs.count, start + 2)]
-            let got = await withTaskGroup(of: (Int, Int, WebSearch.Answer).self) { g -> [(Int, Int, WebSearch.Answer)] in
+        repeat {
+            let batch = Array(fullJobs[min(start, fullJobs.count)..<min(fullJobs.count, start + 2)]) + (start == 0 ? lightJobs : [])
+            let batchAnswers = await withTaskGroup(of: (Int, Int, WebSearch.Answer).self) { g -> [(Int, Int, WebSearch.Answer)] in
                 for (n, j) in batch {
                     g.addTask {
                         let a = await within(9) { await WebSearch.search(j.q, lang: L, news: plan.kind == .news && n == 0, light: !j.full) }
@@ -225,9 +228,10 @@ public enum WebAgent {
                 for await a in g { out.append(a) }
                 return out
             }
-            answers += got.sorted { $0.0 < $1.0 }.map { ($0.1, $0.2) }
+            got += batchAnswers
             start += 2
-        }
+        } while start < fullJobs.count
+        let answers: [(Int, WebSearch.Answer)] = got.sorted { $0.0 < $1.0 }.map { ($0.1, $0.2) }
         clock.append(("查詢\(jobs.count)組", Date()))
 
         // ④ 只留下跟主題有關的結果
