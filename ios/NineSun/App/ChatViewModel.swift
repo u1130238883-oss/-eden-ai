@@ -106,6 +106,8 @@ final class ChatViewModel: ObservableObject {
                 engine.chatBank = try? ChatBank(bundle: .main)
                 // 大腦（閱讀理解模型）：上網查到的每段文字都由它來讀懂、判斷
                 Brain.shared = try? Brain(bundle: .main)
+                // 離線字典（英、中、西、義、阿）：翻譯單字用，背景慢慢載入
+                DispatchQueue.global(qos: .utility).async { Lexicon.shared = try? Lexicon(bundle: .main) }
                 let core = try PalaceCore(bundle: .main)
                 if let d = try? Data(contentsOf: Self.coreURL), let s = try? JSONDecoder().decode(PalaceCore.Snapshot.self, from: d) {
                     core.restore(s)
@@ -208,6 +210,12 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
+        // 翻譯：「蘋果用西班牙文怎麼說」「把這句翻成英文：…」「gracias 是什麼意思」
+        if let req = Translate.parse(text) {
+            translate(req)
+            return
+        }
+
         // 全部交給 AI：算命、命盤、生日這些還是 NineSun 自己算（AI 算不出你的盤），其他的都問 Gemini
         if aiAlways, aiConfig.enabled, !Self.isReading(text) {
             aiChat(text, autoDetect ? Lang.detect(text, fallback: language) : language)
@@ -273,6 +281,34 @@ final class ChatViewModel: ObservableObject {
                 }
                 self.streaming = ""
                 self.play(text: reply.text, final: ChatTurn(role: .echo, text: reply.text, source: .knowledge))
+            }
+        }
+    }
+
+    /// 翻譯：單字先查手機裡的字典（馬上有、離線）；句子用手機內建翻譯（iOS 18 起），再不行請 AI 或線上翻譯
+    private func translate(_ req: Translate.Request) {
+        let cfg = aiConfig
+        streaming = "🌐 翻譯成\(req.target.name)…"
+        Task { [self] in
+            var res: Translate.Result?
+            if let lex = Lexicon.shared { res = Translate.dictionary(req, lexicon: lex) }
+            if res == nil, #available(iOS 18.0, *) {
+                res = await AppleTranslator.shared.translate(req)
+            }
+            if res == nil, cfg.enabled {
+                let r = await AskAIs.chat(Translate.aiPrompt(req), history: [], evidence: [], lang: .zh, config: cfg)
+                if r.error == nil, !r.text.isEmpty {
+                    res = Translate.Result(text: r.text.trimmingCharacters(in: .whitespacesAndNewlines),
+                                           source: req.source ?? Translate.detect(req.text, lexicon: Lexicon.shared),
+                                           via: "請 " + cfg.names.joined(separator: "、") + " 翻譯")
+                }
+            }
+            if res == nil { res = await Translate.online(req) }
+            let text = res.map { Translate.reply(req, $0) }
+                ?? "這句我現在翻不出來。整句翻譯要 iOS 18 以上的內建翻譯（第一次會請你下載語言包），或到設定填 AI 金鑰；也請確認手機有連上網路，再試一次。"
+            await MainActor.run {
+                self.streaming = ""
+                self.play(text: text, final: ChatTurn(role: .echo, text: text, source: .tool))
             }
         }
     }

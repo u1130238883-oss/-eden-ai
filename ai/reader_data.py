@@ -10,6 +10,7 @@
 這樣大腦練習時讀到的段落，就是它在手機上讀網頁時會看到的樣子。
 """
 import json
+import glob
 import os
 import random
 
@@ -86,7 +87,7 @@ def passages(text):
 
 
 def all_sets(data_dir, convert):
-    """訓練用（DRCD 訓練＋測試、CMRC 全部）與考試用（DRCD dev，從來不拿來訓練）。"""
+    """訓練用（DRCD 訓練＋測試、CMRC 全部、extra_*.json）與考試用（DRCD dev，從來不拿來訓練）。"""
     j = lambda f: os.path.join(data_dir, f)
     train, bad = [], 0
     for f in ["DRCD_training.json", "DRCD_test.json"]:
@@ -98,6 +99,11 @@ def all_sets(data_dir, convert):
             s, b = load_squad(j(f), convert)
             train += s
             bad += b
+    # 其他人工標註的閱讀題（XQuAD 中文版、C3 裡答案原文就在文章中的題目，含不少「為什麼」題）
+    for f in sorted(glob.glob(j("extra_*.json"))):
+        s, b = load_squad(f, convert)
+        train += s
+        bad += b
     dev, _ = load_squad(j("DRCD_dev.json"))
     return train, dev, bad
 

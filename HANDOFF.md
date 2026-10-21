@@ -298,3 +298,9 @@ CI 的「Live web search check」會用真的網路問 40 題（`WebTests.swift`
 - `Understanding.voteNumber`：「瑞士8個國家共同經營」這種數字前面緊接另一個名字的「N個」不算總數。
 - `Think.wholeName`：大腦框到半個名字（「文西」）時補成完整的（「達文西」）；「珠穆朗瑪峰頂峰」→「珠穆朗瑪峰」。
 - 「怎麼辦」題多認得「治療、緩解、多喝、服用、補充」這類建議句。
+
+## 翻譯（2026-10-22）
+- `EchoCore/Translate/Translate.swift`：聽懂「蘋果用西班牙文怎麼說」「把X翻成英文」「翻譯：…」「gracias 是什麼意思」、英／西／義文的 translate…、cómo se dice…、come si dice…；判斷原文語言。
+- `EchoCore/Translate/Lexicon.swift` ＋ `NineSun/Resources/lexicon.tsv`（`ai/build_lexicon.py` 產生）：離線字典，英文（ECDICT，MIT）、中文／西班牙文／義大利文／阿拉伯文（維基詞典，CC BY-SA 3.0，經 Vuizur/Wiktionary-Dictionaries），只收常用詞（hermitdave/FrequencyWords 詞頻，MIT）。中文附拼音、阿拉伯文附拉丁拼音、西／義動詞變化形會指回原形。三種外語之間用英文當橋樑反查。
+- App：單字先查字典 → 整句用 iOS 18 內建翻譯（`AppleTranslator`，第一次會請使用者下載語言包，之後離線）→ AI 金鑰 → MyMemory 線上翻譯。`Translation` 用 weak link，iOS 16 照樣能開。
+- 重新產生字典：`python3 ai/build_lexicon.py ECDICT_DIR WIKT_DIR FREQ_DIR ios/NineSun/Resources/lexicon.tsv`
