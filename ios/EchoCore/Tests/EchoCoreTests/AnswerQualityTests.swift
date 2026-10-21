@@ -210,3 +210,19 @@ final class AnswerQualityTests: XCTestCase {
         XCTAssertTrue(q.hasPrefix("歐洲國家"), q)
     }
 }
+
+/// 比較題：分開找兩邊的優缺點再並排（之前答成「增強功能、錯誤修正和安全性更新」）
+final class CompareTests: XCTestCase {
+    func testCompareDigest() {
+        let page = """
+        iPhone 的優點是系統流暢、更新快，而且隱私保護做得比較好。
+        安卓手機的優勢是選擇多、價格範圍廣，也比較能自己客製。
+        iOS 17 加入待機模式和其他錯誤修正。
+        """
+        let d = Think.compareDigest("iPhone", "安卓", pages: [.init(text: page, host: "tech.tw")]) ?? ""
+        XCTAssertTrue(d.contains("• iPhone：") && d.contains("流暢"), d)
+        XCTAssertTrue(d.contains("• 安卓：") && d.contains("選擇多"), d)
+        XCTAssertFalse(d.contains("待機模式"), d)
+        XCTAssertNil(Think.compareDigest("iPhone", "安卓", pages: [.init(text: "iOS 17 加入待機模式。", host: "w")]))
+    }
+}

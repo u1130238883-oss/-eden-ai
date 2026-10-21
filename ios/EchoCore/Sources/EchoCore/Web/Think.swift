@@ -260,6 +260,31 @@ public enum Think {
         return out.joined(separator: "\n")
     }
 
+    /// 「iPhone和安卓哪個好」：網路上很少有一句話同時把兩邊講清楚，所以分開找——各自的優缺點各找一句，
+    /// 有直接比較兩邊的句子也放上，最後給一個怎麼選的判斷（不硬選邊）
+    public static func compareDigest(_ a: String, _ b: String, pages: [Understanding.Evidence]) -> String? {
+        let sents = contentSentences(pages)
+        let judge = ["優點", "優勢", "缺點", "劣勢", "適合", "價格", "便宜", "昂貴", "安全", "流暢", "彈性", "自由", "封閉", "開放", "生態",
+                     "續航", "隱私", "選擇", "好用", "穩定", "更新", "客製", "相容"]
+        func has(_ s: String, _ x: String) -> Bool { s.lowercased().contains(x.lowercased()) }
+        func strength(_ s: String) -> Int { judge.filter { s.contains($0) }.count }
+        func pick(_ x: String, _ other: String) -> (text: String, host: String)? {
+            sents.filter { has($0.text, x) && !has($0.text, other) && strength($0.text) > 0 && $0.text.count <= 120 }
+                .max { strength($0.text) < strength($1.text) }
+        }
+        let both = sents.filter { has($0.text, a) && has($0.text, b) && $0.text.count <= 140
+            && ["比", "更", "而", "相較", "不同", "差別", "相比", "則"].contains { w in $0.text.contains(w) } }
+            .max { strength($0.text) < strength($1.text) }
+        let pa = pick(a, b), pb = pick(b, a)
+        guard both != nil || (pa != nil && pb != nil) else { return nil }
+        var out = ["兩邊各有長處，關鍵是你重視什麼："]
+        if let both { out.append("• 直接比較：" + Cite.whole(both.text, host: both.host, limit: 90)) }
+        if let pa { out.append("• \(a)：" + Cite.whole(pa.text, host: pa.host, limit: 80)) }
+        if let pb { out.append("• \(b)：" + Cite.whole(pb.text, host: pb.host, limit: 80)) }
+        out.append("我的看法：沒有絕對比較好的一邊。先想清楚你最在意的是哪一點（價格、好不好上手、能不能自己調整、跟你已經有的東西合不合），照那一點選就不會後悔。")
+        return out.joined(separator: "\n")
+    }
+
     /// 「金閣寺在講什麼」：資料裡有《金閣寺》這部作品時，用描寫它內容的句子回答（不是寺廟的介紹）
     public static func aboutWork(question: String, pages: [Understanding.Evidence]) -> String? {
         guard wantsSentences(question), let m = Understanding.match(question, #"^《?(.{1,12}?)》?(?:是)?(?:在)?(?:講|說)(?:了|些)?什麼"#) else { return nil }

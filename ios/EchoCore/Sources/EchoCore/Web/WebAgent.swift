@@ -408,6 +408,12 @@ public enum WebAgent {
                 }
                 let old = solve(fr, pages: ps, snippets: sn)
                 let oldOK = old.ok && !old.text.isEmpty
+                // 比較題：找不到同時講兩邊的句子時，分開找兩邊的優缺點再並排
+                if case let .compare(a, b) = fr.want, !oldOK, let d = Think.compareDigest(a, b, pages: ps + sn) {
+                    brainNote = "很少有資料同時講兩邊，所以分開找各自的優缺點再並排比較。"
+                    brainAnswered = true
+                    return (d, true)
+                }
                 // 要一段說明的題目（在講什麼、怎麼辦、為什麼、X是什麼）：大腦給整句，不切幾個字
                 var explain = Think.wantsSentences(question)
                 if case .definition = fr.want { explain = true }
