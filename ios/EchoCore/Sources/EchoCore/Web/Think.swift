@@ -274,8 +274,9 @@ public enum Think {
             sents.filter { has($0.text, x) && !has($0.text, other) && strength($0.text) > 0 && $0.text.count <= 120 }
                 .max { strength($0.text) < strength($1.text) }
         }
-        let both = sents.filter { has($0.text, a) && has($0.text, b) && $0.text.count <= 140
-            && ["比", "更", "而", "相較", "不同", "差別", "相比", "則"].contains { w in $0.text.contains(w) } }
+        let compareWords = ["比", "更", "而", "相較", "不同", "差別", "相比", "則"]
+        let both = sents.filter { s in has(s.text, a) && has(s.text, b) && s.text.count <= 140
+            && compareWords.contains { w in s.text.contains(w) } }
             .max { strength($0.text) < strength($1.text) }
         let pa = pick(a, b), pb = pick(b, a)
         guard both != nil || (pa != nil && pb != nil) else { return nil }
