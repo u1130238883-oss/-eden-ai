@@ -90,6 +90,20 @@ final class AskAIsTests: XCTestCase {
         XCTAssertEqual(r.error, "還沒填金鑰")
     }
 
+    /// 一格貼好幾把金鑰，照開頭認出是哪一家
+    func testRecognisesManyProviders() {
+        let c = AskAIs.Config(keys: ["AIzaSyExample123", "sk-ant-api03-abcdefg", "xai-abcdefghijk", "gsk_abcdefghijkl",
+                                     "sk-proj-abcdefghijklmnop", "sk-0123456789abcdef0123456789abcdef", "sk-or-v1-abcdef", "", "短"])
+        XCTAssertEqual(c.geminiKey, "AIzaSyExample123")
+        XCTAssertEqual(c.anthropicKey, "sk-ant-api03-abcdefg")
+        XCTAssertEqual(c.openRouterKey, "sk-or-v1-abcdef")
+        XCTAssertEqual(c.compat.map(\.name), ["Grok", "Groq", "ChatGPT", "DeepSeek"])
+        XCTAssertEqual(c.names, ["Claude", "Grok", "Groq", "ChatGPT", "DeepSeek", "Gemini", "OpenRouter"])
+        XCTAssertFalse(AskAIs.Config(keys: ["", " "]).enabled)
+        let claude = #"{"content":[{"type":"text","text":"結論：東京"}],"stop_reason":"end_turn"}"#.data(using: .utf8)
+        XCTAssertEqual(AskAIs.claudeText(claude), "結論：東京")
+    }
+
     func testWhenToAsk() {
         var r = WebAgent.Result(text: "", card: nil, found: true, engines: [:])
         r.confident = true

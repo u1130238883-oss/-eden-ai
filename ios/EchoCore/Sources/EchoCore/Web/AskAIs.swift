@@ -28,7 +28,60 @@ public enum AskAIs {
             self.models = models.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         }
 
-        public var enabled: Bool { !openRouterKey.isEmpty || !geminiKey.isEmpty }
+        /// Claude（Anthropic 官方 API）
+        public var anthropicKey = ""
+        /// 跟 OpenAI 格式一樣的幾家（ChatGPT、Grok、DeepSeek、Groq）
+        public var compat: [Provider] = []
+
+        public var enabled: Bool { !openRouterKey.isEmpty || !geminiKey.isEmpty || !anthropicKey.isEmpty || !compat.isEmpty }
+
+        /// 貼上好幾把金鑰（一行一把、順序不拘），照開頭認出是哪一家
+        public init(keys: [String]) {
+            self.init()
+            for raw in keys {
+                let k = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard k.count >= 10 else { continue }
+                if k.hasPrefix("AIza") { if geminiKey.isEmpty { geminiKey = k } }
+                else if k.hasPrefix("sk-or-") { if openRouterKey.isEmpty { openRouterKey = k } }
+                else if k.hasPrefix("sk-ant-") { if anthropicKey.isEmpty { anthropicKey = k } }
+                else if let p = Provider.detect(k), !compat.contains(where: { $0.name == p.name }) { compat.append(p) }
+            }
+        }
+
+        /// 認出了哪幾家（設定頁顯示用）
+        public var names: [String] {
+            (anthropicKey.isEmpty ? [] : ["Claude"]) + compat.map(\.name) + (geminiKey.isEmpty ? [] : ["Gemini"])
+                + (openRouterKey.isEmpty ? [] : ["OpenRouter"])
+        }
+    }
+
+    /// 跟 OpenAI 格式一樣的 AI（同一種呼叫方式，換網址、模型和金鑰）
+    public struct Provider: Equatable, Sendable {
+        public let name: String
+        public let endpoint: String
+        /// 依序試：前一個找不到、忙線就換下一個
+        public let models: [String]
+        public let key: String
+
+        static func detect(_ k: String) -> Provider? {
+            if k.hasPrefix("xai-") {
+                return Provider(name: "Grok", endpoint: "https://api.x.ai/v1/chat/completions", models: ["grok-4", "grok-3", "grok-3-mini"], key: k)
+            }
+            if k.hasPrefix("gsk_") {
+                return Provider(name: "Groq", endpoint: "https://api.groq.com/openai/v1/chat/completions",
+                                models: ["llama-3.3-70b-versatile", "openai/gpt-oss-120b", "llama-3.1-8b-instant"], key: k)
+            }
+            if k.hasPrefix("sk-") {
+                // DeepSeek 的金鑰是 sk- 加 32 個十六進位字；其他 sk- 開頭的是 OpenAI（ChatGPT）
+                let rest = k.dropFirst(3)
+                if rest.count == 32 && rest.allSatisfy(\.isHexDigit) {
+                    return Provider(name: "DeepSeek", endpoint: "https://api.deepseek.com/chat/completions", models: ["deepseek-chat"], key: k)
+                }
+                return Provider(name: "ChatGPT", endpoint: "https://api.openai.com/v1/chat/completions",
+                                models: ["gpt-5-mini", "gpt-4.1-mini", "gpt-4o-mini"], key: k)
+            }
+            return nil
+        }
     }
 
     /// 一家 AI 的回答
@@ -152,9 +205,21 @@ public enum AskAIs {
                     return (i, last)
                 }
             }
+            var next = slots
             if !gKey.isEmpty {
-                let i = slots
+                let i = next
                 g.addTask { (i, await gemini(system: p.system, user: p.user, key: gKey)) }
+                next += 1
+            }
+            if !config.anthropicKey.isEmpty {
+                let i = next, k = config.anthropicKey
+                g.addTask { (i, await claude(system: p.system, user: p.user, key: k)) }
+                next += 1
+            }
+            for prov in config.compat {
+                let i = next
+                g.addTask { (i, await compatible(prov, system: p.system, user: p.user)) }
+                next += 1
             }
             var out: [(Int, Reply)] = []
             for await r in g { out.append(r) }
@@ -191,6 +256,16 @@ public enum AskAIs {
         let system = chatSystem(evidence: evidence, lang: L)
         let past = Array(history.suffix(10))
         var errors: [String] = []
+        if !config.anthropicKey.isEmpty {
+            let r = await claude(system: system, user: message, key: config.anthropicKey, history: past)
+            if r.error == nil { return r }
+            errors.append("Claude：" + (r.error ?? ""))
+        }
+        for prov in config.compat {
+            let r = await compatible(prov, system: system, user: message, history: past)
+            if r.error == nil { return r }
+            errors.append(prov.name + "：" + (r.error ?? ""))
+        }
         if !config.geminiKey.isEmpty {
             let r = await gemini(system: system, user: message, key: config.geminiKey, history: past)
             if r.error == nil { return r }
@@ -207,6 +282,69 @@ public enum AskAIs {
             }
         }
         return Reply(name: "AI", text: "", error: errors.isEmpty ? "還沒填金鑰" : errors.joined(separator: "\n"))
+    }
+
+    // MARK: - ChatGPT、Grok、DeepSeek、Groq（跟 OpenAI 一樣的格式）
+
+    static let retryCodes = [404, 429, 500, 503, 529].map(httpError)
+
+    static func compatible(_ p: Provider, system: String, user: String, history: [Turn] = []) async -> Reply {
+        var last = Reply(name: p.name, text: "", error: "沒有回答")
+        for m in p.models {
+            let r = await chatCompletion(p.endpoint, model: m, name: p.name, system: system, user: user, key: p.key, history: history)
+            guard let err = r.error, retryCodes.contains(where: { err.hasPrefix($0) }) else { return r }
+            last = r
+        }
+        return last
+    }
+
+    static func chatCompletion(_ endpoint: String, model: String, name: String, system: String, user: String, key: String,
+                               history: [Turn] = []) async -> Reply {
+        guard let url = URL(string: endpoint) else { return Reply(name: name, text: "", error: "網址錯誤") }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let past: [[String: Any]] = history.map { ["role": $0.fromUser ? "user" : "assistant", "content": $0.text] }
+        let body: [String: Any] = ["model": model,
+                                   "messages": [["role": "system", "content": system]] + past + [["role": "user", "content": user]]]
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        let (code, data, failure) = await sendDetailed(req)
+        guard code == 200 else { return Reply(name: name, text: "", error: explain(code: code, data: data, failure: failure)) }
+        guard let t = openRouterText(data) else {
+            return Reply(name: name, text: "", error: serverMessage(data).map { "沒有回答：" + WebSearch.clip($0, 160) } ?? "沒有回答")
+        }
+        return Reply(name: name, text: t, error: nil)
+    }
+
+    // MARK: - Claude（Anthropic 官方 API）
+
+    static func claude(system: String, user: String, key: String, history: [Turn] = []) async -> Reply {
+        var last = Reply(name: "Claude", text: "", error: "沒有回答")
+        for model in ["claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5"] {
+            guard let url = URL(string: "https://api.anthropic.com/v1/messages") else { break }
+            var req = URLRequest(url: url)
+            req.httpMethod = "POST"
+            req.setValue(key, forHTTPHeaderField: "x-api-key")
+            req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            let msgs: [[String: Any]] = history.map { ["role": $0.fromUser ? "user" : "assistant", "content": $0.text] }
+                + [["role": "user", "content": user]]
+            let body: [String: Any] = ["model": model, "max_tokens": 1500, "system": system, "messages": msgs]
+            req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+            let (code, data, failure) = await sendDetailed(req)
+            if code == 200, let t = claudeText(data) { return Reply(name: "Claude", text: t, error: nil) }
+            last = Reply(name: "Claude", text: "", error: code == 200 ? "沒有回答" : explain(code: code, data: data, failure: failure))
+            guard let err = last.error, retryCodes.contains(where: { err.hasPrefix($0) }) else { return last }
+        }
+        return last
+    }
+
+    static func claudeText(_ d: Data?) -> String? {
+        guard let d, let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
+              let content = o["content"] as? [[String: Any]] else { return nil }
+        let t = content.compactMap { $0["type"] as? String == "text" ? $0["text"] as? String : nil }.joined()
+        return t.isEmpty ? nil : t
     }
 
     // MARK: - OpenRouter
@@ -269,7 +407,7 @@ public enum AskAIs {
         case 404: return "找不到這個模型"
         case 429: return "今天的免費次數用完了，或問得太頻繁"
         case 500: return "對方伺服器出錯"
-        case 503: return "對方忙線中（用的人太多）"
+        case 503, 529: return "對方忙線中（用的人太多）"
         default: return "沒回應（\(code)）"
         }
     }

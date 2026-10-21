@@ -78,11 +78,23 @@ struct SettingsView: View {
                    "NineSun busca primero en la web; si no está seguro o hay que razonar, pregunta a otras IA a la vez, las compara, las verifica y te da su conclusión. Usa APIs oficiales; las claves se quedan en este teléfono.",
                    "NineSun cerca prima sul web; se non è sicuro o serve ragionare, chiede ad altre IA insieme, le confronta, le verifica e ti dà la sua conclusione. Usa API ufficiali; le chiavi restano su questo telefono."))
                 .font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
-            keyField(T("Gemini 金鑰（AIza…）", "Gemini key (AIza…)", "Clave de Gemini (AIza…)", "Chiave Gemini (AIza…)"), $vm.geminiKey, secure: true)
-            Text(T("免費申請：aistudio.google.com → Get API key → 建立 API 金鑰 → 複製，貼到上面這一格。",
-                   "Free: aistudio.google.com → Get API key → Create API key → copy and paste it above.",
-                   "Gratis: aistudio.google.com → Get API key → Crear clave → cópiala aquí arriba.",
-                   "Gratis: aistudio.google.com → Get API key → Crea chiave → copiala qui sopra."))
+            TextField(T("AI 金鑰：一行一把，可以貼好幾把", "AI keys: one per line, paste as many as you like",
+                        "Claves de IA: una por línea", "Chiavi IA: una per riga"), text: $vm.aiKeys, axis: .vertical)
+                .lineLimit(2...6)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                .foregroundColor(Theme.paper)
+                .padding(10)
+                .background(Theme.panelHi)
+            let found = vm.aiConfig.names
+            Text(found.isEmpty ? T("還沒認出任何金鑰", "No keys recognised yet", "Aún no hay claves", "Nessuna chiave ancora")
+                               : T("✓ 認出：", "✓ Recognised: ", "✓ Reconocidas: ", "✓ Riconosciute: ") + found.joined(separator: "、"))
+                .font(.system(size: 12, weight: .bold)).foregroundColor(found.isEmpty ? Theme.dim : Theme.hazard)
+            Text(T("照開頭自動認：AIza…＝Gemini（aistudio.google.com 免費）、sk-ant-…＝Claude、sk-proj-…＝ChatGPT、xai-…＝Grok、gsk_…＝Groq（免費）、sk-or-…＝OpenRouter（一把可以問很多家）、DeepSeek 的 sk-…。有好幾把時每一家都會問。",
+                   "Detected by prefix: AIza…=Gemini (free at aistudio.google.com), sk-ant-…=Claude, sk-proj-…=ChatGPT, xai-…=Grok, gsk_…=Groq (free), sk-or-…=OpenRouter, DeepSeek sk-….",
+                   "Se detectan por el inicio: AIza…=Gemini, sk-ant-…=Claude, sk-proj-…=ChatGPT, xai-…=Grok, gsk_…=Groq, sk-or-…=OpenRouter, DeepSeek sk-….",
+                   "Riconosciute dall'inizio: AIza…=Gemini, sk-ant-…=Claude, sk-proj-…=ChatGPT, xai-…=Grok, gsk_…=Groq, sk-or-…=OpenRouter, DeepSeek sk-…."))
                 .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
             button(vm.aiTesting ? T("測試中…", "Testing…", "Probando…", "Test in corso…") : T("測試連線", "Test connection", "Probar conexión", "Prova connessione"),
                    color: Theme.hazard) { if !vm.aiTesting { vm.testAI() } }
@@ -91,10 +103,10 @@ struct SettingsView: View {
                     .textSelection(.enabled)
             }
             Toggle(isOn: $vm.aiAlways) {
-                label(T("全部交給 AI 回答（Gemini）", "Let the AI answer everything (Gemini)", "Que la IA responda todo (Gemini)", "Lascia rispondere l'IA a tutto (Gemini)"), "")
+                label(T("全部交給 AI 回答", "Let the AIs answer everything", "Que la IA responda todo", "Lascia rispondere l'IA a tutto"), "")
             }
             .tint(Theme.hazard)
-            Text(T("打開：所有的話都由 Gemini（或其他 AI）回答，問題會先上網查一下給它參考；算命、命盤、生日還是 NineSun 自己算。關掉：NineSun 自己回答。",
+            Text(T("打開：所有的話都由你填了金鑰的 AI 回答（Claude、ChatGPT、Grok、Gemini…，哪一家先回答就用哪一家），問題會先上網查一下給它參考；算命、命盤、生日還是 NineSun 自己算。關掉：NineSun 自己回答。",
                    "On: Gemini (or another AI) answers everything, with a quick web search for questions; fortunes and charts stay with NineSun. Off: NineSun answers.",
                    "Activado: Gemini (u otra IA) responde todo, con una búsqueda rápida para las preguntas; las lecturas siguen con NineSun. Desactivado: responde NineSun.",
                    "Attivo: Gemini (o un'altra IA) risponde a tutto, con una ricerca veloce per le domande; le letture restano a NineSun. Disattivo: risponde NineSun."))

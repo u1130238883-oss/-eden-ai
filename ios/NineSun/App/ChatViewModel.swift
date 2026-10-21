@@ -12,9 +12,17 @@ final class ChatViewModel: ObservableObject {
     /// 請其他 AI 幫忙：金鑰存在鑰匙圈，其他設定存在 UserDefaults
     @Published var openRouterKey = KeyStore.get("openrouter") { didSet { KeyStore.set("openrouter", openRouterKey.trimmingCharacters(in: .whitespacesAndNewlines)) } }
     @Published var geminiKey = KeyStore.get("gemini") { didSet { KeyStore.set("gemini", geminiKey.trimmingCharacters(in: .whitespacesAndNewlines)) } }
+    /// 各家 AI 的金鑰，一行一把（Gemini、Claude、ChatGPT、Grok、DeepSeek、Groq、OpenRouter 都可以，照開頭自動認）
+    @Published var aiKeys: String = ChatViewModel.initialKeys() { didSet { KeyStore.set("aikeys", aiKeys.trimmingCharacters(in: .whitespacesAndNewlines)) } }
+    /// 舊版分開存的 Gemini、OpenRouter 金鑰搬過來
+    static func initialKeys() -> String {
+        let k = KeyStore.get("aikeys")
+        if !k.isEmpty { return k }
+        return [KeyStore.get("gemini"), KeyStore.get("openrouter")].filter { !$0.isEmpty }.joined(separator: "\n")
+    }
     @Published var aiAuto = true { didSet { save(aiAuto, "aiAuto") } }
     @Published var aiModels = "" { didSet { save(aiModels, "aiModels") } }
-    /// 打開：除了算命、命盤，所有的話都交給 Gemini（或其他 AI）回答；關掉：NineSun 自己回答
+    /// 打開：除了算命、命盤，所有的話都交給其他 AI 回答；關掉：NineSun 自己回答
     @Published var aiAlways = false { didSet { save(aiAlways, "aiAlways") } }
     /// 設定頁「測試連線」的結果
     @Published var aiTestResult = ""
@@ -29,8 +37,7 @@ final class ChatViewModel: ObservableObject {
         }
     }
     var aiConfig: AskAIs.Config {
-        AskAIs.Config(openRouterKey: openRouterKey, geminiKey: geminiKey,
-                      models: aiModels.components(separatedBy: CharacterSet(charactersIn: ",，\n ")))
+        AskAIs.Config(keys: aiKeys.components(separatedBy: CharacterSet(charactersIn: "\n ,，")))
     }
     @Published var options = SamplingOptions() { didSet { save(options, "options"); applyOptions() } }
     @Published var profile = UserProfile() { didSet { save(profile, "profile") } }
@@ -173,7 +180,7 @@ final class ChatViewModel: ObservableObject {
             if aiConfig.enabled {
                 lookupWeb(q, L, forceAI: true)
             } else {
-                finish(ChatTurn(role: .echo, text: "還沒設定 AI 的金鑰：到設定頁的「請其他 AI 幫忙」填入 Gemini 金鑰（aistudio.google.com 免費申請），我就能問 Gemini、整理後給你。", source: .tool))
+                finish(ChatTurn(role: .echo, text: "還沒設定 AI 的金鑰：到設定頁的「請其他 AI 幫忙」填入 AI 金鑰（Gemini、Claude、ChatGPT、Grok 等都可以），我就能問它們、整理後給你。", source: .tool))
             }
             return
         }
@@ -304,7 +311,7 @@ final class ChatViewModel: ObservableObject {
             // 沒設定其他 AI、這題又沒把握：說一次可以怎麼讓答案更可靠（一次就好，不一直講）
             var hinted = false
             if !quietIfNothing, offerAI, !r.confident, AskAIs.shouldAsk(r) {
-                text += "\n\n💡 這題我沒什麼把握。到設定頁「請其他 AI 幫忙」填一把 Gemini 金鑰（aistudio.google.com 免費申請），以後遇到沒把握的題目，我會問 Gemini、查證後把結論給你。"
+                text += "\n\n💡 這題我沒什麼把握。到設定頁「請其他 AI 幫忙」填 AI 金鑰（Gemini 可以免費申請；Claude、ChatGPT、Grok 也行），以後遇到沒把握的題目，我會問它們、查證後把結論給你。"
                 hinted = true
             }
             // tokens 設成空的，泡泡才會出現 👍／👎；query 記下問題，回饋時知道是哪一類問題
