@@ -42,6 +42,14 @@ public enum WebAgent {
         public var debug: String = ""
         /// 找到的東西有沒有真的回答問題（沒有的話，補充時就不要再貼上來）
         public var answered: Bool = true
+        /// 有沒有把握：有答到，而且把握程度不是「低」（沒把握時才去問其他 AI）
+        public var confident: Bool = false
+        /// 簡短的答案（「答案：X」的 X），拿來跟其他 AI 的說法對照
+        public var shortAnswer: String?
+        /// 網路上讀到、最相關的幾句話（附網站），拿來查證其他 AI 的說法
+        public var evidence: [String] = []
+        /// 問題要的是什麼（number、reason、steps、compare、open……）
+        public var want: String?
     }
 
     static let kindName: [Kind: String] = [
@@ -708,6 +716,11 @@ public enum WebAgent {
             res.debug = String(("pages=" + parts.joined(separator: " || ") + " LIST " + Understanding.lastListDebug).prefix(2500))
         }
         res.answered = solved?.ok ?? true
+        res.confident = (solved?.ok ?? !answer.isEmpty) && !confidence.hasPrefix("低") && !confidence.hasPrefix("low")
+            && !answer.hasPrefix("（我讀到的資料沒有直接講明")
+        res.shortAnswer = Understanding.match(answer, #"答案：([^（。\n⚠]+)"#)?[1].trimmingCharacters(in: .whitespaces)
+        res.evidence = Array(ranked.prefix(8).map { WebSearch.clip($0.text, 160) + "（\($0.host)）" })
+        res.want = fr.map { SelfTuning.kind($0.want) }
         return res
     }
 

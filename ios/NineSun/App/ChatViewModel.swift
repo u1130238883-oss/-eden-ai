@@ -9,6 +9,15 @@ final class ChatViewModel: ObservableObject {
     @Published var turns: [ChatTurn] = []
     @Published var streaming: String?
     @Published var thinking = false
+    /// 請其他 AI 幫忙：金鑰存在鑰匙圈，其他設定存在 UserDefaults
+    @Published var openRouterKey = KeyStore.get("openrouter") { didSet { KeyStore.set("openrouter", openRouterKey.trimmingCharacters(in: .whitespacesAndNewlines)) } }
+    @Published var geminiKey = KeyStore.get("gemini") { didSet { KeyStore.set("gemini", geminiKey.trimmingCharacters(in: .whitespacesAndNewlines)) } }
+    @Published var aiAuto = true { didSet { save(aiAuto, "aiAuto") } }
+    @Published var aiModels = "" { didSet { save(aiModels, "aiModels") } }
+    var aiConfig: AskAIs.Config {
+        AskAIs.Config(openRouterKey: openRouterKey, geminiKey: geminiKey,
+                      models: aiModels.components(separatedBy: CharacterSet(charactersIn: ",，\n ")))
+    }
     @Published var options = SamplingOptions() { didSet { save(options, "options"); applyOptions() } }
     @Published var profile = UserProfile() { didSet { save(profile, "profile") } }
     @Published var rules = RuleBook() { didSet { save(rules, "rules") } }
@@ -42,6 +51,8 @@ final class ChatViewModel: ObservableObject {
         rules = load("rules") ?? RuleBook()
         language = load("language") ?? UILang.systemDefault
         autoDetect = load("autoDetect") ?? true
+        aiAuto = load("aiAuto") ?? true
+        aiModels = load("aiModels") ?? ""
         UILang.current = language
         // 以前的版本會把上網查過的答案存在手機裡；現在每次都即時上網查，舊檔刪掉
         try? FileManager.default.removeItem(at: Self.docs.appendingPathComponent("ninesun-webmemory.json"))
@@ -128,6 +139,17 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
+        // 「問AI …」：一定要問其他 AI（先自己上網查，再同時問幾家、整理、查證）
+        if let q = askAIQuestion(text) {
+            let L = autoDetect ? Lang.detect(q, fallback: language) : language
+            if aiConfig.enabled {
+                lookupWeb(q, L, forceAI: true)
+            } else {
+                finish(ChatTurn(role: .echo, text: "還沒設定其他 AI 的金鑰：到設定頁的「請其他 AI 幫忙」填入 OpenRouter 金鑰（免費申請），我就能同時問幾家 AI、整理後給你。", source: .tool))
+            }
+            return
+        }
+
         // 知識筆記：看看它學到了什麼
         if ["知識筆記", "你的筆記", "你學到了什麼", "你學到什麼"].contains(where: { text.contains($0) }) {
             finish(ChatTurn(role: .echo, text: Notebook.shared.summary(), source: .tool))
@@ -179,19 +201,43 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
+    /// 「問AI 量子電腦是什麼」→ 要問的問題（沒說的話用上一個問題）
+    private func askAIQuestion(_ text: String) -> String? {
+        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lower = t.lowercased()
+        let prefixes = ["問其他ai", "問其他 ai", "問別的ai", "問別的 ai", "問ai", "問 ai", "ask other ais", "ask other ai", "ask ai"]
+        guard let p = prefixes.first(where: { lower.hasPrefix($0) }) else { return nil }
+        var rest = String(t.dropFirst(p.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+        for w in ["：", ":", "，", ","] where rest.hasPrefix(w) { rest.removeFirst(w.count) }
+        rest = rest.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !rest.isEmpty { return rest }
+        if let q = lastWebQuestion { return q }
+        return turns.dropLast().last(where: { $0.role == .user })?.text
+    }
+
     /// 問題交給 NineSun 自己上網找（理解 → 搜尋 → 讀網頁 → 比對 → 回答），每次都即時查
-    private func lookupWeb(_ q: String, _ L: Lang, quietIfNothing: Bool = false, avoid: [String] = [], reflect: Bool = false) {
+    /// forceAI：「問AI …」——不管自己有沒有把握，都同時問其他 AI
+    private func lookupWeb(_ q: String, _ L: Lang, quietIfNothing: Bool = false, avoid: [String] = [], reflect: Bool = false,
+                           forceAI: Bool = false) {
         let book = rules
         thinking = true
         lastWebQuestion = q
         let asker = profile.birthday.map { Destiny($0).type }
+        let cfg = aiConfig, auto = aiAuto
         Task { [self] in
             let r = await WebAgent.run(q, facts: nil, lang: L, avoid: avoid, reflect: reflect, asker: asker)
             if quietIfNothing && (!r.found || !r.answered) {
                 await MainActor.run { self.saveFile(SelfTuning.shared.state, Self.tuningURL); self.thinking = false; self.streaming = nil; self.saveHistory() }
                 return
             }
-            let text = quietIfNothing ? "我再上網查了一下，補充幾個資料：\n\n" + r.text : r.text
+            var text = quietIfNothing ? "我再上網查了一下，補充幾個資料：\n\n" + r.text : r.text
+            // 沒把握或要推理的題目：同時問其他 AI，整理各家說法、拿網路資料查證後給結論（要先設定金鑰）
+            if !quietIfNothing, cfg.enabled, forceAI || (auto && AskAIs.shouldAsk(r)) {
+                await MainActor.run { self.streaming = "🤖 正在同時問其他 AI，整理、查證中…" }
+                let replies = await AskAIs.ask(q, evidence: r.evidence, lang: L, config: cfg)
+                let summary = AskAIs.summarize(question: q, replies: replies, web: r)
+                text = r.confident ? text + "\n\n" + summary : summary + "\n\n———\n📌 我自己在網路上查到的：\n\n" + text
+            }
             // tokens 設成空的，泡泡才會出現 👍／👎；query 記下問題，回饋時知道是哪一類問題
             var turn = ChatTurn(role: .echo, text: book.enforce(text), source: .knowledge, card: r.card, tokens: [])
             turn.query = q

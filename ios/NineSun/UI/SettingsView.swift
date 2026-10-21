@@ -31,6 +31,7 @@ struct SettingsView: View {
 
                     languageSection
                     profileSection
+                    aiSection
                     section(T("記憶", "Memory", "Memoria", "Memoria") + " · MEMORY") {
                         button(T("清空對話", "Clear chat", "Borrar chat", "Cancella chat"), color: Theme.neonPink) { confirmClear = true }
                     }
@@ -66,6 +67,52 @@ struct SettingsView: View {
                    "Attivo: NineSun risponde nella lingua di ogni messaggio; disattivo: usa sempre la lingua dell'interfaccia."))
                 .font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
         }
+    }
+
+    // MARK: - 請其他 AI 幫忙
+
+    private var aiSection: some View {
+        section(T("請其他 AI 幫忙", "Ask other AIs", "Preguntar a otras IA", "Chiedi ad altre IA") + " · OTHER AIs") {
+            Text(T("NineSun 先自己上網查；沒把握或要推理的題目，會同時問其他 AI，整理各家說法、拿網路資料查證後給你結論。用各家正式的 API，金鑰只存在這支手機。",
+                   "NineSun searches the web first; when it isn't sure, or the question needs reasoning, it asks other AIs at once, compares them, checks them against the web and gives you its conclusion. Uses official APIs; keys stay on this phone.",
+                   "NineSun busca primero en la web; si no está seguro o hay que razonar, pregunta a otras IA a la vez, las compara, las verifica y te da su conclusión. Usa APIs oficiales; las claves se quedan en este teléfono.",
+                   "NineSun cerca prima sul web; se non è sicuro o serve ragionare, chiede ad altre IA insieme, le confronta, le verifica e ti dà la sua conclusione. Usa API ufficiali; le chiavi restano su questo telefono."))
+                .font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
+            keyField(T("OpenRouter 金鑰（sk-or-…）", "OpenRouter key (sk-or-…)", "Clave de OpenRouter (sk-or-…)", "Chiave OpenRouter (sk-or-…)"), $vm.openRouterKey, secure: true)
+            Text(T("免費申請：openrouter.ai → 登入 → Keys → Create Key。沒指定模型時，NineSun 自動挑三個不同家的免費模型（每天有次數上限）；帳戶儲值後，可以在下面指定 Claude、Grok 等付費模型。",
+                   "Free: openrouter.ai → sign in → Keys → Create Key. With no models set, NineSun picks three free models from different makers (daily limits); add credit to name paid models such as Claude or Grok below.",
+                   "Gratis: openrouter.ai → inicia sesión → Keys → Create Key. Sin modelos indicados, NineSun elige tres modelos gratuitos de distintas empresas (con límite diario); con saldo puedes indicar Claude, Grok, etc.",
+                   "Gratis: openrouter.ai → accedi → Keys → Create Key. Senza modelli indicati, NineSun sceglie tre modelli gratuiti di aziende diverse (limite giornaliero); con credito puoi indicare Claude, Grok, ecc."))
+                .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
+            keyField(T("指定模型（選填，逗號分隔；名稱以 OpenRouter 網站為準）", "Models (optional, comma-separated, as listed on OpenRouter)",
+                       "Modelos (opcional, separados por comas, como en OpenRouter)", "Modelli (facoltativo, separati da virgole, come su OpenRouter)"), $vm.aiModels, secure: false)
+            keyField(T("Gemini 金鑰（選用）", "Gemini key (optional)", "Clave de Gemini (opcional)", "Chiave Gemini (facoltativa)"), $vm.geminiKey, secure: true)
+            Toggle(isOn: $vm.aiAuto) {
+                label(T("沒把握時自動問", "Ask automatically when unsure", "Preguntar solo cuando dude", "Chiedi da solo quando è incerto"), "")
+            }
+            .tint(Theme.hazard)
+            Text(T("問題會送到這些 AI 公司。在對話裡說「問AI 你的問題」，也可以直接叫它問。",
+                   "Your questions are sent to these AI companies. You can also say “ask AI <question>” in the chat.",
+                   "Tus preguntas se envían a estas empresas de IA. También puedes decir «ask AI <pregunta>» en el chat.",
+                   "Le domande vengono inviate a queste aziende di IA. Puoi anche scrivere «ask AI <domanda>» nella chat."))
+                .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
+        }
+    }
+
+    private func keyField(_ placeholder: String, _ text: Binding<String>, secure: Bool) -> some View {
+        Group {
+            if secure {
+                SecureField(placeholder, text: text)
+            } else {
+                TextField(placeholder, text: text)
+            }
+        }
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
+        .font(.system(size: 13, weight: .medium))
+        .foregroundColor(Theme.paper)
+        .padding(10)
+        .background(Theme.panelHi)
     }
 
     // MARK: - 命主
