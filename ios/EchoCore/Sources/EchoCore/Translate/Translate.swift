@@ -4,7 +4,7 @@ import FoundationNetworking
 #endif
 
 /// 翻譯：聽懂「蘋果用西班牙文怎麼說」「把這句翻成英文：…」「gracias 是什麼意思」，
-/// 單字先查手機裡的字典（離線、馬上有答案），句子交給手機內建的翻譯（App 那邊）、AI 或線上翻譯。
+/// 交給手機內建的翻譯（App 那邊）、AI 或線上翻譯（日常的東西不在 App 裡存固定答案）。
 public enum Translate {
     public enum Code: String, CaseIterable, Sendable {
         case zh = "zh-Hant", zhHans = "zh-Hans", en, es, it, ar, ja, ko, fr, de, ru, pt
@@ -27,7 +27,7 @@ public enum Translate {
             }
         }
 
-        /// 離線字典裡用的語言代號
+        /// 同一種語言（繁中、簡中都算中文）
         var lex: String? {
             switch self {
             case .zh, .zhHans: return "zh"
@@ -192,7 +192,7 @@ public enum Translate {
     static let enHints: Set<String> = ["the", "a", "an", "is", "are", "i", "you", "he", "she", "it", "we", "they", "what", "how", "where", "thank",
                                        "thanks", "hello", "good", "morning", "please", "love", "my", "your", "and", "of", "to", "in", "do", "does", "this", "that"]
 
-    public static func detect(_ text: String, lexicon: Lexicon? = nil) -> Code {
+    public static func detect(_ text: String) -> Code {
         var cjk = 0, kana = 0, hangul = 0, arabic = 0, cyr = 0
         for s in text.unicodeScalars {
             switch s.value {
@@ -221,27 +221,10 @@ public enum Translate {
             if "ñ¿¡áíóú".contains(c) { es += 2 }
             if "èìòù".contains(c) { it += 2 }
         }
-        // 單字：看它在哪個語言的字典裡（比較常用的優先）
-        if let lex = lexicon, words.count <= 3, es == it, it == en {
-            let w = words.joined(separator: " ")
-            let found = ["en", "es", "it"].compactMap { l in lex.lookup(w, lang: l).map { (l, $0.rank) } }
-            if let best = found.min(by: { $0.1 < $1.1 }) { return Code(rawValue: best.0) ?? .en }
-        }
         if es > it && es > en { return .es }
         if it > es && it > en { return .it }
         return .en
     }
-
-    /// 短到可以查字典（一個詞或兩三個字的片語）
-    public static func isWordish(_ text: String) -> Bool {
-        let t = clean(text)
-        if t.contains(where: { "。！？.!?，,；;".contains($0) }) { return false }
-        let cjk = t.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }.count
-        if cjk > 0 { return t.count <= 6 }
-        return t.split(separator: " ").count <= 3
-    }
-
-    // MARK: - 查字典
 
     public struct Result: Equatable, Sendable {
         /// 翻出來的那一句（字典的最佳答案或整句翻譯）
@@ -260,80 +243,6 @@ public enum Translate {
         }
     }
 
-    /// 單字、短片語查字典；查不到回 nil（交給整句翻譯）
-    public static func dictionary(_ r: Request, lexicon lex: Lexicon) -> Result? {
-        let text = clean(r.text)
-        guard isWordish(text) else { return nil }
-        let src = r.source ?? detect(text, lexicon: lex)
-        guard let sl = src.lex, let tl = r.target.lex, sl != tl, let e = lex.lookup(text, lang: sl) else { return nil }
-        let viaName = "手機裡的字典"
-        var res: Result
-        switch (sl, tl) {
-        case ("en", "zh"):
-            // 英文 → 中文：ECDICT 直接有中文
-            let first = firstChinese(e.gloss)
-            res = Result(text: first, pron: e.pron, notes: [e.gloss], source: src, via: viaName)
-        case (_, "en"):
-            let senses = e.senses
-            res = Result(text: Lexicon.heads(senses.first ?? "").prefix(2).joined(separator: ", "), pron: e.pron,
-                         notes: senses.map { "· " + $0 }, source: src, via: viaName)
-            if sl == "zh" { res.text = senses.first.map { Lexicon.heads($0).first ?? $0 } ?? "" }
-        case (_, "zh"):
-            // 西班牙文、義大利文、阿拉伯文 → 英文 → 中文
-            let senses = e.senses
-            let eng = senses.first.map { Lexicon.heads($0) } ?? []
-            let zh = eng.lazy.compactMap { lex.lookup($0, lang: "en") }.first.map { firstChinese($0.gloss) }
-            res = Result(text: zh ?? eng.first ?? "", pron: e.pron, notes: senses.map { "· " + $0 + englishToChinese($0, lex) },
-                         source: src, via: viaName)
-        default:
-            // 中文／英文／其他 → 西班牙文、義大利文、阿拉伯文：先找英文的說法，再反查
-            let eng: [String]
-            var pos = e.pos
-            if sl == "en" {
-                eng = [text.lowercased()]
-                pos = englishPOS(e.gloss)
-            } else {
-                eng = Lexicon.heads(e.senses.first ?? "")
-            }
-            let hits = lex.find(english: eng, in: tl, pos: pos)
-            guard let best = hits.first else { return nil }
-            res = Result(text: best.word, pron: best.pron, notes: [], source: src, via: viaName)
-            res.alternatives = hits.dropFirst().prefix(2).map(\.word)
-            res.notes = best.senses.prefix(2).map { "· " + $0 }
-            if sl == "zh", !e.pron.isEmpty { res.notes.insert("「\(e.word)」\(e.pron)：\(e.senses.first ?? "")", at: 0) }
-        }
-        guard !res.text.isEmpty else { return nil }
-        return res
-    }
-
-    /// 「n. 蘋果, 傢伙；…」→「蘋果」
-    static func firstChinese(_ gloss: String) -> String {
-        var s = gloss.components(separatedBy: "；").first ?? gloss
-        s = s.replacingOccurrences(of: #"^[a-z]+\.\s*"#, with: "", options: .regularExpression)
-        s = s.replacingOccurrences(of: #"[（(][^）)]*[）)]"#, with: "", options: .regularExpression)
-        return (s.components(separatedBy: CharacterSet(charactersIn: ",，;、")).first ?? s).trimmingCharacters(in: .whitespaces)
-    }
-
-    /// ECDICT 的詞性（n. vt. adj.）→ 維基詞典的（noun verb adj）
-    static func englishPOS(_ gloss: String) -> String {
-        let p = gloss.prefix { $0 != "." }
-        switch p {
-        case "n": return "noun"
-        case "v", "vt", "vi": return "verb"
-        case "a", "adj": return "adj"
-        case "ad", "adv": return "adv"
-        case "int", "interj": return "intj"
-        default: return ""
-        }
-    }
-
-    /// 英文意思後面補一個中文：「apple (fruit)」→「（蘋果）」
-    static func englishToChinese(_ sense: String, _ lex: Lexicon) -> String {
-        guard let h = Lexicon.heads(sense).first, let e = lex.lookup(h, lang: "en") else { return "" }
-        let zh = firstChinese(e.gloss)
-        return zh.isEmpty ? "" : "（\(zh)）"
-    }
-
     // MARK: - 寫成回答
 
     public static func reply(_ r: Request, _ res: Result) -> String {
@@ -348,7 +257,7 @@ public enum Translate {
 
     /// MyMemory 的免費翻譯服務（不需要金鑰）
     public static func online(_ r: Request) async -> Result? {
-        let src = r.source ?? detect(r.text, lexicon: Lexicon.shared)
+        let src = r.source ?? detect(r.text)
         guard src != r.target else { return nil }
         var c = URLComponents(string: "https://api.mymemory.translated.net/get")!
         c.queryItems = [.init(name: "q", value: r.text), .init(name: "langpair", value: "\(src.memory)|\(r.target.memory)")]

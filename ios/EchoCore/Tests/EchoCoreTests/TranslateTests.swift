@@ -1,10 +1,8 @@
 import XCTest
 @testable import EchoCore
 
-/// 翻譯：聽懂要翻什麼、翻成哪種語言；單字用手機裡的字典
+/// 翻譯：聽懂要翻什麼、翻成哪種語言
 final class TranslateTests: XCTestCase {
-    static let lexicon: Lexicon? = try? Lexicon(text: String(contentsOf: EchoCoreTests.resources.appendingPathComponent("lexicon.tsv"), encoding: .utf8))
-
     func testUnderstandsTranslationRequests() {
         func p(_ s: String) -> Translate.Request? { Translate.parse(s) }
         XCTAssertEqual(p("蘋果用西班牙文怎麼說"), .init(text: "蘋果", source: nil, target: .es))
@@ -38,33 +36,8 @@ final class TranslateTests: XCTestCase {
         XCTAssertEqual(Translate.detect("ありがとう"), .ja)
     }
 
-    func testDictionaryTranslatesWordsBetweenFiveLanguages() throws {
-        let lex = try XCTUnwrap(Self.lexicon)
-        XCTAssertGreaterThan(lex.count, 100_000)
-        func t(_ s: String, _ to: Translate.Code) -> Translate.Result? {
-            Translate.dictionary(.init(text: s, source: nil, target: to), lexicon: lex)
-        }
-        XCTAssertEqual(t("蘋果", .es)?.text, "manzana")
-        XCTAssertEqual(t("蘋果", .it)?.text, "mela")
-        XCTAssertEqual(t("蘋果", .en)?.text, "apple")
-        XCTAssertEqual(t("蘋果", .en)?.pron, "píngguǒ")
-        XCTAssertEqual(t("謝謝", .es)?.text, "gracias")
-        XCTAssertEqual(t("謝謝", .it)?.text, "grazie")
-        XCTAssertEqual(t("謝謝", .ar)?.text, "شكرا")
-        XCTAssertEqual(t("謝謝", .ar)?.pron, "šukran")
-        XCTAssertEqual(t("早安", .es)?.text.hasPrefix("buen"), true)
-        XCTAssertEqual(t("apple", .zh)?.text, "蘋果")
-        XCTAssertEqual(t("computer", .zh)?.text, "電腦")
-        XCTAssertEqual(t("book", .ar)?.text, "كتاب")
-        XCTAssertEqual(t("manzana", .zh)?.text, "蘋果")
-        XCTAssertEqual(t("gracias", .en)?.text.contains("thank"), true)
-        // 動詞變化形：comiendo → comer → eat → 吃
-        XCTAssertEqual(t("comiendo", .en)?.text, "eat")
-        XCTAssertEqual(t("mangiare", .zh)?.text, "吃")
-        XCTAssertNotNil(t("ciao", .zh))
-        // 整句不查字典（交給整句翻譯）
-        XCTAssertNil(t("今天天氣很好，我們去公園。", .en))
-        let r = Translate.reply(.init(text: "謝謝", source: nil, target: .ar), try XCTUnwrap(t("謝謝", .ar)))
-        XCTAssertTrue(r.contains("繁體中文 → 阿拉伯文") && r.contains("شكرا"), r)
+    func testReplyFormat() {
+        let r = Translate.reply(.init(text: "謝謝", source: nil, target: .ar), .init(text: "شكرا", pron: "šukran", source: .zh, via: "AI"))
+        XCTAssertTrue(r.contains("繁體中文 → 阿拉伯文") && r.contains("شكرا") && r.contains("šukran"), r)
     }
 }

@@ -41,7 +41,6 @@ public func ns_start() -> Int32 {
     guard let w = files[0], let m = files[1], let model = try? EchoModel(weights: w, metaJSON: m) else { return 0 }
     let e = EchoEngine(model: model)
     if let d = files[2] { e.i18n = try? I18N(json: d) }
-    if let d = files[3] { e.chatBank = try? ChatBank(json: d) }
     if let d = files[4] { e.core = try? PalaceCore(json: d) }
     for (i, L) in [Lang.zh, .en, .es, .it].enumerated() {
         if let d = files[Int32(10 + i)] { e.knowledge[L] = try? KnowledgeBase(json: d, lang: L) }

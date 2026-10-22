@@ -35,7 +35,6 @@ final class EchoCoreTests: XCTestCase {
         }
         e.core = try PalaceCore(json: resource("palace_lexicon.json"))
         e.i18n = try I18N(json: resource("i18n.json"))
-        e.chatBank = try ChatBank(json: resource("chat_bank.json"))
         return e
     }
 
@@ -576,18 +575,16 @@ final class EchoCoreTests: XCTestCase {
         }
     }
 
-    func testChatBankFallbackAndEvolution() throws {
+    func testFallbackAndEvolution() throws {
         let engine = try makeEngine(seed: 2)
         let ctx = EchoEngine.Context(now: date(2026, 5, 1, 10))
 
         let who = engine.reply(to: "你是誰", context: ctx)
         XCTAssertTrue(who.turn.text.contains("NineSun"), who.turn.text)
 
-        // 手寫對話庫
+        // 問 NineSun 自己的事：不拿去上網查（日常問題在 App 裡交給 AI，不存固定答案）
         let song = engine.reply(to: "你會唱歌嗎", context: ctx)
-        XCTAssertTrue(song.turn.text.contains("嗶嗶聲") || song.turn.text.contains("燈光效果"), song.turn.text)
-        XCTAssertNotNil(song.turn.variant)
-        XCTAssertNotNil(song.turn.tokens)   // 有 👍／👎
+        XCTAssertNil(song.webQuery, song.turn.text)
 
         // 本地不會的就上網查，不亂編
         let unknown = engine.reply(to: "請解釋量子力學的測不準原理", context: ctx)
@@ -721,22 +718,10 @@ final class EchoCoreTests: XCTestCase {
         let whyT = engine.reply(to: "為什麼", history: [ChatTurn(role: .user, text: "我今年感情運如何"), topicR.turn], context: ctx).turn.text
         if whyT.contains("r12") || whyT.contains("年柱") || !whyT.contains("根源") { fails.append("✗ 為什麼還在講算法：\(whyT.prefix(80))") }
 
-        // 思路庫：問句要用寫好的思路回答，不能被當成閒聊用宮位亂回
-        for (q, must) in [("所以我要怎樣要求克勞德幫我改進我的這個AI才能與克勞德給出的思路和答案相近啊", "先確定一件事"),
-                          ("怎麼樣才能讓你的回答跟Claude差不多", "400 萬參數"), ("你比Claude笨在哪裡", "差別"),
-                          ("你可以上網找資料嗎", "規劃"), ("我最近很想離職怎麼辦", "逃離"), ("老闆不給我加薪怎麼辦", "證據"),
-                          ("每個月都存不了錢要怎麼辦", "先分好"), ("我做事一直拖怎麼辦", "5 分鐘"), ("晚上一直睡不著覺怎麼辦", "20 分鐘"),
-                          ("英文要怎麼學比較快", "每天"), ("算命到底可不可以信", "趨勢"), ("八字跟九型十二宮哪一個比較準", "角度")] {
+        // 日常問題不存固定答案：交給上網查（App 有 AI 金鑰時交給 AI，用 NineSun 的個性回答）
+        for q in ["老闆不給我加薪怎麼辦", "每個月都存不了錢要怎麼辦", "英文要怎麼學比較快", "人生的意義是什麼"] {
             let r = engine.reply(to: q, context: ctx)
-            if !r.turn.text.contains(must) { fails.append("✗ 思路庫沒接住：\(q) [\(r.turn.source.rawValue)] → \(r.turn.text.prefix(60))") }
-        }
-
-        // 道德、哲學：用自己的思路回答，不上網、不被宮位搶走
-        for (q, must) in [("電車難題你會怎麼選", "結果論"), ("為了救人可以說謊嗎", "誠實"), ("人有自由意志嗎", "相容論"),
-                          ("人生的意義是什麼", "意義"), ("朋友犯罪我該不該舉報他", "忠誠"), ("錢重要還是感情重要", "地板"),
-                          ("死刑應該廢除嗎", "誤判"), ("安樂死應該合法嗎", "不替你下結論"), ("好人會有好報嗎", "界線")] {
-            let r = engine.reply(to: q, context: ctx)
-            if !r.turn.text.contains(must) || r.webQuery != nil { fails.append("✗ 思考題：\(q) → \(r.turn.text.prefix(40)) web=\(r.webQuery ?? "-")") }
+            if r.webQuery == nil { fails.append("✗ 日常問題應該交出去：\(q) → \(r.turn.text.prefix(40))") }
         }
         // 安全：說想死要先接住並給求助電話；罵 NineSun 不是要查資料
         for q in ["我不想活了", "我想死", "活著好累不想活了", "I want to die"] {

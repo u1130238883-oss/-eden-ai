@@ -102,19 +102,11 @@ struct SettingsView: View {
                 Text(vm.aiTestResult).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.paper)
                     .textSelection(.enabled)
             }
-            Toggle(isOn: $vm.aiAlways) {
-                label(T("全部交給 AI 回答", "Let the AIs answer everything", "Que la IA responda todo", "Lascia rispondere l'IA a tutto"), "")
-            }
-            .tint(Theme.hazard)
-            Text(T("打開：所有的話都由你填了金鑰的 AI 回答（Claude、ChatGPT、Grok、Gemini…，有好幾家時融合成一個答案；Gemini 會自己用 Google 搜尋最新資料）；算命、命盤、生日還是 NineSun 自己算。關掉：NineSun 自己回答。",
-                   "On: Gemini (or another AI) answers everything, with a quick web search for questions; fortunes and charts stay with NineSun. Off: NineSun answers.",
-                   "Activado: Gemini (u otra IA) responde todo, con una búsqueda rápida para las preguntas; las lecturas siguen con NineSun. Desactivado: responde NineSun.",
-                   "Attivo: Gemini (o un'altra IA) risponde a tutto, con una ricerca veloce per le domande; le letture restano a NineSun. Disattivo: risponde NineSun."))
+            Text(T("有金鑰時：九型十二宮、命盤運勢、你的心情，由 NineSun 自己用你的命盤回答；其他生活上的問題交給這些 AI，但用 NineSun 自己的個性回答（有好幾家時融合成一個答案），還會照你的九型調整說話方式。沒有金鑰、或 AI 回答不了時，NineSun 自己上網查。",
+                   "With a key: Nine & Twelve readings, your chart and your feelings are answered by NineSun from your chart; everyday questions go to these AIs, answered in NineSun's own personality. Without a key, or if the AI fails, NineSun searches the web itself.",
+                   "Con clave: las lecturas, tu carta y tus emociones las responde NineSun con tu carta; lo cotidiano va a estas IA, con la personalidad de NineSun. Sin clave, NineSun busca en la web.",
+                   "Con chiave: letture, tema e stati d'animo li gestisce NineSun col tuo tema; il resto va a queste IA, con la personalità di NineSun. Senza chiave, NineSun cerca sul web."))
                 .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
-            Toggle(isOn: $vm.aiAuto) {
-                label(T("沒把握時自動問", "Ask automatically when unsure", "Preguntar solo cuando dude", "Chiedi da solo quando è incerto"), "")
-            }
-            .tint(Theme.hazard)
             Text(T("問題會送到這些 AI 公司。在對話裡說「問AI 你的問題」，也可以直接叫它問。",
                    "Your questions are sent to these AI companies. You can also say “ask AI <question>” in the chat.",
                    "Tus preguntas se envían a estas empresas de IA. También puedes decir «ask AI <pregunta>» en el chat.",

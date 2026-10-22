@@ -28,7 +28,7 @@ final class AppleTranslator: ObservableObject {
 
     /// allowDownload：false 時，語言包還沒下載就直接放棄（不跳出下載畫面讓人等），交給 AI 或線上翻譯
     func translate(_ req: Translate.Request, allowDownload: Bool) async -> Translate.Result? {
-        let src = req.source ?? Translate.detect(req.text, lexicon: Lexicon.shared)
+        let src = req.source ?? Translate.detect(req.text)
         guard src != req.target else { return nil }
         let from = Locale.Language(identifier: src.rawValue), to = Locale.Language(identifier: req.target.rawValue)
         let status = await LanguageAvailability().status(from: from, to: to)

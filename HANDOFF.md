@@ -322,3 +322,10 @@ CI 的「Live web search check」會用真的網路問 40 題（`WebTests.swift`
 - 九型十二宮把生日化成年、月、日三個 1–9：729 種組合，年月對調本命相同 → 405 種本命盤；大運、流年因實際出生年不同。`scratchpad/solace_eval.py` 把 729 種 × 不同出生年 × 不同時間 × 不同心情全部跑過，檢查溫柔用詞、沒有代號、長度、有沒有講什麼時候會好。
 - Swift 與 Python 逐字一致：`python3 ai/solace.py fixture ios/EchoCore/Tests/EchoCoreTests/Fixtures/solace.json`；詞表由 `ai/gen_solace_swift.py` 產生 `SolaceData.swift`。
 - 「全部交給 AI」時，說心情的話還是由 NineSun 用命盤接（AI 看不到你的大運流年）。
+
+## 日常問題交給 AI、NineSun 自己的個性（2026-10-22）
+- 使用者要求：九型十二宮的命理、運勢、個人情緒留在 NineSun 底層；其他生活瑣事交給 API 回答，App 裡不存日常問題的固定答案（省空間）。
+- 拿掉：`chat_bank.json`（腦筋急轉彎、思路庫）與 `ChatBank.swift`、`ai/chat_bank.py`、`ai/claude_playbook.py`；翻譯字典 `lexicon.tsv`（13MB）、`Lexicon.swift`、`ai/build_lexicon.py`。翻譯改成：已下載的內建翻譯 → AI → 線上翻譯。
+- 留下：`knowledge_*.json`（卦、紫微、九型、五行…命理知識）、`reader.bin`（沒金鑰時自己上網讀網頁用）、`ninesun.bin`（命盤解讀的模型）。
+- 路由（`ChatViewModel.staysLocal`）：有金鑰時，命理字、心情（`Solace.isFeeling`）、規則指令、「上網查」、打招呼（`Companion.isSmallTalk`）留在本地，其他都交給 AI；沒有金鑰或 AI 失敗 → NineSun 自己上網查。設定頁拿掉「全部交給 AI」「沒把握時自動問」兩個開關，改成說明。
+- 個性（`AskAIs.chatSystem`）：NineSun 是會發光的小電視機器人夥伴，溫暖、真誠、有點俏皮、有自己的看法；先抓真正的需求、先講結論、用生活比喻、多想一步。`AskAIs.persona(type:)` 依使用者的九型調整說話方式。接哪一家 AI、融合時都用同一個個性。

@@ -112,6 +112,11 @@ final class AskAIsTests: XCTestCase {
         XCTAssertEqual(AskAIs.plain("## 重點\n1. **約束權力**：限制國家權力\n* 社會共識"), "重點\n1. 約束權力：限制國家權力\n• 社會共識")
         let s = AskAIs.chatSystem(evidence: [], lang: .zh, persona: "跟你說話的人是第5型")
         XCTAssertTrue(s.contains("NineSun") && s.contains("第5型") && !s.contains("世界觀"), s)
+        // NineSun 自己的個性，接哪一家 AI 都一樣；照對方的九型調整說話方式
+        let p = AskAIs.persona(type: 6, lang: .zh)
+        XCTAssertTrue(p.contains("第6型") && p.contains("安全感"), p)
+        XCTAssertTrue(AskAIs.chatSystem(evidence: [], lang: .zh, persona: p).contains("個性"))
+        XCTAssertEqual(AskAIs.persona(type: nil, lang: .zh), "")
     }
 
     /// Google 一直停用舊模型（「gemini-2.5-flash-lite is no longer available」）：用即時的模型清單，新的優先

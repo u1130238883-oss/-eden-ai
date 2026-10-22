@@ -22,8 +22,6 @@ final class ChatViewModel: ObservableObject {
     }
     @Published var aiAuto = true { didSet { save(aiAuto, "aiAuto") } }
     @Published var aiModels = "" { didSet { save(aiModels, "aiModels") } }
-    /// 打開：除了算命、命盤，所有的話都交給其他 AI 回答；關掉：NineSun 自己回答
-    @Published var aiAlways = false { didSet { save(aiAlways, "aiAlways") } }
     /// 設定頁「測試連線」的結果
     @Published var aiTestResult = ""
     @Published var aiTesting = false
@@ -76,7 +74,6 @@ final class ChatViewModel: ObservableObject {
         autoDetect = load("autoDetect") ?? true
         aiAuto = load("aiAuto") ?? true
         aiModels = load("aiModels") ?? ""
-        aiAlways = load("aiAlways") ?? false
         UILang.current = language
         // 以前的版本會把上網查過的答案存在手機裡；現在每次都即時上網查，舊檔刪掉
         try? FileManager.default.removeItem(at: Self.docs.appendingPathComponent("ninesun-webmemory.json"))
@@ -103,11 +100,8 @@ final class ChatViewModel: ObservableObject {
                 let engine = EchoEngine(model: model)
                 for L in Lang.allCases { engine.knowledge[L] = try? KnowledgeBase(bundle: .main, lang: L) }
                 engine.i18n = try? I18N(bundle: .main)
-                engine.chatBank = try? ChatBank(bundle: .main)
                 // 大腦（閱讀理解模型）：上網查到的每段文字都由它來讀懂、判斷
                 Brain.shared = try? Brain(bundle: .main)
-                // 離線字典（英、中、西、義、阿）：翻譯單字用，背景慢慢載入
-                DispatchQueue.global(qos: .utility).async { Lexicon.shared = try? Lexicon(bundle: .main) }
                 let core = try PalaceCore(bundle: .main)
                 if let d = try? Data(contentsOf: Self.coreURL), let s = try? JSONDecoder().decode(PalaceCore.Snapshot.self, from: d) {
                     core.restore(s)
@@ -216,8 +210,8 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
-        // 全部交給 AI：算命、命盤、生日這些還是 NineSun 自己算（AI 算不出你的盤），其他的都問 Gemini
-        if aiAlways, aiConfig.enabled, !Self.isReading(text) {
+        // 有 AI 金鑰時：九型十二宮、命盤運勢、你的心情由 NineSun 自己用命盤回答；其他日常問題交給 AI（用 NineSun 的個性）
+        if aiConfig.enabled, !Self.staysLocal(text) {
             aiChat(text, autoDetect ? Lang.detect(text, fallback: language) : language)
             return
         }
@@ -257,6 +251,17 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
+    /// 留在 NineSun 自己的系統裡的：命理、心情、規則、叫它上網查、跟它打招呼
+    static func staysLocal(_ text: String) -> Bool {
+        isReading(text) || fortuneWords(text) || RuleBook.parse(text) != nil || EchoEngine.explicitSearch(text) != nil
+            || Companion.isSmallTalk(text)
+    }
+
+    /// 明確在問運勢的字（「今天」「如何」這種一般字不算）
+    static func fortuneWords(_ text: String) -> Bool {
+        ["運", "命", "宮", "流年", "大運", "流月", "八字", "紫微", "卦", "九型", "第幾型"].contains { text.contains($0) }
+    }
+
     /// 要 NineSun 自己的命理引擎算的（運勢、命盤、八字、紫微、九型、生日…）
     static func isReading(_ text: String) -> Bool {
         ["運勢", "運氣", "命盤", "命宮", "本命", "八字", "紫微", "流年", "大運", "流月", "九型", "第幾型", "十二宮", "卦", "生日",
@@ -265,13 +270,14 @@ final class ChatViewModel: ObservableObject {
             || Solace.isFeeling(text)
     }
 
-    /// 全部交給 AI 回答：直接問（Gemini 會自己用 Google 搜尋），用 NineSun 的口吻、照你的九型交代；好幾家 AI 時融合成一個答案
+    /// 日常問題交給 AI：用 NineSun 的個性回答、照你的九型調整說話方式（Gemini 要最新資料時會自己用 Google 搜尋）；好幾家 AI 時融合成一個答案
     private func aiChat(_ text: String, _ L: Lang) {
         let cfg = aiConfig
         let past = turns.dropLast().suffix(10).compactMap { t -> AskAIs.Turn? in
             t.text.isEmpty ? nil : AskAIs.Turn(fromUser: t.role == .user, text: t.text)
         }
-        let persona = ""
+        // NineSun 自己的個性；有生日時照你的九型調整說話方式
+        let persona = AskAIs.persona(type: profile.birthday.map { Destiny($0).type }, lang: L)
         streaming = cfg.names.count > 1 ? "🤖 同時問 " + cfg.names.joined(separator: "、") + "，再融合成我的看法…" : "🤖 思考中…"
         Task { [self] in
             let reply = await AskAIs.chat(text, history: past, evidence: [], lang: L, config: cfg, persona: persona)
@@ -283,28 +289,26 @@ final class ChatViewModel: ObservableObject {
                     return
                 }
                 self.streaming = ""
-                self.play(text: reply.text, final: ChatTurn(role: .echo, text: reply.text, source: .knowledge))
+                self.play(text: reply.text, final: ChatTurn(role: .echo, text: reply.text, source: .neural))
             }
         }
     }
 
-    /// 翻譯：單字先查手機裡的字典（馬上有、離線）；句子用已下載的內建翻譯，沒有的話請 AI 或線上翻譯，都不行才下載語言包
+    /// 翻譯：已下載的內建翻譯 → AI → 線上翻譯，都不行才請使用者下載語言包
     private func translate(_ req: Translate.Request) {
         let cfg = aiConfig
         streaming = "🌐 翻譯成\(req.target.name)…"
         Task { [self] in
             var res: Translate.Result?
-            // 單字：手機裡的字典，馬上有
-            if let lex = Lexicon.shared { res = Translate.dictionary(req, lexicon: lex) }
-            // 句子：語言包已經在手機裡的話用內建翻譯（最快、離線）
-            if res == nil, #available(iOS 18.0, *) {
+            // 語言包已經在手機裡的話用內建翻譯（最快、離線、不佔 App 空間）
+            if #available(iOS 18.0, *) {
                 res = await AppleTranslator.shared.translate(req, allowDownload: false)
             }
             if res == nil, cfg.enabled {
                 let r = await AskAIs.chat(Translate.aiPrompt(req), history: [], evidence: [], lang: .zh, config: cfg)
                 if r.error == nil, !r.text.isEmpty {
                     res = Translate.Result(text: r.text.trimmingCharacters(in: .whitespacesAndNewlines),
-                                           source: req.source ?? Translate.detect(req.text, lexicon: Lexicon.shared),
+                                           source: req.source ?? Translate.detect(req.text),
                                            via: "請 " + cfg.names.joined(separator: "、") + " 翻譯")
                 }
             }

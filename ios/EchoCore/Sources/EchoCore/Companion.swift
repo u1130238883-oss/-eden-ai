@@ -130,6 +130,14 @@ public enum Companion {
         ["Vuoi raccontarmi cos'è successo?", "Guardiamo la fortuna di oggi per trovare un indizio?", "Se vuoi vedere cosa ti aspetta, chiedimi «fortuna di questo mese»."],
     ]
 
+    /// 跟 NineSun 打招呼、道謝、道別、問它是誰、會做什麼：NineSun 自己回（會接上你今天的日宮），不用問其他 AI
+    public static func isSmallTalk(_ raw: String) -> Bool {
+        let t = raw.replacingOccurrences(of: " ", with: "").lowercased()
+        let idx = 0
+        if t.count <= 8 && (has(t, greet[idx]) || has(t, thanks[idx]) || has(t, bye[idx])) { return true }
+        return has(t, identity[idx]) || (has(t, capability[idx]) && t.count <= 14) || helpWords[idx].contains(t)
+    }
+
     /// - Parameters:
     ///   - perceived: 十二宮感知到的宮位
     ///   - day/night: 使用者今天的日宮、夜宮（沒有生日時為 nil）

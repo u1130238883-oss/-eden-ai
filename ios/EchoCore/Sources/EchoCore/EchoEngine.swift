@@ -69,7 +69,6 @@ public final class EchoEngine {
     /// 多語系模板與資料（英文／西班牙文／義大利文）
     public var i18n: I18N?
     /// 手寫對話庫（人設、日常、生活）
-    public var chatBank: ChatBank?
     public var core: PalaceCore?
     public var evolution: Evolution
     /// 上一則命理解讀（可追問「為什麼」「怎麼辦」）與當時的對話長度
@@ -282,9 +281,7 @@ public final class EchoEngine {
         if let t = ctx.rules.trigger(for: text) { return done(t, .rule) }
 
         // 2.1) 心情：用你的生日看此刻的大運、流年、流月、日夜宮，說出處境和情緒，溫柔地安慰
-        //      （「睡不著怎麼辦」這種思路庫有寫好做法的，交給思路庫）
-        if L == .zh, !(text.contains("怎麼辦") && chatBank?.playbookEntry(text, .zh) != nil),
-           let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now,
+        if L == .zh, let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now,
                                 again: history.suffix(4).contains { $0.role == .echo && $0.text.contains("我看了你此刻走到的地方") }) {
             let p = core?.perceive(text)
             if let p { core?.remember(p) }
@@ -390,17 +387,6 @@ public final class EchoEngine {
                             card: card, ctx: ctx, onToken: onToken, done: done)
         }
 
-        // 5.5) 實用型問題（沒有要算運勢）：用思路庫寫好的答案，不要被主題、宮位搶走
-        // 不是問句的（「我感冒了好難受」）只接常識型、不用上網的答案；心情、感情這類還是交給命盤陪伴
-        if !EchoEngine.fortuneIntent(text), let pb = chatBank?.playbookEntry(text, .zh), EchoEngine.isQuestion(text) || !pb.web {
-            let raw = choose(pb.answers)
-            var r = done(raw, .neural)
-            r.turn.tokens = []
-            r.turn.variant = raw
-            if pb.web && !EchoEngine.addressedToMe(text) { r.webQuery = EchoEngine.searchQuery(text) }
-            return r
-        }
-
         // 6) 八字、紫微、易經卦
         if let q = ManticRouter.route(text, profile: ctx.profile, now: ctx.now, rng: &rng) {
             if q.deterministic { return done(q.fallback + q.tail, .tool, card: q.card) }
@@ -498,15 +484,6 @@ public final class EchoEngine {
         let raw: String
         let asksMe = EchoEngine.addressedToMe(text)
         let asking = EchoEngine.isQuestion(text)
-        if asking, let pb = chatBank?.playbookEntry(text, L) {
-            // 思路庫：先用寫好的思路回答（前提 → 原因 → 做法 → 下一步），需要的話再上網查最新資料補充
-            let a = choose(pb.answers)
-            var r = done(a, .neural, nil)
-            r.turn.tokens = []
-            r.turn.variant = a
-            if pb.web && !asksMe { r.webQuery = EchoEngine.searchQuery(text) }
-            return r
-        }
         if let c = companionReply(text, L, ctx: ctx, palace: palace) {
             raw = c
         } else if !asksMe, EchoEngine.infoQuestion(text) || EchoEngine.looksLikeQuestion(text) {
@@ -514,9 +491,7 @@ public final class EchoEngine {
             var r = done(Loc.s("webAsk", L), .tool, palace)
             r.webQuery = EchoEngine.searchQuery(text)
             return r
-        } else if let opts = chatBank?.answers(text, L, useKeywords: asking) {
-            raw = choose(opts)
-        } else if EchoEngine.infoQuestion(text) || (asking && !text.contains("我")) {
+        } else if EchoEngine.infoQuestion(text) || (asking && !text.contains("我") && !asksMe) {
             // 知識題、跟自己無關的問題：上網查
             var r = done(Loc.s("webAsk", L), .tool, palace)
             r.webQuery = EchoEngine.searchQuery(text)
@@ -594,7 +569,7 @@ public final class EchoEngine {
     }
 
     /// 明確要求上網查：回傳要搜尋的關鍵字（問自己的運勢、命盤不算）
-    static func explicitSearch(_ raw: String) -> String? {
+    public static func explicitSearch(_ raw: String) -> String? {
         let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         let l = t.lowercased()
         let prefixes = ["上網", "搜尋", "搜索", "查一下", "幫我查", "幫我搜", "幫我上網", "請上網", "請幫我查", "請幫我上網", "去網上", "網上查", "google",
