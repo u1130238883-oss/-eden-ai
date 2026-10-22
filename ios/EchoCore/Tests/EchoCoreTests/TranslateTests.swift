@@ -125,7 +125,10 @@ final class TranslateTests: XCTestCase {
         XCTAssertEqual(t("吃飯了嗎？", .es), "¿Ya comiste?")
         XCTAssertEqual(t("妳好漂亮", .it), "Sei bellissima.")
         XCTAssertEqual(t("In bocca al lupo!", .zh), "加油")
-        XCTAssertEqual(t("no worries", .zh), "沒事")
+        XCTAssertEqual(t("no worries", .zh), "沒關係")
+        // 外文單字一字多義，不查道地說法表
+        XCTAssertNil(t("ojo", .en))
+        XCTAssertNil(t("tranquilo", .en))
         XCTAssertEqual(t("que rico", .zh), "好吃")
         XCTAssertNil(t("今天天氣很好", .en))
         XCTAssertEqual(t("我好累啊", .en), "I'm exhausted.")

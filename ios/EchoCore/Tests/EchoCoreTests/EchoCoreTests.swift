@@ -831,6 +831,7 @@ final class EchoCoreTests: XCTestCase {
         // 三島 1946（21 歲）：引動的方面起因都是 7宮，合起來看
         let s46 = Reader.sameCause(Destiny(BirthDay(year: 1925, month: 1, day: 14)).triggeredAspects(1946))
         XCTAssertTrue(s46.contains("起因都是7宮") && s46.contains("好在11宮") && s46.contains("壞在5宮"), s46)
+        XCTAssertTrue(s46.contains("牽涉的人：起因是「伴侶、情侶、交往對象、身邊遇到的人」") && s46.contains("貴人"), s46)
         XCTAssertTrue(Reader(.zh, i18n: nil).natal(Destiny(me)).text.contains("本命盤跟你一模一樣的名人：三島由紀夫"))
     }
 }

@@ -173,10 +173,8 @@ public enum Translate {
             guard let m = match(q, p) else { continue }
             let text = clean(m[ti]), lang = code(m[li])
             guard let target = lang, !text.isEmpty, text.count <= 500 else { continue }
-            // 「中文是什麼」「英文怎麼說」這種沒有要翻的東西
-            if code(text) != nil { continue }
             // 本來就是這個語言（「什麼是中文」「台灣的中文」）：不是要翻譯
-            if let d = confidentLang(text), d == target || (d.lex != nil && d.lex == target.lex) { continue }
+            if code(text) == nil, let d = confidentLang(text), d == target || (d.lex != nil && d.lex == target.lex) { continue }
             // 「X 的英文」：X 太長、像在問別的事（「學英文的方法」）就不算
             if p.hasPrefix("^(.+?)(?:的|在)?") {
                 if text.count > 30 || ["學", "考", "讀", "方法", "怎麼學", "老師", "課", "程度", "成績", "補習"].contains(where: { text.contains($0) }) { continue }
@@ -216,45 +214,67 @@ public enum Translate {
         let q = raw.trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: "？?。！!～~")))
         let zhNames = names.filter { $0.0.unicodeScalars.contains { (0x4E00...0x9FFF).contains($0.value) } }
         let Z = "(?:" + zhNames.map { NSRegularExpression.escapedPattern(for: $0.0) }.joined(separator: "|") + ")"
-        // ① 提到哪些語言（「繁體中文」裡的「中文」不重複算）
-        var found: [Code] = []
-        if let re = try? NSRegularExpression(pattern: Z) {
-            for m in re.matches(in: q, range: NSRange(q.startIndex..., in: q)) {
-                if let r = Range(m.range, in: q), let c = code(String(q[r])), !found.contains(c) { found.append(c) }
+        // ① 語言那一段（用英文說／翻成英文／的英文是什麼／在英文裡怎麼說）。句子裡可能有好幾個語言名稱
+        //   （「義大利文用英文怎麼說」：要翻的是「義大利文」這個詞），挑最後一個真的有翻譯意思的那一段
+        let seg = "[（(]?(?:(?:翻譯|翻|譯|換|轉)(?:成|為|到)?|用|以|拿|換成|的|在)?" + Z
+            + "(?:裡|中)?(?:的話|的)?(?:要|該|來)?(?:怎麼|怎樣|怎么|咋|如何)?(?:來)?(?:說|講|寫|念|唸|表達|翻譯|拼)?(?:出來)?"
+            + "(?:是什麼|叫什麼|叫做什麼|是啥|是)?(?:呢|啊|呀|嗎)?[）)]?"
+        let cue = ["翻", "譯", "換", "轉", "用", "以", "拿", "說", "講", "寫", "念", "唸", "表達", "是什麼", "叫什麼", "是啥", "怎麼", "怎樣", "咋", "如何", "的話"]
+        guard let segRe = try? NSRegularExpression(pattern: seg), let zRe = try? NSRegularExpression(pattern: Z) else { return nil }
+        var chosen: (part: String, prefix: String, suffix: String, target: Code, hasCue: Bool)?
+        var chosenBare: (part: String, prefix: String, suffix: String, target: Code, hasCue: Bool)?
+        // 每個語言名稱都各自找一次「語言那一段」（可以重疊：「把日文翻成英文」的「日文」和「翻成英文」）
+        let ns = q as NSString
+        var segs: [Range<String.Index>] = []
+        for zm in zRe.matches(in: q, range: NSRange(location: 0, length: ns.length)) {
+            var best: NSRange?
+            for back in stride(from: min(4, zm.range.location), through: 0, by: -1) {
+                let start = zm.range.location - back
+                if let m = segRe.firstMatch(in: q, options: .anchored, range: NSRange(location: start, length: ns.length - start)),
+                   m.range.location + m.range.length >= zm.range.location + zm.range.length {
+                    best = m.range
+                    break
+                }
+            }
+            if let b = best, let r = Range(b, in: q) { segs.append(r) }
+        }
+        for r in segs {
+            let part = String(q[r]), prefix = String(q[..<r.lowerBound]), suffix = String(q[r.upperBound...])
+            guard let zm = zRe.firstMatch(in: part, range: NSRange(part.startIndex..., in: part)), let zr = Range(zm.range, in: part),
+                  let target = code(String(part[zr])) else { continue }
+            let bare = part.replacingOccurrences(of: Z, with: "", options: .regularExpression)
+                .trimmingCharacters(in: CharacterSet(charactersIn: "（()）"))
+            // 「英文：X」「X（英文）」「英文的話 X 怎麼說」：語言後面接冒號、括起來、或句尾還有「怎麼說」也算
+            let colonAfter = suffix.hasPrefix("：") || suffix.hasPrefix(":")
+            let bracketed = part.hasPrefix("（") || part.hasPrefix("(")
+            let askAtEnd = suffix.range(of: "(?:怎麼|怎樣|咋)(?:說|講|寫)(?:呢)?$", options: .regularExpression) != nil
+            // 「X的英文」「X 英文」放在最後也算；「他說英文嗎」不算
+            let atEnd = suffix.trimmingCharacters(in: .whitespaces).isEmpty
+            let hasCue = cue.contains(where: { bare.contains($0) })
+            // 有翻譯意思的那一段優先（「翻譯成義大利文：西班牙文」要翻成義大利文）；只有「X的英文」「X 英文」這種沒動詞的才退而求其次
+            if hasCue || colonAfter || bracketed || askAtEnd {
+                chosen = (part, prefix, suffix, target, hasCue)
+            } else if atEnd && (bare.hasPrefix("的") || bare.isEmpty) && !bare.hasSuffix("嗎") {
+                chosenBare = (part, prefix, suffix, target, hasCue)
             }
         }
-        guard found.count == 1, let target = found.first else { return nil }
-        // 在問學語言、會不會講、口音這些（這些字要緊貼著語言才算：「學校用英文怎麼說」還是要翻）
-        let about = "(?:學|學習|懂|會說|會講|會不會說|會不會講|能說|能講|考|讀|教|補習|練)" + Z + "|" + Z
+        guard let c = chosen ?? chosenBare else { return nil }
+        let target = c.target, prefix = c.prefix, suffix = c.suffix
+        // ② 在問學這個語言、會不會講、口音（要緊貼著這個語言才算：「學校用英文怎麼說」還是要翻）
+        let T = "(?:" + zhNames.filter { $0.1 == target }.map { NSRegularExpression.escapedPattern(for: $0.0) }.joined(separator: "|") + ")"
+        var about = "(?:學|學習|懂|會說|會講|會不會說|會不會講|能說|能講|考|讀|教|補習|練)" + T + "|" + T
             + "(?:課|老師|程度|考試|好難|難不難|文法|口音|流利|很好|很爛|不好|好不好|怎麼學|要學|好學|檢定|單字量|說得|講得|很強|進步)"
-            + "|幾種語言|哪種語言|什麼語言|母語"
+        if !c.hasCue { about += "|幾種語言|哪種語言|什麼語言" }
         guard q.range(of: about, options: .regularExpression) == nil else { return nil }
-        // ② 語言那一段
-        let seg = "[（(]?(?:(?:翻譯|翻|譯|換|轉)(?:成|為|到)?|用|以|拿|換成|的|在)?" + Z
-            + "(?:裡|中)?(?:的話|的)?(?:要|該|來)?(?:怎麼|怎樣|怎么|咋|如何)?(?:來)?(?:說|講|寫|念|唸|表達|翻譯|翻|拼)?(?:出來)?"
-            + "(?:是什麼|叫什麼|叫做什麼|是啥|是)?(?:呢|啊|呀|嗎)?[）)]?"
-        guard let r = q.range(of: seg, options: .regularExpression) else { return nil }
-        let part = String(q[r])
-        let prefix = String(q[..<r.lowerBound]), suffix = String(q[r.upperBound...])
-        let cue = ["翻", "譯", "換", "轉", "用", "以", "拿", "說", "講", "寫", "念", "唸", "表達", "是什麼", "叫什麼", "是啥", "怎麼", "怎樣", "咋", "如何", "的話"]
-        let bare = part.replacingOccurrences(of: Z, with: "", options: .regularExpression)
-            .trimmingCharacters(in: CharacterSet(charactersIn: "（()）"))
-        // 「英文：X」「X（英文）」「英文的話 X 怎麼說」：語言後面接冒號、括起來、或句尾還有「怎麼說」也算
-        let colonAfter = suffix.hasPrefix("：") || suffix.hasPrefix(":")
-        let bracketed = part.hasPrefix("（") || part.hasPrefix("(")
-        let askAtEnd = suffix.range(of: "(?:怎麼|怎樣|咋)(?:說|講|寫)(?:呢)?$", options: .regularExpression) != nil
-        // 「X的英文」「X 英文」放在最後也算；「他說英文嗎」不算
-        let atEnd = suffix.trimmingCharacters(in: .whitespaces).isEmpty
-        guard cue.contains(where: { bare.contains($0) }) || colonAfter || bracketed || askAtEnd
-            || (atEnd && (bare.hasPrefix("的") || bare.isEmpty) && !bare.hasSuffix("嗎")) else { return nil }
         // ③ 內容在哪一邊
         let wrap = "(?:請你|請問|請|麻煩你|麻煩|可以幫我|幫我|教我|可以|你可以|能不能|可不可以|告訴我|跟我說|欸|誒|那個|嗯|哈囉|嗨|嘿|如何|要怎麼|怎麼"
             + "|如果要|如果|那麼|那|還有|另外|我想知道|想知道|想問|我想問|請教|(?i:ninesun)"
             + "|這句話|這句|這段話|這段|這個字|這個詞|這個|下面這句|以下|句子|我想要|我想|我要|翻譯一下|翻一下|翻譯|把|[，,、：:\\s])"
+        let suffixReal = !suffix.trimmingCharacters(in: CharacterSet(charactersIn: "，,、：:?？!！。～~ ")).isEmpty
         var content: String
-        if prefix.range(of: "^" + wrap + "*$", options: .regularExpression) != nil {
+        if suffixReal && prefix.range(of: "^" + wrap + "*$", options: .regularExpression) != nil {
             content = suffix
-            for p in ["^[，,、：:\\s]+", "^(?:跟|對|和|向)(?:他|她|他們|她們|你|對方|朋友|老外|外國人|老闆|客人|別人|大家)(?:說|講)", "^(?:說|講|寫)(?=.)",
+            for p in ["^[，,、：:\\s]+", "^(?:跟|對|和|向)(?:他|她|他們|她們|你|對方|朋友|老外|外國人|老闆|客人|別人|大家)(?:說|講)",
                       "(?:要|該)?(?:怎麼|怎樣|咋)(?:說|講|寫)(?:呢)?$"] {
                 content = content.replacingOccurrences(of: p, with: "", options: .regularExpression)
             }
@@ -262,18 +282,28 @@ public enum Translate {
             // 語言前後都有實際的內容（「我在翻英文書」）：是一般的句子，不是要翻譯
             let rest = suffix.replacingOccurrences(of: "^(?:[，,、：:?？!！。～~\\s]|呢|啊|呀|嗎|吧|才自然|比較自然|比較道地|才道地|才對|比較好|最自然|最道地|的話是什麼|的話|是什麼)+$", with: "", options: .regularExpression)
             guard rest.isEmpty else { return nil }
+            let original = prefix
             content = prefix
-            // 開頭的包裝；「請問」後面本身就是問句（「請問車站怎麼走」）就留著
-            let lead = "^(?:欸|誒|那個|嗯|哈囉|嗨|嘿|告訴我|跟我說|翻譯一下|翻一下|可以幫我把|幫我把|請把|麻煩把|把|如何"
-                + "|可不可以告訴我|可以告訴我|我想知道|想知道|我想問|想問|請教|還有|另外|那麼|那(?=[，,\\s])|那(?!個|是|裡|邊|些|麼|就|天|時)|(?i:ninesun)"
+            // 開頭的包裝；「請問」後面本身就是問句（「請問車站怎麼走」）就留著；「那輛車」的「那」是內容
+            let mw = "個是裡邊些麼就天時輛本張隻件條家座顆杯枝支把台扇盞面份封副根球頭匹位列架艘頂所棵朵間塊"
+            // 「那個」後面是整句話（「那個碗很重」）時是「那個」，不是口頭禪
+            let fillerThat = "那個(?![^，,]*[很是了。有在會要想])"
+            let lead = "^(?:欸|誒|" + fillerThat + "|嗯|哈囉|嗨|嘿|告訴我|跟我說|翻譯一下|翻一下|可以幫我把|幫我把|請把|麻煩把|把|如何"
+                + "|可不可以告訴我|可以告訴我|我想知道|想知道|我想問|想問|請教|還有|另外|那麼|那(?=[，,\\s])|那(?![" + mw + "])|(?i:ninesun)"
                 + "|請問(?=請問|你|妳|您|我|他|她|大家)|請問(?!.*(?:怎麼|哪|嗎|什麼|幾|多少|誰|呢)))[，,、：:\\s]*"
             for _ in 0..<3 { content = content.replacingOccurrences(of: lead, with: "", options: .regularExpression) }
-            content = content.replacingOccurrences(of: "(?:要怎麼|該怎麼|怎麼|如何|要|在|這句話|這句|這個字|這個詞|[，,、：:?？\\s])+$", with: "", options: .regularExpression)
+            content = content.replacingOccurrences(of: "(?:要怎麼|該怎麼|怎麼|如何|這句話|這句|這個字|這個詞|[，,、：:?？\\s])+$", with: "", options: .regularExpression)
+            // 拿掉包裝後什麼都不剩：那些字本身就是要翻的（「請問」「那個」「翻譯」）
+            if clean(content).isEmpty {
+                content = original.replacingOccurrences(of: "(?:這句話|這句|這個字|這個詞|[，,、：:?？\\s])+$", with: "", options: .regularExpression)
+                content = content.replacingOccurrences(of: "^(?:請問(?=.)|把(?=.))", with: "", options: .regularExpression)
+            }
         }
         // ④ 內容要像樣
         let text = clean(content)
-        guard !text.isEmpty, text.count <= 300, code(text) == nil, !["嗎", "呢", "啊", "呀"].contains(text) else { return nil }
-        if let d = confidentLang(text), d == target || (d.lex != nil && d.lex == target.lex) { return nil }
+        guard !text.isEmpty, text.count <= 300, !["嗎", "呢", "啊", "呀"].contains(text) else { return nil }
+        // 本來就是那個語言的句子（語言名稱本身例外：「Italian 用義大利文怎麼說」）
+        if code(text) == nil, let d = confidentLang(text), d == target || (d.lex != nil && d.lex == target.lex) { return nil }
         return Request(text: text, source: nil, target: target)
     }
 
@@ -292,7 +322,7 @@ public enum Translate {
             guard let m = match(q, p), let c = m[li].first, let target = shortNames[c] else { continue }
             let text = clean(m[ti])
             guard !text.isEmpty, text.count <= 300 else { continue }
-            if let d = confidentLang(text), d == target || (d.lex != nil && d.lex == target.lex) { continue }
+            if code(text) == nil, let d = confidentLang(text), d == target || (d.lex != nil && d.lex == target.lex) { continue }
             return Request(text: text, source: nil, target: target)
         }
         return nil

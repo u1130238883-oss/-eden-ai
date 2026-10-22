@@ -329,6 +329,11 @@ public struct Reader {
             }
             out += "\n合起來看：這幾個方面的起因都是\(c)宮（\(what)）——同一個起因落在不同的領域，結果不一樣：" + parts.joined(separator: "；")
                 + "。不要只看流年一個字的好壞，分開看每個領域。"
+            // 牽涉的人：起因宮的人，帶來好結果那幾宮的人（例：三島 1946 年，遇見的人（7）→ 朋友、貴人（11）＝見到川端康成、被提拔）
+            if let who = FlowReading.people[FlowReading.i(c)] {
+                let goodWho = group.filter { $0.reading.verdict == .good }.compactMap { FlowReading.people[FlowReading.i($0.palace)] }
+                out += "牽涉的人：起因是「\(who)」" + (goodWho.isEmpty ? "。" : "，在好的那一邊會帶來「" + goodWho.joined(separator: "、") + "」。")
+            }
         }
         return out
     }

@@ -1,0 +1,165 @@
+# 更多名詞與描述詞
+主意|idea/plan|idea|idea
+看法|view/opinion|punto de vista|punto di vista
+觀點|perspective|perspectiva|prospettiva
+角度|angle/point of view|ángulo|angolazione
+立場|position/stance|postura|posizione
+感受|feeling|sentimiento/sensación|sensazione
+印象|impression|impresión|impressione
+經歷|experience|vivencia/experiencia|esperienza
+回憶|memory/recollection|recuerdo|ricordo
+童年回憶|childhood memories|recuerdos de la infancia|ricordi d'infanzia
+故鄉|hometown|ciudad natal|città natale
+鄉愁|homesickness|nostalgia|nostalgia
+旅行者|traveler|viajero|viaggiatore
+冒險|adventure|aventura|avventura
+探險家|explorer|explorador|esploratore
+地圖集|atlas|atlas|atlante
+寶藏|treasure|tesoro|tesoro
+海盜|pirate|pirata|pirata
+騎士|knight|caballero|cavaliere
+巫師|wizard|mago|mago
+女巫|witch|bruja|strega
+怪物|monster|monstruo|mostro
+巨人|giant|gigante|gigante
+精靈|elf/fairy|elfo/hada|elfo/fata
+魔法|magic|magia|magia
+咒語|spell|hechizo|incantesimo
+皇冠|crown|corona|corona
+寶座|throne|trono|trono
+劍|sword|espada|spada
+盾牌|shield|escudo|scudo
+弓|bow|arco|arco
+箭|arrow|flecha|freccia
+王國|kingdom|reino|regno
+帝國|empire|imperio|impero
+皇帝|emperor|emperador|imperatore
+將軍|general|general|generale
+士兵們|soldiers|soldados|soldati
+勝利|victory|victoria|vittoria
+失敗（名詞）|defeat|derrota|sconfitta
+和平條約|peace treaty|tratado de paz|trattato di pace
+歷史學家|historian|historiador|storico
+考古|archaeology|arqueología|archeologia
+遺跡|ruins|ruinas|rovine
+古蹟|historic site|sitio histórico|sito storico
+文物|cultural relic|reliquia cultural|reperto
+遺產|heritage/inheritance|patrimonio/herencia|patrimonio/eredità
+# 抽象形容與狀態
+存在感|presence|presencia|presenza
+距離感|sense of distance|sensación de distancia|senso di distanza
+安全感|sense of security|sensación de seguridad|senso di sicurezza
+成就感|sense of achievement|sensación de logro|senso di realizzazione
+歸屬感|sense of belonging|sentido de pertenencia|senso di appartenenza
+責任感|sense of responsibility|sentido de la responsabilidad|senso di responsabilità
+幽默感|sense of humor|sentido del humor|senso dell'umorismo
+方向感|sense of direction|sentido de la orientación|senso dell'orientamento
+時間感|sense of time|noción del tiempo|senso del tempo
+孤獨感|loneliness|soledad|solitudine
+空虛|emptiness|vacío|vuoto
+滿足|satisfaction|satisfacción|soddisfazione
+平靜|calm/peace|calma/paz|calma/pace
+疲勞|fatigue|fatiga/cansancio|fatica/stanchezza
+活力|energy/vitality|energía/vitalidad|energia/vitalità
+熱情|passion/enthusiasm|pasión/entusiasmo|passione/entusiasmo
+冷漠|indifference|indiferencia|indifferenza
+溫度感|warmth|calidez|calore
+魅力|charm|encanto|fascino
+吸引力|attraction|atracción|attrazione
+緣分|fate/destiny (in relationships)|destino|destino
+運氣好|good luck|buena suerte|buona fortuna
+運氣差|bad luck|mala suerte|sfortuna
+# 數字相關詞
+號|number (size/date)|número|numero
+第一名|first place|primer lugar|primo posto
+第二名|second place|segundo lugar|secondo posto
+倍|times (multiple)|veces|volte
+雙倍|double|doble|doppio
+三倍|triple|triple|triplo
+一百萬|one million|un millón|un milione
+十億|billion|mil millones|miliardo
+零點五|zero point five|cero coma cinco|zero virgola cinque
+一半的|half|medio|mezzo
+四分之一|quarter|cuarto|quarto
+三分之一|one third|un tercio|un terzo
+百分之百|one hundred percent|cien por cien|cento per cento
+奇數|odd number|número impar|numero dispari
+偶數|even number|número par|numero pari
+# 常見動作片語（雙詞）
+點火|to light a fire|encender fuego|accendere il fuoco
+滅火|to put out a fire|apagar el fuego|spegnere il fuoco
+開門|to open the door|abrir la puerta|aprire la porta
+關門|to close the door|cerrar la puerta|chiudere la porta
+開窗|to open the window|abrir la ventana|aprire la finestra
+關窗|to close the window|cerrar la ventana|chiudere la finestra
+洗手|to wash one's hands|lavarse las manos|lavarsi le mani
+洗臉|to wash one's face|lavarse la cara|lavarsi la faccia
+擦乾|to dry|secar|asciugare
+喝水|to drink water|beber agua|bere acqua
+吃藥丸|to take a pill|tomar una pastilla|prendere una pillola
+打開電視|to turn on the TV|encender la televisión|accendere la TV
+關掉手機|to turn off the phone|apagar el móvil|spegnere il cellulare
+接電話|to answer the phone|contestar el teléfono|rispondere al telefono
+掛電話|to hang up|colgar|riattaccare
+打字輸入|to type in|escribir|digitare
+拍影片|to film a video|grabar un video|girare un video
+買票|to buy a ticket|comprar un boleto|comprare un biglietto
+訂房|to book a room|reservar una habitación|prenotare una camera
+叫計程車|to call a taxi|llamar a un taxi|chiamare un taxi
+問路|to ask for directions|preguntar el camino|chiedere indicazioni
+看地圖|to look at a map|mirar el mapa|guardare la mappa
+拍張照|to take a picture|sacar una foto|scattare una foto
+寄包裹|to send a package|enviar un paquete|spedire un pacco
+領包裹|to pick up a package|recoger un paquete|ritirare un pacco
+換錢|to exchange money|cambiar dinero|cambiare soldi
+刷卡|to pay by card|pagar con tarjeta|pagare con la carta
+付現|to pay in cash|pagar en efectivo|pagare in contanti
+找工作|to look for a job|buscar trabajo|cercare lavoro
+換工作|to change jobs|cambiar de trabajo|cambiare lavoro
+請假|to take leave|pedir permiso/tomar un día libre|prendere un giorno di ferie
+放假|to have a holiday|estar de vacaciones|essere in vacanza
+開派對|to throw a party|hacer una fiesta|dare una festa
+過生日|to celebrate a birthday|celebrar el cumpleaños|festeggiare il compleanno
+許願|to make a wish|pedir un deseo|esprimere un desiderio
+吹蠟燭|to blow out the candles|soplar las velas|spegnere le candeline
+切蛋糕|to cut the cake|cortar el pastel|tagliare la torta
+送禮物|to give a gift|dar un regalo|fare un regalo
+拆禮物|to open a gift|abrir un regalo|aprire un regalo
+說謝謝|to say thank you|dar las gracias|dire grazie
+說再見|to say goodbye|decir adiós|dire arrivederci
+說實話|to tell the truth|decir la verdad|dire la verità
+開玩笑|to joke|bromear|scherzare
+講故事|to tell a story|contar una historia|raccontare una storia
+唱首歌|to sing a song|cantar una canción|cantare una canzone
+跳支舞|to dance a dance|bailar una pieza|fare un ballo
+看比賽|to watch a match|ver un partido|guardare una partita
+踢足球|to play soccer|jugar al fútbol|giocare a calcio
+打籃球|to play basketball|jugar al baloncesto|giocare a basket
+打網球|to play tennis|jugar al tenis|giocare a tennis
+游一圈|to swim a lap|nadar un largo|fare una vasca
+跑一圈|to run a lap|dar una vuelta|fare un giro
+騎腳踏車|to ride a bike|andar en bicicleta|andare in bicicletta
+開車去|to drive there|ir en coche|andarci in macchina
+走路去|to walk there|ir a pie|andarci a piedi
+搭公車|to take the bus|tomar el autobús|prendere l'autobus
+搭火車|to take the train|tomar el tren|prendere il treno
+搭飛機|to take a plane|tomar un avión|prendere l'aereo
+搭計程車|to take a taxi|tomar un taxi|prendere un taxi
+坐地鐵|to take the subway|tomar el metro|prendere la metro
+過夜|to stay overnight|pasar la noche|passare la notte
+睡午覺|to take a nap|echar una siesta|fare un pisolino
+做運動|to do exercise|hacer ejercicio|fare esercizio
+去健身房|to go to the gym|ir al gimnasio|andare in palestra
+看醫師|to visit the doctor|visitar al médico|andare dal dottore
+量體溫|to take one's temperature|tomar la temperatura|misurare la febbre
+戴口罩|to wear a mask|llevar mascarilla|indossare la mascherina
+排長隊|to wait in a long line|hacer una cola larga|fare una lunga fila
+迷了路|got lost|se perdió|si è perso
+下大雨|it's pouring|llueve a cántaros|piove a dirotto
+出太陽|the sun comes out|sale el sol|esce il sole
+颳大風|it's very windy|hace mucho viento|c'è molto vento
+起霧|it's getting foggy|hay niebla|c'è nebbia
+變冷|to get cold|hacer frío|fare freddo
+變熱|to get hot|hacer calor|fare caldo
+天亮|daybreak|amanecer|fare giorno
+天黑|nightfall|anochecer|fare buio

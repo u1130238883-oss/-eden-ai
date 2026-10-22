@@ -337,3 +337,11 @@ CI 的「Live web search check」會用真的網路問 40 題（`WebTests.swift`
 - 測試：`python3 ai/translate_questions.py ios/EchoCore/Tests/EchoCoreTests/Fixtures/translate_questions.json` 產生 10000 題（9000 題各種問法、1000 題不是翻譯的），`TranslateQuestionsTests` 逐題檢查。第一輪 7821 題對 → 第二輪 9928 → 第三輪 10000。
 - 第二批 10000 題（`translate_questions2.json`，`python3 ai/translate_questions.py … 2`）：新問法（怎樣說、咋說、X（英文）、英文：X、英文的話X怎麼說、X這句話英文怎麼說、怎麼講比較道地）、開頭的包裝（那、還有、嗨、NineSun、我想知道、想問、如果要）、簡稱（中翻英、翻西、X 翻英、X翻成義文）、英西義的新說法。第一輪 6220 → 第二輪 9796 → 第三輪 10000。
 - App：原文語言用手機內建的語言辨識（`NineSun/App/LangID.swift`，NaturalLanguage）；句子翻完再翻回原文核對（🔁）；單字補 Google 字典的其他說法；念的時候挑手機裡最好的聲音。
+
+## 四語翻譯語料 15000 項、Hollow 新版（2026-10-22）
+- `ai/corpus4/`：5000 單字（人工撰寫約 3900＋0–999 數字）、5000 短語（形容詞＋名詞、數量＋名詞、我的／這個／那個＋名詞、動詞＋名詞，西義陰陽性、複數、冠詞照規則變化）、5000 句子（主詞×動詞×名詞、這個很…、在哪裡、多少錢…）。`python3 ai/corpus4/build.py ios/EchoCore/Tests/EchoCoreTests/Fixtures/translate_corpus.json`。
+- `TranslateCorpusTests`：每一項四種語言輪流當原文、包進約 20 種問法（中文、英西義），共 60000 次都要聽懂；道地說法表對到時要跟語料一致（人工看過、兩種都對的列在 reviewed）。第一輪 59259 → 第二輪 59910 → 第三輪 60000。
+- 修掉的：「主要」「現在」尾巴的字被吃掉、「那輛機車」的「那」被當口頭禪、內容本身是「請問／翻譯」、內容是語言名稱（Italian 用義大利文怎麼說）、一句裡兩個語言名稱（把日文翻成英文）；道地說法表的外文單字一字多義（ojo、tranquilo、ánimo）不再查表。
+- `TranslateLiveTests`（CI「Live translation check」）：抽 120 項用 Google 翻譯，跟語料比，列出不一樣的，常見又翻錯的補進 Native.swift。
+- 新版 Hollow.ipa：只多了 11宮關鍵詞「貴人」，算法逐位元組相同；NineSun 四語關鍵詞、宮位感知詞表同步。
+- 流年「合起來看」加上牽涉的人（起因宮的人 → 帶來好結果那幾宮的人）。

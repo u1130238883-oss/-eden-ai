@@ -1,0 +1,230 @@
+# 抽象名詞
+意義|meaning|significado|significato
+目的|purpose|propósito/objetivo|scopo
+價值|value|valor|valore
+原則|principle|principio|principio
+信念|belief|creencia|convinzione/credenza
+理想|ideal|ideal|ideale
+現實|reality|realidad|realtà
+可能性|possibility|posibilidad|possibilità
+機率|probability|probabilidad|probabilità
+風險|risk|riesgo|rischio
+挑戰|challenge|desafío/reto|sfida
+困難|difficulty|dificultad|difficoltà
+優點|advantage/strength|ventaja/punto fuerte|vantaggio/pregio
+缺點|disadvantage/weakness|desventaja/defecto|svantaggio/difetto
+差別|difference|diferencia|differenza
+相似|similarity|similitud|somiglianza
+關聯|connection|conexión|collegamento
+影響|influence/impact|influencia/impacto|influenza/impatto
+改變（名詞）|change|cambio|cambiamento
+發展|development|desarrollo|sviluppo
+進步|progress|progreso|progresso
+成長（名詞）|growth|crecimiento|crescita
+未來性|potential|potencial|potenziale
+能力|ability|capacidad|capacità
+天分|talent|talento|talento
+努力（名詞）|effort|esfuerzo|sforzo/impegno
+成就|achievement|logro|risultato/traguardo
+名聲|reputation/fame|fama/reputación|fama/reputazione
+權力|power|poder|potere
+控制|control|control|controllo
+秩序|order|orden|ordine
+混亂|chaos|caos|caos
+衝突|conflict|conflicto|conflitto
+合作（名詞）|cooperation|cooperación|cooperazione
+溝通|communication|comunicación|comunicazione
+誤會|misunderstanding|malentendido|malinteso
+解決辦法|solution|solución|soluzione
+建議（名詞）|suggestion/advice|sugerencia/consejo|suggerimento/consiglio
+警告（名詞）|warning|advertencia|avvertimento
+承諾|promise|promesa|promessa
+約定|agreement|acuerdo|accordo
+規定|regulation|norma/reglamento|norma/regolamento
+限制|limit|límite|limite
+條件|condition|condición|condizione
+狀況|situation|situación|situazione
+情況|circumstance|circunstancia|circostanza
+事件|event/incident|evento/incidente|evento/incidente
+意外|accident|accidente|incidente
+奇蹟|miracle|milagro|miracolo
+傳說|legend|leyenda|leggenda
+神話|myth|mito|mito
+童話|fairy tale|cuento de hadas|fiaba
+寓言|fable|fábula|favola
+笑話|joke|chiste|barzelletta
+謎語|riddle|adivinanza|indovinello
+遊戲規則|rules of the game|reglas del juego|regole del gioco
+興趣愛好|interests and hobbies|intereses y aficiones|interessi e hobby
+氛圍|atmosphere|ambiente/atmósfera|atmosfera
+風格|style|estilo|stile
+品味|taste|gusto|gusto
+美|beauty|belleza|bellezza
+醜陋|ugliness|fealdad|bruttezza
+智慧|wisdom|sabiduría|saggezza
+愚蠢|stupidity|estupidez|stupidità
+善|goodness|bondad|bontà
+惡|evil|mal|male
+罪|sin/crime|pecado|peccato
+靈魂|soul|alma|anima
+精神|spirit|espíritu|spirito
+心靈|mind/heart|mente|mente/animo
+意識|consciousness|conciencia|coscienza
+想像力|imagination|imaginación|immaginazione
+創造力|creativity|creatividad|creatività
+靈感|inspiration|inspiración|ispirazione
+專注|focus|concentración|concentrazione
+耐力|endurance|resistencia|resistenza
+速度感|sense of speed|sensación de velocidad|senso di velocità
+平衡|balance|equilibrio|equilibrio
+和諧|harmony|armonía|armonia
+自然法則|law of nature|ley natural|legge naturale
+理論|theory|teoría|teoria
+實驗|experiment|experimento|esperimento
+證明|proof|prueba/demostración|prova/dimostrazione
+事實|fact|hecho|fatto
+資料庫|database|base de datos|database/banca dati
+統計|statistics|estadística|statistica
+分析|analysis|análisis|analisi
+研究（名詞）|research|investigación|ricerca
+發現（名詞）|discovery|descubrimiento|scoperta
+發明（名詞）|invention|invento|invenzione
+技術|technique/technology|técnica/tecnología|tecnica/tecnologia
+工程|engineering|ingeniería|ingegneria
+醫學|medicine|medicina|medicina
+心理學|psychology|psicología|psicologia
+社會學|sociology|sociología|sociologia
+經濟學|economics|economía|economia
+法學|law (study)|derecho|giurisprudenza
+建築學|architecture|arquitectura|architettura
+天文學|astronomy|astronomía|astronomia
+占星|astrology|astrología|astrologia
+算命|fortune-telling|adivinación|predizione del futuro
+星座|zodiac sign|signo del zodiaco|segno zodiacale
+運勢|fortune|suerte/fortuna|fortuna/oroscopo
+命盤|birth chart|carta astral|tema natale
+宮位|house (astrology)|casa astrológica|casa astrologica
+# 數學與科學詞
+加法|addition|suma|addizione
+減法|subtraction|resta|sottrazione
+乘法|multiplication|multiplicación|moltiplicazione
+除法|division|división|divisione
+分數（數學）|fraction|fracción|frazione
+小數|decimal|decimal|decimale
+平均|average|promedio/media|media
+總數|total|total|totale
+公式|formula|fórmula|formula
+方程式|equation|ecuación|equazione
+幾何|geometry|geometría|geometria
+角度|angle|ángulo|angolo
+面積|area|área|area/superficie
+體積|volume|volumen|volume
+原子|atom|átomo|atomo
+分子|molecule|molécula|molecola
+細胞|cell|célula|cellula
+基因|gene|gen|gene
+進化|evolution|evolución|evoluzione
+重力|gravity|gravedad|gravità
+磁鐵|magnet|imán|calamita/magnete
+電流|electric current|corriente eléctrica|corrente elettrica
+光速|speed of light|velocidad de la luz|velocità della luce
+溫度計量|degree|grado|grado
+氧氣|oxygen|oxígeno|ossigeno
+二氧化碳|carbon dioxide|dióxido de carbono|anidride carbonica
+氫|hydrogen|hidrógeno|idrogeno
+蒸氣|steam|vapor|vapore
+液體|liquid|líquido|liquido
+固體|solid|sólido|solido
+氣體|gas|gas|gas
+# 宗教、文化、節慶
+佛教|Buddhism|budismo|buddismo
+基督教|Christianity|cristianismo|cristianesimo
+天主教|Catholicism|catolicismo|cattolicesimo
+伊斯蘭教|Islam|islam|islam
+猶太教|Judaism|judaísmo|ebraismo
+佛陀|Buddha|Buda|Buddha
+耶穌|Jesus|Jesús|Gesù
+聖經|Bible|Biblia|Bibbia
+神|god|dios|dio
+天使|angel|ángel|angelo
+魔鬼|devil|diablo|diavolo
+鬼|ghost|fantasma|fantasma
+天堂|heaven/paradise|cielo/paraíso|paradiso/cielo
+地獄|hell|infierno|inferno
+祈禱|prayer|oración|preghiera
+儀式|ceremony/ritual|ceremonia/ritual|cerimonia/rituale
+春節|Chinese New Year|Año Nuevo chino|Capodanno cinese
+中秋節|Mid-Autumn Festival|Festival del Medio Otoño|Festa di metà autunno
+端午節|Dragon Boat Festival|Festival del Bote del Dragón|Festa delle barche drago
+聖誕節|Christmas|Navidad|Natale
+新年|New Year|Año Nuevo|Capodanno
+復活節|Easter|Pascua|Pasqua
+萬聖節|Halloween|Halloween|Halloween
+情人節|Valentine's Day|San Valentín|San Valentino
+母親節|Mother's Day|Día de la Madre|Festa della mamma
+父親節|Father's Day|Día del Padre|Festa del papà
+紅包|red envelope|sobre rojo|busta rossa
+煙火|fireworks|fuegos artificiales|fuochi d'artificio
+燈籠|lantern|farol/linterna|lanterna
+聖誕樹|Christmas tree|árbol de Navidad|albero di Natale
+聖誕老人|Santa Claus|Papá Noel/Santa Claus|Babbo Natale
+月餅|mooncake|pastel de luna|torta della luna
+粽子|rice dumpling|zongzi/bola de arroz|zongzi/fagottino di riso
+# 運動器材、遊戲
+球拍|racket|raqueta|racchetta
+球棒|bat|bate|mazza
+手套（運動）|glove|guante|guantone
+頭盔|helmet|casco|casco
+滑板|skateboard|monopatín/patineta|skateboard
+溜冰鞋|skates|patines|pattini
+滑雪板|ski/snowboard|esquí/tabla de snowboard|sci/snowboard
+泳鏡|swimming goggles|gafas de natación|occhialini da nuoto
+啞鈴|dumbbell|mancuerna|manubrio
+跑步機|treadmill|cinta de correr|tapis roulant
+帳篷|tent|tienda de campaña|tenda
+睡袋|sleeping bag|saco de dormir|sacco a pelo
+手電筒|flashlight|linterna|torcia
+指南針|compass|brújula|bussola
+望遠鏡|telescope/binoculars|telescopio/prismáticos|telescopio/binocolo
+骰子|dice|dado|dado
+棋盤|board|tablero|scacchiera
+紙牌遊戲|card game|juego de cartas|gioco di carte
+電動遊戲|video game|videojuego|videogioco
+# 藝術與文學
+小說家|novelist|novelista|romanziere
+詩集|poetry collection|poemario|raccolta di poesie
+散文|essay/prose|ensayo/prosa|saggio/prosa
+傳記|biography|biografía|biografia
+自傳|autobiography|autobiografía|autobiografia
+日記|diary|diario|diario
+信件|letters|cartas|lettere
+書信集|collected letters|epistolario|epistolario
+作品|work|obra|opera
+傑作|masterpiece|obra maestra|capolavoro
+主角|protagonist|protagonista|protagonista
+情節|plot|trama|trama
+章節|chapter|capítulo|capitolo
+標題|title|título|titolo
+封面|cover|portada|copertina
+頁|page|página|pagina
+段落|paragraph|párrafo|paragrafo
+字母|letter (alphabet)|letra|lettera
+漢字|Chinese character|carácter chino|carattere cinese
+文法|grammar|gramática|grammatica
+發音|pronunciation|pronunciación|pronuncia
+詞彙|vocabulary|vocabulario|vocabolario
+翻譯（名詞）|translation|traducción|traduzione
+口音|accent|acento|accento
+方言|dialect|dialecto|dialetto
+母語|native language|lengua materna|lingua madre
+外語|foreign language|lengua extranjera|lingua straniera
+油畫|oil painting|pintura al óleo|dipinto a olio
+水彩|watercolor|acuarela|acquerello
+素描|sketch|boceto|schizzo
+肖像|portrait|retrato|ritratto
+風景畫|landscape painting|paisaje|paesaggio
+畫筆|paintbrush|pincel|pennello
+畫布|canvas|lienzo|tela
+顏料|paint|pintura|colore/vernice
+陶藝|pottery|cerámica|ceramica
+書法|calligraphy|caligrafía|calligrafia

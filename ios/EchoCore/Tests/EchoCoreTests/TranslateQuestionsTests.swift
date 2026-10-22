@@ -20,7 +20,8 @@ final class TranslateQuestionsTests: XCTestCase {
             // 「請問」是客氣話（excuse me），翻進去或不翻進去意思都對
             func same(_ a: String?, _ b: String?) -> Bool {
                 guard let a = n(a), let b = n(b) else { return a == nil && b == nil }
-                return a == b || a == "請問" + b || b == "請問" + a
+                // 「那個」可以是口頭禪，也可以是「那個（東西）」，兩種都對
+                return a == b || a == "請問" + b || b == "請問" + a || a == "那個" + b || b == "那個" + a
             }
             if let text = x.text {
                 if !same(r?.text, text) || r?.target.rawValue != x.target {

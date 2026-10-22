@@ -1,0 +1,178 @@
+# 補充：辦公室與工作
+辦公桌|office desk|escritorio|scrivania
+會議室|meeting room|sala de reuniones|sala riunioni
+影印機|photocopier|fotocopiadora|fotocopiatrice
+白板筆|whiteboard marker|rotulador de pizarra|pennarello per lavagna
+便利貼|sticky note|nota adhesiva/pósit|post-it
+文件夾|file folder|carpeta|cartellina
+公事包|briefcase|maletín|valigetta
+名牌|name tag|tarjeta de identificación|cartellino con il nome
+工作證|work badge|credencial|tesserino
+電子表單|spreadsheet|hoja de cálculo|foglio di calcolo
+簡報|presentation|presentación|presentazione
+截止日期|due date|fecha de entrega|data di scadenza
+上班時間|working hours|horario laboral|orario di lavoro
+休假|time off|días libres|ferie
+病假|sick leave|baja por enfermedad|congedo per malattia
+產假|maternity leave|baja por maternidad|congedo di maternità
+加薪|raise|aumento de sueldo|aumento di stipendio
+獎金|bonus|bonificación/bono|bonus/premio
+年終|year-end|fin de año|fine anno
+同行|peer (same profession)|colega del sector|collega del settore
+上司|supervisor|superior/jefe|superiore/capo
+下屬|subordinate|subordinado|subordinato
+團隊|team|equipo|squadra/team
+專家意見|expert opinion|opinión de experto|parere dell'esperto
+客服|customer service|atención al cliente|servizio clienti
+總機|switchboard|centralita|centralino
+分機|extension|extensión|interno
+傳真|fax|fax|fax
+快遞|express delivery|mensajería|corriere espresso
+倉庫|warehouse|almacén|magazzino
+庫存|inventory/stock|inventario/existencias|scorte/inventario
+樣品|sample|muestra|campione
+目錄|catalog|catálogo|catalogo
+價目表|price list|lista de precios|listino prezzi
+報價|quote/quotation|presupuesto/cotización|preventivo
+付款|payment|pago|pagamento
+訂金|deposit|depósito/anticipo|acconto/caparra
+分期付款|installment|pago a plazos|rate
+信用|credit|crédito|credito
+利息|interest|interés|interesse
+存款|savings/deposit|ahorros/depósito|risparmi/deposito
+支票|check|cheque|assegno
+匯款|remittance/transfer|transferencia|bonifico
+銀行卡|bank card|tarjeta bancaria|carta bancaria
+# 補充：家庭關係二
+親戚|relative|pariente|parente
+祖先|ancestor|antepasado|antenato
+後代|descendant|descendiente|discendente
+長輩|elder|mayor|anziano/persona più grande
+晚輩|younger generation|joven/menor|più giovane
+獨生子|only child|hijo único|figlio unico
+長子|eldest son|hijo mayor|figlio maggiore
+老么|youngest child|el menor|il più piccolo
+公公|father-in-law|suegro|suocero
+婆婆|mother-in-law|suegra|suocera
+女婿|son-in-law|yerno|genero
+媳婦|daughter-in-law|nuera|nuora
+繼父|stepfather|padrastro|patrigno
+繼母|stepmother|madrastra|matrigna
+養父母|adoptive parents|padres adoptivos|genitori adottivi
+乾爹|godfather|padrino|padrino
+乾媽|godmother|madrina|madrina
+家譜|family tree|árbol genealógico|albero genealogico
+# 補充：飲食動作與口感
+脆|crispy/crunchy|crujiente|croccante
+嫩|tender|tierno|tenero
+Q彈|chewy|elástico/chicloso|gommoso/elastico
+濃|strong/thick|fuerte/espeso|forte/denso
+淡|weak/light|suave/ligero|leggero/debole
+多汁|juicy|jugoso|succoso
+乾巴巴|dry|seco|asciutto/secco
+軟綿綿|soft and fluffy|esponjoso|soffice
+香脆|crispy and fragrant|crujiente y aromático|croccante e profumato
+熱騰騰|steaming hot|humeante|fumante
+冰涼|ice-cold|helado|ghiacciato
+飢餓|hunger|hambre|fame
+口渴（名詞）|thirst|sed|sete
+飽足|fullness|saciedad|sazietà
+# 補充：城市生活
+交通尖峰|rush hour|hora punta|ora di punta
+通勤|commute|desplazamiento al trabajo|pendolarismo
+上班族|office worker|oficinista|impiegato
+公寓大樓|apartment building|edificio de apartamentos|condominio
+社區大樓|residential complex|complejo residencial|complesso residenziale
+管理員|building manager|portero/conserje|portiere
+垃圾車|garbage truck|camión de la basura|camion della spazzatura
+資源回收|recycling|reciclaje|raccolta differenziata
+公園長椅|park bench|banco del parque|panchina del parco
+腳踏車道|bike lane|carril bici|pista ciclabile
+共享單車|shared bike|bicicleta compartida|bici in sharing
+電動車|electric car|coche eléctrico|auto elettrica
+充電站|charging station|estación de carga|stazione di ricarica
+地下道|underpass|paso subterráneo|sottopassaggio
+陸橋|pedestrian bridge|puente peatonal|ponte pedonale
+十字路口|crossroads|cruce|incrocio
+紅燈|red light|semáforo en rojo|semaforo rosso
+綠燈|green light|semáforo en verde|semaforo verde
+黃燈|yellow light|semáforo en amarillo|semaforo giallo
+行人|pedestrian|peatón|pedone
+騎士（機車）|rider|motociclista|motociclista
+路人|passerby|transeúnte|passante
+街角|street corner|esquina|angolo della strada
+商圈|shopping district|zona comercial|zona commerciale
+百貨公司|department store|grandes almacenes|grande magazzino
+美食街|food court|patio de comidas|area ristorazione
+電影票|movie ticket|entrada de cine|biglietto del cinema
+KTV|karaoke|karaoke|karaoke
+網咖|internet café|cibercafé|internet café
+健身中心|fitness center|centro de fitness|centro fitness
+瑜伽教室|yoga studio|estudio de yoga|studio di yoga
+游泳課|swimming lesson|clase de natación|lezione di nuoto
+鋼琴課|piano lesson|clase de piano|lezione di pianoforte
+語言學校|language school|escuela de idiomas|scuola di lingue
+補習班|cram school|academia|doposcuola/ripetizioni
+圖書證|library card|carné de biblioteca|tessera della biblioteca
+借書證|borrowing card|carné de préstamo|tessera prestiti
+# 補充：常見抽象動作
+學會|to learn (how to)|aprender a|imparare a
+忘掉|to forget about|olvidarse de|dimenticarsi di
+弄丟|to lose (something)|perder|perdere
+弄壞|to break/to damage|romper/estropear|rompere/rovinare
+弄髒|to make dirty|ensuciar|sporcare
+弄乾淨|to clean up|limpiar|pulire
+用完|to use up|gastar/agotar|finire/esaurire
+吃完|to finish eating|terminar de comer|finire di mangiare
+喝完|to finish drinking|terminar de beber|finire di bere
+做完|to finish doing|terminar de hacer|finire di fare
+看完|to finish reading/watching|terminar de ver/leer|finire di guardare/leggere
+寫完|to finish writing|terminar de escribir|finire di scrivere
+聽懂|to understand (by listening)|entender|capire
+看懂|to understand (by reading)|entender|capire
+記住|to keep in mind|recordar/memorizar|ricordare/tenere a mente
+想起|to recall|acordarse de|ricordarsi di
+想到|to think of|pensar en/ocurrirse|pensare a/venire in mente
+說好|to agree on|quedar en/acordar|mettersi d'accordo
+說服|to persuade|convencer|convincere
+吵醒|to wake (someone) up|despertar|svegliare
+叫醒|to wake up (someone)|despertar|svegliare
+哄睡|to lull to sleep|dormir/arrullar|far addormentare
+睡著|to fall asleep|dormirse|addormentarsi
+睡過頭|to oversleep|quedarse dormido|dormire troppo
+趕上|to catch (in time)|alcanzar/llegar a tiempo|fare in tempo/prendere
+錯過|to miss|perder|perdere
+遲到了|to be late|llegar tarde|essere in ritardo
+早到|to arrive early|llegar temprano|arrivare presto
+準時到|to arrive on time|llegar a tiempo|arrivare in orario
+等很久|to wait a long time|esperar mucho|aspettare a lungo
+花時間|to take time|tomar tiempo/dedicar tiempo|prendere tempo/dedicare tempo
+浪費|to waste|desperdiciar|sprecare
+節省|to save|ahorrar|risparmiare
+分配|to distribute|distribuir|distribuire
+收集|to collect|coleccionar/recoger|raccogliere/collezionare
+整合|to integrate|integrar|integrare
+比賽（動詞）|to compete|competir|gareggiare
+訓練|to train|entrenar|allenare/allenarsi
+參觀|to visit (a place)|visitar|visitare
+觀察|to observe|observar|osservare
+欣賞風景|to enjoy the scenery|disfrutar del paisaje|ammirare il paesaggio
+享受|to enjoy|disfrutar|godersi
+期望|to expect|esperar|aspettarsi
+預測|to predict|predecir/prever|prevedere
+預約（動詞）|to make an appointment|pedir cita|prenotare un appuntamento
+延期|to postpone|aplazar/posponer|rinviare/posticipare
+提前|to bring forward|adelantar|anticipare
+準備好|to be ready|estar listo|essere pronto
+忙著|to be busy with|estar ocupado con|essere occupato con
+習慣於|to be used to|estar acostumbrado a|essere abituato a
+擅長|to be good at|ser bueno en|essere bravo a
+不擅長|to be bad at|ser malo en|non essere bravo a
+感興趣|to be interested in|estar interesado en|essere interessato a
+受歡迎|to be popular|ser popular|essere popolare
+出名|to become famous|hacerse famoso|diventare famoso
+變老|to grow old|envejecer|invecchiare
+變胖|to get fat|engordar|ingrassare
+變瘦|to get thin|adelgazar|dimagrire
+變好|to get better|mejorar|migliorare
+變壞|to get worse|empeorar|peggiorare

@@ -1,0 +1,251 @@
+# 家、房間、日用品
+房子|house|casa|casa
+家|home|hogar/casa|casa
+公寓|apartment|apartamento/piso|appartamento
+房間|room|habitación|stanza/camera
+臥室|bedroom|dormitorio|camera da letto
+客廳|living room|sala/salón|soggiorno/salotto
+廚房|kitchen|cocina|cucina
+浴室|bathroom|baño|bagno
+廁所|toilet/restroom|baño/servicio|bagno/toilette
+餐廳|dining room|comedor|sala da pranzo
+陽台|balcony|balcón|balcone
+花園|garden|jardín|giardino
+車庫|garage|garaje|garage
+地下室|basement|sótano|seminterrato/cantina
+屋頂|roof|techo/tejado|tetto
+牆|wall|pared|muro/parete
+地板|floor|suelo/piso|pavimento
+天花板|ceiling|techo|soffitto
+樓梯|stairs|escaleras|scale
+電梯|elevator|ascensor|ascensore
+門|door|puerta|porta
+窗戶|window|ventana|finestra
+鑰匙|key|llave|chiave
+鎖|lock|cerradura|serratura
+桌子|table|mesa|tavolo
+書桌|desk|escritorio|scrivania
+椅子|chair|silla|sedia
+沙發|sofa/couch|sofá|divano
+床|bed|cama|letto
+枕頭|pillow|almohada|cuscino
+被子|blanket/quilt|manta/edredón|coperta/piumone
+床單|sheet|sábana|lenzuolo
+衣櫃|wardrobe/closet|armario|armadio
+抽屜|drawer|cajón|cassetto
+書架|bookshelf|estantería|libreria/scaffale
+鏡子|mirror|espejo|specchio
+燈|lamp/light|lámpara/luz|lampada/luce
+窗簾|curtain|cortina|tenda
+地毯|carpet/rug|alfombra|tappeto
+時鐘|clock|reloj|orologio
+鬧鐘|alarm clock|despertador|sveglia
+電視|television/TV|televisión/tele|televisione/TV
+收音機|radio|radio|radio
+電話|telephone/phone|teléfono|telefono
+手機|cell phone/mobile phone|móvil/celular|cellulare
+電腦|computer|computadora/ordenador|computer
+筆記型電腦|laptop|portátil/laptop|portatile
+平板|tablet|tableta|tablet
+鍵盤|keyboard|teclado|tastiera
+滑鼠|mouse|ratón|mouse
+螢幕|screen|pantalla|schermo
+耳機|headphones|auriculares|cuffie
+相機|camera|cámara|macchina fotografica
+充電器|charger|cargador|caricabatterie
+電池|battery|batería/pila|batteria/pila
+插座|socket/outlet|enchufe|presa
+冷氣|air conditioner|aire acondicionado|condizionatore
+電風扇|fan|ventilador|ventilatore
+暖氣|heating|calefacción|riscaldamento
+洗衣機|washing machine|lavadora|lavatrice
+吸塵器|vacuum cleaner|aspiradora|aspirapolvere
+垃圾|trash/garbage|basura|spazzatura
+垃圾桶|trash can|basurero/cubo de basura|pattumiera/cestino
+掃把|broom|escoba|scopa
+毛巾|towel|toalla|asciugamano
+肥皂|soap|jabón|sapone
+洗髮精|shampoo|champú|shampoo
+牙刷|toothbrush|cepillo de dientes|spazzolino
+牙膏|toothpaste|pasta de dientes|dentifricio
+梳子|comb|peine|pettine
+衛生紙|toilet paper|papel higiénico|carta igienica
+雨傘|umbrella|paraguas|ombrello
+錢包|wallet|cartera/billetera|portafoglio
+包包|bag|bolso|borsa
+背包|backpack|mochila|zaino
+行李箱|suitcase|maleta|valigia
+箱子|box|caja|scatola
+袋子|bag|bolsa|sacchetto
+禮物|gift/present|regalo|regalo
+信|letter|carta|lettera
+信封|envelope|sobre|busta
+郵票|stamp|sello/estampilla|francobollo
+包裹|package/parcel|paquete|pacco
+報紙|newspaper|periódico|giornale
+雜誌|magazine|revista|rivista
+書|book|libro|libro
+筆記本|notebook|cuaderno|quaderno
+筆|pen|bolígrafo/pluma|penna
+鉛筆|pencil|lápiz|matita
+橡皮擦|eraser|goma de borrar|gomma
+尺|ruler|regla|righello
+剪刀|scissors|tijeras|forbici
+膠水|glue|pegamento|colla
+紙|paper|papel|carta
+地圖|map|mapa|mappa
+照片|photo/picture|foto|foto
+畫|painting|pintura/cuadro|quadro/dipinto
+花瓶|vase|florero/jarrón|vaso
+蠟燭|candle|vela|candela
+火柴|match|cerilla/fósforo|fiammifero
+打火機|lighter|encendedor/mechero|accendino
+工具|tool|herramienta|attrezzo/strumento
+鐵鎚|hammer|martillo|martello
+釘子|nail|clavo|chiodo
+螺絲起子|screwdriver|destornillador|cacciavite
+繩子|rope|cuerda|corda
+梯子|ladder|escalera|scala
+# 衣服、配件
+衣服|clothes|ropa|vestiti
+襯衫|shirt|camisa|camicia
+T恤|T-shirt|camiseta|maglietta
+毛衣|sweater|suéter/jersey|maglione
+外套|coat/jacket|abrigo/chaqueta|cappotto/giacca
+夾克|jacket|chaqueta|giacca
+西裝|suit|traje|abito/completo
+褲子|pants/trousers|pantalones|pantaloni
+牛仔褲|jeans|vaqueros/jeans|jeans
+短褲|shorts|pantalones cortos|pantaloncini
+裙子|skirt|falda|gonna
+洋裝|dress|vestido|vestito/abito
+睡衣|pajamas|pijama|pigiama
+內衣|underwear|ropa interior|biancheria intima
+襪子|socks|calcetines|calzini
+鞋子|shoes|zapatos|scarpe
+運動鞋|sneakers|zapatillas|scarpe da ginnastica
+靴子|boots|botas|stivali
+拖鞋|slippers|pantuflas/zapatillas|pantofole/ciabatte
+涼鞋|sandals|sandalias|sandali
+帽子|hat|sombrero/gorra|cappello
+圍巾|scarf|bufanda|sciarpa
+手套|gloves|guantes|guanti
+領帶|tie|corbata|cravatta
+皮帶|belt|cinturón|cintura
+眼鏡|glasses|gafas/lentes|occhiali
+太陽眼鏡|sunglasses|gafas de sol|occhiali da sole
+手錶|watch|reloj|orologio
+戒指|ring|anillo|anello
+項鍊|necklace|collar|collana
+耳環|earrings|aretes/pendientes|orecchini
+手環|bracelet|pulsera|braccialetto
+口袋|pocket|bolsillo|tasca
+扣子|button|botón|bottone
+拉鍊|zipper|cremallera|cerniera/zip
+泳衣|swimsuit|traje de baño|costume da bagno
+雨衣|raincoat|impermeable|impermeabile
+制服|uniform|uniforme|divisa/uniforme
+# 地方、城市
+城市|city|ciudad|città
+鄉村|countryside|campo|campagna
+村莊|village|pueblo/aldea|villaggio/paese
+國家|country|país|paese
+首都|capital|capital|capitale
+街道|street|calle|strada/via
+馬路|road|carretera/calle|strada
+路口|intersection|cruce|incrocio
+廣場|square|plaza|piazza
+公園|park|parque|parco
+學校|school|escuela/colegio|scuola
+大學|university|universidad|università
+圖書館|library|biblioteca|biblioteca
+博物館|museum|museo|museo
+美術館|art gallery|galería de arte/museo de arte|galleria d'arte
+電影院|movie theater/cinema|cine|cinema
+劇院|theater|teatro|teatro
+餐館|restaurant|restaurante|ristorante
+咖啡廳|café/coffee shop|cafetería|bar/caffetteria
+酒吧|bar|bar|bar/pub
+飯店|hotel|hotel|albergo/hotel
+商店|store/shop|tienda|negozio
+超市|supermarket|supermercado|supermercato
+市場|market|mercado|mercato
+購物中心|shopping mall|centro comercial|centro commerciale
+麵包店|bakery|panadería|panetteria/forno
+書店|bookstore|librería|libreria
+銀行|bank|banco|banca
+郵局|post office|oficina de correos|ufficio postale
+警察局|police station|comisaría|questura/commissariato
+消防局|fire station|estación de bomberos|caserma dei pompieri
+教堂|church|iglesia|chiesa
+寺廟|temple|templo|tempio
+辦公室|office|oficina|ufficio
+工廠|factory|fábrica|fabbrica
+農場|farm|granja|fattoria
+車站|station|estación|stazione
+火車站|train station|estación de tren|stazione ferroviaria
+公車站|bus stop|parada de autobús|fermata dell'autobus
+地鐵站|subway station|estación de metro|stazione della metropolitana
+機場|airport|aeropuerto|aeroporto
+港口|port/harbor|puerto|porto
+停車場|parking lot|estacionamiento/aparcamiento|parcheggio
+加油站|gas station|gasolinera|distributore di benzina
+橋|bridge|puente|ponte
+隧道|tunnel|túnel|galleria/tunnel
+體育館|gym/stadium|gimnasio/estadio|palestra/stadio
+健身房|gym|gimnasio|palestra
+游泳池|swimming pool|piscina|piscina
+海灘|beach|playa|spiaggia
+動物園|zoo|zoológico/zoo|zoo
+遊樂園|amusement park|parque de atracciones|parco divertimenti
+監獄|prison|cárcel/prisión|prigione/carcere
+城堡|castle|castillo|castello
+宮殿|palace|palacio|palazzo
+塔|tower|torre|torre
+大樓|building|edificio|edificio/palazzo
+摩天大樓|skyscraper|rascacielos|grattacielo
+鄰近地區|neighborhood|barrio|quartiere
+市中心|downtown/city center|centro|centro
+郊區|suburbs|afueras/suburbios|periferia
+# 交通
+車|car|coche/carro/auto|macchina/auto
+汽車|car|coche/automóvil|automobile/auto
+公車|bus|autobús|autobus
+火車|train|tren|treno
+地鐵|subway/metro|metro|metropolitana/metro
+計程車|taxi|taxi|taxi
+飛機|airplane/plane|avión|aereo
+船|ship/boat|barco|nave/barca
+小船|boat|bote/barca|barca
+腳踏車|bicycle/bike|bicicleta|bicicletta
+機車|motorcycle/scooter|moto|moto/motorino
+卡車|truck|camión|camion
+直升機|helicopter|helicóptero|elicottero
+電車|tram|tranvía|tram
+票|ticket|boleto/billete|biglietto
+護照|passport|pasaporte|passaporto
+簽證|visa|visado/visa|visto
+行李|luggage|equipaje|bagaglio
+司機座|driver's seat|asiento del conductor|posto di guida
+座位|seat|asiento|posto/sedile
+紅綠燈|traffic light|semáforo|semaforo
+交通|traffic|tráfico|traffico
+塞車|traffic jam|atasco/embotellamiento|ingorgo
+旅行|trip/travel|viaje|viaggio
+旅程|journey|viaje/trayecto|viaggio/percorso
+地址|address|dirección|indirizzo
+方向|direction|dirección|direzione
+左邊|left|izquierda|sinistra
+右邊|right|derecha|destra
+前面|front|frente/delante|davanti
+後面|back/behind|detrás|dietro
+上面|top/above|arriba/encima|sopra
+下面|bottom/below|abajo/debajo|sotto
+旁邊|side/next to|al lado|accanto
+中間|middle|medio/centro|mezzo/centro
+裡面|inside|dentro|dentro
+外面|outside|fuera/afuera|fuori
+北|north|norte|nord
+南|south|sur|sud
+東|east|este|est
+西|west|oeste|ovest

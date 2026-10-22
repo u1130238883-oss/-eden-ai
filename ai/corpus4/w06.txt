@@ -1,0 +1,298 @@
+# 更多食物、烹飪
+早午餐|brunch|brunch|brunch
+宵夜|late-night snack|tentempié nocturno|spuntino notturno
+便當|lunch box|fiambrera/almuerzo para llevar|pranzo al sacco
+粥|porridge/congee|gachas|porridge/zuppa di riso
+炒飯|fried rice|arroz frito|riso fritto
+炒麵|fried noodles|fideos fritos|spaghetti saltati
+拉麵|ramen|ramen|ramen
+牛排|steak|filete/bistec|bistecca
+烤雞|roast chicken|pollo asado|pollo arrosto
+肉丸|meatball|albóndiga|polpetta
+燉菜|stew|guiso/estofado|stufato
+咖哩|curry|curry|curry
+吐司|toast|tostada|pane tostato
+可頌|croissant|cruasán/medialuna|cornetto/croissant
+貝果|bagel|bagel|bagel
+鬆餅|pancake|panqueque/tortita|pancake/frittella
+甜甜圈|donut|dona/rosquilla|ciambella
+布丁|pudding|pudín/flan|budino
+派|pie|pastel/tarta|torta
+餅|pancake/flatbread|torta/tortita|focaccia/frittella
+麵糰|dough|masa|impasto
+醬汁|sauce|salsa|salsa/sugo
+番茄醬|ketchup|kétchup|ketchup
+美乃滋|mayonnaise|mayonesa|maionese
+芥末|mustard|mostaza|senape
+香料|spice|especia|spezia
+肉桂|cinnamon|canela|cannella
+香草|vanilla|vainilla|vaniglia
+羅勒|basil|albahaca|basilico
+薄荷|mint|menta|menta
+迷迭香|rosemary|romero|rosmarino
+奧勒岡|oregano|orégano|origano
+食譜|recipe|receta|ricetta
+廚藝|cooking|cocina|cucina
+早點|breakfast food|desayuno|colazione
+罐頭|canned food|lata/conserva|scatoletta/conserva
+零食|snacks|aperitivos/botanas|snack/stuzzichini
+麥當勞|McDonald's|McDonald's|McDonald's
+咖啡豆|coffee bean|grano de café|chicco di caffè
+茶葉|tea leaves|hojas de té|foglie di tè
+濃縮咖啡|espresso|café expreso|espresso/caffè espresso
+卡布奇諾|cappuccino|capuchino|cappuccino
+拿鐵|latte|café con leche/latte|caffellatte
+可樂|cola|refresco de cola/coca-cola|cola/coca-cola
+檸檬水|lemonade|limonada|limonata
+豆漿|soy milk|leche de soja|latte di soia
+米酒|rice wine|vino de arroz|vino di riso
+伏特加|vodka|vodka|vodka
+蘭姆酒|rum|ron|rum
+葡萄乾|raisin|pasa|uvetta/uva passa
+杏桃|apricot|albaricoque/damasco|albicocca
+覆盆子|raspberry|frambuesa|lampone
+黑莓|blackberry|mora|mora
+萊姆|lime|lima|lime
+柚子|grapefruit/pomelo|pomelo|pompelmo
+荔枝|lychee|lichi|litchi
+榴槤|durian|durián|durian
+棗子|date|dátil|dattero
+橄欖|olive|aceituna/oliva|oliva
+蘆筍|asparagus|espárrago|asparago
+朝鮮薊|artichoke|alcachofa|carciofo
+櫛瓜|zucchini|calabacín|zucchina
+甜椒|bell pepper|pimiento|peperone
+甜菜根|beetroot|remolacha|barbabietola
+蘿蔔|radish|rábano|ravanello
+地瓜|sweet potato|batata/camote|patata dolce
+扁豆|lentils|lentejas|lenticchie
+鷹嘴豆|chickpeas|garbanzos|ceci
+蔥|green onion/scallion|cebolleta|cipollotto
+韭菜|leek|puerro|porro
+香菜|cilantro/coriander|cilantro|coriandolo
+海帶|seaweed|alga|alga
+牡蠣|oyster|ostra|ostrica
+蛤蜊|clam|almeja|vongola
+淡菜|mussel|mejillón|cozza
+魷魚|squid|calamar|calamaro
+鱈魚|cod|bacalao|merluzzo
+沙丁魚|sardine|sardina|sardina
+火雞|turkey|pavo|tacchino
+鴨肉|duck meat|carne de pato|carne d'anatra
+蛋白|egg white|clara de huevo|albume
+蛋黃|egg yolk|yema de huevo|tuorlo
+炒蛋|scrambled eggs|huevos revueltos|uova strapazzate
+荷包蛋|fried egg|huevo frito|uovo fritto
+水煮蛋|boiled egg|huevo cocido|uovo sodo
+起司蛋糕|cheesecake|tarta de queso|cheesecake/torta al formaggio
+提拉米蘇|tiramisu|tiramisú|tiramisù
+馬卡龍|macaron|macarón|macaron
+奶昔|milkshake|batido|frullato/milkshake
+冰沙|smoothie|batido/licuado|frullato/smoothie
+早餐穀片|breakfast cereal|cereales para el desayuno|cereali per la colazione
+燕麥|oats|avena|avena
+麵包屑|breadcrumbs|pan rallado|pangrattato
+小麥|wheat|trigo|grano/frumento
+糙米|brown rice|arroz integral|riso integrale
+全麥麵包|whole wheat bread|pan integral|pane integrale
+素食者|vegetarian|vegetariano|vegetariano
+純素者|vegan|vegano|vegano
+口味|flavor/taste|sabor|sapore/gusto
+味道|smell/taste|olor/sabor|odore/sapore
+香味|aroma/fragrance|aroma|profumo/aroma
+胃口|appetite|apetito|appetito
+一餐|meal|comida|pasto
+份量|portion|porción|porzione
+外帶|takeaway/to go|para llevar|da asporto
+外送|delivery|entrega a domicilio|consegna a domicilio
+訂位|reservation|reserva|prenotazione
+主菜|main course|plato principal|piatto principale/secondo
+前菜|appetizer/starter|entrante/aperitivo|antipasto
+配菜|side dish|guarnición|contorno
+主廚|head chef|jefe de cocina/chef|capocuoco/chef
+# 家電、科技
+科技|technology|tecnología|tecnologia
+機器|machine|máquina|macchina
+機器人|robot|robot|robot
+人工智慧|artificial intelligence|inteligencia artificial|intelligenza artificiale
+軟體|software|software|software
+硬體|hardware|hardware|hardware
+程式|program|programa|programma
+應用程式|app/application|aplicación/app|app/applicazione
+資料|data|datos|dati
+檔案|file|archivo|file
+資料夾|folder|carpeta|cartella
+印表機|printer|impresora|stampante
+掃描器|scanner|escáner|scanner
+伺服器|server|servidor|server
+網路連線|internet connection|conexión a internet|connessione internet
+無線網路|Wi-Fi|wifi|wi-fi
+藍牙|Bluetooth|Bluetooth|Bluetooth
+帳號|account|cuenta|account
+使用者|user|usuario|utente
+登入|login|inicio de sesión|accesso/login
+按鈕|button|botón|pulsante/tasto
+圖示|icon|icono|icona
+視窗|window|ventana|finestra
+遊戲機|game console|consola|console
+遙控器|remote control|control remoto/mando|telecomando
+喇叭|speaker|altavoz/parlante|altoparlante/cassa
+麥克風|microphone|micrófono|microfono
+攝影機|video camera|videocámara|videocamera
+投影機|projector|proyector|proiettore
+隨身碟|USB flash drive|memoria USB|chiavetta USB
+硬碟|hard drive|disco duro|disco rigido
+記憶體|memory|memoria|memoria
+晶片|chip|chip|chip
+電線|wire/cable|cable|cavo/filo
+電源|power|energía/corriente|alimentazione/corrente
+電|electricity|electricidad|elettricità
+電燈泡|light bulb|bombilla/foco|lampadina
+吹風機|hair dryer|secador de pelo|asciugacapelli/phon
+熨斗|iron|plancha|ferro da stiro
+烤麵包機|toaster|tostadora|tostapane
+咖啡機|coffee machine|cafetera|macchina del caffè
+洗碗機|dishwasher|lavavajillas/lavaplatos|lavastoviglie
+果汁機|blender|licuadora|frullatore
+電鍋|rice cooker|olla arrocera|cuociriso
+熱水壺|kettle|hervidor|bollitore
+# 學習、文具、辦公
+文具|stationery|papelería|cancelleria
+原子筆|ballpoint pen|bolígrafo|penna a sfera
+螢光筆|highlighter|marcador/resaltador|evidenziatore
+迴紋針|paper clip|clip|graffetta
+釘書機|stapler|grapadora/engrapadora|pinzatrice/spillatrice
+計算機|calculator|calculadora|calcolatrice
+課本|textbook|libro de texto|libro di testo
+講義|handout|apuntes|dispensa
+筆記|notes|apuntes/notas|appunti
+試卷|exam paper|hoja de examen|foglio d'esame
+成績單|report card/transcript|boletín de notas|pagella
+證書|certificate|certificado|certificato
+獎學金|scholarship|beca|borsa di studio
+學費|tuition|matrícula|tasse universitarie/retta
+宿舍|dormitory|residencia estudiantil|dormitorio/studentato
+校園|campus|campus|campus
+操場|playground/sports field|patio/campo de deportes|cortile/campo sportivo
+實驗室|laboratory/lab|laboratorio|laboratorio
+系|department|departamento|dipartimento
+學期|semester|semestre|semestre
+暑假|summer vacation|vacaciones de verano|vacanze estive
+寒假|winter vacation|vacaciones de invierno|vacanze invernali
+研究所|graduate school|posgrado|scuola di specializzazione
+論文|thesis/paper|tesis|tesi
+演講|speech/lecture|discurso/conferencia|discorso/conferenza
+討論|discussion|discusión|discussione
+辯論|debate|debate|dibattito
+面試|interview|entrevista|colloquio
+履歷|résumé/CV|currículum|curriculum
+同意書|consent form|formulario de consentimiento|modulo di consenso
+文件|document|documento|documento
+表格|form|formulario|modulo
+簽名|signature|firma|firma
+印章|stamp/seal|sello|timbro
+預算|budget|presupuesto|budget/bilancio
+利潤|profit|beneficio/ganancia|profitto
+損失|loss|pérdida|perdita
+投資|investment|inversión|investimento
+股票|stock/share|acción|azione
+貸款|loan|préstamo|prestito
+債務|debt|deuda|debito
+保險|insurance|seguro|assicurazione
+發票|invoice/receipt|factura|fattura
+收據|receipt|recibo|ricevuta
+折扣|discount|descuento|sconto
+特價|sale|oferta/rebaja|saldo/offerta
+排隊的人|queue|cola|fila/coda
+老闆娘|proprietress|dueña|padrona/titolare
+員工|employee|empleado|dipendente/impiegato
+同仁|staff|personal|personale
+部門|department|departamento|reparto/ufficio
+總部|headquarters|sede central|sede centrale
+分公司|branch|sucursal|filiale
+客戶|client|cliente|cliente
+供應商|supplier|proveedor|fornitore
+競爭|competition|competencia|concorrenza
+廣告|advertisement|anuncio/publicidad|pubblicità/annuncio
+品牌|brand|marca|marchio/marca
+行銷|marketing|marketing/mercadotecnia|marketing
+銷售|sales|ventas|vendite
+訂單|order|pedido|ordine
+運費|shipping fee|gastos de envío|spese di spedizione
+退款|refund|reembolso|rimborso
+保證|guarantee/warranty|garantía|garanzia
+# 運動、休閒、嗜好
+嗜好|hobby|pasatiempo/afición|hobby/passatempo
+閱讀|reading|lectura|lettura
+寫作|writing|escritura|scrittura
+繪畫|painting|pintura|pittura
+攝影|photography|fotografía|fotografia
+園藝|gardening|jardinería|giardinaggio
+釣魚|fishing|pesca|pesca
+露營|camping|acampada/camping|campeggio
+健行|hiking|senderismo|escursionismo
+登山|mountain climbing|alpinismo|alpinismo
+滑雪|skiing|esquí|sci
+衝浪|surfing|surf|surf
+潛水|diving|buceo|immersione
+騎單車|cycling|ciclismo|ciclismo
+慢跑|jogging|trotar/footing|jogging/corsa
+瑜伽|yoga|yoga|yoga
+健身|fitness|fitness/ejercicio|fitness
+舉重|weightlifting|halterofilia/pesas|sollevamento pesi
+拳擊|boxing|boxeo|pugilato/boxe
+武術|martial arts|artes marciales|arti marziali
+排球|volleyball|voleibol|pallavolo
+桌球|table tennis/ping-pong|ping-pong/tenis de mesa|ping-pong/tennis da tavolo
+羽毛球|badminton|bádminton|badminton
+高爾夫|golf|golf|golf
+賽跑|race|carrera|corsa/gara
+奧運|Olympics|Juegos Olímpicos|Olimpiadi
+冠軍|champion|campeón|campione
+獎牌|medal|medalla|medaglia
+金牌|gold medal|medalla de oro|medaglia d'oro
+獎品|prize|premio|premio
+分|point|punto|punto
+平手|tie/draw|empate|pareggio
+球場|court/field|cancha/campo|campo
+球迷|fan|aficionado/hincha|tifoso
+西洋棋|chess|ajedrez|scacchi
+撲克牌|playing cards|cartas/naipes|carte da gioco
+拼圖|puzzle|rompecabezas/puzle|puzzle
+玩具|toy|juguete|giocattolo
+娃娃|doll|muñeca|bambola
+風箏|kite|cometa/papalote|aquilone
+氣球|balloon|globo|palloncino
+樂器|musical instrument|instrumento musical|strumento musicale
+鋼琴|piano|piano|pianoforte
+吉他|guitar|guitarra|chitarra
+小提琴|violin|violín|violino
+鼓|drum|tambor/batería|tamburo/batteria
+長笛|flute|flauta|flauto
+喇叭（樂器）|trumpet|trompeta|tromba
+樂團|band/orchestra|banda/orquesta|band/orchestra
+演唱會|concert|concierto|concerto
+音符|note|nota|nota
+旋律|melody|melodía|melodia
+歌詞|lyrics|letra|testo
+專輯|album|álbum|album
+節奏|rhythm|ritmo|ritmo
+戲劇|drama/play|drama/obra de teatro|dramma/opera teatrale
+舞台|stage|escenario|palcoscenico
+劇本|script|guion|copione/sceneggiatura
+角色|role/character|papel/personaje|ruolo/personaggio
+卡通|cartoon|dibujos animados|cartone animato
+漫畫|comic|cómic/historieta|fumetto
+動畫|animation|animación|animazione
+展覽|exhibition|exposición|mostra/esposizione
+雕像|statue|estatua|statua
+紀念品|souvenir|recuerdo/souvenir|souvenir/ricordo
+門票|admission ticket|entrada|biglietto d'ingresso
+觀光|sightseeing|turismo|turismo
+導覽|guided tour|visita guiada|visita guidata
+景點|tourist attraction|atracción turística|attrazione turistica
+風景|scenery/landscape|paisaje|paesaggio/panorama
+日出|sunrise|amanecer|alba
+日落|sunset|atardecer/puesta de sol|tramonto
+野餐|picnic|pícnic|picnic
+烤肉|barbecue|barbacoa/asado|grigliata/barbecue

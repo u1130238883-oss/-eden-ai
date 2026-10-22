@@ -77,6 +77,15 @@ jobs:
             NineSun 未簽名 IPA（九型十二宮 AI）。
             用 Sideloadly / AltStore / TrollStore 自行簽名安裝。
 
+      - name: Live translation check (Google vs 4-language corpus)
+        working-directory: ios/EchoCore
+        continue-on-error: true
+        env:
+          NINESUN_LIVE: "1"
+        run: |
+          NINESUN_LIVE_OUT="$PWD/live-translate.txt" swift test --filter TranslateLiveTests > live-tr.log 2>&1 || true
+          if [ -s live-translate.txt ]; then cat live-translate.txt; else grep -a -E "LIVE-TR|error:|Executed" live-tr.log || tail -40 live-tr.log; fi
+
       - name: Live web search check (real network)
         working-directory: ios/EchoCore
         continue-on-error: true

@@ -1,0 +1,233 @@
+# 情緒、個性、人際
+心情|mood|ánimo/humor|umore
+感情|feelings/emotion|sentimiento/emoción|sentimento/emozione
+情緒|emotion|emoción|emozione
+快樂|joy|alegría|gioia
+興奮|excitement|emoción/entusiasmo|eccitazione/entusiasmo
+驚訝|surprise|sorpresa|sorpresa
+失望|disappointment|decepción|delusione
+壓力|stress/pressure|estrés/presión|stress/pressione
+焦慮|anxiety|ansiedad|ansia
+寂寞|loneliness|soledad|solitudine
+嫉妒|jealousy|celos|gelosia
+驕傲|pride|orgullo|orgoglio
+羞恥|shame|vergüenza|vergogna
+罪惡感|guilt|culpa|senso di colpa
+同情|sympathy|compasión|compassione
+信任|trust|confianza|fiducia
+尊重|respect|respeto|rispetto
+勇氣|courage|valor/coraje|coraggio
+耐性|patience|paciencia|pazienza
+好奇心|curiosity|curiosidad|curiosità
+自信|confidence|confianza en sí mismo|fiducia in sé
+個性|personality|personalidad|personalità
+脾氣|temper|carácter/genio|carattere/temperamento
+習慣|habit|hábito/costumbre|abitudine
+興趣|interest|interés|interesse
+態度|attitude|actitud|atteggiamento
+關係|relationship|relación|relazione/rapporto
+約會（名詞）|date|cita|appuntamento
+婚姻|marriage|matrimonio|matrimonio
+離婚（名詞）|divorce|divorcio|divorzio
+伴侶|partner|pareja|partner/compagno
+戀人|lover|amante/enamorado|innamorato
+初戀|first love|primer amor|primo amore
+吵架|argument/quarrel|pelea/discusión|litigio
+和好|reconciliation|reconciliación|riconciliazione
+擁抱（名詞）|hug|abrazo|abbraccio
+吻|kiss|beso|bacio
+微笑（名詞）|smile|sonrisa|sorriso
+眼淚|tear|lágrima|lacrima
+笑聲|laughter|risa|risata
+聲音|voice/sound|voz/sonido|voce/suono
+噪音|noise|ruido|rumore
+沉默|silence|silencio|silenzio
+# 社會、政治、法律
+社會|society|sociedad|società
+社區|community|comunidad|comunità
+人口|population|población|popolazione
+公民|citizen|ciudadano|cittadino
+民主|democracy|democracia|democrazia
+國會|parliament/congress|parlamento/congreso|parlamento
+總理|prime minister|primer ministro|primo ministro
+部長|minister|ministro|ministro
+市長|mayor|alcalde|sindaco
+大使館|embassy|embajada|ambasciata
+政黨|political party|partido político|partito politico
+投票|vote|voto|voto
+法院|court|tribunal|tribunale
+警方|police|policía|polizia
+犯罪|crime|crimen/delito|crimine/reato
+罰款|fine|multa|multa
+證據|evidence|prueba|prova
+證人|witness|testigo|testimone
+受害者|victim|víctima|vittima
+嫌犯|suspect|sospechoso|sospettato
+軍隊|army|ejército|esercito
+武器|weapon|arma|arma
+槍|gun|pistola/arma|pistola/fucile
+炸彈|bomb|bomba|bomba
+旗子|flag|bandera|bandiera
+邊界|border|frontera|confine/frontiera
+移民|immigrant/immigration|inmigrante/inmigración|immigrato/immigrazione
+難民|refugee|refugiado|rifugiato
+貧窮（名詞）|poverty|pobreza|povertà
+財富|wealth|riqueza|ricchezza
+平等|equality|igualdad|uguaglianza
+正義|justice|justicia|giustizia
+環境|environment|medio ambiente|ambiente
+污染|pollution|contaminación|inquinamento
+氣候|climate|clima|clima
+氣候變遷|climate change|cambio climático|cambiamento climatico
+能源|energy|energía|energia
+回收|recycling|reciclaje|riciclaggio
+塑膠|plastic|plástico|plastica
+# 材料、物品
+材料|material|material|materiale
+木頭|wood|madera|legno
+金屬|metal|metal|metallo
+鐵|iron|hierro|ferro
+鋼|steel|acero|acciaio
+金子|gold|oro|oro
+銀|silver|plata|argento
+銅|copper|cobre|rame
+玻璃|glass|vidrio/cristal|vetro
+布|cloth/fabric|tela|stoffa/tessuto
+棉|cotton|algodón|cotone
+絲|silk|seda|seta
+羊毛|wool|lana|lana
+皮革|leather|cuero|pelle/cuoio
+橡膠|rubber|goma/caucho|gomma
+磚塊|brick|ladrillo|mattone
+水泥|cement|cemento|cemento
+鑽石|diamond|diamante|diamante
+珍珠|pearl|perla|perla
+寶石|gem/jewel|gema/joya|gemma/gioiello
+珠寶|jewelry|joyas|gioielli
+香水|perfume|perfume|profumo
+化妝品|cosmetics/makeup|maquillaje/cosméticos|trucco/cosmetici
+口紅|lipstick|pintalabios/lápiz labial|rossetto
+指甲油|nail polish|esmalte de uñas|smalto per unghie
+刮鬍刀|razor|maquinilla de afeitar|rasoio
+眼藥水|eye drops|gotas para los ojos|collirio
+隱形眼鏡|contact lenses|lentes de contacto|lenti a contatto
+衛生棉|sanitary pad|compresa|assorbente
+尿布|diaper|pañal|pannolino
+奶瓶|baby bottle|biberón|biberon
+嬰兒車|stroller|cochecito|passeggino
+搖籃|cradle|cuna|culla
+# 建築、城市設施
+人行道|sidewalk|acera/banqueta|marciapiede
+斑馬線|crosswalk|paso de peatones|strisce pedonali
+天橋|footbridge/overpass|paso elevado|cavalcavia/passerella
+高速公路|highway/freeway|autopista|autostrada
+路燈|streetlight|farola|lampione
+公共廁所|public toilet|baño público|bagno pubblico
+長椅|bench|banco|panchina
+噴水池|fountain|fuente|fontana
+雕塑|sculpture|escultura|scultura
+紀念碑|monument|monumento|monumento
+大教堂|cathedral|catedral|cattedrale/duomo
+清真寺|mosque|mezquita|moschea
+墓地|cemetery|cementerio|cimitero
+市政府|city hall|ayuntamiento|municipio/comune
+法院大樓|courthouse|palacio de justicia|tribunale
+大使|ambassador|embajador|ambasciatore
+警衛|security guard|guardia de seguridad|guardia giurata
+櫃台|counter/reception|mostrador/recepción|bancone/reception
+入口|entrance|entrada|ingresso/entrata
+出口|exit|salida|uscita
+緊急出口|emergency exit|salida de emergencia|uscita di emergenza
+走廊|hallway/corridor|pasillo|corridoio
+大廳|lobby/hall|vestíbulo/sala|atrio/sala
+樓層|floor/story|piso/planta|piano
+一樓|first floor/ground floor|planta baja/primer piso|piano terra
+屋簷|eaves|alero|grondaia
+煙囪|chimney|chimenea|camino/comignolo
+圍牆|fence/wall|valla/muro|recinzione/muro
+大門|gate/main entrance|portón/puerta principal|cancello/portone
+信箱|mailbox|buzón|cassetta delle lettere
+門鈴|doorbell|timbre|campanello
+# 交通、旅行（更多）
+航班|flight|vuelo|volo
+登機證|boarding pass|tarjeta de embarque|carta d'imbarco
+登機門|gate|puerta de embarque|gate/uscita d'imbarco
+海關|customs|aduana|dogana
+行李箱（車）|trunk|maletero/cajuela|bagagliaio
+輪胎|tire|neumático/llanta|pneumatico/gomma
+引擎|engine|motor|motore
+方向盤|steering wheel|volante|volante
+煞車|brake|freno|freno
+汽油|gasoline/petrol|gasolina|benzina
+駕照|driver's license|licencia de conducir/carné de conducir|patente
+安全帶|seat belt|cinturón de seguridad|cintura di sicurezza
+車禍|car accident|accidente de coche|incidente stradale
+罰單|ticket/fine|multa|multa
+單程票|one-way ticket|billete de ida|biglietto di sola andata
+來回票|round-trip ticket|billete de ida y vuelta|biglietto di andata e ritorno
+時刻表|timetable/schedule|horario|orario
+月台|platform|andén|binario
+車廂|car/carriage|vagón|vagone/carrozza
+渡輪|ferry|ferry/transbordador|traghetto
+郵輪|cruise ship|crucero|nave da crociera
+帆船|sailboat|velero|barca a vela
+潛水艇|submarine|submarino|sottomarino
+火箭|rocket|cohete|razzo
+太空人|astronaut|astronauta|astronauta
+太空|space|espacio|spazio
+衛星|satellite|satélite|satellite
+導航|navigation|navegación|navigazione
+旅館|inn/hotel|hostal/hotel|locanda/albergo
+民宿|bed and breakfast|casa de huéspedes|bed and breakfast/pensione
+青年旅館|hostel|albergue juvenil/hostal|ostello
+房卡|key card|tarjeta de la habitación|chiave magnetica
+退房|checkout|salida/check-out|check-out
+入住|check-in|registro/check-in|check-in
+旅行社|travel agency|agencia de viajes|agenzia di viaggi
+導遊書|guidebook|guía turística|guida turistica
+匯率|exchange rate|tipo de cambio|tasso di cambio
+外幣|foreign currency|moneda extranjera|valuta estera
+時差|time difference/jet lag|diferencia horaria/desfase horario|fuso orario/jet lag
+# 天氣、自然（更多）
+晴天|sunny day|día soleado|giornata di sole
+陰天|cloudy day|día nublado|giornata nuvolosa
+雨天|rainy day|día lluvioso|giornata piovosa
+暴風雨|storm|tormenta|tempesta
+冰雹|hail|granizo|grandine
+露水|dew|rocío|rugiada
+濕度|humidity|humedad|umidità
+氣溫|air temperature|temperatura|temperatura
+天氣預報|weather forecast|pronóstico del tiempo|previsioni del tempo
+潮汐|tide|marea|marea
+海浪|wave|ola|onda
+海岸|coast|costa|costa
+懸崖|cliff|acantilado|scogliera
+山谷|valley|valle|valle
+峽谷|canyon|cañón|canyon/gola
+平原|plain|llanura|pianura
+沼澤|swamp|pantano|palude
+冰河|glacier|glaciar|ghiacciaio
+溫泉|hot spring|aguas termales|terme/sorgente termale
+岩漿|lava|lava|lava
+化石|fossil|fósil|fossile
+礦物|mineral|mineral|minerale
+樹林|woods|bosque|bosco
+灌木|bush/shrub|arbusto|cespuglio
+蘆葦|reed|caña|canna
+苔蘚|moss|musgo|muschio
+蘑菇（野生）|wild mushroom|seta|fungo selvatico
+楓樹|maple tree|arce|acero
+橡樹|oak|roble|quercia
+棕櫚樹|palm tree|palmera|palma
+仙人掌|cactus|cactus|cactus
+蓮花|lotus|loto|loto
+百合|lily|lirio/azucena|giglio
+菊花|chrysanthemum|crisantemo|crisantemo
+蘭花|orchid|orquídea|orchidea
+雛菊|daisy|margarita|margherita
+薰衣草|lavender|lavanda|lavanda
+花束|bouquet|ramo de flores|mazzo di fiori
+花瓣|petal|pétalo|petalo
+果實|fruit|fruto|frutto
+農作物|crop|cultivo|coltura/raccolto
+收成|harvest|cosecha|raccolto

@@ -1,0 +1,223 @@
+# 更多動詞
+簽|to sign|firmar|firmare
+打字|to type|escribir a máquina/teclear|digitare/scrivere al computer
+印|to print|imprimir|stampare
+複製|to copy|copiar|copiare
+貼上|to paste|pegar|incollare
+刪除|to delete|borrar/eliminar|cancellare/eliminare
+儲存|to save|guardar|salvare
+更新|to update|actualizar|aggiornare
+安裝|to install|instalar|installare
+連接|to connect|conectar|collegare
+充電|to charge|cargar|caricare
+關機|to shut down|apagar|spegnere
+重新開機|to restart|reiniciar|riavviare
+登出|to log out|cerrar sesión|uscire/disconnettersi
+註冊|to register/to sign up|registrarse|registrarsi/iscriversi
+訂|to book/to order|reservar/pedir|prenotare/ordinare
+取消|to cancel|cancelar|annullare/disdire
+確認|to confirm|confirmar|confermare
+改|to change/to correct|cambiar/corregir|cambiare/correggere
+填|to fill in|rellenar/llenar|compilare/riempire
+申請|to apply|solicitar|fare domanda/richiedere
+批准|to approve|aprobar|approvare
+報名|to sign up/to enroll|inscribirse|iscriversi
+畢業（動詞）|to graduate|graduarse|laurearsi/diplomarsi
+考|to take an exam|hacer un examen|fare un esame
+通過|to pass|aprobar/pasar|superare/passare
+不及格|to fail (an exam)|suspender/reprobar|essere bocciato
+複習|to review|repasar|ripassare
+背|to memorize|memorizar|memorizzare/imparare a memoria
+抄|to copy (by hand)|copiar|copiare
+借書|to borrow a book|pedir prestado un libro|prendere in prestito un libro
+租|to rent|alquilar/rentar|affittare/noleggiare
+付|to pay|pagar|pagare
+找錢|to give change|dar el cambio|dare il resto
+換|to exchange/to change|cambiar|cambiare
+退|to return (an item)|devolver|restituire/rendere
+打折|to give a discount|hacer descuento|fare uno sconto
+殺價|to bargain|regatear|contrattare/mercanteggiare
+送貨|to deliver|entregar|consegnare
+包|to wrap|envolver|incartare/avvolgere
+拆|to unwrap/to open|desenvolver/abrir|scartare/aprire
+裝|to pack/to fill|empacar/llenar|imballare/riempire
+倒|to pour|verter/servir|versare
+攪拌|to stir|remover/revolver|mescolare
+煎|to fry|freír|friggere
+炒|to stir-fry|saltear/sofreír|saltare in padella
+蒸|to steam|cocer al vapor|cuocere al vapore
+燙|to scald/to blanch|escaldar|scottare/sbollentare
+燒|to burn|quemar|bruciare
+冷凍|to freeze|congelar|congelare
+解凍|to thaw|descongelar|scongelare
+加熱|to heat up|calentar|riscaldare
+削|to peel|pelar|sbucciare
+剝|to peel off|pelar|sbucciare
+混合|to mix|mezclar|mescolare/mischiare
+嚐嚐|to try (food)|probar|assaggiare
+點菜|to order food|pedir|ordinare
+請客|to treat someone|invitar|offrire
+乾杯（動詞）|to toast|brindar|brindare
+洗碗|to do the dishes|lavar los platos|lavare i piatti
+擦|to wipe|limpiar/secar|pulire/asciugare
+掃地|to sweep the floor|barrer|spazzare
+拖地|to mop the floor|fregar el suelo/trapear|lavare il pavimento
+洗衣服|to do laundry|lavar la ropa|fare il bucato
+晾|to hang out to dry|tender|stendere
+燙衣服|to iron clothes|planchar|stirare
+折|to fold|doblar|piegare
+縫|to sew|coser|cucire
+編織|to knit|tejer|lavorare a maglia
+種|to plant|plantar|piantare
+澆水|to water|regar|annaffiare
+餵|to feed|alimentar/dar de comer|nutrire/dare da mangiare
+遛狗|to walk the dog|pasear al perro|portare a spasso il cane
+養|to raise/to keep|criar/tener|allevare/tenere
+照顧|to take care of|cuidar|prendersi cura di
+陪|to accompany|acompañar|accompagnare
+接送|to pick up and drop off|llevar y recoger|accompagnare e riprendere
+接（人）|to pick up|recoger|andare a prendere
+見面|to meet|verse/encontrarse|incontrarsi/vedersi
+聊天|to chat|charlar|chiacchierare
+聯絡|to contact|contactar|contattare
+回覆|to reply|responder|rispondere
+寄信|to send a letter|enviar una carta|spedire una lettera
+分享|to share|compartir|condividere
+借錢|to borrow money|pedir dinero prestado|prendere in prestito dei soldi
+欠|to owe|deber|dovere
+存|to deposit/to save|depositar/ahorrar|depositare/risparmiare
+領|to withdraw|retirar/sacar|prelevare/ritirare
+轉帳|to transfer money|transferir|fare un bonifico
+投資（動詞）|to invest|invertir|investire
+雇用|to hire|contratar|assumere
+開除|to fire|despedir|licenziare
+辭職|to resign/to quit|renunciar/dimitir|dimettersi/licenziarsi
+退休|to retire|jubilarse|andare in pensione
+升遷|to be promoted|ser ascendido|essere promosso
+加班|to work overtime|hacer horas extra|fare gli straordinari
+出差|to go on a business trip|viajar por trabajo|andare in trasferta
+開會|to have a meeting|tener una reunión|fare una riunione
+報告（動詞）|to report|informar|riferire/fare rapporto
+管理|to manage|gestionar/administrar|gestire/amministrare
+領導|to lead|dirigir/liderar|guidare/dirigere
+合作|to cooperate|cooperar/colaborar|collaborare
+競爭（動詞）|to compete|competir|competere
+談判|to negotiate|negociar|negoziare/trattare
+簽約|to sign a contract|firmar un contrato|firmare un contratto
+抱怨|to complain|quejarse|lamentarsi
+批評|to criticize|criticar|criticare
+稱讚|to praise|elogiar/alabar|lodare/elogiare
+鼓勵|to encourage|animar/alentar|incoraggiare
+建議|to suggest/to advise|sugerir/aconsejar|suggerire/consigliare
+警告|to warn|advertir|avvertire/avvisare
+威脅|to threaten|amenazar|minacciare
+答應|to promise|prometer|promettere
+懷疑|to doubt/to suspect|dudar/sospechar|dubitare/sospettare
+猜|to guess|adivinar|indovinare
+想像|to imagine|imaginar|immaginare
+注意|to pay attention|prestar atención|fare attenzione
+專心|to concentrate|concentrarse|concentrarsi
+放鬆|to relax|relajarse|rilassarsi
+冷靜|to calm down|calmarse|calmarsi
+哭泣|to weep|llorar|piangere
+尖叫|to scream|gritar|urlare
+嘆氣|to sigh|suspirar|sospirare
+打哈欠|to yawn|bostezar|sbadigliare
+做夢|to dream|soñar|sognare
+失眠|to suffer from insomnia|tener insomnio|soffrire d'insonnia
+運動（動詞）|to exercise|hacer ejercicio|fare esercizio/fare sport
+減肥|to lose weight|adelgazar|dimagrire
+發胖|to gain weight|engordar|ingrassare
+看醫生|to see a doctor|ir al médico|andare dal medico
+吃藥|to take medicine|tomar medicina|prendere la medicina
+受傷|to get hurt|lastimarse/herirse|ferirsi/farsi male
+流血|to bleed|sangrar|sanguinare
+康復|to recover|recuperarse|guarire/riprendersi
+懷孕|to be pregnant|estar embarazada|essere incinta
+生（孩子）|to give birth|dar a luz|partorire
+餵奶|to breastfeed|amamantar|allattare
+哄|to soothe/to coax|calmar/consolar|calmare/consolare
+教育|to educate|educar|educare
+懲罰|to punish|castigar|punire
+獎勵|to reward|premiar|premiare
+慶祝|to celebrate|celebrar/festejar|festeggiare/celebrare
+裝飾|to decorate|decorar|decorare
+表演|to perform|actuar/interpretar|esibirsi/recitare
+彈鋼琴|to play the piano|tocar el piano|suonare il pianoforte
+拍電影|to make a movie|hacer una película|girare un film
+看電影|to watch a movie|ver una película|guardare un film
+聽音樂|to listen to music|escuchar música|ascoltare musica
+逛街|to go shopping|ir de compras|fare shopping
+散步|to take a walk|dar un paseo|fare una passeggiata
+爬山|to go hiking|hacer senderismo|fare escursionismo
+露營（動詞）|to go camping|ir de camping/acampar|andare in campeggio
+釣魚（動詞）|to go fishing|ir de pesca/pescar|andare a pescare
+划船|to row|remar|remare
+滑|to slide/to slip|deslizarse/resbalar|scivolare
+轉|to turn|girar|girare
+停|to stop|parar/detenerse|fermarsi
+經過|to pass by|pasar por|passare per
+穿過|to go through/to cross|atravesar/cruzar|attraversare
+過馬路|to cross the street|cruzar la calle|attraversare la strada
+轉彎|to turn (a corner)|doblar/girar|girare/svoltare
+迴轉|to make a U-turn|dar media vuelta|fare inversione
+加速|to speed up|acelerar|accelerare
+減速|to slow down|reducir la velocidad|rallentare
+停車|to park|estacionar/aparcar|parcheggiare
+上車|to get in/to get on|subir al coche|salire in macchina
+下車|to get out/to get off|bajar del coche|scendere dalla macchina
+搭|to take (transport)|tomar/coger|prendere
+轉車|to transfer|transbordar/hacer transbordo|cambiare/fare scalo
+起飛|to take off|despegar|decollare
+降落|to land|aterrizar|atterrare
+出發|to depart/to set off|salir/partir|partire
+抵達|to arrive|llegar|arrivare
+迎接|to welcome/to greet|recibir/dar la bienvenida|accogliere
+送行|to see off|despedir|salutare/accompagnare alla partenza
+道別|to say goodbye|despedirse|salutarsi/dire addio
+打招呼|to greet|saludar|salutare
+介紹|to introduce|presentar|presentare
+自我介紹|to introduce oneself|presentarse|presentarsi
+握手|to shake hands|darse la mano|stringersi la mano
+鞠躬|to bow|hacer una reverencia|inchinarsi
+拍手|to clap|aplaudir|applaudire
+舉手|to raise one's hand|levantar la mano|alzare la mano
+排|to line up/to arrange|poner en fila/ordenar|mettere in fila/disporre
+分|to divide/to split|dividir/repartir|dividere
+合|to combine|combinar|unire/combinare
+連|to link|unir/enlazar|collegare
+綁|to tie|atar|legare
+解開|to untie|desatar|slegare/sciogliere
+掛|to hang|colgar|appendere
+蓋|to cover|cubrir/tapar|coprire
+挖|to dig|cavar/excavar|scavare
+埋|to bury|enterrar|seppellire
+撿|to pick up|recoger|raccogliere
+搬|to move/to carry|mover/cargar|spostare/trasportare
+舉|to lift|levantar|sollevare
+放下|to put down|dejar/bajar|posare/mettere giù
+拿走|to take away|llevarse|portare via
+藏|to hide|esconder|nascondere
+找出|to find out|descubrir|scoprire
+躲|to hide oneself|esconderse|nascondersi
+逃|to escape/to run away|escapar/huir|scappare/fuggire
+追|to chase|perseguir|inseguire
+抓住|to catch|atrapar|catturare/afferrare
+放開|to let go|soltar|lasciare andare
+打破|to break|romper|rompere
+修好|to fix|arreglar|aggiustare
+清潔|to clean|limpiar|pulire
+檢查（動詞）|to inspect|inspeccionar/revisar|ispezionare/controllare
+保持|to keep/to maintain|mantener|mantenere
+避免|to avoid|evitar|evitare
+接受|to accept|aceptar|accettare
+提供|to provide/to offer|proporcionar/ofrecer|fornire/offrire
+支持|to support|apoyar|sostenere/supportare
+反對|to oppose|oponerse|opporsi
+屬於|to belong to|pertenecer|appartenere
+包括|to include|incluir|includere
+依靠|to depend on|depender de|dipendere da
+屬|to belong|pertenecer|appartenere
+存在|to exist|existir|esistere
+值得|to be worth|valer la pena|valere la pena
+需要（名詞）|need|necesidad|bisogno

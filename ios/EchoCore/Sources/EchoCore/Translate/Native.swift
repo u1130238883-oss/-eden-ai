@@ -39,7 +39,9 @@ public enum Native {
         // 中文句尾的語氣詞不影響意思（「我好累啊」＝「我好累」）
         let k2 = key(r.text.replacingOccurrences(of: "[啊呀喔哦啦耶欸嘛吧～~！!。？?]+$", with: "", options: .regularExpression))
         let order = ((r.source?.lex).map { [$0] } ?? []) + ["zh", "en", "es", "it"]
-        for l in order where l != tl {
+        // 外文的單字一字多義（ojo 是眼睛也是「小心」、tranquilo 是安靜也是「沒事」）：單字不查這張表，交給翻譯
+        let single = !k.contains(" ") && r.text.unicodeScalars.allSatisfy { !(0x4E00...0x9FFF).contains($0.value) }
+        for l in order where l != tl && !(single && l != "zh") {
             guard let i = index[l]?[k] ?? index[l]?[k2] else { continue }
             let e = entries[i]
             let out: [String]
@@ -67,8 +69,8 @@ public enum Native {
 麻煩你了/麻煩了|Thanks so much, I owe you one./Thanks for your help.|Te lo agradezco mucho./Gracias por la molestia.|Grazie mille, sei gentilissimo./Ti ringrazio.
 隨便/都可以/都好|Whatever works for you./Either is fine./I'm easy.|Lo que tú quieras./Me da igual.|Come vuoi tu./Per me è uguale.
 隨便你|Suit yourself./It's up to you.|Como quieras.|Fai come vuoi.
-沒事/沒事啦|It's fine./No worries./I'm okay.|No pasa nada./Tranquilo.|Niente./Tranquillo./Tutto a posto.
 沒關係/不要緊|No worries./It's okay./Don't worry about it.|No pasa nada./No te preocupes.|Non fa niente./Non ti preoccupare.
+沒事/沒事啦|It's fine./No worries./I'm okay.|No pasa nada./Tranquilo.|Niente./Tranquillo./Tutto a posto.
 算了/算了吧|Forget it./Never mind.|Olvídalo./Déjalo.|Lascia stare./Lascia perdere.
 好久不見|Long time no see!/It's been ages!|¡Cuánto tiempo!/¡Tanto tiempo sin verte!|Da quanto tempo!/Quanto tempo!
 請多指教/請多多指教|Nice to meet you, I look forward to working with you.|Encantado de conocerte./Un placer.|Piacere di conoscerti.
@@ -86,10 +88,11 @@ public enum Native {
 傻眼/我傻眼了|I was speechless./I couldn't believe it.|Me quedé sin palabras./Me quedé de piedra.|Sono rimasto senza parole.
 好可惜/太可惜了/可惜|What a shame!/That's too bad.|¡Qué pena!/¡Qué lástima!|Che peccato!
 好吧|Fine./Okay then./Alright.|Bueno./Vale./Está bien.|Va bene./D'accordo.
-沒問題|No problem!/Sure thing!|¡Claro!/¡Sin problema!|Certo!/Nessun problema!
+沒問題|No problem!/Sure thing!|¡No hay problema!/¡Claro!|Nessun problema!/Certo!
 拜託/拜託啦|Please!/Come on, please!|¡Porfa!/¡Por favor!|Ti prego!/Dai, per favore!
 哪裡哪裡/過獎了|Oh, you're too kind!|¡Qué va!/Me halagas.|Ma figurati!/Sei troppo gentile.
 不客氣/不用謝|You're welcome!/No problem!/Anytime!|¡De nada!/¡No hay de qué!|Prego!/Figurati!/Di niente!
+非常感謝/多謝/太感謝了|Thank you so much!/Many thanks!|¡Muchas gracias!|Grazie mille!
 謝謝你/謝啦/感謝|Thank you!/Thanks!/Thanks a lot!|¡Gracias!/¡Muchas gracias!|Grazie!/Grazie mille!
 早安|Good morning!/Morning!|¡Buenos días!|Buongiorno!
 晚安|Good night!/Sleep well!|¡Buenas noches!/¡Que descanses!|Buonanotte!/Dormi bene!
@@ -129,7 +132,7 @@ public enum Native {
 多少錢/這個多少錢|How much is this?|¿Cuánto cuesta?/¿Cuánto es?|Quanto costa?/Quant'è?
 廁所在哪裡/洗手間在哪裡/請問廁所在哪|Where's the restroom?/Where's the bathroom?|¿Dónde está el baño?|Dov'è il bagno?
 好麻煩/很麻煩/好煩|What a pain./That's so annoying.|¡Qué rollo!/¡Qué lata!|Che seccatura!/Che palle!
-好無聊/無聊|I'm so bored./This is boring.|¡Qué aburrido!/Me aburro.|Che noia!/Mi annoio.
+好無聊|I'm so bored./This is boring.|¡Qué aburrido!/Me aburro.|Che noia!/Mi annoio.
 我也是|Me too!/Same here.|Yo también.|Anch'io.
 當然/當然啊|Of course!/Sure!|¡Claro!/¡Por supuesto!|Certo!/Ovvio!
 不會吧|No way!/You're kidding!|¡No me digas!/¡No puede ser!|Non ci credo!/Ma no!
