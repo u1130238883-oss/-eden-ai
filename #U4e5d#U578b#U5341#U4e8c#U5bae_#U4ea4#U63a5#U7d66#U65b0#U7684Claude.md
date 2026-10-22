@@ -239,7 +239,7 @@ io.open(path, "w", encoding="utf-8").write(src[:start] + "\n".join(out) + src[en
 
 （12宮原本就有「隔離＝Isolation」「隱藏＝Concealment」，所以隔絕、隱匿用了不同的譯法避免重複。）
 
-現在各宮的條目數：`[9, 10, 25, 16, 12, 18, 12, 19, 26, 24, 15, 30]`
+現在各宮的條目數：`[9, 10, 25, 16, 12, 18, 12, 19, 26, 24, 16, 30]`
 
 ---
 
@@ -399,6 +399,12 @@ iOS 已照這個對應改好。**以後要改 iOS 畫面，先看 Android 同一
 2027 年正確的引動是：2宮 正5因7、5宮 壞12因7、8宮 正11因7、11宮 好12因7。
 使用者另外傳了一個叫 Hollow（com.phantomthieves.fortune，Persona5 風格）的 IPA 當參考，沒有用到它的內容。
 這一輪 GitHub 連不上（使用者說連結的不是同一個 GitHub），只交原始碼 zip 與這份文件，**沒有在 CI 上編過**。
+
+第十七輪（2026-10-22，倉庫 `u1130238883-oss/-eden-ai`，分支 `ninetwelve`）：
+1. 原樣推上去，Build IPA 綠。使用者解不開 artifact 的 zip，改把 IPA 放到 GitHub Release 給 `.ipa` 直接下載連結
+   （分支 `ninetwelve-ipa-日期` 上的 `ipa-release.yml`，建立分支時觸發、只跑 Ubuntu；推送時 commit 訊息加 [skip ci]）。
+   ⚠️ 這個倉庫是**公開的**，已經告訴使用者，還沒決定怎麼處理。
+2. 11宮最後面加「貴人」（Benefactors / Benefactores / Benefattori），三份含義同步。
 
 ## 十一、開著沒決定的
 

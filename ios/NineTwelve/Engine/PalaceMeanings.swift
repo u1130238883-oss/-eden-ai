@@ -91,7 +91,7 @@ public struct Palace {
          "比自己年長的人", "工作", "長輩", "職業", "名聲", "權威", "權勢", "才能", "社會地位", "成就", "政府"],
         // 11宮
         ["朋友", "群體", "變動", "變化", "特別", "差異", "理智", "理性", "精神困擾", "網絡", "不穩定", "波折", "奔波", "折騰",
-         "奔波輾轉"],
+         "奔波輾轉", "貴人"],
         // 12宮
         ["沉迷", "迷茫", "幻想", "緣分", "脾氣", "性格", "品行", "道德", "幕後", "悲觀", "逃避", "悲傷", "多愁善感", "嚮往",
          "缺愛", "暗戀", "隱沒", "隱藏", "消耗", "隔離", "自我瓦解", "業力", "循環", "投胎", "輪迴", "玄秘", "玄學", "隔絕",
@@ -153,7 +153,8 @@ public struct Palace {
         // 11宮
         ["Friends", "Groups", "Shifts", "Change", "Being set apart", "Difference",
          "Level-headedness", "Reason", "Mental disturbance", "Networks", "Instability",
-         "Setbacks", "Running about", "Upheaval", "Being tossed from place to place"],
+         "Setbacks", "Running about", "Upheaval", "Being tossed from place to place",
+         "Benefactors"],
         // 12宮
         ["Obsession", "Confusion", "Fantasy", "Karmic affinity", "Temper", "Disposition",
          "Conduct", "Morality", "Behind the scenes", "Pessimism", "Escapism", "Sorrow",
@@ -223,7 +224,7 @@ public struct Palace {
         ["Amigos", "Grupos", "Cambios de rumbo", "Cambio", "Ser distinto", "Diferencia",
          "Serenidad de juicio", "Razón", "Perturbación mental", "Redes", "Inestabilidad",
          "Contratiempos", "Ir de un lado a otro", "Trastorno",
-         "Verse llevado de un lugar a otro"],
+         "Verse llevado de un lugar a otro", "Benefactores"],
         // 12宮
         ["Obsesión", "Confusión", "Fantasía", "Afinidad kármica", "Genio", "Carácter",
          "Conducta", "Moralidad", "Entre bastidores", "Pesimismo", "Evasión", "Pena",
@@ -291,7 +292,7 @@ public struct Palace {
         ["Amici", "Gruppi", "Mutamenti", "Cambiamento", "Essere diversi", "Differenza",
          "Lucidità", "Ragione", "Turbamento mentale", "Reti", "Instabilità", "Contrattempi",
          "Correre di qua e di là", "Sconvolgimento",
-         "Essere sballottati da un posto all'altro"],
+         "Essere sballottati da un posto all'altro", "Benefattori"],
         // 12宮
         ["Ossessione", "Confusione", "Fantasia", "Affinità karmica", "Temperamento", "Indole",
          "Condotta", "Moralità", "Dietro le quinte", "Pessimismo", "Evasione", "Tristezza",

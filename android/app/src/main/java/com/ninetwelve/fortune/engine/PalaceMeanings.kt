@@ -121,7 +121,7 @@ object Palace {
         // 宮 11
         listOf(
             "朋友", "群體", "變動", "變化", "特別", "差異", "理智", "理性", "精神困擾", "網絡", "不穩定", "波折", "奔波",
-            "折騰", "奔波輾轉"
+            "折騰", "奔波輾轉", "貴人"
         ),
         // 宮 12
         listOf(
@@ -207,7 +207,8 @@ object Palace {
         listOf(
             "Friends", "Groups", "Shifts", "Change", "Being set apart", "Difference",
             "Level-headedness", "Reason", "Mental disturbance", "Networks", "Instability",
-            "Setbacks", "Running about", "Upheaval", "Being tossed from place to place"
+            "Setbacks", "Running about", "Upheaval", "Being tossed from place to place",
+            "Benefactors"
         ),
         // 宮 12
         listOf(
@@ -301,7 +302,7 @@ object Palace {
             "Amigos", "Grupos", "Cambios de rumbo", "Cambio", "Ser distinto", "Diferencia",
             "Serenidad de juicio", "Razón", "Perturbación mental", "Redes", "Inestabilidad",
             "Contratiempos", "Ir de un lado a otro", "Trastorno",
-            "Verse llevado de un lugar a otro"
+            "Verse llevado de un lugar a otro", "Benefactores"
         ),
         // 宮 12
         listOf(
@@ -393,7 +394,7 @@ object Palace {
             "Amici", "Gruppi", "Mutamenti", "Cambiamento", "Essere diversi", "Differenza",
             "Lucidità", "Ragione", "Turbamento mentale", "Reti", "Instabilità", "Contrattempi",
             "Correre di qua e di là", "Sconvolgimento",
-            "Essere sballottati da un posto all'altro"
+            "Essere sballottati da un posto all'altro", "Benefattori"
         ),
         // 宮 12
         listOf(
