@@ -77,25 +77,10 @@ struct SettingsView: View {
                 label(T("用 AI API 回答", "Answer with AI APIs", "Responder con API de IA", "Rispondi con API IA"), "")
             }
             .tint(Theme.hazard)
-            Text(vm.useAPI
-                 ? T("開著：日常問題交給下面金鑰的 AI 回答（命盤、運勢、心情還是 NineSun 自己算）。沒填金鑰時一樣由 NineSun 自己回答。",
-                     "On: everyday questions go to the AIs below (readings and feelings stay with NineSun). Without a key NineSun answers itself.",
-                     "Activado: lo cotidiano va a las IA de abajo (las lecturas siguen en NineSun). Sin clave responde NineSun.",
-                     "Attivo: le domande quotidiane vanno alle IA qui sotto (le letture restano a NineSun). Senza chiave risponde NineSun.")
-                 : T("關著：完全不呼叫 AI 的 API，全部由 NineSun 自己回答（本地的命理引擎、自己上網查資料、Google／手機內建翻譯）。",
-                     "Off: no AI API calls at all; NineSun answers everything itself (local engine, its own web search, Google / built-in translation).",
-                     "Desactivado: ninguna API de IA; NineSun responde todo (motor local, su propia búsqueda web, traducción de Google / del sistema).",
-                     "Disattivo: nessuna API IA; NineSun risponde a tutto (motore locale, ricerca web propria, traduzione Google / di sistema)."))
-                .font(.system(size: 12, weight: .bold)).foregroundColor(vm.useAPI ? Theme.hazard : Theme.orange)
             Toggle(isOn: $vm.speakTranslation) {
                 label(T("翻譯後念出來", "Read translations aloud", "Leer traducciones en voz alta", "Leggi le traduzioni ad alta voce"), "")
             }
             .tint(Theme.hazard)
-            Text(T("NineSun 先自己上網查；沒把握或要推理的題目，會同時問其他 AI，整理各家說法、拿網路資料查證後給你結論。用各家正式的 API，金鑰只存在這支手機。",
-                   "NineSun searches the web first; when it isn't sure, or the question needs reasoning, it asks other AIs at once, compares them, checks them against the web and gives you its conclusion. Uses official APIs; keys stay on this phone.",
-                   "NineSun busca primero en la web; si no está seguro o hay que razonar, pregunta a otras IA a la vez, las compara, las verifica y te da su conclusión. Usa APIs oficiales; las claves se quedan en este teléfono.",
-                   "NineSun cerca prima sul web; se non è sicuro o serve ragionare, chiede ad altre IA insieme, le confronta, le verifica e ti dà la sua conclusione. Usa API ufficiali; le chiavi restano su questo telefono."))
-                .font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
             TextField(T("AI 金鑰：一行一把，可以貼好幾把", "AI keys: one per line, paste as many as you like",
                         "Claves de IA: una por línea", "Chiavi IA: una per riga"), text: $vm.aiKeys, axis: .vertical)
                 .lineLimit(2...6)
@@ -109,27 +94,12 @@ struct SettingsView: View {
             Text(found.isEmpty ? T("還沒認出任何金鑰", "No keys recognised yet", "Aún no hay claves", "Nessuna chiave ancora")
                                : T("✓ 認出：", "✓ Recognised: ", "✓ Reconocidas: ", "✓ Riconosciute: ") + found.joined(separator: "、"))
                 .font(.system(size: 12, weight: .bold)).foregroundColor(found.isEmpty ? Theme.dim : Theme.hazard)
-            Text(T("照開頭自動認：AIza… 或 AQ.…＝Gemini（aistudio.google.com 免費）、sk-ant-…＝Claude、sk-proj-…＝ChatGPT、xai-…＝Grok、gsk_…＝Groq（免費）、sk-or-…＝OpenRouter（一把可以問很多家）、DeepSeek 的 sk-…。有好幾把時每一家都會問。",
-                   "Detected by prefix: AIza…=Gemini (free at aistudio.google.com), sk-ant-…=Claude, sk-proj-…=ChatGPT, xai-…=Grok, gsk_…=Groq (free), sk-or-…=OpenRouter, DeepSeek sk-….",
-                   "Se detectan por el inicio: AIza…=Gemini, sk-ant-…=Claude, sk-proj-…=ChatGPT, xai-…=Grok, gsk_…=Groq, sk-or-…=OpenRouter, DeepSeek sk-….",
-                   "Riconosciute dall'inizio: AIza…=Gemini, sk-ant-…=Claude, sk-proj-…=ChatGPT, xai-…=Grok, gsk_…=Groq, sk-or-…=OpenRouter, DeepSeek sk-…."))
-                .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
             button(vm.aiTesting ? T("測試中…", "Testing…", "Probando…", "Test in corso…") : T("測試連線", "Test connection", "Probar conexión", "Prova connessione"),
                    color: Theme.hazard) { if !vm.aiTesting { vm.testAI() } }
             if !vm.aiTestResult.isEmpty {
                 Text(vm.aiTestResult).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.paper)
                     .textSelection(.enabled)
             }
-            Text(T("有金鑰時：九型十二宮、命盤運勢、你的心情，由 NineSun 自己用你的命盤回答；其他生活上的問題交給這些 AI，但用 NineSun 自己的個性回答（有好幾家時融合成一個答案），還會照你的九型調整說話方式。沒有金鑰、或 AI 回答不了時，NineSun 自己上網查。",
-                   "With a key: Nine & Twelve readings, your chart and your feelings are answered by NineSun from your chart; everyday questions go to these AIs, answered in NineSun's own personality. Without a key, or if the AI fails, NineSun searches the web itself.",
-                   "Con clave: las lecturas, tu carta y tus emociones las responde NineSun con tu carta; lo cotidiano va a estas IA, con la personalidad de NineSun. Sin clave, NineSun busca en la web.",
-                   "Con chiave: letture, tema e stati d'animo li gestisce NineSun col tuo tema; il resto va a queste IA, con la personalità di NineSun. Senza chiave, NineSun cerca sul web."))
-                .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
-            Text(T("問題會送到這些 AI 公司。在對話裡說「問AI 你的問題」，也可以直接叫它問。",
-                   "Your questions are sent to these AI companies. You can also say “ask AI <question>” in the chat.",
-                   "Tus preguntas se envían a estas empresas de IA. También puedes decir «ask AI <pregunta>» en el chat.",
-                   "Le domande vengono inviate a queste aziende di IA. Puoi anche scrivere «ask AI <domanda>» nella chat."))
-                .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
         }
     }
 

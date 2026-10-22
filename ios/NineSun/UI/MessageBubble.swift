@@ -24,7 +24,7 @@ struct MessageBubble: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 6) {
                         TagLabel(text: "NINESUN", fg: Theme.ink, bg: Theme.signal)
-                        if let badge { TagLabel(text: badge.0, fg: badge.2, bg: badge.1) }
+                        if let badge, turn.speak == nil { TagLabel(text: badge.0, fg: badge.2, bg: badge.1) }
                         if let p = turn.palace {
                             TagLabel(text: UILang.current == .zh ? "感 \(NT.label(p))" : T("", "PALACE \(p)", "PALACIO \(p)", "PALAZZO \(p)"), fg: Theme.hazard, bg: Theme.panelHi)
                         }

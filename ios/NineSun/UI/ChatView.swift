@@ -6,6 +6,7 @@ struct ChatView: View {
     @State private var input = ""
     @State private var showSettings = false
     @State private var showKnowledge = false
+    @State private var showLangPicker = false
     @FocusState private var focused: Bool
 
     private var quick: [String] {
@@ -31,6 +32,7 @@ struct ChatView: View {
                 quickBar
                 inputBar
             }
+            if showLangPicker { langPicker }
         }
         .background {
             // 手機內建翻譯（iOS 18 起）需要掛在畫面上的元件
@@ -141,30 +143,73 @@ struct ChatView: View {
         }
     }
 
-    /// 翻譯按鈕：點一下開／關（亮黃綠色＝開），長按選語言（中文、English、Español、Italiano）
+    /// 翻譯按鈕：點一下開／關（亮黃綠色＝開），長按跳出絕區零風格的語言面板
     private var translateButton: some View {
         let cur = ChatViewModel.translateLangs.first { $0.code == vm.translateTarget } ?? ChatViewModel.translateLangs[1]
-        return Menu {
-            ForEach(ChatViewModel.translateLangs, id: \.self) { l in
-                Button {
-                    vm.translateTarget = l.code
-                    vm.translateOn = true
-                } label: {
-                    if l.code == vm.translateTarget { Label(l.name, systemImage: "checkmark") } else { Text(l.name) }
+        return HStack(spacing: 4) {
+            Image(systemName: "globe").font(.system(size: 12, weight: .black))
+            Text(cur.short).font(.system(size: 13, weight: .black))
+        }
+        .foregroundColor(vm.translateOn ? Theme.ink : Theme.dim)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(Slanted(skew: 6).fill(vm.translateOn ? Theme.hazard : Theme.panel))
+        .overlay(Slanted(skew: 6).stroke(vm.translateOn ? Theme.hazard : Theme.panelHi, lineWidth: 1))
+        .contentShape(Rectangle())
+        .gesture(
+            LongPressGesture(minimumDuration: 0.35)
+                .onEnded { _ in
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    withAnimation(.spring(response: 0.28, dampingFraction: 0.8)) { showLangPicker = true }
+                }
+                .exclusively(before: TapGesture().onEnded {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    vm.translateOn.toggle()
+                })
+        )
+    }
+
+    /// 長按後的語言面板：警示條紋標題、斜切按鈕，選中的亮黃綠色
+    private var langPicker: some View {
+        ZStack(alignment: .bottomLeading) {
+            Color.black.opacity(0.55).ignoresSafeArea()
+                .onTapGesture { withAnimation(.easeOut(duration: 0.18)) { showLangPicker = false } }
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    TagLabel(text: "TRANSLATE", fg: Theme.ink, bg: Theme.signal)
+                    Text(T("翻譯成", "TRANSLATE TO", "TRADUCIR AL", "TRADURRE IN")).font(Theme.hud(11)).foregroundColor(Theme.dim)
+                }
+                HazardStripes(height: 5)
+                ForEach(ChatViewModel.translateLangs, id: \.self) { l in
+                    let on = l.code == vm.translateTarget
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        vm.translateTarget = l.code
+                        vm.translateOn = true
+                        withAnimation(.easeOut(duration: 0.18)) { showLangPicker = false }
+                    } label: {
+                        HStack(spacing: 10) {
+                            Text(l.short).font(Theme.display(16)).frame(width: 34, alignment: .leading)
+                            Text(l.name).font(.system(size: 16, weight: .heavy))
+                            Spacer()
+                            if on { Image(systemName: "play.fill").font(.system(size: 11, weight: .black)) }
+                        }
+                        .foregroundColor(on ? Theme.ink : Theme.paper)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 11)
+                        .background(Slanted(skew: 8).fill(on ? Theme.hazard : Theme.panelHi))
+                        .overlay(Slanted(skew: 8).stroke(on ? Theme.orange : Color.white.opacity(0.08), lineWidth: 1.5))
+                    }
                 }
             }
-        } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "globe").font(.system(size: 12, weight: .black))
-                Text(cur.short).font(.system(size: 13, weight: .black))
-            }
-            .foregroundColor(vm.translateOn ? Theme.ink : Theme.dim)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
-            .background(Slanted(skew: 6).fill(vm.translateOn ? Theme.hazard : Theme.panel))
-            .overlay(Slanted(skew: 6).stroke(vm.translateOn ? Theme.hazard : Theme.panelHi, lineWidth: 1))
-        } primaryAction: {
-            vm.translateOn.toggle()
+            .padding(14)
+            .frame(width: 250)
+            .background(NotchedPanel(cut: 14).fill(Theme.panel))
+            .overlay(NotchedPanel(cut: 14).stroke(Theme.hazard.opacity(0.7), lineWidth: 1.5))
+            .overlay(alignment: .leading) { Rectangle().fill(Theme.signal).frame(width: 3) }
+            .padding(.leading, 16)
+            .padding(.bottom, 128)
+            .transition(.scale(scale: 0.85, anchor: .bottomLeading).combined(with: .opacity))
         }
     }
 

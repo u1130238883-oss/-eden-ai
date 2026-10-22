@@ -116,4 +116,23 @@ final class TranslateTests: XCTestCase {
         XCTAssertEqual(Translate.parse("中翻英：我想喝咖啡"), .init(text: "我想喝咖啡", source: nil, target: .en))
         XCTAssertEqual(Translate.parse("謝謝 翻西"), .init(text: "謝謝", source: nil, target: .es))
     }
+
+    /// 常用口語用母語人士真的會說的
+    func testNativePhrases() {
+        func t(_ text: String, _ to: Translate.Code) -> String? { Native.lookup(.init(text: text, source: nil, target: to))?.text }
+        XCTAssertEqual(t("加油", .en), "You've got this!")
+        XCTAssertEqual(t("辛苦了！", .it), "Grazie per tutto il lavoro.")
+        XCTAssertEqual(t("吃飯了嗎？", .es), "¿Ya comiste?")
+        XCTAssertEqual(t("妳好漂亮", .it), "Sei bellissima.")
+        XCTAssertEqual(t("In bocca al lupo!", .zh), "加油")
+        XCTAssertEqual(t("no worries", .zh), "沒事")
+        XCTAssertEqual(t("que rico", .zh), "好吃")
+        XCTAssertNil(t("今天天氣很好", .en))
+        XCTAssertEqual(t("我好累啊", .en), "I'm exhausted.")
+        XCTAssertEqual(Translate.distinct(["I'm so tired", "Hallo!", "hallo"], from: "I'm so tired."), ["Hallo!"])
+        XCTAssertTrue(Translate.isSingleWord("蘋果") && !Translate.isSingleWord("吃飯了嗎") && !Translate.isSingleWord("good morning"))
+        XCTAssertNil(t("加油", .zh))
+        // 每一行四種語言都要有
+        for e in Native.entries { XCTAssertTrue(!e.zh.isEmpty && !e.en.isEmpty && !e.es.isEmpty && !e.it.isEmpty, e.zh.first ?? "") }
+    }
 }

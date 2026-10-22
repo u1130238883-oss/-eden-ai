@@ -245,10 +245,17 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
-        // 開著「用 AI API 回答」又有金鑰時：九型十二宮、命盤運勢、你的心情由 NineSun 自己用命盤回答；其他日常問題交給 AI（用 NineSun 的個性）
-        // 關掉時全部由 NineSun 自己回答
-        if apiOn, !Self.staysLocal(text) {
-            aiChat(text, autoDetect ? Lang.detect(text, fallback: language) : language)
+        // 開著「用 AI API 回答」又有金鑰：一律用 AI 回答。
+        // 命盤、運勢、心情先由 NineSun 的九型十二宮引擎算出來，再交給 AI 用這些結果回答（AI 自己算不出你的盤）；
+        // 設定生日、規則這種會改資料的話還是 NineSun 自己處理。關掉：全部由 NineSun 自己回答
+        if apiOn {
+            if RuleBook.parse(text) != nil {
+                localReply(text)
+            } else if Self.isReading(text) || Self.fortuneWords(text) {
+                localReply(text, viaAI: true)
+            } else {
+                aiChat(text, autoDetect ? Lang.detect(text, fallback: language) : language)
+            }
             return
         }
 
@@ -256,7 +263,8 @@ final class ChatViewModel: ObservableObject {
     }
 
     /// NineSun 自己回答（本地的引擎；需要時上網查）
-    private func localReply(_ text: String) {
+    /// viaAI：算好之後交給 AI，用這些結果回答（開著 API 時的命理問題）
+    private func localReply(_ text: String, viaAI: Bool = false) {
         guard let engine else { return }
         let history = turns
         let ctx = EchoEngine.Context(profile: profile, rules: rules, now: Date(), language: language, autoDetect: autoDetect)
@@ -268,6 +276,10 @@ final class ChatViewModel: ObservableObject {
                 if let r = reply.rules { self.rules = r }
                 self.coreSnapshot = snap
                 if let s = snap { self.saveFile(s, Self.coreURL) }
+                if viaAI, reply.profile == nil, reply.rules == nil, reply.webQuery == nil {
+                    self.aiChat(text, reply.lang, chart: reply.turn.text + (reply.augmentFacts.isEmpty ? "" : "\n" + reply.augmentFacts))
+                    return
+                }
                 if let q = reply.webQuery {
                     self.streaming = nil
                     self.turns.append(reply.turn)
@@ -307,13 +319,18 @@ final class ChatViewModel: ObservableObject {
     }
 
     /// 日常問題交給 AI：用 NineSun 的個性回答、照你的九型調整說話方式（Gemini 要最新資料時會自己用 Google 搜尋）；好幾家 AI 時融合成一個答案
-    private func aiChat(_ text: String, _ L: Lang) {
+    /// chart：NineSun 的九型十二宮引擎算出來的結果（AI 只能用它，不能改）
+    private func aiChat(_ text: String, _ L: Lang, chart: String = "") {
         let cfg = aiConfig
         let past = turns.dropLast().suffix(10).compactMap { t -> AskAIs.Turn? in
             t.text.isEmpty ? nil : AskAIs.Turn(fromUser: t.role == .user, text: t.text)
         }
         // NineSun 自己的個性；有生日時照你的九型調整說話方式
-        let persona = AskAIs.persona(type: profile.birthday.map { Destiny($0).type }, lang: L)
+        var persona = AskAIs.persona(type: profile.birthday.map { Destiny($0).type }, lang: L)
+        if !chart.isEmpty {
+            persona += "\n\n【NineSun 用九型十二宮算出來的結果】（這是精確推算，宮位、數字、好正壞、年份一個都不能改，也不要自己另外算）\n" + chart
+                + "\n\n用上面的結果回答對方的問題：先講結論，再用白話說為什麼（起因 → 落在哪個領域 → 呈現出來的樣子 → 心裡的感受），最後給一個具體可做的建議。"
+        }
         streaming = cfg.names.count > 1 ? "🤖 同時問 " + cfg.names.joined(separator: "、") + "，再融合成我的看法…" : "🤖 思考中…"
         Task { [self] in
             let reply = await AskAIs.chat(text, history: past, evidence: [], lang: L, config: cfg, persona: persona)
@@ -342,28 +359,31 @@ final class ChatViewModel: ObservableObject {
         lastTranslation = req
         streaming = "🌐 翻譯成\(req.target.name)…"
         Task { [self] in
-            var res: Translate.Result?
-            // 蘋果內建翻譯優先：第一次用某個語言會請你下載語言包，之後完全在手機裡翻
-            if #available(iOS 18.0, *) {
-                res = await AppleTranslator.shared.translate(req, allowDownload: true)
-            }
-            // iOS 18 以前、或內建翻譯不支援這個語言、你沒下載語言包：才用 Google 翻譯
-            if res == nil { res = await Translate.google(req) }
+            // 常用口語：直接用母語人士真的會說的（「加油」→ You've got this!）
+            var res: Translate.Result? = Native.lookup(req)
+            // 開著 API：請 AI 用道地的說法翻
             if res == nil, api {
                 let r = await AskAIs.chat(Translate.aiPrompt(req), history: [], evidence: [], lang: .zh, config: cfg)
                 if r.error == nil, !r.text.isEmpty {
-                    res = Translate.Result(text: r.text.trimmingCharacters(in: .whitespacesAndNewlines),
+                    res = Translate.Result(text: r.text.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "\"「」“”")),
                                            source: req.source ?? Translate.detect(req.text),
                                            via: "請 " + cfg.names.joined(separator: "、") + " 翻譯")
                 }
             }
+            // 沒開 API：蘋果內建翻譯（第一次用某個語言會請你下載語言包，之後完全在手機裡翻）→ Google 翻譯
+            if res == nil, #available(iOS 18.0, *) {
+                res = await AppleTranslator.shared.translate(req, allowDownload: true)
+            }
+            if res == nil { res = await Translate.google(req) }
             if res == nil { res = await Translate.online(req) }
             if var r = res {
-                // 單字、短片語：補上 Google 字典的其他說法（蘋果內建翻譯只給一個）
-                if r.alternatives.isEmpty, Translate.isWordish(req.text), let g = await Translate.google(req) {
-                    r.alternatives = g.alternatives.filter { $0.lowercased() != r.text.lowercased() }
-                    if r.alternatives.isEmpty, g.text.lowercased() != r.text.lowercased() { r.alternatives = [g.text] }
+                // 單字：補上 Google 字典裡的其他說法，只留目標語言的（英文不要冒出德文的 Hallo）。
+                // 句子不補：整句的另一個機器翻譯常常是直譯、不道地（Have you got a meal yet）
+                if r.alternatives.isEmpty, Translate.isSingleWord(req.text), let g = await Translate.google(req) {
+                    r.alternatives = g.alternatives.filter { LangID.detect($0).lex == req.target.lex }
                 }
+                // 只差標點、大小寫的算同一個（「I'm so tired.」和「I'm so tired」）
+                r.alternatives = Translate.distinct(r.alternatives, from: r.text)
                 res = r
             }
             let text = res.map { Translate.reply(req, $0) }

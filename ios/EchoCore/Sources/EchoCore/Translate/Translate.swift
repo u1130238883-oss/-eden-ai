@@ -406,7 +406,8 @@ public enum Translate {
     /// 只給譯文（中文附拼音），單字再加其他說法；不加說明、來源
     public static func reply(_ r: Request, _ res: Result) -> String {
         var lines = [res.text + (res.pron.isEmpty ? "" : "　〔\(res.pron)〕")]
-        if !res.alternatives.isEmpty { lines.append("也可以說：" + res.alternatives.joined(separator: "、")) }
+        let alts = distinct(res.alternatives, from: res.text)
+        if !alts.isEmpty { lines.append("也可以說：" + alts.joined(separator: "、")) }
         return lines.joined(separator: "\n")
     }
 
@@ -422,6 +423,20 @@ public enum Translate {
         let cjk = t.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }.count
         if cjk > 0 { return t.count <= 6 }
         return t.split(separator: " ").count <= 3
+    }
+
+    /// 一個詞（中文三個字以內、外文一個字）
+    public static func isSingleWord(_ text: String) -> Bool {
+        let t = clean(text)
+        let cjk = t.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }.count
+        if cjk > 0 { return t.count <= 3 }
+        return !t.contains(" ") && t.count <= 20
+    }
+
+    /// 去掉跟譯文一樣、或彼此一樣的說法（只差標點、大小寫的算一樣）
+    public static func distinct(_ alts: [String], from main: String) -> [String] {
+        var seen: Set<String> = [norm(main)]
+        return alts.filter { !norm($0).isEmpty && seen.insert(norm($0)).inserted }
     }
 
     // MARK: - Google 翻譯
@@ -526,6 +541,8 @@ public enum Translate {
 
     /// 請 AI 翻譯時的指示
     public static func aiPrompt(_ r: Request) -> String {
-        "把下面這段翻譯成\(r.target.name)。只回譯文本身，不要解釋、不要加引號；如果是單字，譯文後面可以用括號補一個讀音或最常見的另一種說法。\n\n\(r.text)"
+        "把下面這段翻譯成\(r.target.name)，要像\(r.target.name)母語人士在日常生活裡真的會這樣說：用自然、口語、常用的講法，"
+            + "不要逐字直譯（例如「加油」不要翻成 add oil，「辛苦了」不要翻成 you worked hard）；語氣、客氣程度跟原文一樣。"
+            + "只回譯文本身，不要解釋、不要加引號、不要加讀音。\n\n\(r.text)"
     }
 }
