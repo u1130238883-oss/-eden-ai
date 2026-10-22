@@ -184,7 +184,8 @@ public enum Solace {
         if let area {
             let a = D.luckAspects(y)[area - 1]
             let tone = ["這十年整體是順的，這次只是一時的卡", "這十年平平，起伏都還在可以走過的範圍", "這十年本來就比較需要用力"][a.reading.verdict.rawValue]
-            out.append("再看你這十年的「\(SolaceData.areaName[area]!)」這一方面：\(tone)。")
+            let hit = D.triggeredAspects(y).contains { $0.palace == area } ? "而且今年的流年剛好引動這一方面，所以最近特別有感。" : ""
+            out.append("再看你這十年的「\(SolaceData.areaName[area]!)」這一方面：\(tone)。\(hit)")
         }
         if let note = natalNote(D, focus) { out.append(note) }
         let key = sit.row.reading.verdict == .bad ? sit.row.reading.result : (f.topic ?? focus[0])

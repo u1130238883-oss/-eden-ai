@@ -361,7 +361,8 @@ def reply(text, birthday=None, now=(2026, 10, 22, 14), again=False):
     if area:
         a = D.luck_aspects(y)[area - 1]
         tone = {BAD: "這十年本來就比較需要用力", GOOD: "這十年整體是順的，這次只是一時的卡", NEUTRAL: "這十年平平，起伏都還在可以走過的範圍"}[a.reading.verdict]
-        out.append(f"再看你這十年的「{AREA_NAME[area]}」這一方面：{tone}。")
+        hit = "而且今年的流年剛好引動這一方面，所以最近特別有感。" if any(r.palace == area for r in D.triggered_aspects(y)) else ""
+        out.append(f"再看你這十年的「{AREA_NAME[area]}」這一方面：{tone}。{hit}")
     note = natal_note(D, focus)
     if note:
         out.append(note)
