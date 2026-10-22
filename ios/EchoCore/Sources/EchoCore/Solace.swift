@@ -96,7 +96,7 @@ public enum Solace {
         for fp in focus.prefix(2) {
             guard let row = D.natal.first(where: { $0.palace == fp }) else { continue }
             if row.reading.verdict == .bad {
-                return "從你的本命看，\(dom(fp))本來就是你比較敏感的地方，所以這件事對你特別重，不是你小題大作。"
+                return "從你的本命看，\(dom(fp))本來就是你比較敏感、柔軟的地方，所以這件事會特別碰到你的心。"
             }
             if row.reading.verdict == .good {
                 return "不過從你的本命看，\(dom(fp))其實是你的力量所在，你有走出來的底子。"
