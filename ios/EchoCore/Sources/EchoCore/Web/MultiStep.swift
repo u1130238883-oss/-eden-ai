@@ -101,9 +101,13 @@ public enum MultiStep {
         let s = String(String.UnicodeScalarView(raw.unicodeScalars.map { (0xFF10...0xFF19).contains($0.value) ? Unicode.Scalar($0.value - 0xFF10 + 0x30)! : $0 }))
         let units = unitTable.map(\.0)
         // 「1億2321萬9千人」：好幾段加起來
-        if let m = Understanding.match(s, #"(?:(\d+(?:\.\d+)?)億)?(?:(\d+(?:\.\d+)?)萬)?(?:(\d+(?:\.\d+)?)千)?(\d+)?\s*("# + units.sorted { $0.count > $1.count }.map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|") + ")"),
-           [m[1], m[2], m[3]].filter({ !$0.isEmpty }).count >= 2 {
-            let v = (Double(m[1]) ?? 0) * 1e8 + (Double(m[2]) ?? 0) * 1e4 + (Double(m[3]) ?? 0) * 1e3 + (Double(m[4]) ?? 0)
+        let unitAlt: String = units.sorted { $0.count > $1.count }.map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|")
+        let compound: String = #"(?:(\d+(?:\.\d+)?)億)?(?:(\d+(?:\.\d+)?)萬)?(?:(\d+(?:\.\d+)?)千)?(\d+)?\s*("# + unitAlt + ")"
+        if let m = Understanding.match(s, compound), [m[1], m[2], m[3]].filter({ !$0.isEmpty }).count >= 2 {
+            let yi: Double = (Double(m[1]) ?? 0) * 1e8
+            let wan: Double = (Double(m[2]) ?? 0) * 1e4
+            let qian: Double = (Double(m[3]) ?? 0) * 1e3
+            let v: Double = yi + wan + qian + (Double(m[4]) ?? 0)
             if let u = unitTable.first(where: { $0.0 == m[5] }) {
                 let factor = (u.0 == "萬人" || u.0 == "億人") ? 1 : u.2
                 return (v, u.0, u.1, v * factor)
