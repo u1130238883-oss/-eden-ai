@@ -73,6 +73,24 @@ struct SettingsView: View {
 
     private var aiSection: some View {
         section(T("請其他 AI 幫忙", "Ask other AIs", "Preguntar a otras IA", "Chiedi ad altre IA") + " · OTHER AIs") {
+            Toggle(isOn: $vm.useAPI) {
+                label(T("用 AI API 回答", "Answer with AI APIs", "Responder con API de IA", "Rispondi con API IA"), "")
+            }
+            .tint(Theme.hazard)
+            Text(vm.useAPI
+                 ? T("開著：日常問題交給下面金鑰的 AI 回答（命盤、運勢、心情還是 NineSun 自己算）。沒填金鑰時一樣由 NineSun 自己回答。",
+                     "On: everyday questions go to the AIs below (readings and feelings stay with NineSun). Without a key NineSun answers itself.",
+                     "Activado: lo cotidiano va a las IA de abajo (las lecturas siguen en NineSun). Sin clave responde NineSun.",
+                     "Attivo: le domande quotidiane vanno alle IA qui sotto (le letture restano a NineSun). Senza chiave risponde NineSun.")
+                 : T("關著：完全不呼叫 AI 的 API，全部由 NineSun 自己回答（本地的命理引擎、自己上網查資料、Google／手機內建翻譯）。",
+                     "Off: no AI API calls at all; NineSun answers everything itself (local engine, its own web search, Google / built-in translation).",
+                     "Desactivado: ninguna API de IA; NineSun responde todo (motor local, su propia búsqueda web, traducción de Google / del sistema).",
+                     "Disattivo: nessuna API IA; NineSun risponde a tutto (motore locale, ricerca web propria, traduzione Google / di sistema)."))
+                .font(.system(size: 12, weight: .bold)).foregroundColor(vm.useAPI ? Theme.hazard : Theme.orange)
+            Toggle(isOn: $vm.speakTranslation) {
+                label(T("翻譯後念出來", "Read translations aloud", "Leer traducciones en voz alta", "Leggi le traduzioni ad alta voce"), "")
+            }
+            .tint(Theme.hazard)
             Text(T("NineSun 先自己上網查；沒把握或要推理的題目，會同時問其他 AI，整理各家說法、拿網路資料查證後給你結論。用各家正式的 API，金鑰只存在這支手機。",
                    "NineSun searches the web first; when it isn't sure, or the question needs reasoning, it asks other AIs at once, compares them, checks them against the web and gives you its conclusion. Uses official APIs; keys stay on this phone.",
                    "NineSun busca primero en la web; si no está seguro o hay que razonar, pregunta a otras IA a la vez, las compara, las verifica y te da su conclusión. Usa APIs oficiales; las claves se quedan en este teléfono.",

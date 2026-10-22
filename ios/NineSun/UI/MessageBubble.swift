@@ -38,6 +38,17 @@ struct MessageBubble: View {
                     if let card = turn.card {
                         FortuneCardView(card: card)
                     }
+                    if !live, let say = turn.speak, let lang = turn.speakLang {
+                        Button {
+                            Speaker.shared.say(say, lang: lang)
+                        } label: {
+                            Label(T("再念一次", "Play again", "Escuchar otra vez", "Riascolta"), systemImage: "speaker.wave.2.fill")
+                                .font(.system(size: 12, weight: .black))
+                                .foregroundColor(Theme.ink)
+                                .padding(.horizontal, 12).padding(.vertical, 6)
+                                .background(Slanted(skew: 4).fill(Theme.hazard))
+                        }
+                    }
                     if !live, turn.tokens != nil {
                         feedbackBar
                     }

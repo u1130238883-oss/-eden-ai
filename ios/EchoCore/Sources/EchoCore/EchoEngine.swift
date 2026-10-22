@@ -29,6 +29,9 @@ public struct ChatTurn: Codable, Equatable, Identifiable {
     public var variant: String?
     /// 上網查的回覆：當初問的問題（👍／👎 時用來決定要記住還是重查）
     public var query: String?
+    /// 翻譯的譯文和語音語言（泡泡上的 🔊 再念一次）
+    public var speak: String?
+    public var speakLang: String?
 
     public init(role: Role, text: String, source: Source = .neural, card: FortuneCard? = nil,
                 palace: Int? = nil, tokens: [Int]? = nil) {

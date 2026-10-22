@@ -4,7 +4,7 @@ import FoundationNetworking
 #endif
 
 /// 翻譯：聽懂「蘋果用西班牙文怎麼說」「把這句翻成英文：…」「gracias 是什麼意思」，
-/// 交給手機內建的翻譯（App 那邊）、AI 或線上翻譯（日常的東西不在 App 裡存固定答案）。
+/// 交給 Google 翻譯或手機內建的翻譯（App 那邊），翻好後念出來；App 裡不存字典。
 public enum Translate {
     public enum Code: String, CaseIterable, Sendable {
         case zh = "zh-Hant", zhHans = "zh-Hans", en, es, it, ar, ja, ko, fr, de, ru, pt
@@ -36,6 +36,24 @@ public enum Translate {
             case .it: return "it"
             case .ar: return "ar"
             default: return nil
+            }
+        }
+
+        /// 念出來用的語音（AVSpeechSynthesisVoice 的語言代號）
+        public var voice: String {
+            switch self {
+            case .zh: return "zh-TW"
+            case .zhHans: return "zh-CN"
+            case .en: return "en-US"
+            case .es: return "es-ES"
+            case .it: return "it-IT"
+            case .ar: return "ar-SA"
+            case .ja: return "ja-JP"
+            case .ko: return "ko-KR"
+            case .fr: return "fr-FR"
+            case .de: return "de-DE"
+            case .ru: return "ru-RU"
+            case .pt: return "pt-PT"
             }
         }
 
@@ -175,6 +193,23 @@ public enum Translate {
         return nil
     }
 
+    /// 接著上一次翻譯問：「那西班牙文呢？」「義大利文呢」「in Italian?」「¿y en italiano?」→ 同一段話換一種語言
+    public static func followUp(_ raw: String, last: Request?) -> Request? {
+        guard let last else { return nil }
+        let q = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let Z = "(" + langPattern + ")"
+        let pats = ["^(?:那|那麼|換成|改成|用)?" + Z + "(?:呢|的呢|怎麼說|怎麼說呢|是什麼|是什麼呢)?[？?。！!]*$",
+                    "(?i)^(?:and |what about |how about )?(?:in )?" + Z + "[?.!]*$",
+                    "(?i)^¿?\\s*(?:y )?(?:en )?" + Z + "[?¿.!]*$",
+                    "(?i)^(?:e )?(?:in )?" + Z + "[?.!]*$"]
+        for p in pats {
+            guard let m = match(q, p), let target = code(m[1]) else { continue }
+            guard target != (last.source ?? detect(last.text)) else { return nil }
+            return Request(text: last.text, source: last.source, target: target)
+        }
+        return nil
+    }
+
     static func match(_ s: String, _ pattern: String) -> [String]? {
         guard let re = try? NSRegularExpression(pattern: pattern),
               let m = re.firstMatch(in: s, range: NSRange(s.startIndex..., in: s)) else { return nil }
@@ -253,7 +288,81 @@ public enum Translate {
         return lines.joined(separator: "\n")
     }
 
-    // MARK: - 線上翻譯（沒有內建翻譯、也沒有 AI 金鑰時）
+    // MARK: - Google 翻譯
+
+    /// Google 翻譯（translate.googleapis.com 的免費網頁介面，不需要金鑰）。原文語言交給 Google 自己判斷；
+    /// 有讀音（拼音、羅馬拼音）的話一起帶回來
+    public static func google(_ r: Request) async -> Result? {
+        var c = URLComponents(string: "https://translate.googleapis.com/translate_a/single")!
+        c.queryItems = [.init(name: "client", value: "gtx"), .init(name: "sl", value: r.source?.memory ?? "auto"),
+                        .init(name: "tl", value: r.target.memory), .init(name: "dt", value: "t"), .init(name: "dt", value: "rm"),
+                        .init(name: "q", value: r.text)]
+        guard let url = c.url else { return nil }
+        var req = URLRequest(url: url, timeoutInterval: 8)
+        req.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
+        var parsed: (text: String, pron: String, source: Code?)?
+        if let (d, resp) = try? await URLSession.shared.data(for: req), (resp as? HTTPURLResponse)?.statusCode == 200,
+           let j = try? JSONSerialization.jsonObject(with: d) {
+            parsed = parseGoogle(j, target: r.target)
+        }
+        // 第一個介面被擋時，換 Chrome 擴充功能用的那個
+        if parsed == nil {
+            var c2 = URLComponents(string: "https://clients5.google.com/translate_a/t")!
+            c2.queryItems = [.init(name: "client", value: "dict-chrome-ex"), .init(name: "sl", value: r.source?.memory ?? "auto"),
+                             .init(name: "tl", value: r.target.memory), .init(name: "q", value: r.text)]
+            if let u = c2.url {
+                var req2 = URLRequest(url: u, timeoutInterval: 8)
+                req2.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
+                if let (d, resp) = try? await URLSession.shared.data(for: req2), (resp as? HTTPURLResponse)?.statusCode == 200,
+                   let j = try? JSONSerialization.jsonObject(with: d) {
+                    parsed = parseGoogleSimple(j)
+                }
+            }
+        }
+        guard let parsed else { return nil }
+        let src = parsed.source ?? r.source ?? detect(r.text)
+        return Result(text: parsed.text, pron: parsed.pron, source: src, via: "Google 翻譯")
+    }
+
+    /// 第二個介面：["譯文"] 或 [["譯文","en"]]
+    static func parseGoogleSimple(_ j: Any) -> (text: String, pron: String, source: Code?)? {
+        guard let top = j as? [Any], let first = top.first else { return nil }
+        if let t = first as? String, !t.isEmpty { return (t, "", nil) }
+        if let a = first as? [Any], let t = a.first as? String, !t.isEmpty {
+            let src = (a.count > 1 ? a[1] as? String : nil).flatMap { n -> Code? in
+                n.hasPrefix("zh") ? (n == "zh-TW" ? .zh : .zhHans) : Code(rawValue: n)
+            }
+            return (t, "", src)
+        }
+        return nil
+    }
+
+    /// Google 回來的 JSON：[[["譯文","原文",…],…,[null,null,"讀音","原文讀音"]], null, "en", …]
+    static func parseGoogle(_ j: Any, target: Code) -> (text: String, pron: String, source: Code?)? {
+        guard let top = j as? [Any], let segs = top.first as? [Any] else { return nil }
+        var text = "", pron = ""
+        for seg in segs {
+            guard let a = seg as? [Any] else { continue }
+            if let t = a.first as? String { text += t }
+            // 讀音那一段：前兩格是空的，第三格是譯文的讀音
+            else if a.count > 2, let p = a[2] as? String { pron += p }
+        }
+        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return nil }
+        let srcName = top.count > 2 ? top[2] as? String : nil
+        let src: Code? = srcName.flatMap { n in
+            switch n {
+            case "zh-TW": return .zh
+            case "zh-CN", "zh": return .zhHans
+            default: return Code(rawValue: n)
+            }
+        }
+        // 只有中文、日文、韓文、阿拉伯文、俄文的譯文需要讀音
+        let needPron: Set<Code> = [.zh, .zhHans, .ja, .ko, .ar, .ru]
+        return (text, needPron.contains(target) ? pron.trimmingCharacters(in: .whitespaces) : "", src)
+    }
+
+    // MARK: - 線上翻譯（Google 也連不上時）
 
     /// MyMemory 的免費翻譯服務（不需要金鑰）
     public static func online(_ r: Request) async -> Result? {

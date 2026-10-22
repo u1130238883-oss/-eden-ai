@@ -40,4 +40,33 @@ final class TranslateTests: XCTestCase {
         let r = Translate.reply(.init(text: "謝謝", source: nil, target: .ar), .init(text: "شكرا", pron: "šukran", source: .zh, via: "AI"))
         XCTAssertTrue(r.contains("繁體中文 → 阿拉伯文") && r.contains("شكرا") && r.contains("šukran"), r)
     }
+
+    func testGoogleResponse() throws {
+        let json = #"[[["浴室在哪裡？","¿Dónde está el baño?",null,null,10],[null,null,"Yùshì zài nǎlǐ?","¿Dónde está el baño?"]],null,"es",null,null,null,1]"#
+        let j = try JSONSerialization.jsonObject(with: Data(json.utf8))
+        let r = try XCTUnwrap(Translate.parseGoogle(j, target: .zh))
+        XCTAssertEqual(r.text, "浴室在哪裡？")
+        XCTAssertEqual(r.pron, "Yùshì zài nǎlǐ?")
+        XCTAssertEqual(r.source, .es)
+        // 西文譯文不需要讀音
+        let it = #"[[["Voglio bere un caffè","我想喝咖啡",null,null,10],[null,null,null,"Wǒ xiǎng hē kāfēi"]],null,"zh-CN"]"#
+        let r2 = try XCTUnwrap(Translate.parseGoogle(try JSONSerialization.jsonObject(with: Data(it.utf8)), target: .it))
+        XCTAssertEqual(r2.text, "Voglio bere un caffè")
+        XCTAssertEqual(r2.pron, "")
+        XCTAssertEqual(Translate.parseGoogleSimple(try JSONSerialization.jsonObject(with: Data(#"[["Hello","it"]]"#.utf8)))?.text, "Hello")
+        XCTAssertEqual(Translate.parseGoogleSimple(try JSONSerialization.jsonObject(with: Data(#"["Ciao"]"#.utf8)))?.text, "Ciao")
+        XCTAssertNil(Translate.parseGoogle(try JSONSerialization.jsonObject(with: Data("[]".utf8)), target: .en))
+    }
+
+    func testFollowUpLanguage() {
+        let last = Translate.Request(text: "謝謝", source: nil, target: .en)
+        XCTAssertEqual(Translate.followUp("那西班牙文呢？", last: last), .init(text: "謝謝", source: nil, target: .es))
+        XCTAssertEqual(Translate.followUp("義大利文呢", last: last)?.target, .it)
+        XCTAssertEqual(Translate.followUp("what about Italian?", last: last)?.target, .it)
+        XCTAssertEqual(Translate.followUp("¿y en italiano?", last: last)?.target, .it)
+        XCTAssertNil(Translate.followUp("中文呢", last: last))          // 原文就是中文
+        XCTAssertNil(Translate.followUp("今天天氣如何", last: last))
+        XCTAssertNil(Translate.followUp("英文呢", last: nil))
+        XCTAssertEqual(Translate.Code.it.voice, "it-IT")
+    }
 }

@@ -22,6 +22,10 @@ final class ChatViewModel: ObservableObject {
     }
     @Published var aiAuto = true { didSet { save(aiAuto, "aiAuto") } }
     @Published var aiModels = "" { didSet { save(aiModels, "aiModels") } }
+    /// 打開：日常問題、翻譯、沒把握的題目都用 AI 的 API 回答；關掉：完全不呼叫 AI 的 API，NineSun 自己（本地引擎＋自己上網查）回答
+    @Published var useAPI = true { didSet { save(useAPI, "useAPI") } }
+    /// 翻譯好後自動念出來
+    @Published var speakTranslation = true { didSet { save(speakTranslation, "speakTranslation") } }
     /// 設定頁「測試連線」的結果
     @Published var aiTestResult = ""
     @Published var aiTesting = false
@@ -65,6 +69,10 @@ final class ChatViewModel: ObservableObject {
     private var lastWebQuestion: String?
     /// 沒設定其他 AI 時，提醒過一次就好
     private var aiHintShown = false
+    /// 上一次翻譯（「那西班牙文呢？」接著翻同一句）
+    private var lastTranslation: Translate.Request?
+    /// 設定裡有開 API、也有金鑰
+    var apiOn: Bool { useAPI && aiConfig.enabled }
 
     init() {
         options = load("options") ?? SamplingOptions()
@@ -74,6 +82,8 @@ final class ChatViewModel: ObservableObject {
         autoDetect = load("autoDetect") ?? true
         aiAuto = load("aiAuto") ?? true
         aiModels = load("aiModels") ?? ""
+        useAPI = load("useAPI") ?? true
+        speakTranslation = load("speakTranslation") ?? true
         UILang.current = language
         // 以前的版本會把上網查過的答案存在手機裡；現在每次都即時上網查，舊檔刪掉
         try? FileManager.default.removeItem(at: Self.docs.appendingPathComponent("ninesun-webmemory.json"))
@@ -173,7 +183,9 @@ final class ChatViewModel: ObservableObject {
         // 「問AI …」：一定要問其他 AI（先自己上網查，再同時問幾家、整理、查證）
         if let q = askAIQuestion(text) {
             let L = autoDetect ? Lang.detect(q, fallback: language) : language
-            if aiConfig.enabled {
+            if !useAPI {
+                finish(ChatTurn(role: .echo, text: "設定裡的「用 AI API 回答」現在是關的，所以我不會去問其他 AI，由我自己回答。要問 AI 的話，到設定頁把它打開。", source: .tool))
+            } else if aiConfig.enabled {
                 lookupWeb(q, L, forceAI: true)
             } else {
                 finish(ChatTurn(role: .echo, text: "還沒設定 AI 的金鑰：到設定頁的「請其他 AI 幫忙」填入 AI 金鑰（Gemini、Claude、ChatGPT、Grok 等都可以），我就能問它們、整理後給你。", source: .tool))
@@ -209,9 +221,16 @@ final class ChatViewModel: ObservableObject {
             translate(req)
             return
         }
+        // 剛翻完接著問「那義大利文呢？」：同一句換一種語言
+        if let last = turns.dropLast().last, last.role == .echo, last.speak != nil,
+           let req = Translate.followUp(text, last: lastTranslation) {
+            translate(req)
+            return
+        }
 
-        // 有 AI 金鑰時：九型十二宮、命盤運勢、你的心情由 NineSun 自己用命盤回答；其他日常問題交給 AI（用 NineSun 的個性）
-        if aiConfig.enabled, !Self.staysLocal(text) {
+        // 開著「用 AI API 回答」又有金鑰時：九型十二宮、命盤運勢、你的心情由 NineSun 自己用命盤回答；其他日常問題交給 AI（用 NineSun 的個性）
+        // 關掉時全部由 NineSun 自己回答
+        if apiOn, !Self.staysLocal(text) {
             aiChat(text, autoDetect ? Lang.detect(text, fallback: language) : language)
             return
         }
@@ -294,17 +313,22 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    /// 翻譯：已下載的內建翻譯 → AI → 線上翻譯，都不行才請使用者下載語言包
+    /// 翻譯：手機內建翻譯（語言包已下載，離線最快）→ Google 翻譯 → 內建翻譯（請你下載語言包）→ AI（設定有開 API 時）→ MyMemory；
+    /// 翻好後念出來。App 裡不存字典。
     private func translate(_ req: Translate.Request) {
-        let cfg = aiConfig
+        let cfg = aiConfig, api = apiOn, speak = speakTranslation
+        lastTranslation = req
         streaming = "🌐 翻譯成\(req.target.name)…"
         Task { [self] in
             var res: Translate.Result?
-            // 語言包已經在手機裡的話用內建翻譯（最快、離線、不佔 App 空間）
             if #available(iOS 18.0, *) {
                 res = await AppleTranslator.shared.translate(req, allowDownload: false)
             }
-            if res == nil, cfg.enabled {
+            if res == nil { res = await Translate.google(req) }
+            if res == nil, #available(iOS 18.0, *) {
+                res = await AppleTranslator.shared.translate(req, allowDownload: true)
+            }
+            if res == nil, api {
                 let r = await AskAIs.chat(Translate.aiPrompt(req), history: [], evidence: [], lang: .zh, config: cfg)
                 if r.error == nil, !r.text.isEmpty {
                     res = Translate.Result(text: r.text.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -313,15 +337,18 @@ final class ChatViewModel: ObservableObject {
                 }
             }
             if res == nil { res = await Translate.online(req) }
-            // 都不行（沒網路、沒金鑰）：才請使用者下載內建翻譯的語言包
-            if res == nil, #available(iOS 18.0, *) {
-                res = await AppleTranslator.shared.translate(req, allowDownload: true)
-            }
             let text = res.map { Translate.reply(req, $0) }
-                ?? "這句我現在翻不出來。整句翻譯要 iOS 18 以上的內建翻譯（第一次會請你下載語言包），或到設定填 AI 金鑰；也請確認手機有連上網路，再試一次。"
+                ?? "這句我現在翻不出來：Google 翻譯連不上，手機內建翻譯也還沒有這個語言包（要 iOS 18 以上）。請確認手機有連上網路，再試一次。"
+            var turn = ChatTurn(role: .echo, text: text, source: .tool)
+            if let r = res {
+                turn.speak = r.text
+                turn.speakLang = req.target.voice
+                if speak { Speaker.shared.say(r.text, lang: req.target.voice) }
+            }
+            let final = turn
             await MainActor.run {
                 self.streaming = ""
-                self.play(text: text, final: ChatTurn(role: .echo, text: text, source: .tool))
+                self.play(text: text, final: final)
             }
         }
     }
@@ -348,8 +375,8 @@ final class ChatViewModel: ObservableObject {
         thinking = true
         lastWebQuestion = q
         let asker = profile.birthday.map { Destiny($0).type }
-        let cfg = aiConfig, auto = aiAuto
-        let offerAI = !cfg.enabled && !aiHintShown
+        let cfg = aiConfig, auto = aiAuto, api = useAPI
+        let offerAI = api && !cfg.enabled && !aiHintShown
         // 查資料時一步一步顯示在想什麼（理解問題 → 搜尋 → 閱讀 → 比對），不會像卡住
         let show: @Sendable (String) -> Void = { [weak self] step in DispatchQueue.main.async { self?.streaming = step } }
         Task { [self] in
@@ -360,7 +387,7 @@ final class ChatViewModel: ObservableObject {
             }
             var text = quietIfNothing ? "我再上網查了一下，補充幾個資料：\n\n" + r.text : r.text
             // 沒把握或要推理的題目：同時問其他 AI，整理各家說法、拿網路資料查證後給結論（要先設定金鑰）
-            if !quietIfNothing, cfg.enabled, forceAI || (auto && AskAIs.shouldAsk(r)) {
+            if !quietIfNothing, api, cfg.enabled, forceAI || (auto && AskAIs.shouldAsk(r)) {
                 await MainActor.run { self.streaming = "🤖 正在同時問其他 AI，整理、查證中…" }
                 let replies = await AskAIs.ask(q, evidence: r.evidence, lang: L, config: cfg)
                 let summary = AskAIs.summarize(question: q, replies: replies, web: r)
