@@ -335,3 +335,5 @@ CI 的「Live web search check」會用真的網路問 40 題（`WebTests.swift`
 - 翻譯順序：蘋果內建翻譯（iOS 18，第一次下載語言包，之後離線）→ Google 翻譯（免金鑰的網頁介面）→ AI（開 API 時）→ MyMemory。App 不存字典。
 - 聽懂問法：`Translate.understand` 拆開來想——只提到一種語言 → 找「語言那一段」（用英文說／翻成英文／的英文是什麼）且要有翻譯的意思 → 判斷內容在前面還是後面 → 去掉「請問、教我、跟他說」這些包裝。回答第一行「🧠 我理解成：把「X」從中文翻成英文」。
 - 測試：`python3 ai/translate_questions.py ios/EchoCore/Tests/EchoCoreTests/Fixtures/translate_questions.json` 產生 10000 題（9000 題各種問法、1000 題不是翻譯的），`TranslateQuestionsTests` 逐題檢查。第一輪 7821 題對 → 第二輪 9928 → 第三輪 10000。
+- 第二批 10000 題（`translate_questions2.json`，`python3 ai/translate_questions.py … 2`）：新問法（怎樣說、咋說、X（英文）、英文：X、英文的話X怎麼說、X這句話英文怎麼說、怎麼講比較道地）、開頭的包裝（那、還有、嗨、NineSun、我想知道、想問、如果要）、簡稱（中翻英、翻西、X 翻英、X翻成義文）、英西義的新說法。第一輪 6220 → 第二輪 9796 → 第三輪 10000。
+- App：原文語言用手機內建的語言辨識（`NineSun/App/LangID.swift`，NaturalLanguage）；句子翻完再翻回原文核對（🔁）；單字補 Google 字典的其他說法；念的時候挑手機裡最好的聲音。

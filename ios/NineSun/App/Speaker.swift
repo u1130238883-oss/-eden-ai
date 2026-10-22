@@ -14,10 +14,18 @@ final class Speaker {
             try? AVAudioSession.sharedInstance().setActive(true)
             if self.synth.isSpeaking { self.synth.stopSpeaking(at: .immediate) }
             let u = AVSpeechUtterance(string: t)
-            u.voice = AVSpeechSynthesisVoice(language: lang)
-                ?? AVSpeechSynthesisVoice(language: String(lang.prefix(2)))
+            u.voice = Self.bestVoice(lang)
             u.rate = AVSpeechUtteranceDefaultSpeechRate * 0.95
             self.synth.speak(u)
         }
+    }
+
+    /// 手機裡這個語言最好的聲音（有下載「增強／高品質」語音就用那個）
+    static func bestVoice(_ lang: String) -> AVSpeechSynthesisVoice? {
+        let all = AVSpeechSynthesisVoice.speechVoices()
+        let exact = all.filter { $0.language == lang }
+        let family = all.filter { $0.language.hasPrefix(String(lang.prefix(2))) }
+        let pick = (exact.isEmpty ? family : exact).max { $0.quality.rawValue < $1.quality.rawValue }
+        return pick ?? AVSpeechSynthesisVoice(language: lang)
     }
 }

@@ -5,8 +5,12 @@ import XCTest
 final class TranslateQuestionsTests: XCTestCase {
     struct Q: Decodable { let q: String; let text: String?; let target: String? }
 
-    func testTenThousandQuestions() throws {
-        let url = try XCTUnwrap(Bundle.module.url(forResource: "translate_questions", withExtension: "json", subdirectory: "Fixtures"))
+    func testTenThousandQuestions() throws { try run("translate_questions") }
+    /// 第二批：新的問法、簡稱（中翻英、翻西）、英西義的其他說法
+    func testTenThousandMore() throws { try run("translate_questions2") }
+
+    func run(_ name: String) throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: name, withExtension: "json", subdirectory: "Fixtures"))
         let qs = try JSONDecoder().decode([Q].self, from: Data(contentsOf: url))
         var bad: [String] = []
         for x in qs {
@@ -26,9 +30,9 @@ final class TranslateQuestionsTests: XCTestCase {
                 bad.append("✗ 不是翻譯：\(x.q)  →  「\(r.text)」/\(r.target.rawValue)")
             }
         }
-        print("TRANSLATE-QUESTIONS: \(qs.count - bad.count) ok, \(bad.count) failed")
+        print("TRANSLATE-QUESTIONS \(name): \(qs.count - bad.count) ok, \(bad.count) failed")
         if let out = ProcessInfo.processInfo.environment["NINESUN_TQ_OUT"] {
-            try? bad.joined(separator: "\n").write(toFile: out, atomically: true, encoding: .utf8)
+            try? bad.joined(separator: "\n").write(toFile: out + "." + name, atomically: true, encoding: .utf8)
         }
         XCTAssertTrue(bad.isEmpty, bad.prefix(40).joined(separator: "\n"))
     }

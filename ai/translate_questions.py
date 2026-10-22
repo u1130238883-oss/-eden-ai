@@ -2,6 +2,7 @@
 
 每題：q 問句；text 應該翻的內容（null＝不是要翻譯）；target 要翻成的語言代號。
 用法：python3 ai/translate_questions.py ios/EchoCore/Tests/EchoCoreTests/Fixtures/translate_questions.json
+      python3 ai/translate_questions.py ios/EchoCore/Tests/EchoCoreTests/Fixtures/translate_questions2.json 2   （第二批：新的問法、簡稱「中翻英」）
 """
 import json
 import random
@@ -55,6 +56,21 @@ EN_T = [
 ES_T = ["¿cómo se dice {X} en {L}?", "cómo se dice {X} en {L}", "traduce {X} al {L}", "traducir {X} al {L}", "¿Cómo se dice {X} en {L}?"]
 IT_T = ["come si dice {X} in {L}?", "traduci {X} in {L}", "come si dice {X} in {L}", "Come si dice {X} in {L}?"]
 
+# 第二批的新問法
+ZH_T2 = [
+    "{X}{L}怎樣說", "{X}{L}咋說", "{X}用{L}怎麼講比較道地", "{X}用{L}要怎麼講才自然", "{L}：{X}", "{X}（{L}）", "{X}的{L}翻譯",
+    "{X}{L}翻譯", "{X} 用{L}", "怎麼用{L}說{X}", "我要怎麼用{L}說{X}", "如果要用{L}說{X}要怎麼說", "{X} 要怎麼翻成{L}",
+    "{X} 這句{L}怎麼說", "{X}這句話{L}怎麼說", "{L}的話{X}怎麼說", "{X} 用{L}說的話是什麼", "{X}，{L}", "{X}? {L}",
+    "嗨，{X}用{L}怎麼說", "NineSun，{X}用{L}怎麼說", "那{X}用{L}怎麼說", "還有{X}的{L}", "我想知道{X}用{L}怎麼說",
+    "可不可以告訴我{X}的{L}", "{X}翻{L}", "幫我翻{L}：{X}", "{L}怎麼講{X}", "想問{X}的{L}怎麼說", "{X}用{L}怎樣講",
+]
+ABBR = {"en": ["英"], "es": ["西"], "it": ["義", "意"], "zh": ["中"]}
+ABBR_T = ["{S}翻{A}：{X}", "{S}翻{A} {X}", "翻{A}：{X}", "幫我翻{A} {X}", "{X} 翻{A}", "{X}，翻{A}", "{X}{S}翻{A}", "{X}翻成{A}文", "{X} {S}翻{A}"]
+EN_T2 = ["{X} in {L} please", "what's the {L} for {X}", "what is the {L} word for {X}", "{L} for {X}", "how do you translate {X} into {L}",
+         "how do I translate {X} to {L}?", "could you translate {X} to {L}"]
+ES_T2 = ["¿cómo digo {X} en {L}?", "¿cómo puedo decir {X} en {L}?", "cómo se escribe {X} en {L}"]
+IT_T2 = ["come posso dire {X} in {L}?", "come dico {X} in {L}", "come si scrive {X} in {L}?"]
+
 NEG_T = [
     "你會說{L}嗎", "你會不會講{L}", "我想學{L}", "{L}好難", "{L}怎麼學比較快", "學{L}要多久", "你的{L}很好", "我的{L}程度不好",
     "{L}老師很兇", "{L}課好無聊", "{L}考試考砸了", "我在學{L}", "{L}的文法好複雜", "推薦學{L}的app", "{L}口音怎麼練",
@@ -71,7 +87,7 @@ NEG_PLAIN = [
 
 def ambiguous(tpl, x):
     """「我不懂英文是什麼」可以是「翻譯我不懂」也可以是「我看不懂英文」：內容最後一個字跟語言黏在一起會變成另一個意思的，不出題"""
-    return x[-1] in "懂學會說講" and "{X}{L}" in tpl
+    return (x[-1] in "懂學會說講" and "{X}{L}" in tpl) or (x[-1] == "的" and ("{X}{L}" in tpl or "{X}的{L}" in tpl))
 
 
 def item(q, text, target):
@@ -107,6 +123,36 @@ def positives():
     return out
 
 
+def positives2():
+    out = []
+    zhsrc = {"zh": "中", "en": "英", "es": "西", "it": "義"}
+    for x, src in CONTENT:
+        for t in [l for l in CODE if l != src]:
+            for tpl in [t_ for t_ in ZH_T2 if not ambiguous(t_, x)]:
+                for L in ZH_NAMES[t]:
+                    out.append(item(tpl.format(X=x, L=L), x, t))
+            for tpl in ABBR_T:
+                for A in ABBR[t]:
+                    out.append(item(tpl.format(X=x, A=A, S=zhsrc[src]), x, t))
+            for tpl in EN_T2:
+                for L in EN_NAMES[t]:
+                    out.append(item(tpl.format(X=x, L=L), x, t))
+            for tpl in ES_T2:
+                for L in ES_NAMES[t]:
+                    out.append(item(tpl.format(X=x, L=L), x, t))
+            for tpl in IT_T2:
+                for L in IT_NAMES[t]:
+                    out.append(item(tpl.format(X=x, L=L), x, t))
+    return out
+
+
+NEG2 = ["我在翻英文書", "英翻中好難", "中翻英要多少錢", "翻譯社推薦", "你翻譯得不錯", "英國人", "我喜歡西班牙", "義大利麵好吃",
+        "我想去義大利玩", "西班牙海鮮飯怎麼做", "英文名字怎麼取", "幫我取一個英文名字", "我英文不好", "英文單字怎麼背",
+        "你說英文好聽嗎", "中文好難學嗎", "學西班牙文有用嗎", "義大利文跟西班牙文像嗎", "今天想吃什麼", "我好累喔",
+        "西班牙在哪裡", "義大利人很熱情", "翻牆", "翻身", "我英文考100分", "推薦英文歌", "英文老師好帥", "什麼叫翻譯",
+        "how do you do", "translate", "中文", "英翻", "翻英"]
+
+
 def negatives():
     out = []
     for tpl in NEG_T:
@@ -117,8 +163,15 @@ def negatives():
     return out
 
 
-def main(dst):
-    pos, neg = positives(), negatives()
+def main(dst, batch="1"):
+    if batch == "2":
+        random.seed(20261023)
+        pos, neg = positives2(), [item(q, None, None) for q in NEG2]
+        for tpl in NEG_T:
+            for names in ZH_NAMES.values():
+                neg.append(item("欸 " + tpl.format(L=names[0]), None, None))
+    else:
+        pos, neg = positives(), negatives()
     random.shuffle(pos)
     # 9000 題要翻譯的 + 1000 題不是（不夠的重複抽，加不同的語氣詞）
     pos = pos[:9000]
@@ -135,4 +188,4 @@ def main(dst):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else "1")

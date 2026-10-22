@@ -229,9 +229,7 @@ final class ChatViewModel: ObservableObject {
 
         // 翻譯模式開著：直接翻成選好的語言（本來就是那個語言的話：翻成中文；選中文的話翻成英文）
         if translateOn, let target = Translate.Code(rawValue: translateTarget) {
-            let src = Translate.detect(text)
-            let to: Translate.Code = src.lex == target.lex ? (target == .zh ? .en : .zh) : target
-            translate(Translate.Request(text: text, source: nil, target: to))
+            translate(Translate.Request(text: text, source: nil, target: target))
             return
         }
 
@@ -334,8 +332,13 @@ final class ChatViewModel: ObservableObject {
 
     /// 翻譯：蘋果內建翻譯（離線）→ Google 翻譯 → AI（設定有開 API 時）→ MyMemory；
     /// 翻好後念出來。App 裡不存字典。
-    private func translate(_ req: Translate.Request) {
+    private func translate(_ req0: Translate.Request) {
         let cfg = aiConfig, api = apiOn, speak = speakTranslation
+        // 先認清楚原文是什麼語言（手機內建的語言辨識）；本來就是目標語言的話換個方向翻
+        let src = req0.source ?? LangID.detect(req0.text)
+        var target = req0.target
+        if src.lex != nil, src.lex == target.lex { target = target == .zh ? .en : .zh }
+        let req = Translate.Request(text: req0.text, source: src, target: target)
         lastTranslation = req
         streaming = "🌐 翻譯成\(req.target.name)…"
         Task { [self] in
@@ -355,6 +358,22 @@ final class ChatViewModel: ObservableObject {
                 }
             }
             if res == nil { res = await Translate.online(req) }
+            if var r = res {
+                // 單字、短片語：補上 Google 字典的其他說法（蘋果內建翻譯只給一個）
+                if r.alternatives.isEmpty, Translate.isWordish(req.text), let g = await Translate.google(req) {
+                    r.alternatives = g.alternatives.filter { $0.lowercased() != r.text.lowercased() }
+                    if r.alternatives.isEmpty, g.text.lowercased() != r.text.lowercased() { r.alternatives = [g.text] }
+                }
+                // 翻回原文核對意思（句子才做；單字翻回來常常是同義詞，沒意義）
+                if !Translate.isWordish(req.text) {
+                    let backReq = Translate.Request(text: r.text, source: req.target, target: r.source)
+                    var back: Translate.Result?
+                    if #available(iOS 18.0, *) { back = await AppleTranslator.shared.translate(backReq, allowDownload: false) }
+                    if back == nil { back = await Translate.google(backReq) }
+                    r.back = back?.text ?? ""
+                }
+                res = r
+            }
             let text = res.map { Translate.reply(req, $0) }
                 ?? "這句我現在翻不出來：Google 翻譯連不上，手機內建翻譯也還沒有這個語言包（要 iOS 18 以上）。請確認手機有連上網路，再試一次。"
             var turn = ChatTurn(role: .echo, text: text, source: .tool)

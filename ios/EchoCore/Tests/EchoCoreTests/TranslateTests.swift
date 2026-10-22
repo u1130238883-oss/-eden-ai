@@ -104,4 +104,18 @@ final class TranslateTests: XCTestCase {
         }
         XCTAssertTrue(bad.isEmpty, bad.joined(separator: "\n"))
     }
+
+    func testGoogleDictionaryAlternatives() throws {
+        let json = #"[[["apple","蘋果",null,null,1]],[["noun",["apple","Apple"],[]],["noun2",["pome"],[]]],"zh-TW"]"#
+        let r = try XCTUnwrap(Translate.parseGoogle(try JSONSerialization.jsonObject(with: Data(json.utf8)), target: .en))
+        XCTAssertEqual(r.text, "apple")
+        XCTAssertEqual(r.alternatives, ["pome"])
+        XCTAssertEqual(r.source, .zh)
+        var res = Translate.Result(text: "Have you eaten?", source: .zh, via: "test")
+        res.back = "你吃飯了嗎？"
+        let out = Translate.reply(.init(text: "你吃飯了嗎", source: .zh, target: .en), res)
+        XCTAssertTrue(out.contains("🔁 翻回繁體中文核對：你吃飯了嗎？（跟原文一樣"), out)
+        XCTAssertEqual(Translate.parse("中翻英：我想喝咖啡"), .init(text: "我想喝咖啡", source: nil, target: .en))
+        XCTAssertEqual(Translate.parse("謝謝 翻西"), .init(text: "謝謝", source: nil, target: .es))
+    }
 }
