@@ -24,7 +24,16 @@ final class ChatViewModel: ObservableObject {
     @Published var aiModels = "" { didSet { save(aiModels, "aiModels") } }
     /// 打開：日常問題、翻譯、沒把握的題目都用 AI 的 API 回答；關掉：完全不呼叫 AI 的 API，NineSun 自己（本地引擎＋自己上網查）回答
     @Published var useAPI = true { didSet { save(useAPI, "useAPI") } }
-    /// 翻譯好後自動念出來
+    /// 翻譯模式：輸入框上的語言按鈕亮著時，打的每一句都直接翻成這個語言
+    @Published var translateOn = false { didSet { save(translateOn, "translateOn") } }
+    @Published var translateTarget = "en" { didSet { save(translateTarget, "translateTarget") } }
+    /// 翻譯模式可選的四種語言
+    struct TranslateLang: Hashable { let code: String; let short: String; let name: String }
+    static let translateLangs: [TranslateLang] = [
+        .init(code: "zh-Hant", short: "中", name: "中文"), .init(code: "en", short: "EN", name: "English"),
+        .init(code: "es", short: "ES", name: "Español"), .init(code: "it", short: "IT", name: "Italiano"),
+    ]
+    /// 翻好後自動念出來
     @Published var speakTranslation = true { didSet { save(speakTranslation, "speakTranslation") } }
     /// 設定頁「測試連線」的結果
     @Published var aiTestResult = ""
@@ -84,6 +93,8 @@ final class ChatViewModel: ObservableObject {
         aiModels = load("aiModels") ?? ""
         useAPI = load("useAPI") ?? true
         speakTranslation = load("speakTranslation") ?? true
+        translateOn = load("translateOn") ?? false
+        translateTarget = load("translateTarget") ?? "en"
         UILang.current = language
         // 以前的版本會把上網查過的答案存在手機裡；現在每次都即時上網查，舊檔刪掉
         try? FileManager.default.removeItem(at: Self.docs.appendingPathComponent("ninesun-webmemory.json"))
@@ -213,6 +224,14 @@ final class ChatViewModel: ObservableObject {
             Notebook.shared.dispute(q, userSaid: Mind.claim(text))
             saveFile(Notebook.shared.state, Self.notebookURL)
             lookupWeb(q, autoDetect ? Lang.detect(q, fallback: language) : language, avoid: hosts, reflect: true)
+            return
+        }
+
+        // 翻譯模式開著：直接翻成選好的語言（本來就是那個語言的話：翻成中文；選中文的話翻成英文）
+        if translateOn, let target = Translate.Code(rawValue: translateTarget) {
+            let src = Translate.detect(text)
+            let to: Translate.Code = src.lex == target.lex ? (target == .zh ? .en : .zh) : target
+            translate(Translate.Request(text: text, source: nil, target: to))
             return
         }
 

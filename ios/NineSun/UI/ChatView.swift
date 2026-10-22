@@ -135,6 +135,40 @@ struct ChatView: View {
     // MARK: - 快捷
 
     private var quickBar: some View {
+        HStack(spacing: 0) {
+            translateButton.padding(.leading, 16)
+            quickChips
+        }
+    }
+
+    /// 翻譯按鈕：點一下開／關（亮黃綠色＝開），長按選語言（中文、English、Español、Italiano）
+    private var translateButton: some View {
+        let cur = ChatViewModel.translateLangs.first { $0.code == vm.translateTarget } ?? ChatViewModel.translateLangs[1]
+        return Menu {
+            ForEach(ChatViewModel.translateLangs, id: \.self) { l in
+                Button {
+                    vm.translateTarget = l.code
+                    vm.translateOn = true
+                } label: {
+                    if l.code == vm.translateTarget { Label(l.name, systemImage: "checkmark") } else { Text(l.name) }
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "globe").font(.system(size: 12, weight: .black))
+                Text(cur.short).font(.system(size: 13, weight: .black))
+            }
+            .foregroundColor(vm.translateOn ? Theme.ink : Theme.dim)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(Slanted(skew: 6).fill(vm.translateOn ? Theme.hazard : Theme.panel))
+            .overlay(Slanted(skew: 6).stroke(vm.translateOn ? Theme.hazard : Theme.panelHi, lineWidth: 1))
+        } primaryAction: {
+            vm.translateOn.toggle()
+        }
+    }
+
+    private var quickChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(quick, id: \.self) { q in
@@ -159,7 +193,10 @@ struct ChatView: View {
 
     private var inputBar: some View {
         HStack(spacing: 10) {
-            TextField("", text: $input, prompt: Text(T("對 NineSun 發送訊號…", "Send a signal to NineSun…", "Envía una señal a NineSun…", "Invia un segnale a NineSun…")).foregroundColor(Theme.dim), axis: .vertical)
+            TextField("", text: $input, prompt: Text(vm.translateOn
+                    ? T("直接輸入，翻成", "Type to translate into ", "Escribe para traducir al ", "Scrivi per tradurre in ")
+                        + (ChatViewModel.translateLangs.first { $0.code == vm.translateTarget }?.name ?? "")
+                    : T("對 NineSun 發送訊號…", "Send a signal to NineSun…", "Envía una señal a NineSun…", "Invia un segnale a NineSun…")).foregroundColor(Theme.dim), axis: .vertical)
                 .lineLimit(1...4)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(Theme.paper)
