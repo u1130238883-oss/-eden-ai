@@ -218,7 +218,7 @@ public enum Think {
         if ["為什麼", "為何", "原因", "怎麼會"].contains(where: { q.contains($0) }) { return Understanding.causal }
         if ["是什麼", "是啥", "什麼意思", "是指什麼"].contains(where: { q.contains($0) }) { return ["是", "指", "稱為", "一種", "簡稱"] }
         if ["怎麼辦", "該怎麼", "怎麼處理", "建議"].contains(where: { q.contains($0) }) {
-            return ["可以", "應該", "建議", "最好", "記得", "不要", "避免", "休息", "就醫", "找", "先", "試著", "治療", "緩解", "多喝", "服用", "補充"]
+            return ["可以", "應該", "建議", "最好", "記得", "不要", "避免", "休息", "就醫", "找", "先", "試著", "緩解", "多喝", "補充水分", "多休息"]
         }
         if ["怎麼做", "怎麼煮", "如何", "做法", "步驟"].contains(where: { q.contains($0) }) {
             return Understanding.stepVerbs + ["先", "再", "然後", "接著", "最後"]
