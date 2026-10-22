@@ -176,6 +176,10 @@ public enum WebAgent {
         // 使用者給了網址：直接讀那個網頁
         if facts == nil, let url = firstURL(question), url.count >= question.count - 2 { return await readLink(url, lang: L) }
         let fortune = facts != nil
+        // 「台北101比玉山高多少」：拆成兩個小問題分別查，再換算、相減（查不到兩個數字就照一般的方法查）
+        if L == .zh, !fortune, let ms = MultiStep.parse(question), let r = await MultiStep.solve(ms, lang: L, progress: progress) {
+            return r
+        }
         let t0 = Date()
         var clock: [(String, Date)] = []
         let plan = understand(question, L: L, fortune: fortune)

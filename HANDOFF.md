@@ -304,3 +304,7 @@ CI 的「Live web search check」會用真的網路問 40 題（`WebTests.swift`
 - `EchoCore/Translate/Lexicon.swift` ＋ `NineSun/Resources/lexicon.tsv`（`ai/build_lexicon.py` 產生）：離線字典，英文（ECDICT，MIT）、中文／西班牙文／義大利文／阿拉伯文（維基詞典，CC BY-SA 3.0，經 Vuizur/Wiktionary-Dictionaries），只收常用詞（hermitdave/FrequencyWords 詞頻，MIT）。中文附拼音、阿拉伯文附拉丁拼音、西／義動詞變化形會指回原形。三種外語之間用英文當橋樑反查。
 - App：單字先查字典 → 整句用 iOS 18 內建翻譯（`AppleTranslator`，第一次會請使用者下載語言包，之後離線）→ AI 金鑰 → MyMemory 線上翻譯。`Translation` 用 weak link，iOS 16 照樣能開。
 - 重新產生字典：`python3 ai/build_lexicon.py ECDICT_DIR WIKT_DIR FREQ_DIR ios/NineSun/Resources/lexicon.tsv`
+
+## 分兩步想（`Web/MultiStep.swift`，2026-10-22）
+- 「A比B高多少」「A和B哪個高」「A是B的幾倍」「A和B相差多少」：拆成兩個小問題（「A有多高」「B有多高」）同時查，換成同一個單位再相減／比大小／算倍數；回答會列出每一步（①②③）。問「A比B高多少」但其實 A 比較矮時照實講。
+- 名單：`Understanding.countedList`——句子自己說「這五個國家」、列出的數目也對得上，直接用（修正北歐漏掉瑞典、挪威）。
