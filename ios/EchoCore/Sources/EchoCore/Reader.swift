@@ -294,6 +294,7 @@ public struct Reader {
         var text = rowText(label, row, seed: y * 7, headKey: 5)
         var card = rowCard(t("流年 ", "Annual ", "Anual ", "Annuale ") + "\(y)", row)
         let trig = D.triggeredAspects(y)
+        if L == .zh { text += "\n\n" + Reader.luckAndYear(D, y: y) }
         if !trig.isEmpty && L == .zh {
             text += "\n\n今年流年在\(row.palace)宮，會引動大運裡果或因是\(row.palace)的方面："
             for a in trig {
@@ -310,6 +311,46 @@ public struct Reader {
         }
         return mk(text: text, card: card,
                             follow: Followup(scope: "year", label: label, row: row, y: y, m: 1, d: 1, palace: nil, birthday: D.birth))
+    }
+
+    /// 大運和流年的關係（九型十二宮的結構）：
+    /// - 流年每年往下走一列，大運第 1 年流年＝大運（同宮），第 7 年流年走到大運的對宮。
+    /// - 對宮的兩列：兩邊都是好／壞時，果因一定是同一對宮位（年＋日、月＋日各加 12，繞回原處），只有五行決定好壞和方向——同一件事的兩面；
+    ///   兩邊都是正時，因相同、果互為對宮；一正一好壞時沒有固定關係。（1728 種組合全部驗證過）
+    static func luckAndYear(_ D: Destiny, y: Int) -> String {
+        let lp = D.luckPeriod(y), fy = D.year(y)
+        let n = y - lp.start + 1, lr = lp.row.reading, fr = fy.reading
+        let gap = ((lp.row.palace - fy.palace) % 12 + 12) % 12
+        var s = "【大運 × 流年】今年是\(lp.start)–\(lp.end)這段大運（\(NT.label(lp.row.palace))「\(lr.text)」）的第\(n)年，流年在\(NT.label(fy.palace))「\(fr.text)」。"
+        let pair = Set([lr.result, lr.cause]) == Set([fr.result, fr.cause])
+        if gap == 0 {
+            s += "流年和大運是同一宮：這十年的主題今年直接開場，感受最濃。"
+        } else if gap == 6 {
+            s += "流年走到大運的對宮（\(lp.row.palace)宮對\(fy.palace)宮）"
+            if pair {
+                s += "，果因是同一對宮位，同一件事從另一面呈現。"
+            } else if lr.verdict == .neutral && fr.verdict == .neutral {
+                s += "，起因一樣（\(NT.label(lr.cause))），結果落在彼此的對宮。"
+            } else {
+                s += "。"
+            }
+            if pair && lr.verdict != fr.verdict && lr.verdict != .neutral && fr.verdict != .neutral {
+                s += lr.verdict == .bad
+                    ? "大運是\(lr.text)、流年是\(fr.text)，好壞翻過來：這些年卡住的\(NT.label(lr.result))課題，今年有機會換一個方向找到出口，常見的是換環境、離開或放下。"
+                    : "大運是\(lr.text)、流年是\(fr.text)，好壞翻過來：這些年順的\(NT.label(lr.result))，今年會碰到它的另一面，要多留意。"
+            } else if lr.verdict == fr.verdict {
+                s += "兩邊都是\(Reader.vword(fr.verdict))，這十年的主題今年從兩頭一起出現，特別明顯。"
+            }
+        } else if fy.palace == lr.result || fy.palace == lr.cause {
+            s += "流年走的正是大運的\(fy.palace == lr.result ? "果" : "因")宮：大運的\(fy.palace == lr.result ? "結果" : "起因")今年被直接點到。"
+        } else {
+            s += "流年和大運不在同一條線上，今年的事比較是流年自己的主題。"
+        }
+        if gap != 0 && gap != 6 {
+            let opp = lp.start + 6
+            if opp <= lp.end { s += "這段大運的對宮年是\(opp)年。" }
+        }
+        return s
     }
 
     public func luck(_ D: Destiny, y: Int, aspects: Bool = false) -> ReaderOutput {
@@ -600,7 +641,7 @@ public struct Reader {
                 let item = "\(yy)年（\(st.text)）"
                 switch st.verdict { case .good: good.append(item); case .bad: bad.append(item); case .neutral: mid.append(item) }
             }
-            text += "\n⑤ 期限："
+            text += "\n⑤ 期限（年份是傾向和參考，不是一定會發生的事）："
             var periods: [String] = []
             var yy0 = lp.start
             for _ in 0..<3 {

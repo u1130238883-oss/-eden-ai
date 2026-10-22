@@ -795,4 +795,25 @@ final class EchoCoreTests: XCTestCase {
         XCTAssertEqual(ToolRouter.handle("今天幾號", now: d), "今天是 2026 年 9 月 29 日，星期二。")
     }
 
+
+    /// 大運和流年的關係：2006-01-14 生，2025 年是大運（3宮壞12因7）的第 7 年，流年走對宮 9宮好12因7
+    func testLuckAndYearRelation() {
+        let D = Destiny(BirthDay(year: 2006, month: 1, day: 14))
+        let s25 = Reader.luckAndYear(D, y: 2025)
+        XCTAssertTrue(s25.contains("第7年") && s25.contains("對宮") && s25.contains("好壞翻過來"), s25)
+        XCTAssertTrue(Reader.luckAndYear(D, y: 2019).contains("同一宮"))
+        // 結構：對宮兩列都是好壞 → 果因同一對；都是正 → 因相同、果互為對宮
+        for y in 1950...2010 {
+            let d = Destiny(BirthDay(year: y, month: (y % 12) + 1, day: (y % 28) + 1))
+            for i in 0..<6 {
+                let a = d.natal[i].reading, b = d.natal[i + 6].reading
+                if a.verdict != .neutral && b.verdict != .neutral {
+                    XCTAssertEqual(Set([a.result, a.cause]), Set([b.result, b.cause]))
+                } else if a.verdict == .neutral && b.verdict == .neutral {
+                    XCTAssertEqual(a.cause, b.cause)
+                    XCTAssertEqual(((a.result - b.result) % 12 + 12) % 12, 6)
+                }
+            }
+        }
+    }
 }
