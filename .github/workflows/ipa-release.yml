@@ -1,0 +1,29 @@
+name: Release IPA
+
+# 只在建立 ninetwelve-ipa-* 分支時跑（Ubuntu，很省額度）。
+# 推送時 commit 訊息加 [skip ci]，Build IPA 就不會重編；create 事件不受 [skip ci] 影響。
+# 把 Build IPA 已經編好的 IPA 放到 Release，給一個不用解壓、不用登入的 .ipa 直接下載連結。
+on: create
+
+jobs:
+  release:
+    if: github.ref_type == 'branch' && startsWith(github.ref_name, 'ninetwelve-ipa-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: NineTwelve-4lang-FREE-ipa
+          run-id: 39806457263
+          github-token: ${{ github.token }}
+      - name: 建立 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -lh NineTwelve-4lang-free.ipa
+          gh release create "${GITHUB_REF_NAME}" NineTwelve-4lang-free.ipa \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "Nine & Twelve 四語解鎖版 IPA（2026-10-22）" \
+            --notes "Build IPA run 39806457263"
