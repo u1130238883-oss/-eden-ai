@@ -301,6 +301,7 @@ public struct Reader {
                 text += "\n• 第\(a.palace)方面 \(NT.label(a.palace))「\(a.reading.text)」：" + FlowReading.interpret(a)
             }
             text += "\n這些方面今年特別有感。"
+            text += Reader.sameCause(trig)
             card.details.append("引動大運：" + trig.map { "\($0.palace)宮\($0.reading.text)" }.joined(separator: "、"))
         } else if !trig.isEmpty {
             let items = trig.prefix(3).map { "\(pnt($0.palace))" }
@@ -311,6 +312,25 @@ public struct Reader {
         }
         return mk(text: text, card: card,
                             follow: Followup(scope: "year", label: label, row: row, y: y, m: 1, d: 1, palace: nil, birthday: D.birth))
+    }
+
+    /// 好幾個被引動的方面起因相同時合起來看：同一個起因落在不同領域、結果不同
+    /// 例：三島由紀夫 1946 年（21 歲）引動 11宮好12因7、5宮壞12因7——遇見的人（因7）在朋友圈是好緣分（見到川端康成、被提拔），在感情上緣分落空（初戀嫁給別人）
+    static func sameCause(_ rows: [NTRow]) -> String {
+        var out = ""
+        for (c, group) in Dictionary(grouping: rows, by: { $0.reading.cause }).sorted(by: { $0.key < $1.key }) where group.count >= 2 {
+            let what = FlowReading.cause[FlowReading.i(c)].components(separatedBy: "、").prefix(2).joined(separator: "、")
+            var parts: [String] = []
+            for v in [NTVerdict.good, .bad, .neutral] {
+                let g = group.filter { $0.reading.verdict == v }
+                guard !g.isEmpty else { continue }
+                let areas = g.map { "\(NT.label($0.palace))（得到\(Reader.vword(v))\($0.reading.result)）" }.joined(separator: "、")
+                parts.append("\(Reader.vword(v))在" + areas)
+            }
+            out += "\n合起來看：這幾個方面的起因都是\(c)宮（\(what)）——同一個起因落在不同的領域，結果不一樣：" + parts.joined(separator: "；")
+                + "。不要只看流年一個字的好壞，分開看每個領域。"
+        }
+        return out
     }
 
     /// 大運和流年的關係（九型十二宮的結構）：
@@ -418,9 +438,16 @@ public struct Reader {
             text += "\n" + fmt(t("十二宮裡比較順的方面：%@。", "Areas that flow more easily in your chart: %@.", "Áreas que fluyen mejor en tu carta: %@.",
                                  "Aree che scorrono meglio nel tuo tema: %@."), join(good))
         }
+        if !good.isEmpty && L == .zh {
+            text += "（好是那個方面做得成、流得動，不等於心情一定快樂）"
+        }
         if !bad.isEmpty {
             text += "\n" + fmt(t("需要多留意的方面：%@。", "Areas that need extra care: %@.", "Áreas que piden más cuidado: %@.",
                                  "Aree che chiedono più cura: %@."), join(bad))
+        }
+        if L == .zh {
+            let same = Celebrities.sameChart(as: D.birth).prefix(3).map { "\($0.name)（\($0.birth.display)）" }
+            if !same.isEmpty { text += "\n本命盤跟你一模一樣的名人：" + same.joined(separator: "、") + "（說「\(same[0].components(separatedBy: "（")[0])的命盤」可以看他的經歷）" }
         }
         let cardHead = t("命宮 ", "Life Palace ", "Palacio de Vida ", "Palazzo della Vita ") + pn(r0.palace)
         let card = FortuneCard(title: t("本命盤", "Natal chart", "Carta natal", "Tema natale"), headline: cardHead,

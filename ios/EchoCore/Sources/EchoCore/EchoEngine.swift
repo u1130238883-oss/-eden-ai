@@ -283,6 +283,14 @@ public final class EchoEngine {
         // 2) 觸發規則
         if let t = ctx.rules.trigger(for: text) { return done(t, .rule) }
 
+        // 2.05) 名人命盤：「三島由紀夫的命盤」「跟我同命盤的名人」
+        if L == .zh, Celebrities.asksSameChart(text) {
+            return done(Celebrities.sameChartReply(ctx.profile.birthday), .reader)
+        }
+        if L == .zh, let p = Celebrities.asksChart(text) {
+            return done(Celebrities.reading(p), .reader)
+        }
+
         // 2.1) 心情：用你的生日看此刻的大運、流年、流月、日夜宮，說出處境和情緒，溫柔地安慰
         if L == .zh, let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now,
                                 again: history.suffix(4).contains { $0.role == .echo && $0.text.contains("我看了你此刻走到的地方") }) {

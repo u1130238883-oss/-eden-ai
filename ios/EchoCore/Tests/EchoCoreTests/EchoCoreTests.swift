@@ -816,4 +816,21 @@ final class EchoCoreTests: XCTestCase {
             }
         }
     }
+
+    /// 名人命盤：三島由紀夫和 2006-01-14 生的人本命盤一樣
+    func testCelebrities() {
+        let me = BirthDay(year: 2006, month: 1, day: 14)
+        XCTAssertTrue(Celebrities.sameChart(as: me).contains { $0.name == "三島由紀夫" })
+        XCTAssertEqual(Celebrities.asksChart("三島由紀夫的命盤")?.name, "三島由紀夫")
+        XCTAssertEqual(Celebrities.asksChart("賈伯斯的大運")?.name, "史蒂夫·賈伯斯")
+        XCTAssertNil(Celebrities.asksChart("我喜歡川端康成的小說"))
+        XCTAssertTrue(Celebrities.asksSameChart("有哪些名人跟我同命盤"))
+        let r = Celebrities.reading(Celebrities.find(in: "三島由紀夫")!)
+        XCTAssertTrue(r.contains("1945年（20歲）") && r.contains("流年8宮") && r.contains("第5型"), r)
+        XCTAssertTrue(Celebrities.sameChartReply(me).contains("三島由紀夫"))
+        // 三島 1946（21 歲）：引動的方面起因都是 7宮，合起來看
+        let s46 = Reader.sameCause(Destiny(BirthDay(year: 1925, month: 1, day: 14)).triggeredAspects(1946))
+        XCTAssertTrue(s46.contains("起因都是7宮") && s46.contains("好在11宮") && s46.contains("壞在5宮"), s46)
+        XCTAssertTrue(Reader(.zh, i18n: nil).natal(Destiny(me)).text.contains("本命盤跟你一模一樣的名人：三島由紀夫"))
+    }
 }
