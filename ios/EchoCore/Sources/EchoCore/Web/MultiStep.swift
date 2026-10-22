@@ -52,7 +52,15 @@ public enum MultiStep {
         for x in [a, b] where ["我", "你", "他", "她", "誰", "這", "那"].contains(where: { x.hasPrefix($0) }) { return nil }
         let look = base[adj] ?? adj
         func sub(_ x: String) -> String? {
-            if attr != nil { return x + "是多少" }
+            if let attr {
+                switch attr {
+                case "人口": return x + "有多少"
+                case "面積": return x + "有多大"
+                case "距離": return x + "有多遠"
+                case "高度", "海拔", "身高": return x + "有多高"
+                default: return x + "是多少"
+                }
+            }
             switch look {
             case "高": return x + "有多高"
             case "重": return x + "有多重"
@@ -164,9 +172,26 @@ public enum MultiStep {
         async let ra = WebAgent.run(p.subA, lang: L)
         async let rb = WebAgent.run(p.subB, lang: L)
         let (x, y) = await (ra, rb)
-        progress?("② 兩個數字都查到了，換成同一個單位來算")
-        guard let sa = short(x.text), let sb = short(y.text), let c = compute(p, sa.answer, sb.answer) else { return nil }
+        progress?("② 兩題都查完了，換成同一個單位來算")
         func from(_ h: String) -> String { h.isEmpty ? "" : "（\(h)）" }
+        let oa = short(x.text), ob = short(y.text)
+        guard let sa = oa, let sb = ob, let c = compute(p, sa.answer, sb.answer) else {
+            // 兩個都沒查到：交給一般的查法；查到一個、或單位對不起來：照實說做到哪一步，不亂湊答案
+            guard oa != nil || ob != nil else { return nil }
+            let lines: [String] = [
+                "📌 回答",
+                "這題要先分別查兩個數字再比較，但我只查到一部分，沒辦法算出可靠的結果：",
+                "① 「\(p.subA)」→ " + (oa.map { $0.answer + from($0.host) } ?? "沒查到清楚的數字"),
+                "② 「\(p.subB)」→ " + (ob.map { $0.answer + from($0.host) } ?? "沒查到清楚的數字"),
+                oa != nil && ob != nil ? "③ 兩個數字的單位對不起來，不能直接相減。" : "③ 少了一個數字，先不算，免得給你錯的答案。",
+                "可以換個說法再問一次，或分開問這兩題。",
+            ]
+            var r = WebAgent.Result(text: lines.joined(separator: "\n"), card: nil, found: true, engines: x.engines)
+            r.want = "multistep"
+            r.answered = false
+            r.timing = "分兩步：\(x.timing) ｜ \(y.timing)"
+            return r
+        }
         let lines = [
             "📌 回答",
             c.answer,

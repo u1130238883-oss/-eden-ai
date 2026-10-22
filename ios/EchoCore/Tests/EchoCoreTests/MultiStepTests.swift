@@ -13,7 +13,7 @@ final class MultiStepTests: XCTestCase {
         XCTAssertEqual([r.subA, r.subB], ["太陽的質量是多少", "地球的質量是多少"])
         XCTAssertEqual(r.op, .ratio)
         let pop = try XCTUnwrap(MultiStep.parse("台灣人口比日本多多少"))
-        XCTAssertEqual([pop.subA, pop.subB], ["台灣人口是多少", "日本的人口是多少"])
+        XCTAssertEqual([pop.subA, pop.subB], ["台灣人口有多少", "日本的人口有多少"])
         // 不是在比兩個東西的數量
         for q in ["我比你高多少", "iPhone和安卓哪個好", "台北101有多高", "今天比昨天冷嗎"] { XCTAssertNil(MultiStep.parse(q), q) }
     }
