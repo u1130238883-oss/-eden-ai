@@ -232,6 +232,10 @@ final class CompareTests: XCTestCase {
         XCTAssertTrue(d.contains("• 安卓：") && d.contains("選擇多"), d)
         XCTAssertFalse(d.contains("待機模式"), d)
         XCTAssertNil(Think.compareDigest("iPhone", "安卓", pages: [.init(text: "iOS 17 加入待機模式。", host: "w")]))
+        // 資料寫「Android」也算在講安卓
+        let wiki = "Android 是開放原始碼的系統，優點是可以自由客製、選擇多。\niPhone 的優勢在於系統穩定、隱私保護好。"
+        let w = Think.compareDigest("iPhone", "安卓", pages: [.init(text: wiki, host: "zh.wikipedia.org")]) ?? ""
+        XCTAssertTrue(w.contains("• 安卓：") && w.contains("客製"), w)
     }
 
     /// 歐洲有多少個國家 → 答成「8個國家」（「瑞士8個國家共同經營」是在數別的東西）

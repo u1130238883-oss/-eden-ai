@@ -298,11 +298,18 @@ public enum Think {
 
     /// 「iPhone和安卓哪個好」：網路上很少有一句話同時把兩邊講清楚，所以分開找——各自的優缺點各找一句，
     /// 有直接比較兩邊的句子也放上，最後給一個怎麼選的判斷（不硬選邊）
+    static let compareAliases: [String: [String]] = [
+        "安卓": ["android"], "android": ["安卓"], "iphone": ["ios", "蘋果手機"], "ios": ["iphone"], "蘋果": ["apple", "iphone", "ios"],
+        "mac": ["macos", "蘋果電腦"], "windows": ["微軟"], "pc": ["windows", "個人電腦"], "可樂": ["coca-cola"], "咖啡": ["coffee"],
+    ]
+
     public static func compareDigest(_ a: String, _ b: String, pages: [Understanding.Evidence]) -> String? {
         let sents = contentSentences(pages)
         let judge = ["優點", "優勢", "缺點", "劣勢", "適合", "價格", "便宜", "昂貴", "安全", "流暢", "彈性", "自由", "封閉", "開放", "生態",
                      "續航", "隱私", "選擇", "好用", "穩定", "更新", "客製", "相容"]
-        func has(_ s: String, _ x: String) -> Bool { s.lowercased().contains(x.lowercased()) }
+        // 同一個東西的不同叫法（資料寫「Android」，問的是「安卓」）
+        func names(_ x: String) -> [String] { [x.lowercased()] + (compareAliases[x.lowercased()] ?? []) }
+        func has(_ s: String, _ x: String) -> Bool { let l = s.lowercased(); return names(x).contains { l.contains($0) } }
         func strength(_ s: String) -> Int { judge.filter { s.contains($0) }.count }
         func pick(_ x: String, _ other: String) -> (text: String, host: String)? {
             sents.filter { has($0.text, x) && !has($0.text, other) && strength($0.text) > 0 && $0.text.count <= 120 }
