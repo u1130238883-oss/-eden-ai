@@ -112,7 +112,8 @@ final class TranslateTests: XCTestCase {
         XCTAssertEqual(r.alternatives, ["pome"])
         XCTAssertEqual(r.source, .zh)
         let res = Translate.Result(text: "Have you eaten?", alternatives: ["Did you eat?"], source: .zh, via: "test")
-        XCTAssertEqual(Translate.reply(.init(text: "你吃飯了嗎", source: .zh, target: .en), res), "Have you eaten?\n也可以說：Did you eat?")
+        // 不顯示「也可以說」
+        XCTAssertEqual(Translate.reply(.init(text: "你吃飯了嗎", source: .zh, target: .en), res), "Have you eaten?")
         XCTAssertEqual(Translate.parse("中翻英：我想喝咖啡"), .init(text: "我想喝咖啡", source: nil, target: .en))
         XCTAssertEqual(Translate.parse("謝謝 翻西"), .init(text: "謝謝", source: nil, target: .es))
     }

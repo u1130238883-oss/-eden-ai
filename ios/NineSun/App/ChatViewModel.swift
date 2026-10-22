@@ -376,16 +376,6 @@ final class ChatViewModel: ObservableObject {
             }
             if res == nil { res = await Translate.google(req) }
             if res == nil { res = await Translate.online(req) }
-            if var r = res {
-                // 單字：補上 Google 字典裡的其他說法，只留目標語言的（英文不要冒出德文的 Hallo）。
-                // 句子不補：整句的另一個機器翻譯常常是直譯、不道地（Have you got a meal yet）
-                if r.alternatives.isEmpty, Translate.isSingleWord(req.text), let g = await Translate.google(req) {
-                    r.alternatives = g.alternatives.filter { LangID.detect($0).lex == req.target.lex }
-                }
-                // 只差標點、大小寫的算同一個（「I'm so tired.」和「I'm so tired」）
-                r.alternatives = Translate.distinct(r.alternatives, from: r.text)
-                res = r
-            }
             let text = res.map { Translate.reply(req, $0) }
                 ?? "這句我現在翻不出來：Google 翻譯連不上，手機內建翻譯也還沒有這個語言包（要 iOS 18 以上）。請確認手機有連上網路，再試一次。"
             var turn = ChatTurn(role: .echo, text: text, source: .tool)

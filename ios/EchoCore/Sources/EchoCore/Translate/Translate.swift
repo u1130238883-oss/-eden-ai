@@ -433,12 +433,9 @@ public enum Translate {
 
     // MARK: - 寫成回答
 
-    /// 只給譯文（中文附拼音），單字再加其他說法；不加說明、來源
+    /// 只給譯文（中文附拼音）；不加「也可以說」、說明、來源（字典的其他說法常常意思不一樣：今天 ≠ now）
     public static func reply(_ r: Request, _ res: Result) -> String {
-        var lines = [res.text + (res.pron.isEmpty ? "" : "　〔\(res.pron)〕")]
-        let alts = distinct(res.alternatives, from: res.text)
-        if !alts.isEmpty { lines.append("也可以說：" + alts.joined(separator: "、")) }
-        return lines.joined(separator: "\n")
+        res.text + (res.pron.isEmpty ? "" : "　〔\(res.pron)〕")
     }
 
     /// 比對用：去掉標點、空白、大小寫
