@@ -129,6 +129,9 @@ final class TranslateTests: XCTestCase {
         XCTAssertEqual(t("que rico", .zh), "好吃")
         XCTAssertNil(t("今天天氣很好", .en))
         XCTAssertEqual(t("我好累啊", .en), "I'm exhausted.")
+        // 吃飯是一般的「吃」，不是晚餐（cena）
+        XCTAssertEqual(t("我想去吃飯", .it), "Voglio andare a mangiare.")
+        XCTAssertEqual(t("吃晚飯", .it), "cenare")
         XCTAssertEqual(Translate.distinct(["I'm so tired", "Hallo!", "hallo"], from: "I'm so tired."), ["Hallo!"])
         XCTAssertTrue(Translate.isSingleWord("蘋果") && !Translate.isSingleWord("吃飯了嗎") && !Translate.isSingleWord("good morning"))
         XCTAssertNil(t("加油", .zh))

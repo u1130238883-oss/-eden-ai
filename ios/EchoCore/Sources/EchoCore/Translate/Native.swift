@@ -116,6 +116,14 @@ public enum Native {
 我懂/我懂你/我明白|I get it./I know what you mean.|Te entiendo./Ya veo.|Ti capisco./Capisco.
 我累死了/累死了/好累/我好累/我很累|I'm exhausted./I'm wiped out.|Estoy muerto./Estoy agotado.|Sono distrutto./Sono stanchissimo.
 我餓死了/餓死了|I'm starving!|¡Me muero de hambre!|Muoio di fame!
+我想去吃飯/想去吃飯/我要去吃飯/去吃飯|I want to go eat./I'm going to grab something to eat.|Quiero ir a comer.|Voglio andare a mangiare./Vado a mangiare.
+我們去吃飯吧/一起去吃飯/一起吃飯吧/去吃飯吧|Let's go get something to eat!|¡Vamos a comer!|Andiamo a mangiare!
+吃飯|eat/have a meal|comer|mangiare
+你想吃什麼/想吃什麼|What do you feel like eating?|¿Qué te apetece comer?|Cosa ti va di mangiare?
+我吃飽了/吃飽了|I'm full.|Estoy lleno./Ya comí suficiente.|Sono pieno./Sono sazio.
+吃早餐/吃早飯|have breakfast|desayunar|fare colazione
+吃午餐/吃午飯|have lunch|comer/almorzar|pranzare
+吃晚餐/吃晚飯|have dinner|cenar|cenare
 好吃/很好吃/超好吃|This is delicious!/So good!|¡Qué rico!/¡Está buenísimo!|Buonissimo!/Che buono!
 買單/結帳|Check, please./Can I get the bill?|La cuenta, por favor.|Il conto, per favore.
 多少錢/這個多少錢|How much is this?|¿Cuánto cuesta?/¿Cuánto es?|Quanto costa?/Quant'è?
