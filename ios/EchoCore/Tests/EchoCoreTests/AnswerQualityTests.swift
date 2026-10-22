@@ -284,4 +284,11 @@ final class CompareTests: XCTestCase {
         let page = "歐洲國家包括英國各協會、義大利、西德、比利時、瑞典、捷克斯洛伐克、蘇聯等七國參賽。"
         XCTAssertTrue(Understanding.extractList([.init(text: page, host: "w")], noun: "國家", subject: "歐洲").items.isEmpty)
     }
+
+    /// 北歐五國頁面的第一句：「北歐五國（英語：Nordic countries）是位於丹麥、瑞典、芬蘭、挪威和冰島及其附屬領土…」
+    func testIntroSentenceWithParenthesesAndJoinedItems() {
+        let page = "北歐五國（英語：Nordic countries）是位於丹麥、瑞典、芬蘭、挪威和冰島及其附屬領土如屬於丹麥的法羅群島、格陵蘭，屬於芬蘭的奧蘭群島。"
+        let r = Understanding.extractList([.init(text: page, host: "zh.wikipedia.org")], noun: "國家", subject: "北歐")
+        for c in ["丹麥", "瑞典", "芬蘭", "挪威", "冰島"] { XCTAssertTrue(r.items.contains(c), "\(c) \(r.items)") }
+    }
 }

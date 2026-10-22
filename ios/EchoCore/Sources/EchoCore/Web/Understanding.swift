@@ -461,7 +461,7 @@ extension Understanding {
                 guard let m = match(sent, pattern), let n = smallNumber(m[2]), n >= 2 else { continue }
                 var parts = m[1].components(separatedBy: "、")
                 if var f = parts.first {
-                    for v in ["包括", "包含", "分別是", "分別為", "說明為", "指的是", "是指", "指", "即", "為", "是", "有", "：", ":"] {
+                    for v in ["包括", "包含", "分別是", "分別為", "說明為", "指的是", "是指", "指", "即", "為", "是", "有", "位於", "：", ":"] {
                         if let r = f.range(of: v, options: .backwards) { f = String(f[r.upperBound...]) }
                     }
                     parts[0] = f
@@ -530,7 +530,7 @@ extension Understanding {
                 if parts.count >= 4 {
                     // 「北歐國家包括挪威、…、冰島等五國。」：去掉開頭的「…包括」和結尾的「等…」
                     if var f = parts.first {
-                        for m in ["包括", "包含", "分別是", "分別為", "泛指", "是指", "指", "即", "有", "為", "是", "：", ":"] {
+                        for m in ["包括", "包含", "分別是", "分別為", "泛指", "是指", "指", "即", "有", "為", "是", "位於", "：", ":"] {
                             if let r = f.range(of: m, options: .backwards) { f = String(f[r.upperBound...]) }
                         }
                         parts[0] = f
@@ -548,6 +548,20 @@ extension Understanding {
                             parts[parts.count - 1] = l
                         }
                     }
+                    // 中間的「挪威和冰島及其附屬領土」：去掉「及其…」，「和」連起來的兩個拆開
+                    if parts.count >= 3 {
+                        var mid: [String] = []
+                        for x in parts.dropFirst().dropLast() {
+                            var t = x
+                            if let r = t.range(of: "及其") { t = String(t[..<r.lowerBound]) }
+                            if let r = t.range(of: "和"), t.distance(from: t.startIndex, to: r.lowerBound) >= 2, t.distance(from: r.upperBound, to: t.endIndex) >= 2 {
+                                mid += [String(t[..<r.lowerBound]), String(t[r.upperBound...])]
+                            } else {
+                                mid.append(t)
+                            }
+                        }
+                        parts = [parts[0]] + mid + [parts[parts.count - 1]]
+                    }
                     let its = parts.compactMap { item($0) }
                     // 沒有明確字尾時，同一句要同時講到主題和名詞（「北歐國家包括…」），才算這一類的名單
                     let key = String(noun.prefix(1))
@@ -555,6 +569,8 @@ extension Understanding {
                     // 「北歐國家包括…」「北歐五國是…」這種開頭本身就是在列名單，不用別的資料印證
                     // 「北歐國家包括」「北歐五國是」「北歐理事會成員國包括」：主題後面不遠處出現名詞（或它的第一個字），接著是在列名單的字
                     let key1 = NSRegularExpression.escapedPattern(for: String(noun.prefix(1)))
+                    // 「北歐五國（英語：Nordic countries）是位於丹麥」：括號裡的外文名不算
+                    let rawFirst = rawFirst.replacingOccurrences(of: #"（[^）]*）|\([^)]*\)"#, with: "", options: .regularExpression)
                     let intro = !subj.isEmpty && rawFirst.range(of: NSRegularExpression.escapedPattern(for: subj) + "[^，。、]{0,8}" + key1
                         + "[^。、]{0,3}(包括|包含|分別是|分別為|泛指|是指|指|即|有|是|為|：|:)[^，。、]{1,8}$", options: .regularExpression) != nil
                     // ●：「北歐五國，指…」這種直接在列名單的句子，最可信

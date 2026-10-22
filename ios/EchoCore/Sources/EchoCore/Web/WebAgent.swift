@@ -391,6 +391,9 @@ public enum WebAgent {
                     return { a in a.contains(where: \.isNumber) || ["年", "月", "日", "世紀", "朝"].contains { a.contains($0) } }
                 case .person, .place:
                     return { a in a.count <= 16 && !a.contains(where: \.isNumber) }
+                case .list:
+                    // 問名單：答案要是好幾個名字（「丹麥、瑞典、芬蘭」），不是一句描述
+                    return { a in a.components(separatedBy: "、").count >= 3 }
                 default: return nil
                 }
             }()
