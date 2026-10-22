@@ -313,7 +313,7 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    /// 翻譯：手機內建翻譯（語言包已下載，離線最快）→ Google 翻譯 → 內建翻譯（請你下載語言包）→ AI（設定有開 API 時）→ MyMemory；
+    /// 翻譯：蘋果內建翻譯（離線）→ Google 翻譯 → AI（設定有開 API 時）→ MyMemory；
     /// 翻好後念出來。App 裡不存字典。
     private func translate(_ req: Translate.Request) {
         let cfg = aiConfig, api = apiOn, speak = speakTranslation
@@ -321,13 +321,12 @@ final class ChatViewModel: ObservableObject {
         streaming = "🌐 翻譯成\(req.target.name)…"
         Task { [self] in
             var res: Translate.Result?
+            // 蘋果內建翻譯優先：第一次用某個語言會請你下載語言包，之後完全在手機裡翻
             if #available(iOS 18.0, *) {
-                res = await AppleTranslator.shared.translate(req, allowDownload: false)
-            }
-            if res == nil { res = await Translate.google(req) }
-            if res == nil, #available(iOS 18.0, *) {
                 res = await AppleTranslator.shared.translate(req, allowDownload: true)
             }
+            // iOS 18 以前、或內建翻譯不支援這個語言、你沒下載語言包：才用 Google 翻譯
+            if res == nil { res = await Translate.google(req) }
             if res == nil, api {
                 let r = await AskAIs.chat(Translate.aiPrompt(req), history: [], evidence: [], lang: .zh, config: cfg)
                 if r.error == nil, !r.text.isEmpty {
