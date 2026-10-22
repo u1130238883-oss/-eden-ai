@@ -224,7 +224,7 @@ public enum Companion {
         if let D, L == .zh {
             let y = Calendar(identifier: .gregorian).component(.year, from: now)
             let a = D.luckAspects(y)[p - 1], yr = D.year(y)
-            var line = "\n用你的命盤看：這十年你的第\(p)方面判讀「\(a.reading.text)」，" + PalaceLore.text(p, a.reading.verdict, .zh)
+            var line = "\n用你的命盤看：這十年你的第\(p)方面判讀「\(a.reading.text)」——" + PalaceLore.text(p, a.reading, .zh)
             if D.triggeredAspects(y).contains(where: { $0.palace == p }) {
                 line += "而且今年流年（\(NT.label(yr.palace))）正好引動這一方面，所以最近特別有感。"
             } else if yr.palace == p {

@@ -370,9 +370,9 @@ final class ChatViewModel: ObservableObject {
                                            via: "請 " + cfg.names.joined(separator: "、") + " 翻譯")
                 }
             }
-            // 沒開 API：蘋果內建翻譯（第一次用某個語言會請你下載語言包，之後完全在手機裡翻）→ Google 翻譯
+            // 沒開 API：蘋果內建翻譯（只用手機裡已經下載好的語言，不跳出系統的下載畫面）→ Google 翻譯
             if res == nil, #available(iOS 18.0, *) {
-                res = await AppleTranslator.shared.translate(req, allowDownload: true)
+                res = await AppleTranslator.shared.translate(req, allowDownload: false)
             }
             if res == nil { res = await Translate.google(req) }
             if res == nil { res = await Translate.online(req) }

@@ -7,7 +7,7 @@ public enum PalaceLore {
     static let zh: [[String]] = [
         ["自我狀態好，行動力強，敢表達自己的想法。", "情緒平穩，按自己的步調做事。", "容易煩躁、衝動、上火，說話前先停三秒，別傷到人也別傷到自己。"],
         ["收入和物質上比較順，有機會買到想要的東西，價值觀也清楚。", "收支平穩，花錢有節制就好。", "開銷變大、錢不太聽話，也要留意口腔和飲食，別衝動消費。"],
-        ["溝通順、腦袋靈活，學習和談事情都有收穫，身邊同輩會幫你。", "交流照常，想法多但不亂。", "容易說錯話、想太多、跟同事或兄弟姊妹有摩擦，重要的事寫下來再說。"],
+        ["溝通順、腦袋靈活，學習和談事情都有收穫，身邊同輩會幫你。", "交流照常，想法多但不亂。", "容易說錯話、想太多、跟同輩、同事或同胞有摩擦，重要的事寫下來再說。"],
         ["家裡和睦、住得安心，內心有安全感。", "家庭平穩，偶爾會想東想西。", "不安全感上來、容易焦慮內耗，家裡的事比較多，給自己一個安靜的角落。"],
         ["人緣好、被看見，桃花和娛樂都旺，適合表現自己。", "有些小快樂，感情平平。", "容易為了被關注而用力過猛、感情波折或享樂過頭，量力而為。"],
         ["雖然忙但忙得有成果，社交和日常事務處理得很順。", "日常瑣事多，照清單一件件做。", "瑣事纏身、思緒亂、心累，容易被議論，先把最重要的一件事做完。"],
@@ -61,6 +61,11 @@ public enum PalaceLore {
         ["Amici e gruppi portano nuove occasioni; idee creative.", "Qualche cambiamento: resta flessibile.", "Molta instabilità: tieni un piano B."],
         ["Intuizione e coincidenze forti; bene per riflettere e creare.", "Più mondo interiore: prenditi tempo da solo.", "Confusione, fuga o pessimismo: non lasciarti trascinare."],
     ]
+
+    /// 有完整判讀時用這個：中文照「本宮 × 果宮好壞 × 因宮」講，不再只看本宮好壞（5宮壞12因7 是沒緣分，不是用力過猛）
+    public static func text(_ p: Int, _ r: NTReading, _ L: Lang) -> String {
+        L == .zh ? FlowReading.plain(palace: p, reading: r) : text(p, r.verdict, L)
+    }
 
     public static func text(_ p: Int, _ v: NTVerdict, _ L: Lang) -> String {
         let i = NT.r12(p) - 1

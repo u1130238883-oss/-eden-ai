@@ -20,45 +20,53 @@ public enum FullReading {
         let trigNatal = D.triggeredNatal(y).map(\.palace)
 
         // 每一宮被幾層觸動（命宮、大運、流年、流月、日宮、夜宮、引動）
-        var weight = [Int: Int]()
-        for p in [natal.palace, lp.row.palace, yr.palace, mo.palace, dp, np] { weight[p, default: 0] += 1 }
-        for p in trigYear { weight[p, default: 0] += 1 }
-        for p in trigNatal { weight[p, default: 0] += 1 }
+        var layers = [Int: [String]]()
+        for (p, name) in [(natal.palace, "命宮"), (lp.row.palace, "大運"), (yr.palace, "流年"), (mo.palace, "流月"), (dp, "今天白天"), (np, "今晚")] {
+            layers[p, default: []].append(name)
+        }
+        for p in trigYear { layers[p, default: []].append("流年引動") }
+        for p in trigNatal { layers[p, default: []].append("大運牽動本命") }
+        let weight = layers.mapValues(\.count)
         let focus = weight.filter { $0.value >= 2 }.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }.prefix(3)
 
         var t = "【綜合分析 · \(y)年\(m)月\(d)日】\n"
         t += "\n① 你是誰（本命）\n"
-        t += "命宮在\(NT.label(natal.palace))（\(R.topicShort(natal.palace))），本命判讀「\(natal.reading.text)」。\(PalaceLore.text(natal.palace, natal.reading.verdict, .zh))\n"
+        t += "命宮在\(NT.label(natal.palace))（\(R.topicShort(natal.palace))），本命判讀「\(natal.reading.text)」。\(PalaceLore.text(natal.palace, natal.reading, .zh))\n"
         t += "九型是第\(ty)型「\(NT.typeName(ty))」：\(NT.typeTagline(ty))。\n"
 
         t += "\n② 人生現在的階段（大運 \(lp.start)–\(lp.end)）\n"
-        t += "大運走\(NT.label(lp.row.palace))，判讀「\(lp.row.reading.text)」。\(PalaceLore.text(lp.row.palace, lp.row.reading.verdict, .zh))\n"
+        t += "大運走\(NT.label(lp.row.palace))，判讀「\(lp.row.reading.text)」。\(PalaceLore.text(lp.row.palace, lp.row.reading, .zh))\n"
         if !trigNatal.isEmpty { t += "這十年會牽動你本命的" + trigNatal.prefix(3).map { NT.label($0) }.joined(separator: "、") + "。\n" }
         let good = aspects.filter { $0.reading.verdict == .good }.map { R.topicShort($0.palace) }
         let bad = aspects.filter { $0.reading.verdict == .bad }.map { R.topicShort($0.palace) }
         t += "這十年比較順的方面：\(good.isEmpty ? "沒有特別順的" : good.joined(separator: "、"))；要多花心力的：\(bad.isEmpty ? "沒有" : bad.joined(separator: "、"))。\n"
 
         t += "\n③ 今年（流年 \(y)）\n"
-        t += "流年在\(NT.label(yr.palace))，判讀「\(yr.reading.text)」。\(PalaceLore.text(yr.palace, yr.reading.verdict, .zh))\n"
-        t += "果落在\(NT.label(yr.reading.result))、因來自\(NT.label(yr.reading.cause))：今年的結果會表現在「\(R.topicShort(yr.reading.result))」，推動它的是「\(R.topicShort(yr.reading.cause))」。\n"
+        t += "流年在\(NT.label(yr.palace))，判讀「\(yr.reading.text)」。\(PalaceLore.text(yr.palace, yr.reading, .zh))\n"
         if !trigYear.isEmpty {
             t += "今年引動大運的" + trigYear.sorted().map { p in "\(p)宮\(R.topicShort(p))（\(aspects[p - 1].reading.text)）" }.joined(separator: "、") + "，這些方面今年特別有感。\n"
         }
 
         t += "\n④ 這個月（流月 \(m)月）\n"
-        t += "流月在\(NT.label(mo.palace))，判讀「\(mo.reading.text)」。\(PalaceLore.text(mo.palace, mo.reading.verdict, .zh))\n"
+        t += "流月在\(NT.label(mo.palace))，判讀「\(mo.reading.text)」。\(PalaceLore.text(mo.palace, mo.reading, .zh))\n"
 
         t += "\n⑤ 今天（流日）\n"
-        t += "白天走\(NT.label(dp))：\(R.tip(dp))\n晚上走\(NT.label(np))：\(R.tip(np))\n"
+        t += dp == np ? "白天、晚上都走\(NT.label(dp))：\(R.tip(dp))\n" : "白天走\(NT.label(dp))：\(R.tip(dp))\n晚上走\(NT.label(np))：\(R.tip(np))\n"
 
         t += "\n⑥ 重點與建議\n"
         if focus.isEmpty {
             t += "現在各層沒有特別集中在同一宮，屬於比較分散、平均的時期，照自己的節奏把日常顧好就好。\n"
         } else {
-            for (p, n) in focus {
-                let v = aspects[p - 1].reading.verdict
-                t += "• \(NT.label(p))（\(R.topicShort(p))）同時被\(n)層觸動，是你現在的重點。這十年這方面判讀「\(aspects[p - 1].reading.text)」："
-                t += PalaceLore.text(p, v, .zh) + "\n"
+            for (p, _) in focus {
+                let r = aspects[p - 1].reading
+                t += "• \(NT.label(p))（\(R.topicShort(p))）：\(layers[p]!.joined(separator: "、"))都落在這裡，是你現在的重點。"
+                t += "這十年判讀「\(r.text)」——" + FlowReading.plain(palace: p, reading: r)
+                switch r.verdict {
+                case .bad: t += "建議先從\(FlowReading.area[r.cause - 1])下手：\(FlowReading.remedy[r.cause - 1])。"
+                case .good: t += "這是你的助力，好好用：\(FlowReading.remedy[r.result - 1])。"
+                case .neutral: t += "平平的，看你怎麼用：\(FlowReading.remedy[p - 1])。"
+                }
+                t += "\n"
             }
         }
         let score = [yr.reading.verdict, lp.row.reading.verdict, mo.reading.verdict].map { [1, 0, -1][$0.rawValue] }.reduce(0, +)
@@ -72,7 +80,11 @@ public enum FullReading {
         let bs = BaZiReading.yearScore(b, y)
         let fa = BaZiReading.favAndAvoid(b)
         t += "\n\n⑦ 其他系統對照\n"
-        t += "八字：日主\(GZ.stems[b.dayMaster])\(BaZi.wuxing[BaZi.stemEl[b.dayMaster]])，\(b.strength().strong ? "身強" : "身弱")，喜\(fa.fav.map { BaZi.wuxing[$0] }.joined(separator: "、"))；\(y)年\(GZ.name(bs.gz))對你是\(BaZiReading.vword(bs.score))的。"
+        let yEls = Array(Set([BaZi.stemEl[bs.gz % 10], BaZi.branchEl[bs.gz % 12]])).sorted().map { BaZi.wuxing[$0] }.joined(separator: "、")
+        let bv = BaZiReading.verdict(bs.score)
+        t += "八字：日主\(GZ.stems[b.dayMaster])\(BaZi.wuxing[BaZi.stemEl[b.dayMaster]])，\(b.strength().strong ? "身強" : "身弱")，喜\(fa.fav.map { BaZi.wuxing[$0] }.joined(separator: "、"))。"
+        t += "\(y)年\(GZ.name(bs.gz))屬\(yEls)，" + (bv == .good ? "正好是你需要的，八字看今年偏順。" : bv == .bad ? "不是你需要的五行，八字看今年比較辛苦。" : "對你不算幫也不算剋，八字看今年持平。")
+        if let h = bs.hits.max(by: { abs($0.score) < abs($1.score) }) { t += h.text + "。" }
         if let h = profile?.hour {
             let zw = ZiWei(bd.year, bd.month, bd.day, hour: h, male: profile?.male ?? true)
             let hs = ZiWeiReading.yearSihua(zw, year: y)
@@ -81,7 +93,7 @@ public enum FullReading {
             t += "\n紫微：告訴我出生時間，就能一起對照紫微斗數。"
         }
         let agree = (BaZiReading.verdict(bs.score) == yr.reading.verdict)
-        t += agree ? "\n八字和九型十二宮對今年的判斷一致，可信度更高。" : "\n八字和九型十二宮對今年的看法不完全一樣，以九型十二宮為主，八字當作補充。"
+        t += agree ? "\n八字和九型十二宮看今年的方向一樣。" : "\n八字和九型十二宮看今年不完全一樣，以九型十二宮為主，八字當補充。"
         t += "\n\n想細看哪一塊，可以追問「今年感情運如何」「我的八字今年運勢」「紫微今年運勢」「我什麼時候會升職」。"
 
         let card = FortuneCard(title: "綜合分析", headline: "命宮 \(NT.label(natal.palace)) · 第\(ty)型",

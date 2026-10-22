@@ -265,8 +265,9 @@ public struct Reader {
                             pn(r.result), topicShort(r.result), kw(r.result, 2), pn(r.cause), topicShort(r.cause), kw(r.cause, 2))
         }
         // 這一宮在這個判讀下的具體表現
-        s += "\n" + fmt(t("在%@「%@」的時候：", "With %@ reading “%@”: ", "Con %@ en «%@»: ", "Con %@ in «%@»: "), pn(row.palace), vname(r.verdict))
-            + PalaceLore.text(row.palace, r.verdict, L)
+        s += L == .zh ? "\n白話說：" + FlowReading.plain(palace: row.palace, reading: r)
+            : "\n" + fmt(t("在%@「%@」的時候：", "With %@ reading “%@”: ", "Con %@ en «%@»: ", "Con %@ in «%@»: "), pn(row.palace), vname(r.verdict))
+                + PalaceLore.text(row.palace, r.verdict, L)
         s += "\n" + adviceLine(r.verdict, seed + 2 * headKey)
         return s
     }
@@ -506,7 +507,7 @@ public struct Reader {
             text += "\n\n關係裡的關鍵宮位："
             for key in [5, 7, 4, 2, 3] {
                 if let r = ch.first(where: { $0.palace == key }) {
-                    text += "\n• \(pnt(key))「\(r.reading.text)」：" + PalaceLore.text(key, r.reading.verdict, .zh)
+                    text += "\n• \(pnt(key))「\(r.reading.text)」：" + PalaceLore.text(key, r.reading, .zh)
                 }
             }
             let D2 = Destiny(other)
@@ -747,7 +748,7 @@ public struct Reader {
         var lines: [String] = []
         lines.append(fmt(t("【%@ · %@】", "[%@ · %@]", "[%@ · %@]", "[%@ · %@]"), topicShort(p), pn(p)))
         lines.append(fmt(t("本命：%@判讀「%@」——%@。%@", "Natal: %@ reads “%@” — %@. %@", "Natal: %@ lee «%@» — %@. %@", "Natale: %@ legge «%@» — %@. %@"),
-                         pn(p), rt(natalRow.reading), basis(natalRow.reading.verdict), PalaceLore.text(p, natalRow.reading.verdict, L)))
+                         pn(p), rt(natalRow.reading), basis(natalRow.reading.verdict), PalaceLore.text(p, natalRow.reading, L)))
         let lp = D.luckPeriod(y)
         lines.append(fmt(t("這十年（%@–%@）：這方面是大運的第%@方面，判讀「%@」。%@",
                            "This decade (%@–%@): this is aspect %@ of your luck pillar, reading “%@”. %@",
@@ -755,7 +756,7 @@ public struct Reader {
                            "Questo decennio (%@–%@): è l'aspetto %@ del tuo pilastro della sorte, lettura «%@». %@"),
                          "\(lp.start)", "\(lp.end)", "\(p)", rt(aspect.reading), aspect.reading.verdict == natalRow.reading.verdict
                              ? t("跟本命一樣的判讀，這個課題這十年會一直跟著你。", "Same as your natal reading — this theme stays with you all decade.", "Igual que tu lectura natal: este tema te acompaña toda la década.", "Uguale alla lettura natale: questo tema ti accompagna per tutto il decennio.")
-                             : PalaceLore.text(p, aspect.reading.verdict, L)))
+                             : PalaceLore.text(p, aspect.reading, L)))
         // 流年
         var yearNote: String
         if yearRow.palace == p {
