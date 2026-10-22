@@ -28,7 +28,7 @@ public enum Translate {
         }
 
         /// 同一種語言（繁中、簡中都算中文）
-        var lex: String? {
+        public var lex: String? {
             switch self {
             case .zh, .zhHans: return "zh"
             case .en: return "en"

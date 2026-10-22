@@ -41,7 +41,10 @@ jobs:
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             build | tee xcodebuild.log | grep -E "error:|BUILD" || true
-          test -d build/Build/Products/Release-iphoneos/NineSun.app || (grep -B2 -A6 "error:" xcodebuild.log | head -150; tail -80 xcodebuild.log; exit 1)
+          # 編譯失敗時 .app 資料夾還是會有（只有資源檔），一定要檢查主程式在不在，不然會發出裝不了的 IPA
+          if grep -q "BUILD FAILED" xcodebuild.log || ! test -f build/Build/Products/Release-iphoneos/NineSun.app/NineSun; then
+            grep -B2 -A6 "error:" xcodebuild.log | head -150; tail -80 xcodebuild.log; exit 1
+          fi
 
       - name: Package IPA
         working-directory: ios
@@ -50,6 +53,7 @@ jobs:
           cp -R build/Build/Products/Release-iphoneos/NineSun.app Payload/
           ls -la Payload/NineSun.app | head -30
           test -f Payload/NineSun.app/ninesun.bin
+          test -f Payload/NineSun.app/NineSun
           mkdir -p ../dist
           zip -qry ../dist/NineSun.ipa Payload
           ls -la ../dist

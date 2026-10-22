@@ -12,7 +12,7 @@ enum LangID {
     static func detect(_ text: String) -> Translate.Code {
         let quick = Translate.detect(text)
         // 中日韓、阿拉伯、俄文看字就知道（繁簡交給原本的判斷：都當繁中處理）
-        if ![.en, .es, .it].contains(quick) { return quick }
+        if ![Translate.Code.en, .es, .it].contains(quick) { return quick }
         let r = NLLanguageRecognizer()
         // 使用者最常用的是英、西、義，給一點偏好
         r.languageHints = [.english: 0.4, .spanish: 0.3, .italian: 0.3]
