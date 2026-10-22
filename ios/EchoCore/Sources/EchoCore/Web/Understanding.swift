@@ -418,7 +418,51 @@ extension Understanding {
     nonisolated(unsafe) public static var lastListDebug = ""
 
     /// 從網頁裡找出名單：表格第一欄、「、」隔開的一串、連續的短行
+    /// 「一」「五」「十二」「12」→ 數字
+    static func smallNumber(_ s: String) -> Int? {
+        if let n = Int(s) { return n }
+        let d: [Character: Int] = ["一": 1, "二": 2, "兩": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9]
+        if s == "十" { return 10 }
+        if let r = s.firstIndex(of: "十") {
+            let tens = s[..<r].isEmpty ? 1 : d[s[s.startIndex]] ?? 0
+            let ones = s[s.index(after: r)...].first.flatMap { d[$0] } ?? 0
+            return tens * 10 + ones
+        }
+        return s.count == 1 ? d[s.first!] : nil
+    }
+
+    /// 「北歐五國則清楚說明為丹麥、芬蘭、冰島、挪威和瑞典這五個國家」：句子自己說有幾個，列出來的也剛好那麼多——最可信的名單
+    public static func countedList(_ pages: [Evidence], noun: String, subject: String) -> (items: [String], hosts: [String])? {
+        let subj = subject.filter { $0.isLetter || $0.isNumber }
+        let nounRe = noun.hasSuffix("國家") || noun == "國" ? "(?:個國家|國家|國)" : "(?:個)?" + NSRegularExpression.escapedPattern(for: noun)
+        let pattern = "([^，。；：、]{1,14}(?:、[^，。；：、]{1,10})+(?:以及|和|及|與)[^，。；：、]{1,10}?)(?:這|等|共|總共|共計)?([一二兩三四五六七八九十\\d]{1,3})" + nounRe
+        for p in pages {
+            for sent in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) where subj.isEmpty || sent.contains(subj) {
+                guard let m = match(sent, pattern), let n = smallNumber(m[2]), n >= 2 else { continue }
+                var parts = m[1].components(separatedBy: "、")
+                if var f = parts.first {
+                    for v in ["包括", "包含", "分別是", "分別為", "說明為", "指的是", "是指", "指", "即", "為", "是", "有", "：", ":"] {
+                        if let r = f.range(of: v, options: .backwards) { f = String(f[r.upperBound...]) }
+                    }
+                    parts[0] = f
+                }
+                if let l = parts.last, let r = l.range(of: "以及") ?? l.range(of: "和") ?? l.range(of: "及") ?? l.range(of: "與") {
+                    parts[parts.count - 1] = String(l[..<r.lowerBound])
+                    parts.append(String(l[r.upperBound...]))
+                }
+                let items = parts.compactMap { item($0) }
+                if items.count == n && items.count == parts.count && Set(items).count == n { return (items, [p.host]) }
+            }
+        }
+        return nil
+    }
+
     public static func extractList(_ pages: [Evidence], noun: String, subject: String) -> (items: [String], hosts: [String]) {
+        // 句子自己說了有幾個、列出來的數目也對得上：直接用
+        if let c = countedList(pages, noun: noun, subject: subject) {
+            lastListDebug = "counted=" + c.items.joined(separator: "/")
+            return c
+        }
         let suffix = ["縣", "省", "州", "市", "區", "島", "山", "河", "湖", "星", "洲", "洋"].first { noun.hasSuffix($0) }
         var groups: [(items: [String], host: String, ctx: Bool)] = []
         let subj = subject.filter { $0.isLetter || $0.isNumber }

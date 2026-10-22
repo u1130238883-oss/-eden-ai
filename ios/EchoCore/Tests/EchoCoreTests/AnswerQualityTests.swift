@@ -255,4 +255,20 @@ final class CompareTests: XCTestCase {
         XCTAssertEqual(Think.wholeName("東京", in: ["日本首都東京", "位於東京的公司"]), "東京")
         XCTAssertEqual(Think.wholeName("珠穆朗瑪峰頂峰", in: []), "珠穆朗瑪峰")
     }
+
+    /// 北歐有哪些國家 → 只拿到「芬蘭、冰島、丹麥、法羅群島」（表格不完整）；句子裡明說「這五個國家」的名單最可信
+    func testCountedEnumerationIsTheList() {
+        let page = """
+        首都/首府 ｜ 語言
+        芬蘭 ｜ 赫爾辛基
+        冰島 ｜ 雷克雅維克
+        通常斯堪地納維亞指的是丹麥、挪威與瑞典，而北歐五國則清楚說明為丹麥、芬蘭、冰島、挪威和瑞典這五個國家，再加上各自的海外屬地。
+        """
+        let r = Understanding.extractList([.init(text: page, host: "zh.wikipedia.org")], noun: "國家", subject: "北歐")
+        XCTAssertEqual(r.items, ["丹麥", "芬蘭", "冰島", "挪威", "瑞典"])
+        XCTAssertEqual(Understanding.smallNumber("十二"), 12)
+        XCTAssertEqual(Understanding.smallNumber("五"), 5)
+        // 數目對不上就不算
+        XCTAssertNil(Understanding.countedList([.init(text: "北歐包括丹麥、芬蘭和瑞典這五個國家。", host: "w")], noun: "國家", subject: "北歐"))
+    }
 }
