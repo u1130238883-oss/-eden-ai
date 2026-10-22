@@ -121,6 +121,8 @@ public enum Translate {
     public static func parse(_ raw: String) -> Request? {
         let q = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty, q.count <= 600 else { return nil }
+        // 有中文的語言名稱：先拆開來想（固定句型容易把「請問」「告訴我」也當成內容）
+        if let r = understand(q) { return r }
         let L = "(" + langPattern + ")"
         // 中文句型只認中文的語言名稱（「translate good morning to italian」不要被中文句型吃掉）
         let Z = "(" + names.filter { $0.0.unicodeScalars.contains { (0x4E00...0x9FFF).contains($0.value) } }
@@ -132,7 +134,7 @@ public enum Translate {
             // 把 X 翻譯成英文
             (pol + "把(.+?)(?:翻譯|翻|譯)(?:成|為|到)" + Z + "(?:是什麼|怎麼說)?" + ask, 1, 2),
             // X 翻譯成英文 / X 翻成英文
-            (pol + "(.+?)(?:翻譯|翻|譯)(?:成|為|到)" + Z + "(?:是什麼|怎麼說)?" + ask, 1, 2),
+            ("^(.+?)(?:翻譯|翻|譯)(?:成|為|到)" + Z + "(?:是什麼|怎麼說)?" + ask, 1, 2),
             // 翻譯成英文：X / 英文翻譯：X
             (pol + "(?:把)?(?:這句話|這句|這段話|這段|下面這句話|下面這句|下面這段|以下)?(?:翻譯|翻|譯)(?:成|為|到)?" + Z + "[：:，,\\s]+(.+)$", 2, 1),
             (pol + Z + "翻譯[：:，,\\s]+(.+)$", 2, 1),
@@ -149,6 +151,10 @@ public enum Translate {
             ("(?i)^(?:please\\s+)?translate\\s+(.+?)\\s+(?:into|to)\\s+" + L + "[.?!]*$", 1, 2),
             ("(?i)^how\\s+(?:do\\s+(?:you|i)\\s+|to\\s+)say\\s+(.+?)\\s+in\\s+" + L + "[.?!]*$", 1, 2),
             ("(?i)^what\\s+is\\s+(.+?)\\s+in\\s+" + L + "[.?!]*$", 1, 2),
+            ("(?i)^what'?s\\s+(.+?)\\s+in\\s+" + L + "[.?!]*$", 1, 2),
+            ("(?i)^(?:can|could|would)\\s+you\\s+(?:please\\s+)?translate\\s+(.+?)\\s+(?:into|to)\\s+" + L + "[.?!]*$", 1, 2),
+            ("(?i)^how\\s+(?:would|should|can|could|do)\\s+(?:i|you|we|one)\\s+say\\s+(.+?)\\s+in\\s+" + L + "[.?!]*$", 1, 2),
+            ("(?i)^(?:please\\s+)?say\\s+(.+?)\\s+in\\s+" + L + "[.?!]*$", 1, 2),
             // Español / Italiano
             ("(?i)^¿?\\s*c[oó]mo\\s+se\\s+dice\\s+(.+?)\\s+en\\s+" + L + "[?¿.!]*$", 1, 2),
             ("(?i)^traduc(?:e|ir)\\s+(.+?)\\s+(?:al|a|en)\\s+" + L + "[.!?]*$", 1, 2),
@@ -162,8 +168,7 @@ public enum Translate {
             // 「中文是什麼」「英文怎麼說」這種沒有要翻的東西
             if code(text) != nil { continue }
             // 本來就是這個語言（「什麼是中文」「台灣的中文」）：不是要翻譯
-            let d = detect(text)
-            if d == target || (d.lex != nil && d.lex == target.lex) { continue }
+            if let d = confidentLang(text), d == target || (d.lex != nil && d.lex == target.lex) { continue }
             // 「X 的英文」：X 太長、像在問別的事（「學英文的方法」）就不算
             if p.hasPrefix("^(.+?)(?:的|在)?") {
                 if text.count > 30 || ["學", "考", "讀", "方法", "怎麼學", "老師", "課", "程度", "成績", "補習"].contains(where: { text.contains($0) }) { continue }
@@ -193,12 +198,84 @@ public enum Translate {
         return nil
     }
 
+    /// 拆開來想（「你有沒有吃飯用英語說」「用英文跟他說謝謝」「教我用西班牙文說我愛你」「這句英文怎麼說：你吃飯了嗎」）：
+    /// ① 句子裡只提到一種語言 → 那是要翻成的語言；不是在問學語言、會不會說
+    /// ② 找出「語言那一段」（用英文說／翻成英文／的英文是什麼／在英文裡怎麼說），這一段要有翻譯的意思（「他說英文嗎」就沒有）
+    /// ③ 那一段前面、後面哪一邊是內容：前面只有「請問、教我、這句」這類包裝 → 內容在後面；不然內容在前面
+    /// ④ 內容去掉包裝（「請問」「告訴我」「跟他說」），不能是空的、不能明顯本來就是那個語言
+    static func understand(_ raw: String) -> Request? {
+        let q = raw.trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: "？?。！!～~")))
+        let zhNames = names.filter { $0.0.unicodeScalars.contains { (0x4E00...0x9FFF).contains($0.value) } }
+        let Z = "(?:" + zhNames.map { NSRegularExpression.escapedPattern(for: $0.0) }.joined(separator: "|") + ")"
+        // ① 提到哪些語言（「繁體中文」裡的「中文」不重複算）
+        var found: [Code] = []
+        if let re = try? NSRegularExpression(pattern: Z) {
+            for m in re.matches(in: q, range: NSRange(q.startIndex..., in: q)) {
+                if let r = Range(m.range, in: q), let c = code(String(q[r])), !found.contains(c) { found.append(c) }
+            }
+        }
+        guard found.count == 1, let target = found.first else { return nil }
+        // 在問學語言、會不會講、口音這些（這些字要緊貼著語言才算：「學校用英文怎麼說」還是要翻）
+        let about = "(?:學|學習|懂|會說|會講|會不會說|會不會講|能說|能講|考|讀|教|補習|練)" + Z + "|" + Z
+            + "(?:課|老師|程度|考試|好難|難不難|文法|口音|流利|很好|很爛|不好|好不好|怎麼學|要學|好學|檢定|單字量|說得|講得|很強|進步)"
+            + "|幾種語言|哪種語言|什麼語言|母語"
+        guard q.range(of: about, options: .regularExpression) == nil else { return nil }
+        // ② 語言那一段
+        let seg = "(?:(?:翻譯|翻|譯|換|轉)(?:成|為|到)|用|以|拿|換成|的|在)?" + Z
+            + "(?:裡|中)?(?:的)?(?:要|該|來)?(?:怎麼|如何)?(?:來)?(?:說|講|寫|念|唸|表達|翻譯|翻|拼)?(?:出來)?"
+            + "(?:是什麼|叫什麼|叫做什麼|是啥|是)?(?:呢|啊|呀|嗎)?"
+        guard let r = q.range(of: seg, options: .regularExpression) else { return nil }
+        let part = String(q[r])
+        let prefix = String(q[..<r.lowerBound]), suffix = String(q[r.upperBound...])
+        let cue = ["翻", "譯", "換", "轉", "用", "以", "拿", "說", "講", "寫", "念", "唸", "表達", "是什麼", "叫什麼", "是啥", "怎麼", "如何"]
+        let bare = part.replacingOccurrences(of: Z, with: "", options: .regularExpression)
+        // 「X的英文」「X 英文」放在最後也算；「他說英文嗎」不算
+        let atEnd = suffix.trimmingCharacters(in: .whitespaces).isEmpty
+        guard cue.contains(where: { bare.contains($0) }) || (atEnd && (bare.hasPrefix("的") || bare.isEmpty) && !bare.hasSuffix("嗎")) else { return nil }
+        // ③ 內容在哪一邊
+        let wrap = "(?:請你|請問|請|麻煩你|麻煩|可以幫我|幫我|教我|可以|你可以|能不能|告訴我|跟我說|欸|誒|那個|嗯|哈囉|嘿|如何|要怎麼|怎麼"
+            + "|這句話|這句|這段話|這段|這個字|這個詞|這個|下面這句|以下|句子|我想要|我想|我要|翻譯一下|翻一下|翻譯|把|[，,、：:\\s])"
+        var content: String
+        if prefix.range(of: "^" + wrap + "*$", options: .regularExpression) != nil {
+            content = suffix
+            for p in ["^[，,、：:\\s]+", "^(?:跟|對|和|向)(?:他|她|他們|她們|你|對方|朋友|老外|外國人|老闆|客人|別人|大家)(?:說|講)", "^(?:說|講|寫)(?=.)"] {
+                content = content.replacingOccurrences(of: p, with: "", options: .regularExpression)
+            }
+        } else {
+            content = prefix
+            // 開頭的包裝；「請問」後面本身就是問句（「請問車站怎麼走」）就留著
+            let lead = "^(?:欸|誒|那個|嗯|哈囉|嘿|告訴我|跟我說|翻譯一下|翻一下|可以幫我把|幫我把|請把|麻煩把|把|如何"
+                + "|請問(?=請問|你|妳|您|我|他|她|大家)|請問(?!.*(?:怎麼|哪|嗎|什麼|幾|多少|誰|呢)))[，,、：:\\s]*"
+            for _ in 0..<3 { content = content.replacingOccurrences(of: lead, with: "", options: .regularExpression) }
+            content = content.replacingOccurrences(of: "(?:要怎麼|該怎麼|怎麼|如何|要|在|[，,、：:\\s])+$", with: "", options: .regularExpression)
+        }
+        // ④ 內容要像樣
+        let text = clean(content)
+        guard !text.isEmpty, text.count <= 300, code(text) == nil, !["嗎", "呢", "啊", "呀"].contains(text) else { return nil }
+        if let d = confidentLang(text), d == target || (d.lex != nil && d.lex == target.lex) { return nil }
+        return Request(text: text, source: nil, target: target)
+    }
+
+    /// 有把握才說是哪種語言（中文、日文這些看字就知道；拉丁字母要有明顯的特徵字或重音），沒把握回 nil
+    static func confidentLang(_ text: String) -> Code? {
+        let d = detect(text)
+        if ![Code.en, .es, .it].contains(d) { return d }
+        let lower = text.lowercased()
+        let words = lower.split { !($0.isLetter || $0 == "'") }.map(String.init)
+        func score(_ hints: Set<String>, _ marks: String) -> Int {
+            words.filter { hints.contains($0) }.count * 2 + lower.filter { marks.contains($0) }.count * 2
+        }
+        let sc: [(Code, Int)] = [(.en, score(enHints, "")), (.es, score(esHints, "ñ¿¡áíóú")), (.it, score(itHints, "èìòù"))]
+        let sorted = sc.sorted { $0.1 > $1.1 }
+        return sorted[0].1 >= 4 && sorted[0].1 >= sorted[1].1 + 4 ? sorted[0].0 : nil
+    }
+
     /// 接著上一次翻譯問：「那西班牙文呢？」「義大利文呢」「in Italian?」「¿y en italiano?」→ 同一段話換一種語言
     public static func followUp(_ raw: String, last: Request?) -> Request? {
         guard let last else { return nil }
         let q = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         let Z = "(" + langPattern + ")"
-        let pats = ["^(?:那|那麼|換成|改成|用)?" + Z + "(?:呢|的呢|怎麼說|怎麼說呢|是什麼|是什麼呢)?[？?。！!]*$",
+        let pats = ["^(?:那|那麼)?(?:換成|改成|用)?" + Z + "(?:呢|的呢|怎麼說|怎麼說呢|是什麼|是什麼呢)?[？?。！!]*$",
                     "(?i)^(?:and |what about |how about )?(?:in )?" + Z + "[?.!]*$",
                     "(?i)^¿?\\s*(?:y )?(?:en )?" + Z + "[?¿.!]*$",
                     "(?i)^(?:e )?(?:in )?" + Z + "[?.!]*$"]
@@ -221,9 +298,11 @@ public enum Translate {
     // MARK: - 是哪種語言
 
     static let esHints: Set<String> = ["el", "la", "los", "las", "que", "es", "está", "estoy", "por", "para", "gracias", "hola", "como", "cómo",
-                                       "muy", "yo", "tú", "usted", "buenos", "buenas", "días", "noches", "qué", "dónde", "quiero", "tengo", "y", "una", "un", "del", "al", "pero", "mucho", "bien"]
+                                       "muy", "yo", "tú", "usted", "buenos", "buenas", "días", "noches", "qué", "dónde", "quiero", "tengo", "y", "una", "un", "del", "al", "pero", "mucho", "bien",
+                                       "siento", "llamo", "hasta", "luego", "gusto", "favor", "hambre", "baño", "estás", "te", "adiós", "perdón"]
     static let itHints: Set<String> = ["il", "lo", "gli", "le", "che", "è", "sono", "per", "grazie", "ciao", "come", "molto", "io", "tu", "lei",
-                                       "buongiorno", "buonasera", "della", "del", "di", "non", "voglio", "ho", "una", "un", "dove", "perché", "bene", "anche"]
+                                       "buongiorno", "buonasera", "della", "del", "di", "non", "voglio", "ho", "una", "un", "dove", "perché", "bene", "anche",
+                                       "amo", "manchi", "arrivederci", "quanto", "costa", "fame", "buonanotte", "piacere", "conoscerti", "favore", "bagno", "stai", "dov'è", "scusi"]
     static let enHints: Set<String> = ["the", "a", "an", "is", "are", "i", "you", "he", "she", "it", "we", "they", "what", "how", "where", "thank",
                                        "thanks", "hello", "good", "morning", "please", "love", "my", "your", "and", "of", "to", "in", "do", "does", "this", "that"]
 
@@ -281,7 +360,7 @@ public enum Translate {
     // MARK: - 寫成回答
 
     public static func reply(_ r: Request, _ res: Result) -> String {
-        var lines = ["🌐 \(res.source.name) → \(r.target.name)", res.text + (res.pron.isEmpty ? "" : "　〔\(res.pron)〕")]
+        var lines = ["🧠 我理解成：把「\(r.text)」從\(res.source.name)翻成\(r.target.name)", res.text + (res.pron.isEmpty ? "" : "　〔\(res.pron)〕")]
         if !res.alternatives.isEmpty { lines.append("也可以說：" + res.alternatives.joined(separator: "、")) }
         if !res.notes.isEmpty { lines.append("📖 " + res.notes.prefix(4).joined(separator: "\n")) }
         lines.append("（\(res.via)）")

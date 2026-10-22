@@ -38,7 +38,7 @@ final class TranslateTests: XCTestCase {
 
     func testReplyFormat() {
         let r = Translate.reply(.init(text: "謝謝", source: nil, target: .ar), .init(text: "شكرا", pron: "šukran", source: .zh, via: "AI"))
-        XCTAssertTrue(r.contains("繁體中文 → 阿拉伯文") && r.contains("شكرا") && r.contains("šukran"), r)
+        XCTAssertTrue(r.contains("把「謝謝」從繁體中文翻成阿拉伯文") && r.contains("شكرا") && r.contains("šukran"), r)
     }
 
     func testGoogleResponse() throws {
@@ -68,5 +68,40 @@ final class TranslateTests: XCTestCase {
         XCTAssertNil(Translate.followUp("今天天氣如何", last: last))
         XCTAssertNil(Translate.followUp("英文呢", last: nil))
         XCTAssertEqual(Translate.Code.it.voice, "it-IT")
+    }
+
+    /// 真實的問法（教它聽懂「什麼是要翻的內容、翻成什麼」）：每一句都要拆對
+    func testManyPhrasings() {
+        let cases: [(String, String, Translate.Code)] = [
+            ("你有沒有吃飯用英語說", "你有沒有吃飯", .en),
+            ("你有沒有吃飯用英文怎麼講", "你有沒有吃飯", .en),
+            ("用英文跟他說謝謝", "謝謝", .en),
+            ("教我用西班牙文說我愛你", "我愛你", .es),
+            ("我想用義大利文說我很累", "我很累", .it),
+            ("請用義大利文說早安", "早安", .it),
+            ("這句英文怎麼說：你吃飯了嗎", "你吃飯了嗎", .en),
+            ("學校用英文怎麼說", "學校", .en),
+            ("我不懂用英文怎麼說", "我不懂", .en),
+            ("你今天過得好嗎 西班牙文", "你今天過得好嗎", .es),
+            ("好久不見用義大利語講", "好久不見", .it),
+            ("「我想喝咖啡」英語怎麼說？", "我想喝咖啡", .en),
+            ("幫我把明天見翻成西班牙語", "明天見", .es),
+            ("麻煩用英文寫：我會晚一點到", "我會晚一點到", .en),
+            ("跟我說生日快樂的義大利文", "生日快樂", .it),
+            ("hasta luego 用中文怎麼說", "hasta luego", .zh),
+            ("buongiorno翻成中文", "buongiorno", .zh),
+            ("I miss you 中文是什麼", "I miss you", .zh),
+        ]
+        var bad: [String] = []
+        for (q, text, target) in cases {
+            let r = Translate.parse(q)
+            if r?.text != text || r?.target != target { bad.append("\(q) → \(r.map { "\($0.text)/\($0.target.rawValue)" } ?? "nil")") }
+        }
+        // 不是要翻譯
+        for q in ["你會說英文嗎", "我想學西班牙文", "英文好難", "義大利文怎麼學比較快", "你的英文很好", "西班牙文老師說我很棒",
+                  "我的英文程度不好", "你會講幾種語言", "英文課好無聊", "今天運勢如何", "我愛你", "英文"] {
+            if let r = Translate.parse(q) { bad.append("不該翻：\(q) → \(r.text)") }
+        }
+        XCTAssertTrue(bad.isEmpty, bad.joined(separator: "\n"))
     }
 }

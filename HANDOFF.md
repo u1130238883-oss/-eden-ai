@@ -329,3 +329,9 @@ CI 的「Live web search check」會用真的網路問 40 題（`WebTests.swift`
 - 留下：`knowledge_*.json`（卦、紫微、九型、五行…命理知識）、`reader.bin`（沒金鑰時自己上網讀網頁用）、`ninesun.bin`（命盤解讀的模型）。
 - 路由（`ChatViewModel.staysLocal`）：有金鑰時，命理字、心情（`Solace.isFeeling`）、規則指令、「上網查」、打招呼（`Companion.isSmallTalk`）留在本地，其他都交給 AI；沒有金鑰或 AI 失敗 → NineSun 自己上網查。設定頁拿掉「全部交給 AI」「沒把握時自動問」兩個開關，改成說明。
 - 個性（`AskAIs.chatSystem`）：NineSun 是會發光的小電視機器人夥伴，溫暖、真誠、有點俏皮、有自己的看法；先抓真正的需求、先講結論、用生活比喻、多想一步。`AskAIs.persona(type:)` 依使用者的九型調整說話方式。接哪一家 AI、融合時都用同一個個性。
+
+## 翻譯：蘋果內建優先、念出來、10000 題問法（2026-10-22）
+- 設定新增「用 AI API 回答」：關掉就完全不呼叫 AI 的 API；「翻譯後念出來」（AVSpeechSynthesizer，`NineSun/App/Speaker.swift`）。
+- 翻譯順序：蘋果內建翻譯（iOS 18，第一次下載語言包，之後離線）→ Google 翻譯（免金鑰的網頁介面）→ AI（開 API 時）→ MyMemory。App 不存字典。
+- 聽懂問法：`Translate.understand` 拆開來想——只提到一種語言 → 找「語言那一段」（用英文說／翻成英文／的英文是什麼）且要有翻譯的意思 → 判斷內容在前面還是後面 → 去掉「請問、教我、跟他說」這些包裝。回答第一行「🧠 我理解成：把「X」從中文翻成英文」。
+- 測試：`python3 ai/translate_questions.py ios/EchoCore/Tests/EchoCoreTests/Fixtures/translate_questions.json` 產生 10000 題（9000 題各種問法、1000 題不是翻譯的），`TranslateQuestionsTests` 逐題檢查。第一輪 7821 題對 → 第二輪 9928 → 第三輪 10000。
