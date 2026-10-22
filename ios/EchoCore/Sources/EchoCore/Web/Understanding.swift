@@ -414,6 +414,15 @@ extension Understanding {
         return s
     }
 
+    /// 「…、瑞典、芬蘭同意成立」：名單最後一項後面接著的動詞不是名字的一部分
+    static func cutVerbTail(_ s: String) -> String {
+        var t = s
+        for v in ["同意", "簽署", "加入", "組成", "成立", "決定", "共同", "均", "皆", "也", "曾", "已", "將", "於", "在", "則", "被", "之間", "的"] {
+            if let r = t.range(of: v), t.distance(from: t.startIndex, to: r.lowerBound) >= 2 { t = String(t[..<r.lowerBound]) }
+        }
+        return t
+    }
+
     /// 最近一次找名單的過程（除錯用）
     nonisolated(unsafe) public static var lastListDebug = ""
 
@@ -516,6 +525,7 @@ extension Understanding {
                     }
                     if var l = parts.last {
                         for m in ["等", "。", "共", "及其", "；"] { if let r = l.range(of: m) { l = String(l[..<r.lowerBound]) } }
+                        l = cutVerbTail(l)
                         // 「…、挪威和瑞典」：最後兩個用「和／及」連起來
                         if let r = l.range(of: "以及") ?? l.range(of: "和") ?? l.range(of: "及") ?? l.range(of: "與"),
                            l.distance(from: l.startIndex, to: r.lowerBound) >= 2, l.distance(from: r.upperBound, to: l.endIndex) >= 2 {

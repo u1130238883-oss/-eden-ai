@@ -267,6 +267,10 @@ final class CompareTests: XCTestCase {
         let r = Understanding.extractList([.init(text: page, host: "zh.wikipedia.org")], noun: "國家", subject: "北歐")
         XCTAssertEqual(r.items, ["丹麥", "芬蘭", "冰島", "挪威", "瑞典"])
         XCTAssertEqual(Understanding.smallNumber("十二"), 12)
+        XCTAssertEqual(Understanding.cutVerbTail("芬蘭同意成立"), "芬蘭")
+        XCTAssertEqual(Understanding.cutVerbTail("冰島"), "冰島")
+        XCTAssertEqual(Understanding.cutVerbTail("東京都"), "東京都")
+        XCTAssertEqual(Understanding.cutVerbTail("阿拉伯聯合大公國"), "阿拉伯聯合大公國")
         XCTAssertEqual(Understanding.smallNumber("五"), 5)
         // 數目對不上就不算
         XCTAssertNil(Understanding.countedList([.init(text: "北歐包括丹麥、芬蘭和瑞典這五個國家。", host: "w")], noun: "國家", subject: "北歐"))
