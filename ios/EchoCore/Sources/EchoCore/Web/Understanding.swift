@@ -782,8 +782,10 @@ extension WebAgent {
             return (t, true)
         case let .list(noun):
             let r = Understanding.extractList(pages, noun: noun, subject: fr.subject)
-            guard r.items.count >= 4 else { return ("", false) }
-            let head = r.items.count >= 10 ? "一共找到 \(r.items.count) 個\(noun)：" : "我找到的\(noun)有這些（不一定是全部）："
+            // 句子自己說了有幾個、數目也對得上的名單是完整的（「北歐五國…這五個國家」）
+            let counted = Understanding.lastListDebug.hasPrefix("counted=")
+            guard r.items.count >= (counted ? 2 : 4) else { return ("", false) }
+            let head = counted ? "一共 \(r.items.count) 個\(noun)：" : r.items.count >= 10 ? "一共找到 \(r.items.count) 個\(noun)：" : "我找到的\(noun)有這些（不一定是全部）："
             return (head + "\n" + r.items.joined(separator: "、")
                     + "\n（名單整理自 " + r.hosts.joined(separator: "、") + "；不同資料的算法可能略有差異）", true)
         case let .reason(pred):
