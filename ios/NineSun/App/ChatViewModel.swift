@@ -286,15 +286,17 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    /// 翻譯：單字先查手機裡的字典（馬上有、離線）；句子用手機內建翻譯（iOS 18 起），再不行請 AI 或線上翻譯
+    /// 翻譯：單字先查手機裡的字典（馬上有、離線）；句子用已下載的內建翻譯，沒有的話請 AI 或線上翻譯，都不行才下載語言包
     private func translate(_ req: Translate.Request) {
         let cfg = aiConfig
         streaming = "🌐 翻譯成\(req.target.name)…"
         Task { [self] in
             var res: Translate.Result?
+            // 單字：手機裡的字典，馬上有
             if let lex = Lexicon.shared { res = Translate.dictionary(req, lexicon: lex) }
+            // 句子：語言包已經在手機裡的話用內建翻譯（最快、離線）
             if res == nil, #available(iOS 18.0, *) {
-                res = await AppleTranslator.shared.translate(req)
+                res = await AppleTranslator.shared.translate(req, allowDownload: false)
             }
             if res == nil, cfg.enabled {
                 let r = await AskAIs.chat(Translate.aiPrompt(req), history: [], evidence: [], lang: .zh, config: cfg)
@@ -305,6 +307,10 @@ final class ChatViewModel: ObservableObject {
                 }
             }
             if res == nil { res = await Translate.online(req) }
+            // 都不行（沒網路、沒金鑰）：才請使用者下載內建翻譯的語言包
+            if res == nil, #available(iOS 18.0, *) {
+                res = await AppleTranslator.shared.translate(req, allowDownload: true)
+            }
             let text = res.map { Translate.reply(req, $0) }
                 ?? "這句我現在翻不出來。整句翻譯要 iOS 18 以上的內建翻譯（第一次會請你下載語言包），或到設定填 AI 金鑰；也請確認手機有連上網路，再試一次。"
             await MainActor.run {
