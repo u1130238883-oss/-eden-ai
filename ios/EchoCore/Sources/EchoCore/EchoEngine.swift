@@ -281,6 +281,15 @@ public final class EchoEngine {
         // 2) 觸發規則
         if let t = ctx.rules.trigger(for: text) { return done(t, .rule) }
 
+        // 2.1) 心情：用你的生日看此刻的大運、流年、流月、日夜宮，說出處境和情緒，溫柔地安慰
+        //      （「睡不著怎麼辦」這種思路庫有寫好做法的，交給思路庫）
+        if L == .zh, !(text.contains("怎麼辦") && chatBank?.playbookEntry(text, .zh) != nil),
+           let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now) {
+            let p = core?.perceive(text)
+            if let p { core?.remember(p) }
+            return done(s, .neural, palace: p)
+        }
+
         // 2.5) 明確叫它上網查（「上網查…」「搜尋…」「幫我查…」「search …」）：直接上網，不用本地存的答案
         if let q = EchoEngine.explicitSearch(text) {
             return done(Loc.s("webAsk", L), .tool, web: q)

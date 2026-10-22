@@ -261,6 +261,8 @@ final class ChatViewModel: ObservableObject {
     static func isReading(_ text: String) -> Bool {
         ["運勢", "運氣", "命盤", "命宮", "本命", "八字", "紫微", "流年", "大運", "流月", "九型", "第幾型", "十二宮", "卦", "生日",
          "宮位", "算命", "占卜", "日宮", "夜宮", "fortune", "horoscope"].contains { text.lowercased().contains($0) }
+            // 說心情的話也由 NineSun 自己用命盤來接（AI 看不到你的大運、流年、流月）
+            || Solace.isFeeling(text)
     }
 
     /// 全部交給 AI 回答：直接問（Gemini 會自己用 Google 搜尋），用 NineSun 的口吻、照你的九型交代；好幾家 AI 時融合成一個答案
