@@ -48,6 +48,7 @@ def main(dst):
     L.append(f"    static let heavy: [String] = {arr(S.HEAVY)}")
     L.append(f"    static let care = {lit(S.CARE)}")
     L.append(f"    static let noBirthday = {lit(S.NO_BIRTHDAY)}")
+    L.append(f"    static let again = {lit(S.AGAIN)}")
     L.append("    static let aspect: [String: Int] = [" + ", ".join(f"{lit(k)}: {v}" for k, v in S.ASPECT.items()) + "]")
     L.append("    static let areaName: [Int: String] = [" + ", ".join(f"{k}: {lit(v)}" for k, v in S.AREA_NAME.items()) + "]")
     L.append("    static let emotion: [(good: String, bad: String)] = [")

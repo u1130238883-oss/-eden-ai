@@ -136,18 +136,35 @@ public enum Solace {
     }
 
     /// 用現在的時間（手機的時區）
-    public static func reply(_ text: String, birthday: BirthDay?, now: Date) -> String? {
+    public static func reply(_ text: String, birthday: BirthDay?, now: Date, again: Bool = false) -> String? {
         let c = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day, .hour], from: now)
-        return reply(text, birthday: birthday, y: c.year!, m: c.month!, d: c.day!, hour: c.hour!)
+        return reply(text, birthday: birthday, y: c.year!, m: c.month!, d: c.day!, hour: c.hour!, again: again)
     }
 
-    public static func reply(_ text: String, birthday: BirthDay?, y: Int, m: Int, d: Int, hour: Int) -> String? {
+    /// again：這段對話剛剛已經細看過時間點，這次簡短、換個角度陪
+    public static func reply(_ text: String, birthday: BirthDay?, y: Int, m: Int, d: Int, hour: Int, again: Bool = false) -> String? {
         guard let f = detect(text) else { return nil }
         let s = seed(text, y, m, d)
         let focus = (f.topic.map { [$0] } ?? []) + f.palaces
         var out = [pick(f.lead, s)]
         let ending = SolaceData.ask[f.kind] ?? pick(SolaceData.closing, s / 3)
         let heavy = SolaceData.heavy.contains { text.contains($0) }
+        if again, let b = birthday {
+            let D = Destiny(b)
+            out.append(SolaceData.again)
+            if SolaceData.westernKinds.contains(f.kind) {
+                let t = D.type
+                let ts = SolaceData.typeStress[t - 1]
+                out.append("你是第\(t)型「\(NT.typeName(t))」：\(ts.stress)。這不是缺點；往第\(ts.toward)型的方向走會好受一些：\(ts.grow)。")
+            } else {
+                let w = SolaceData.western[focus[0] - 1]
+                out.append("在西方星盤裡，\(w.meaning)；\(w.comfort)")
+            }
+            out.append("現在先為自己做一件小事就好：\(SolaceData.smallStep[focus[0] - 1])。")
+            out.append(ending)
+            if heavy { out.append(SolaceData.care) }
+            return out.joined(separator: "\n")
+        }
         guard let b = birthday else {
             let p = focus[0]
             out.append("這種感覺在九型十二宮裡對應「\(NT.palaceName(p))」這一宮，它管的是\(dom(p))。")

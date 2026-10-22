@@ -76,6 +76,7 @@ enum SolaceData {
     static let heavy: [String] = ["撐不下去", "崩潰", "快瘋了", "受不了"]
     static let care = "如果哪一刻你覺得真的撐不住、想傷害自己，請一定先找人陪著你，或打 1925 安心專線（24 小時有人接）。"
     static let noBirthday = "如果你願意告訴我生日，我可以看看你現在走到哪一段、什麼時候會鬆開，陪你一起看。"
+    static let again = "剛剛我們已經一起看過你此刻走到的地方了，這次我想換個角度陪你："
     static let aspect: [String: Int] = ["heartbreak": 7, "love": 5, "work": 10, "school": 3, "family": 4, "money": 2, "friends": 11, "health": 8]
     static let areaName: [Int: String] = [7: "感情和伴侶", 5: "戀愛", 10: "工作", 4: "家庭", 2: "錢財", 11: "朋友", 8: "身體", 3: "學業和溝通"]
     static let emotion: [(good: String, bad: String)] = [

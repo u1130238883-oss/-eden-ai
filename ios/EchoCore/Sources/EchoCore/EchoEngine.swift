@@ -284,7 +284,8 @@ public final class EchoEngine {
         // 2.1) 心情：用你的生日看此刻的大運、流年、流月、日夜宮，說出處境和情緒，溫柔地安慰
         //      （「睡不著怎麼辦」這種思路庫有寫好做法的，交給思路庫）
         if L == .zh, !(text.contains("怎麼辦") && chatBank?.playbookEntry(text, .zh) != nil),
-           let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now) {
+           let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now,
+                                again: history.suffix(4).contains { $0.role == .echo && $0.text.contains("我看了你此刻走到的地方") }) {
             let p = core?.perceive(text)
             if let p { core?.remember(p) }
             return done(s, .neural, palace: p)

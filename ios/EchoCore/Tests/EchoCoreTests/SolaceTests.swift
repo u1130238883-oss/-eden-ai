@@ -7,6 +7,7 @@ final class SolaceTests: XCTestCase {
         let text: String
         let birthday: [Int]?
         let now: [Int]
+        let again: Bool?
         let reply: String?
     }
 
@@ -17,7 +18,7 @@ final class SolaceTests: XCTestCase {
         var bad = 0
         for c in cases {
             let b = c.birthday.map { BirthDay(year: $0[0], month: $0[1], day: $0[2]) }
-            let got = Solace.reply(c.text, birthday: b, y: c.now[0], m: c.now[1], d: c.now[2], hour: c.now[3])
+            let got = Solace.reply(c.text, birthday: b, y: c.now[0], m: c.now[1], d: c.now[2], hour: c.now[3], again: c.again ?? false)
             if got != c.reply {
                 bad += 1
                 if bad <= 3 { XCTFail("「\(c.text)」\(c.birthday ?? []) \(c.now)\n期望：\(c.reply ?? "nil")\n實際：\(got ?? "nil")") }

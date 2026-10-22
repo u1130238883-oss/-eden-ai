@@ -173,6 +173,8 @@ CLOSING = [
 HEAVY = ["撐不下去", "崩潰", "快瘋了", "受不了"]
 CARE = "如果哪一刻你覺得真的撐不住、想傷害自己，請一定先找人陪著你，或打 1925 安心專線（24 小時有人接）。"
 
+AGAIN = "剛剛我們已經一起看過你此刻走到的地方了，這次我想換個角度陪你："
+
 NO_BIRTHDAY = "如果你願意告訴我生日，我可以看看你現在走到哪一段、什麼時候會鬆開，陪你一起看。"
 
 MONTH_NAMES = {m: f"{m}月" for m in range(1, 13)}
@@ -315,8 +317,8 @@ def hope(D, name, row, y, m, d, hour):
     return f"這一段會走到{end}年，它是一段長的功課，不是永遠。" + tail
 
 
-def reply(text, birthday=None, now=(2026, 10, 22, 14)):
-    """birthday=(y,m,d)；now=(年,月,日,時)"""
+def reply(text, birthday=None, now=(2026, 10, 22, 14), again=False):
+    """birthday=(y,m,d)；now=(年,月,日,時)；again：這段對話剛剛已經細看過時間點，這次簡短、換個角度陪"""
     f = detect(text)
     if f is None:
         return None
@@ -325,6 +327,21 @@ def reply(text, birthday=None, now=(2026, 10, 22, 14)):
     s = seed(text, y, m, d)
     focus = ([topic] if topic else []) + palaces
     out = [pick(lead(kind), s)]
+    if again and birthday is not None:
+        D = nt.Destiny(*birthday)
+        out.append(AGAIN)
+        if kind in WESTERN_KINDS:
+            t = D.type
+            stress, toward, grow = TYPE_STRESS[t - 1]
+            out.append(f"你是第{t}型「{nt.TYPE_NAMES[t - 1]}」：{stress}。這不是缺點；往第{toward}型的方向走會好受一些：{grow}。")
+        else:
+            w = WESTERN[focus[0] - 1]
+            out.append(f"在西方星盤裡，{w[0]}；{w[1]}")
+        out.append(f"現在先為自己做一件小事就好：{SMALL_STEP[focus[0] - 1]}。")
+        out.append(ASK.get(kind) or pick(CLOSING, s // 3))
+        if any(w in text for w in HEAVY):
+            out.append(CARE)
+        return "\n".join(out)
     if birthday is None:
         p = focus[0]
         out.append(f"這種感覺在九型十二宮裡對應「{nt.PALACE_NAMES[p - 1]}」這一宮，它管的是{DOMAIN_SHORT[p - 1]}。")
@@ -377,6 +394,9 @@ def fixtures():
         for j, b in enumerate(CASES_BIRTH):
             n = CASES_NOW[(i + j) % len(CASES_NOW)]
             out.append({"text": t, "birthday": list(b) if b else None, "now": list(n), "reply": reply(t, b, n)})
+    for i, t in enumerate(CASES_TEXT):
+        b = CASES_BIRTH[1 + i % (len(CASES_BIRTH) - 1)]
+        out.append({"text": t, "birthday": list(b), "now": list(CASES_NOW[i % 3]), "again": True, "reply": reply(t, b, CASES_NOW[i % 3], again=True)})
     for t in ["累積了很多點數", "我壓力大的時候會怎樣", "今天運勢", "台北101有多高"]:
         out.append({"text": t, "birthday": [2006, 1, 14], "now": [2026, 10, 22, 14], "reply": reply(t, (2006, 1, 14), (2026, 10, 22, 14))})
     return out
