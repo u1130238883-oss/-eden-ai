@@ -1,0 +1,51 @@
+name: Test Web
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+concurrency:
+  group: web-test-${{ github.ref }}
+  cancel-in-progress: true
+
+# 這個工作只用 Ubuntu，很省額度（macOS 是 10 倍價）
+jobs:
+  test:
+    name: 網站測試
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 確認產生檔與來源同步
+        run: |
+          python3 tools/gen_web_data.py
+          if ! git diff --quiet -- web/server/palace_data.py web/server/enneagram_data.py; then
+            echo "::error::web/server 的產生檔沒有跟上來源，請跑 python3 tools/gen_web_data.py 後提交"
+            git diff --stat
+            exit 1
+          fi
+
+      - name: 驗算法（與原文對照）
+        run: python3 tools/verify_algorithm.py
+
+      - name: 網站引擎要和 App 算出一樣的結果
+        run: python3 tools/verify_web_engine.py
+
+      - name: 整條流程：付款、鎖、啟用碼、後台
+        run: python3 tools/test_web.py
+
+      - name: 確認收款碼與資料庫沒有被提交進來
+        run: |
+          bad=$(git ls-files | grep -E '^web/static/pay/.*\.(png|jpg|jpeg)$|\.sqlite3$' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::這些檔案不該進 git：$bad"
+            exit 1
+          fi
+          echo "沒有收款碼或資料庫被提交，OK"

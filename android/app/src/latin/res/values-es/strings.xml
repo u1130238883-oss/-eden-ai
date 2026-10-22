@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主畫面上的名稱。系統語言是哪一個，就顯示哪一個。 -->
+    <string name="app_name">Nine &amp; Twelve</string>
+</resources>

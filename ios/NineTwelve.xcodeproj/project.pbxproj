@@ -1,0 +1,543 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4DFE37FD2411DB7E2A62F43F /* NineTwelveApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC98FF582AA6BACE17AB830; };
+		0ADEBF3318D7B1638F6919C3 /* Chart.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0E44D9B60A890C4083993D; };
+		D42E29C49F6702AAC0529602 /* Element.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6FA5EAC298F160C1071BBC4; };
+		7B4889168E1BD715281C6BD0 /* Enneagram.swift in Sources */ = {isa = PBXBuildFile; fileRef = 231A21623FA98D60B32B744D; };
+		55BEB6CAC103DF27760D07BF /* Fortune.swift in Sources */ = {isa = PBXBuildFile; fileRef = E69D259F673E346849B2B514; };
+		5AB5F50C020881C595386EDC /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C2EE9A1D2031D5F7E51419; };
+		91879CB3E47C9BABD2075D70 /* Numerology.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94B2CDC31A67FEB723073D69; };
+		09268725F3F8FDF2BB905DDC /* PalaceMeanings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70AA30D4351806BAD201FC4C; };
+		F0BA9652280538A7A813DEAB /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49BAB3E59F6AF2DA65E877B8; };
+		7945A0379E1B38444BBE7CE8 /* Profile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A42633C533CBB54DB4BD1192; };
+		42F2AEDDE019B2A681BA7294 /* Subscription.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD89DCEEC7CB5A4EA6291248; };
+		F26CFBEBFA9C1F9D909EEAA9 /* BirthInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F827A31F6F9FA565CFD319AA; };
+		0B414C1F3E65956D35E2DBD3 /* ChartTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E3A51706C8ABA952E50EECC; };
+		29E968A3D55F91868B01431B /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 769797812BB442DBB227A066; };
+		5711F7E38C7FC63E423E3E0F /* EnneagramView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294894EEED51C85BDC4911F8; };
+		D2B01013706A80F461AB92DA /* FortuneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38015296EDE779D6384CEE58; };
+		4772AA9F7413C41177C1D243 /* LuckAspectsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C523C1E6959ABEB5B555DABF; };
+		B39F19C2E054FA6176756572 /* LuckTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9931B5864E857843EF73A284; };
+		CFFCA09958153C29F8BDC290 /* NatalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DF725A696E122A23B1F627C; };
+		221077A85D1E10D283673F50 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB024F7819CEB1884F4938B6; };
+		FF914FC4670178C5FC58FBB8 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80663D5881D06588CCEAF738; };
+		61B80AC327BD957783CD2E45 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A94E6ACAC267FB42464E25A0; };
+		0E9D0F88A194D13885B5F89B /* SynastryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EEB06A4E3F2963495D2F316; };
+		CD51F9CA30BCA0B1E3A987B7 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C5F80966DE5E82518ECC102; };
+		28E236FAC91379030449D912 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 729EAF467F81B701018AF1C7; };
+		292C3AFE4B9A8B5BA0F16ECF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = B02FC3BC841B230D74AD5204; };
+		ABB03FA972DE67C090F0CD8E /* EngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3DC672B2B95D5A46A85F073; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0989CE0CACFC28E8F6F027BD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 46F86FAA6BBF9AC94A7E4595 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F01C2E624E08A72BC055B46F;
+			remoteInfo = NineTwelve;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		4E83C0B3CCD638E53BB3E0A9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F01C2E624E08A72BC055B46F /* NineTwelve */;
+			targetProxy = 0989CE0CACFC28E8F6F027BD /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXNativeTarget section */
+		F01C2E624E08A72BC055B46F /* NineTwelve */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F2EF0BFE4C820F767E4303FC /* Build configuration list for PBXNativeTarget "NineTwelve" */;
+			buildPhases = (
+				6B366E3A6159DC0A46CE6169 /* Sources */,
+				0F87A878AEB94E823836E22B /* Frameworks */,
+				34E903FB6EA77173817200D0 /* Resources */,
+				FEB4687F7E6DA34FA6F59B48 /* 只留這一版的語言包 */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NineTwelve;
+			productName = NineTwelve;
+			productReference = 996AD237BC284D463E664FFE /* NineTwelve.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C706FA839F4C1F2316B35783 /* NineTwelveTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1E47EEC85B4E560F9CFE8E0B /* Build configuration list for PBXNativeTarget "NineTwelveTests" */;
+			buildPhases = (
+				0D9FED2C54C8F345B7A1EB3B /* Sources */,
+				79A4D45905684BD40D53A6E7 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4E83C0B3CCD638E53BB3E0A9 /* PBXTargetDependency */,
+			);
+			name = NineTwelveTests;
+			productName = NineTwelveTests;
+			productReference = BD5FEB36355BB38F98691943 /* NineTwelveTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXFileReference section */
+		6DC98FF582AA6BACE17AB830 /* NineTwelveApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NineTwelveApp.swift; sourceTree = "<group>"; };
+		BB0E44D9B60A890C4083993D /* Chart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chart.swift; sourceTree = "<group>"; };
+		C6FA5EAC298F160C1071BBC4 /* Element.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Element.swift; sourceTree = "<group>"; };
+		231A21623FA98D60B32B744D /* Enneagram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enneagram.swift; sourceTree = "<group>"; };
+		E69D259F673E346849B2B514 /* Fortune.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fortune.swift; sourceTree = "<group>"; };
+		79C2EE9A1D2031D5F7E51419 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		94B2CDC31A67FEB723073D69 /* Numerology.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Numerology.swift; sourceTree = "<group>"; };
+		70AA30D4351806BAD201FC4C /* PalaceMeanings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PalaceMeanings.swift; sourceTree = "<group>"; };
+		49BAB3E59F6AF2DA65E877B8 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		A42633C533CBB54DB4BD1192 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
+		AD89DCEEC7CB5A4EA6291248 /* Subscription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subscription.swift; sourceTree = "<group>"; };
+		F827A31F6F9FA565CFD319AA /* BirthInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthInputView.swift; sourceTree = "<group>"; };
+		4E3A51706C8ABA952E50EECC /* ChartTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartTable.swift; sourceTree = "<group>"; };
+		769797812BB442DBB227A066 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		294894EEED51C85BDC4911F8 /* EnneagramView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnneagramView.swift; sourceTree = "<group>"; };
+		38015296EDE779D6384CEE58 /* FortuneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FortuneView.swift; sourceTree = "<group>"; };
+		C523C1E6959ABEB5B555DABF /* LuckAspectsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LuckAspectsView.swift; sourceTree = "<group>"; };
+		9931B5864E857843EF73A284 /* LuckTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LuckTimeline.swift; sourceTree = "<group>"; };
+		7DF725A696E122A23B1F627C /* NatalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NatalView.swift; sourceTree = "<group>"; };
+		EB024F7819CEB1884F4938B6 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		80663D5881D06588CCEAF738 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		A94E6ACAC267FB42464E25A0 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		8EEB06A4E3F2963495D2F316 /* SynastryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynastryView.swift; sourceTree = "<group>"; };
+		0C5F80966DE5E82518ECC102 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		C3DC672B2B95D5A46A85F073 /* EngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineTests.swift; sourceTree = "<group>"; };
+		729EAF467F81B701018AF1C7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		1295866F954E19CAB80C4647 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		D958539FFD90FD51C9B37B18 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		F62DF506F96BB7EF8A0A2C3C /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		EDDD403E8E0F79FF2096D3DA /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		996AD237BC284D463E664FFE /* NineTwelve.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NineTwelve.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BD5FEB36355BB38F98691943 /* NineTwelveTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NineTwelveTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		6A19A3E062365FAEA658C776 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				6DC98FF582AA6BACE17AB830 /* NineTwelveApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		BB1096C94DE0A2296406DF3D /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				BB0E44D9B60A890C4083993D /* Chart.swift */,
+				C6FA5EAC298F160C1071BBC4 /* Element.swift */,
+				231A21623FA98D60B32B744D /* Enneagram.swift */,
+				E69D259F673E346849B2B514 /* Fortune.swift */,
+				79C2EE9A1D2031D5F7E51419 /* Localization.swift */,
+				94B2CDC31A67FEB723073D69 /* Numerology.swift */,
+				70AA30D4351806BAD201FC4C /* PalaceMeanings.swift */,
+			);
+			path = Engine;
+			sourceTree = "<group>";
+		};
+		A0B3B4D579C5952157012D1E /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				49BAB3E59F6AF2DA65E877B8 /* AppState.swift */,
+				A42633C533CBB54DB4BD1192 /* Profile.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		5485BF6B772680712C519AB8 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				729EAF467F81B701018AF1C7 /* Assets.xcassets */,
+				B02FC3BC841B230D74AD5204 /* InfoPlist.strings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		A24884E045B2CDECDF85FE4F /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				AD89DCEEC7CB5A4EA6291248 /* Subscription.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		DEFBCC12E9F1C2C33A0D2674 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F827A31F6F9FA565CFD319AA /* BirthInputView.swift */,
+				4E3A51706C8ABA952E50EECC /* ChartTable.swift */,
+				769797812BB442DBB227A066 /* Components.swift */,
+				294894EEED51C85BDC4911F8 /* EnneagramView.swift */,
+				38015296EDE779D6384CEE58 /* FortuneView.swift */,
+				C523C1E6959ABEB5B555DABF /* LuckAspectsView.swift */,
+				9931B5864E857843EF73A284 /* LuckTimeline.swift */,
+				7DF725A696E122A23B1F627C /* NatalView.swift */,
+				EB024F7819CEB1884F4938B6 /* Palette.swift */,
+				80663D5881D06588CCEAF738 /* PaywallView.swift */,
+				A94E6ACAC267FB42464E25A0 /* SettingsView.swift */,
+				8EEB06A4E3F2963495D2F316 /* SynastryView.swift */,
+				0C5F80966DE5E82518ECC102 /* TodayView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		2B60667D5608E09C3E3EE485 /* NineTwelve */ = {
+			isa = PBXGroup;
+			children = (
+				6A19A3E062365FAEA658C776 /* App */,
+				BB1096C94DE0A2296406DF3D /* Engine */,
+				A0B3B4D579C5952157012D1E /* Models */,
+				5485BF6B772680712C519AB8 /* Resources */,
+				A24884E045B2CDECDF85FE4F /* Store */,
+				DEFBCC12E9F1C2C33A0D2674 /* Views */,
+			);
+			path = NineTwelve;
+			sourceTree = "<group>";
+		};
+		04AAD67E73C841172E8CE032 /* NineTwelveTests */ = {
+			isa = PBXGroup;
+			children = (
+				C3DC672B2B95D5A46A85F073 /* EngineTests.swift */,
+			);
+			path = NineTwelveTests;
+			sourceTree = "<group>";
+		};
+		113236722DEE1DC96F378B9D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				996AD237BC284D463E664FFE /* NineTwelve.app */,
+				BD5FEB36355BB38F98691943 /* NineTwelveTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		71DC27D9F8E3B109C877BFC4 = {
+			isa = PBXGroup;
+			children = (
+				2B60667D5608E09C3E3EE485 /* NineTwelve */,
+				04AAD67E73C841172E8CE032 /* NineTwelveTests */,
+				113236722DEE1DC96F378B9D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXVariantGroup section */
+		B02FC3BC841B230D74AD5204 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1295866F954E19CAB80C4647 /* zh-Hant */,
+				D958539FFD90FD51C9B37B18 /* en */,
+				F62DF506F96BB7EF8A0A2C3C /* es */,
+				EDDD403E8E0F79FF2096D3DA /* it */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6B366E3A6159DC0A46CE6169 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4DFE37FD2411DB7E2A62F43F /* NineTwelveApp.swift */,
+				0ADEBF3318D7B1638F6919C3 /* Chart.swift */,
+				D42E29C49F6702AAC0529602 /* Element.swift */,
+				7B4889168E1BD715281C6BD0 /* Enneagram.swift */,
+				55BEB6CAC103DF27760D07BF /* Fortune.swift */,
+				5AB5F50C020881C595386EDC /* Localization.swift */,
+				91879CB3E47C9BABD2075D70 /* Numerology.swift */,
+				09268725F3F8FDF2BB905DDC /* PalaceMeanings.swift */,
+				F0BA9652280538A7A813DEAB /* AppState.swift */,
+				7945A0379E1B38444BBE7CE8 /* Profile.swift */,
+				42F2AEDDE019B2A681BA7294 /* Subscription.swift */,
+				F26CFBEBFA9C1F9D909EEAA9 /* BirthInputView.swift */,
+				0B414C1F3E65956D35E2DBD3 /* ChartTable.swift */,
+				29E968A3D55F91868B01431B /* Components.swift */,
+				5711F7E38C7FC63E423E3E0F /* EnneagramView.swift */,
+				D2B01013706A80F461AB92DA /* FortuneView.swift */,
+				4772AA9F7413C41177C1D243 /* LuckAspectsView.swift */,
+				B39F19C2E054FA6176756572 /* LuckTimeline.swift */,
+				CFFCA09958153C29F8BDC290 /* NatalView.swift */,
+				221077A85D1E10D283673F50 /* Palette.swift */,
+				FF914FC4670178C5FC58FBB8 /* PaywallView.swift */,
+				61B80AC327BD957783CD2E45 /* SettingsView.swift */,
+				0E9D0F88A194D13885B5F89B /* SynastryView.swift */,
+				CD51F9CA30BCA0B1E3A987B7 /* TodayView.swift */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0D9FED2C54C8F345B7A1EB3B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABB03FA972DE67C090F0CD8E /* EngineTests.swift */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		34E903FB6EA77173817200D0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				28E236FAC91379030449D912 /* Assets.xcassets */,
+				292C3AFE4B9A8B5BA0F16ECF /* InfoPlist.strings */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		FEB4687F7E6DA34FA6F59B48 /* 只留這一版的語言包 */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "只留這一版的語言包";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nAPP=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nKEEP=\"${NINETWELVE_LANGS}\"\n[ -n \"$KEEP\" ] || { echo \"error: NINETWELVE_LANGS 未設定\"; exit 1; }\nfor dir in \"$APP\"/*.lproj; do\n  [ -d \"$dir\" ] || continue\n  name=$(basename \"$dir\" .lproj)\n  case \" $KEEP \" in\n    *\" $name \"*) ;;\n    *) rm -rf \"$dir\" ;;\n  esac\ndone\necho \"保留的語言包: $KEEP\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0F87A878AEB94E823836E22B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		79A4D45905684BD40D53A6E7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXProject section */
+		46F86FAA6BBF9AC94A7E4595 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					F01C2E624E08A72BC055B46F = { CreatedOnToolsVersion = 16.0; };
+					C706FA839F4C1F2316B35783 = { CreatedOnToolsVersion = 16.0; TestTargetID = F01C2E624E08A72BC055B46F; };
+				};
+			};
+			buildConfigurationList = 32D42B6A09FA42C6EFFC8E0F /* Build configuration list for PBXProject "NineTwelve" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = "zh-Hant";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				"zh-Hant",
+				en,
+				es,
+				it,
+				Base,
+			);
+			mainGroup = 71DC27D9F8E3B109C877BFC4;
+			productRefGroup = 113236722DEE1DC96F378B9D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F01C2E624E08A72BC055B46F /* NineTwelve */,
+				C706FA839F4C1F2316B35783 /* NineTwelveTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		39449EDF7B151AF1BDA56BF2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1 $(inherited)";
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		453FF012BC101FA2B9706FEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F28A85BE60487DC1BDCF015E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				NINETWELVE_LANGS = "zh-Hant en";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Nine & Twelve";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ninetwelve.fortune;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A86756326B10413DEF26E20B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				NINETWELVE_LANGS = "zh-Hant en";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Nine & Twelve";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ninetwelve.fortune;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C8D8812CF522ADDC23333C1B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ninetwelve.fortune.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NineTwelve.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NineTwelve";
+			};
+			name = Debug;
+		};
+		0868FB48DE6BB567198BEAD5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ninetwelve.fortune.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/NineTwelve.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/NineTwelve";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		32D42B6A09FA42C6EFFC8E0F /* Build configuration list for PBXProject "NineTwelve" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				39449EDF7B151AF1BDA56BF2 /* Debug */,
+				453FF012BC101FA2B9706FEF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F2EF0BFE4C820F767E4303FC /* Build configuration list for PBXNativeTarget "NineTwelve" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F28A85BE60487DC1BDCF015E /* Debug */,
+				A86756326B10413DEF26E20B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1E47EEC85B4E560F9CFE8E0B /* Build configuration list for PBXNativeTarget "NineTwelveTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C8D8812CF522ADDC23333C1B /* Debug */,
+				0868FB48DE6BB567198BEAD5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 46F86FAA6BBF9AC94A7E4595 /* Project object */;
+}

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>九型十二宮</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1 id="appName">九型十二宮</h1>
+    <select class="pill" id="langSel" aria-label="Language">
+      <option value="zh">繁體中文</option>
+      <option value="en">English</option>
+      <option value="es">Español</option>
+      <option value="it">Italiano</option>
+    </select>
+    <button class="pill" id="memberPill">—</button>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<nav class="tabs">
+  <button data-tab="today" class="on"><span class="ico">☀</span><span data-t="today">今日</span></button>
+  <button data-tab="chart"><span class="ico">◎</span><span data-t="chart">命盤</span></button>
+  <button data-tab="fortune"><span class="ico">↗</span><span data-t="fortune">運程</span></button>
+  <button data-tab="synastry"><span class="ico">♁</span><span data-t="synastry">合盤</span></button>
+  <button data-tab="member"><span class="ico">♛</span><span data-t="member">會員</span></button>
+</nav>
+
+<dialog id="sheet"><div class="sheet" id="sheetBody"></div></dialog>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

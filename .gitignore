@@ -1,0 +1,18 @@
+build/
+DerivedData/
+*.ipa
+Payload/
+*.xcresult
+.DS_Store
+xcuserdata/
+__pycache__/
+
+# 網站：收款碼是你的錢，不進 git
+web/static/pay/*.png
+web/static/pay/*.jpg
+web/static/pay/*.jpeg
+# 網站：會員資料庫
+web/data/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm

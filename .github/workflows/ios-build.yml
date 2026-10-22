@@ -1,0 +1,204 @@
+name: Build IPA
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: 測試並打包 IPA
+    runs-on: macos-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 顯示 Xcode 版本
+        run: |
+          xcodebuild -version
+          xcodebuild -showsdks | grep -i iphoneos || true
+
+      - name: 確認九型人格的產生檔與資料同步
+        run: |
+          python3 tools/gen_enneagram.py
+          if ! git diff --quiet -- ios/NineTwelve/Engine/Enneagram.swift \
+                                   android/app/src/main/java/com/ninetwelve/fortune/engine/Enneagram.kt; then
+            echo "::error::Enneagram 產生檔與 tools/enneagram_data.py 不同步，請執行 python3 tools/gen_enneagram.py 後提交"
+            git diff --stat
+            exit 1
+          fi
+
+      - name: 檢查專案檔結構
+        run: |
+          python3 tools/check_pbxproj.py
+          python3 tools/parse_pbxproj.py
+
+      - name: 確認專案檔與原始碼同步
+        run: |
+          python3 tools/gen_xcodeproj.py
+          if ! git diff --quiet -- ios/NineTwelve.xcodeproj; then
+            echo "::error::ios/NineTwelve.xcodeproj 與原始碼不同步，請執行 python3 tools/gen_xcodeproj.py 後提交"
+            git diff --stat -- ios/NineTwelve.xcodeproj
+            exit 1
+          fi
+
+      - name: 挑選模擬器
+        id: sim
+        run: |
+          DEST=$(python3 - <<'PY'
+          import json, subprocess
+          data = json.loads(subprocess.check_output(
+              ["xcrun", "simctl", "list", "devices", "available", "-j"]))
+          best = None
+          for runtime, devices in data["devices"].items():
+              if "iOS" not in runtime:
+                  continue
+              ver = runtime.rsplit(".", 1)[-1].replace("iOS-", "").replace("-", ".")
+              for d in devices:
+                  if d.get("isAvailable") and d["name"].startswith("iPhone"):
+                      key = (tuple(int(x) for x in ver.split(".") if x.isdigit()), d["name"])
+                      if best is None or key > best[0]:
+                          best = (key, d["name"], ver)
+          if not best:
+              raise SystemExit("找不到可用的 iPhone 模擬器")
+          print(f"platform=iOS Simulator,name={best[1]},OS={best[2]}")
+          PY
+          )
+          echo "找到模擬器: $DEST"
+          echo "destination=$DEST" >> "$GITHUB_OUTPUT"
+
+      - name: 執行單元測試
+        run: |
+          xcodebuild test \
+            -project ios/NineTwelve.xcodeproj \
+            -scheme NineTwelve \
+            -destination "${{ steps.sim.outputs.destination }}" \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO
+
+      # 只編一個 IPA：四種語言（繁中／英文／西班牙文／義大利文）都在裡面，
+      # 在設定裡直接切換；完全解鎖，不含任何付費機制。
+      - name: 建置並打包 — 四語解鎖版
+        run: |
+          xcodebuild build \
+            -project ios/NineTwelve.xcodeproj \
+            -scheme NineTwelve \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build-all \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS="LOCALE_ALL UNLOCKED" \
+            PRODUCT_BUNDLE_IDENTIFIER="com.ninetwelve.fortune.free" \
+            NINETWELVE_LANGS="zh-Hant en es it" \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO
+          APP="build-all/Build/Products/Release-iphoneos/NineTwelve.app"
+          test -d "$APP" || { echo "找不到 $APP"; exit 1; }
+          LPROJ=$(cd "$APP" && ls -d *.lproj 2>/dev/null | sort | tr '\n' ' ')
+          echo "語言包: $LPROJ"
+          test "$LPROJ" = "en.lproj es.lproj it.lproj zh-Hant.lproj " \
+            || { echo "::error::語言包不對: $LPROJ"; exit 1; }
+          # 主畫面名稱：四個語言都叫 Nine & Twelve
+          fail=0
+          for w in "zh-Hant=Nine & Twelve" "en=Nine & Twelve" "es=Nine & Twelve" "it=Nine & Twelve"; do
+            lang="${w%%=*}"; want="${w#*=}"
+            f="$APP/$lang.lproj/InfoPlist.strings"
+            [ -f "$f" ] || { echo "::error::缺少 $lang.lproj/InfoPlist.strings"; fail=1; continue; }
+            got=$(plutil -extract CFBundleDisplayName raw -o - "$f" 2>/dev/null || true)
+            if [ "$got" != "$want" ] && grep -qaF "$want" "$f"; then got="$want"; fi
+            echo "$lang -> $got"
+            test "$got" = "$want" || { echo "::error::$lang 的名稱是「$got」，應為「$want」"; fail=1; }
+          done
+          test "$fail" -eq 0
+          rm -rf Payload NineTwelve-4lang-free.ipa
+          mkdir -p Payload && cp -R "$APP" Payload/
+          zip -qry NineTwelve-4lang-free.ipa Payload && rm -rf Payload
+          ls -lh NineTwelve-4lang-free.ipa
+
+      - name: 上傳 IPA — 四語解鎖版
+        uses: actions/upload-artifact@v4
+        with:
+          name: NineTwelve-4lang-FREE-ipa
+          path: NineTwelve-4lang-free.ipa
+          if-no-files-found: error
+          retention-days: 90
+
+      # 在模擬器上把每一頁截圖，推到 screenshots 分支（[skip ci] 不會再觸發建置）。
+      # 只給開發時檢查畫面用；失敗也不影響上面的 IPA。
+      - name: 自動截圖
+        continue-on-error: true
+        env:
+          DEST: ${{ steps.sim.outputs.destination }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          xcodebuild build \
+            -project ios/NineTwelve.xcodeproj \
+            -scheme NineTwelve \
+            -configuration Debug \
+            -destination "$DEST" \
+            -derivedDataPath build-sim \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS="DEBUG LOCALE_ALL UNLOCKED" \
+            NINETWELVE_LANGS="zh-Hant en es it" \
+            CODE_SIGNING_ALLOWED=NO -quiet
+          APP=build-sim/Build/Products/Debug-iphonesimulator/NineTwelve.app
+          BID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
+          UDID=$(python3 - <<'PY'
+          import json, os, re, subprocess
+          dest = os.environ["DEST"]
+          name = re.search(r"name=([^,]+)", dest).group(1)
+          ver = re.search(r"OS=([^,]+)", dest).group(1).replace(".", "-")
+          data = json.loads(subprocess.check_output(
+              ["xcrun", "simctl", "list", "devices", "available", "-j"]))
+          for rt, devs in data["devices"].items():
+              if rt.endswith("iOS-" + ver):
+                  for d in devs:
+                      if d["name"] == name:
+                          print(d["udid"]); raise SystemExit
+          PY
+          )
+          echo "模擬器: $UDID  App: $BID"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryLevel 100 --cellularBars 4 || true
+          xcrun simctl install "$UDID" "$APP"
+          mkdir -p shots
+          shot() {
+            out=$1; shift
+            xcrun simctl terminate "$UDID" "$BID" >/dev/null 2>&1 || true
+            xcrun simctl launch "$UDID" "$BID" -nt.lang zh "$@" >/dev/null
+            sleep 7
+            xcrun simctl io "$UDID" screenshot "shots/$out.png" >/dev/null
+          }
+          shot 0-onboarding
+          shot 1-today -uiDemo YES -uiTab 0
+          shot 2-natal -uiDemo YES -uiTab 1
+          shot 2b-natal-grid -uiDemo YES -uiTab 1 -uiScroll YES
+          shot 3-luck -uiDemo YES -uiTab 2
+          shot 4-year -uiDemo YES -uiTab 2 -uiSeg year
+          shot 5-month -uiDemo YES -uiTab 2 -uiSeg month
+          shot 6-synastry -uiDemo YES -uiTab 3
+          shot 7-settings -uiDemo YES -uiTab 4
+          ls -la shots
+          cd shots
+          git init -q
+          git checkout -q -b screenshots
+          git add .
+          git -c user.name="ci" -c user.email="ci@users.noreply.github.com" \
+            commit -qm "screenshots for ${GITHUB_SHA::7} [skip ci]"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" screenshots
+
+      - name: 上傳測試結果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults
+          path: TestResults.xcresult
+          if-no-files-found: ignore
+          retention-days: 14

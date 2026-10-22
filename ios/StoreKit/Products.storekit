@@ -1,0 +1,67 @@
+{
+  "identifier" : "9C1F5A20",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : {
+    "_applicationInternalID" : "1000000000",
+    "_developerTeamID" : "TEAMID0000",
+    "_lastSynchronizedDate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21000001",
+      "localizations" : [],
+      "name" : "Membership",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "9.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "21000002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlock the chart, fortune and synastry pages.",
+              "displayName" : "Membership",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.ninetwelve.fortune.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly membership",
+          "subscriptionGroupID" : "21000001",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : []
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "9.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "21000003",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Desbloquea las páginas de carta, destino y sinastría.",
+              "displayName" : "Membresía",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.ninetwelve.fortune.latin.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly membership (es/it)",
+          "subscriptionGroupID" : "21000001",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : []
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>後台 · 九型十二宮</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  body { padding-bottom: 24px; }
+  .stat { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 10px; }
+  .stat div { background: var(--bg); border-radius: 12px; padding: 10px; text-align: center; }
+  .stat b { display: block; font-size: 21px; }
+  .stat span { font-size: 11px; color: var(--dim); }
+  .oref { font-family: ui-monospace, Menlo, monospace; font-weight: 700; letter-spacing: 1px; }
+  .codes { font-family: ui-monospace, Menlo, monospace; font-size: 13px;
+           background: var(--bg); border-radius: 10px; padding: 10px; white-space: pre-wrap;
+           user-select: all; }
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>後台</h1>
+  <button class="pill" id="reload">重新整理</button></div></header>
+<main class="wrap" id="main"></main>
+
+<script>
+"use strict";
+const esc = (s) => String(s === null || s === undefined ? "" : s)
+  .replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;",
+    '"': "&quot;", "'": "&#39;" }[c]));
+
+async function api(path, body) {
+  const r = await fetch(path, { method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {}) });
+  let d = {}; try { d = await r.json(); } catch (e) {}
+  return { ok: r.ok, status: r.status, data: d };
+}
+
+const when = (s) => s ? new Date(s * 1000).toLocaleString() : "—";
+const STATUS = { pending: "待確認", paid: "已開通", cancelled: "已取消" };
+
+function loginView(msg) {
+  document.getElementById("main").innerHTML = `
+    <div class="card">
+      <h2>登入</h2>
+      <input type="password" id="pw" placeholder="後台密碼">
+      <button class="primary" id="go">登入</button>
+      ${msg ? `<div class="err">${esc(msg)}</div>` : ""}
+    </div>`;
+  const submit = async () => {
+    const { data } = await api("/api/admin/login",
+      { password: document.getElementById("pw").value });
+    if (data.error) return loginView(data.error);
+    load();
+  };
+  document.getElementById("go").onclick = submit;
+  document.getElementById("pw").onkeydown = (e) => { if (e.key === "Enter") submit(); };
+}
+
+async function load() {
+  const { data } = await api("/api/admin/orders", {});
+  if (data.error) return loginView(data.status === 403 ? "" : data.error);
+  const s = data.stats;
+  const pending = data.orders.filter((o) => o.status === "pending");
+  const rest = data.orders.filter((o) => o.status !== "pending");
+
+  document.getElementById("main").innerHTML = `
+    <div class="card"><h2>總覽</h2>
+      <div class="stat">
+        <div><b>${s.members}</b><span>目前會員</span></div>
+        <div><b>${s.pending}</b><span>待確認</span></div>
+        <div><b>${s.paid}</b><span>已完成</span></div>
+        <div><b>¥${s.revenue}</b><span>累計收款</span></div>
+        <div><b>${s.users}</b><span>使用者</span></div>
+      </div>
+    </div>
+
+    <div class="card"><h2>待確認的付款（${pending.length}）</h2>
+      <p class="tiny">在微信／支付寶看到入帳後，對一下備註的編號與金額，再按「確認收款」。</p>
+      ${pending.length ? `<table class="mini"><thead><tr>
+        <th>編號</th><th>金額</th><th>天數</th><th>時間</th><th></th></tr></thead><tbody>
+        ${pending.map((o) => `<tr>
+          <td class="oref">${esc(o.ref)}</td><td>¥${o.amount}</td><td>${o.days}</td>
+          <td class="tiny">${esc(when(o.createdAt))}</td>
+          <td style="white-space:nowrap">
+            <button class="ghost" data-ok="${esc(o.ref)}">確認收款</button>
+            <button class="ghost" data-no="${esc(o.ref)}">取消</button>
+          </td></tr>`).join("")}
+      </tbody></table>` : `<p class="muted">目前沒有待確認的付款。</p>`}
+    </div>
+
+    <div class="card"><h2>啟用碼</h2>
+      <p class="tiny">直接給人的啟用碼，一組只能用一次。</p>
+      <div class="row2">
+        <div><label>天數</label><input type="number" id="cd" value="5"></div>
+        <div><label>要幾組</label><input type="number" id="cc" value="1"></div>
+      </div>
+      <button class="primary" id="mk">產生</button>
+      <div id="made"></div>
+    </div>
+
+    <div class="card"><h2>歷史紀錄</h2>
+      ${rest.length ? `<table class="mini"><thead><tr>
+        <th>編號</th><th>金額</th><th>狀態</th><th>確認時間</th></tr></thead><tbody>
+        ${rest.slice(0, 60).map((o) => `<tr>
+          <td class="oref">${esc(o.ref)}</td><td>¥${o.amount}</td>
+          <td>${esc(STATUS[o.status] || o.status)}</td>
+          <td class="tiny">${esc(when(o.confirmedAt))}</td></tr>`).join("")}
+      </tbody></table>` : `<p class="muted">還沒有紀錄。</p>`}
+    </div>`;
+
+  document.querySelectorAll("[data-ok]").forEach((b) => {
+    b.onclick = async () => {
+      b.disabled = true;
+      await api("/api/admin/confirm", { ref: b.dataset.ok });
+      load();
+    };
+  });
+  document.querySelectorAll("[data-no]").forEach((b) => {
+    b.onclick = async () => {
+      b.disabled = true;
+      await api("/api/admin/cancel", { ref: b.dataset.no });
+      load();
+    };
+  });
+  document.getElementById("mk").onclick = async () => {
+    const { data: r } = await api("/api/admin/codes", {
+      make: true,
+      days: parseInt(document.getElementById("cd").value, 10),
+      count: parseInt(document.getElementById("cc").value, 10),
+    });
+    document.getElementById("made").innerHTML = r.created
+      ? `<div class="codes">${esc(r.created.join("\n"))}</div>`
+      : `<div class="err">${esc(r.error || "產生失敗")}</div>`;
+  };
+}
+
+document.getElementById("reload").onclick = load;
+load();
+</script>
+</body>
+</html>

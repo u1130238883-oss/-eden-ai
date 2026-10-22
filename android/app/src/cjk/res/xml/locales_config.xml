@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 這個版本開放的語言。系統的「App 語言」設定與主畫面名稱都看這份清單。 -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="zh-Hant" />
+    <locale android:name="en" />
+</locale-config>
