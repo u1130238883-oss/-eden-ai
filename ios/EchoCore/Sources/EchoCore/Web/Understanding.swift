@@ -607,6 +607,9 @@ extension Understanding {
                 if titles.count >= 3 { groups.append((titles.prefix(40).map { "《\($0)》" }, p.host, true)) }
             }
         }
+        // 已經不存在的國家（西德、蘇聯…）出現兩個以上：是在講歷史上的賽事、條約，不是現在的名單
+        let defunct = ["西德", "東德", "蘇聯", "捷克斯洛伐克", "南斯拉夫", "奧匈帝國", "普魯士", "鄂圖曼帝國", "英國各協會"]
+        groups = groups.filter { g in g.items.filter { defunct.contains($0) }.count < 2 }
         // 一組算不算這一類：有明確字尾（縣、省……）就要多數符合；否則要夠長
         let good = groups.map { g -> (items: [String], host: String, ctx: Bool) in
             var seen = Set<String>()

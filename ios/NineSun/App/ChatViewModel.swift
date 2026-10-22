@@ -242,7 +242,8 @@ final class ChatViewModel: ObservableObject {
                     self.streaming = nil
                     self.turns.append(reply.turn)
                     // 已經先給了思路庫的答案，網路只是補充：沒查到就不要再跳一則「查不到」
-                    self.lookupWeb(q, reply.lang, quietIfNothing: reply.turn.source == .neural)
+                    // 已經先給了一段像樣的回答（思路庫、建議）時，網路只是補充：沒查到相關的就不要再跳一則
+                    self.lookupWeb(q, reply.lang, quietIfNothing: reply.turn.source == .neural || reply.turn.text.count > 40)
                     return
                 }
                 if let term = reply.webAugment.first {

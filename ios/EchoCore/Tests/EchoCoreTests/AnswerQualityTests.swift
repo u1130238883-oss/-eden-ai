@@ -278,4 +278,10 @@ final class CompareTests: XCTestCase {
         // 數目對不上就不算
         XCTAssertNil(Understanding.countedList([.init(text: "北歐包括丹麥、芬蘭和瑞典這五個國家。", host: "w")], noun: "國家", subject: "北歐"))
     }
+
+    /// 「歐洲有哪些國家」→ 拿到 1958 年世界盃參賽的「西德、蘇聯…」：歷史上的名單不是現在的國家
+    func testHistoricalListIsNotTheAnswer() {
+        let page = "歐洲國家包括英國各協會、義大利、西德、比利時、瑞典、捷克斯洛伐克、蘇聯等七國參賽。"
+        XCTAssertTrue(Understanding.extractList([.init(text: page, host: "w")], noun: "國家", subject: "歐洲").items.isEmpty)
+    }
 }
