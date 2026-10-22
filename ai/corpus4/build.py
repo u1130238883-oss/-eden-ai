@@ -20,6 +20,7 @@ ES_NUM = {2: "dos", 3: "tres", 4: "cuatro", 5: "cinco", 6: "seis", 7: "siete", 8
 IT_NUM = {2: "due", 3: "tre", 4: "quattro", 5: "cinque", 6: "sei", 7: "sette", 8: "otto", 9: "nove", 10: "dieci"}
 DIRECT_ADJ = {"大", "小", "新", "舊", "長", "短", "熱", "冷"}   # 「大房子」不用加「的」
 COLORS = {"紅色", "藍色", "綠色", "黃色", "黑色", "白色", "灰色"}
+ESTAR = {"乾淨", "髒", "熱", "冷", "新鮮", "壞掉的"}   # 狀態（會變的）西班牙文用 estar：Este paraguas está muy sucio.
 
 
 def cap(s):
@@ -55,7 +56,7 @@ def words():
 
 # ---------- 短語 ----------
 def adj_noun(a, n, number=None):
-    zh_adj = a.zh if a.zh in DIRECT_ADJ else a.zh + "的"
+    zh_adj = a.zh if a.zh in DIRECT_ADJ or a.zh.endswith("的") else a.zh + "的"
     if number is None:
         return item(zh_adj + n.zh, f"{a.en} {n.en}", f"{n.es} {a.es(n.es_g)}", f"{n.it} {a.it(n.it_g)}")
     k = number
@@ -117,12 +118,14 @@ def sentences():
         for a in ADJS:
             if n.cat not in a.cats or a.zh in COLORS or a.zh == "壞掉的":
                 continue
+            ser = "está" if a.zh in ESTAR else "es"
             out.append(item(f"這{n.mw}{n.zh}很{a.zh}。", f"This {n.en} is very {a.en}.",
-                            cap(f"{n.es_this()} es muy {a.es(n.es_g)}."), cap(f"{n.it_this()} è molto {a.it(n.it_g)}.")))
+                            cap(f"{n.es_this()} {ser} muy {a.es(n.es_g)}."), cap(f"{n.it_this()} è molto {a.it(n.it_g)}.")))
             out.append(item(f"那{n.mw}{n.zh}很{a.zh}。", f"That {n.en} is very {a.en}.",
-                            cap(f"{n.es_that()} es muy {a.es(n.es_g)}."), cap(f"{n.it_that()} è molto {a.it(n.it_g)}.")))
-            out.append(item(f"{n.zh}很{a.zh}嗎？", f"Is the {n.en} {a.en}?",
-                            f"¿{cap(n.es_def())} es {a.es(n.es_g)}?", cap(f"{n.it_def()} è {a.it(n.it_g)}?")))
+                            cap(f"{n.es_that()} {ser} muy {a.es(n.es_g)}."), cap(f"{n.it_that()} è molto {a.it(n.it_g)}.")))
+            # 中文問句「很」可有可無：學校很安靜嗎？／學校安靜嗎？
+            out.append(item(f"{n.zh}很{a.zh}嗎？/{n.zh}{a.zh}嗎？", f"Is the {n.en} {a.en}?",
+                            f"¿{cap(n.es_def())} {ser} {a.es(n.es_g)}?", cap(f"{n.it_def()} è {a.it(n.it_g)}?")))
         out.append(item(f"{n.zh}在哪裡？", f"Where is the {n.en}?", f"¿Dónde está {n.es_def()}?", f"Dov'è {n.it_def()}?"))
         if n.cat in ("obj", "cloth", "vehicle", "animal"):
             for k in (2, 3, 4, 5):
