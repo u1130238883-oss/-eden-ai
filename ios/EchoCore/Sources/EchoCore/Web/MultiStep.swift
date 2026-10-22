@@ -96,8 +96,19 @@ public enum MultiStep {
     ]
 
     /// 「3,952公尺」「1.496億公里」→ (數值, 單位, 類別, 換成基本單位後)
-    public static func quantity(_ s: String) -> (value: Double, unit: String, kind: String, base: Double)? {
+    public static func quantity(_ raw: String) -> (value: Double, unit: String, kind: String, base: Double)? {
+        // 全形數字「１億」→「1億」
+        let s = String(String.UnicodeScalarView(raw.unicodeScalars.map { (0xFF10...0xFF19).contains($0.value) ? Unicode.Scalar($0.value - 0xFF10 + 0x30)! : $0 }))
         let units = unitTable.map(\.0)
+        // 「1億2321萬9千人」：好幾段加起來
+        if let m = Understanding.match(s, #"(?:(\d+(?:\.\d+)?)億)?(?:(\d+(?:\.\d+)?)萬)?(?:(\d+(?:\.\d+)?)千)?(\d+)?\s*("# + units.sorted { $0.count > $1.count }.map { NSRegularExpression.escapedPattern(for: $0) }.joined(separator: "|") + ")"),
+           [m[1], m[2], m[3]].filter({ !$0.isEmpty }).count >= 2 {
+            let v = (Double(m[1]) ?? 0) * 1e8 + (Double(m[2]) ?? 0) * 1e4 + (Double(m[3]) ?? 0) * 1e3 + (Double(m[4]) ?? 0)
+            if let u = unitTable.first(where: { $0.0 == m[5] }) {
+                let factor = (u.0 == "萬人" || u.0 == "億人") ? 1 : u.2
+                return (v, u.0, u.1, v * factor)
+            }
+        }
         guard let n = Understanding.numbers(s, units: units, rates: true).first else { return nil }
         // 最長、而且在數字後面的單位
         guard let u = unitTable.filter({ n.shown.hasSuffix($0.0) }).max(by: { $0.0.count < $1.0.count }) else { return nil }

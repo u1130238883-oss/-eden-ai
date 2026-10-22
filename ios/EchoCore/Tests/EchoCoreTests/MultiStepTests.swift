@@ -30,6 +30,11 @@ final class MultiStepTests: XCTestCase {
         let r = try XCTUnwrap(MultiStep.parse("太陽到地球的距離是地球到月亮的幾倍"))
         let cr = try XCTUnwrap(MultiStep.compute(r, "1.496億公里", "384,400公里"))
         XCTAssertTrue(cr.answer.contains("389 倍"), cr.answer)
+        // 「１億2321萬9千人」（全形數字、好幾段）
+        XCTAssertEqual(MultiStep.quantity("１億2321萬9千人")?.base, 123_219_000)
+        let pop = try XCTUnwrap(MultiStep.parse("台灣人口比日本多多少"))
+        let cp = try XCTUnwrap(MultiStep.compute(pop, "23,213,251人", "１億2321萬9千人"))
+        XCTAssertTrue(cp.answer.hasPrefix("其實台灣人口比日本的人口少 1億"), cp.answer)
         // 單位對不起來（公尺 vs 公斤）就不算
         XCTAssertNil(MultiStep.compute(p, "508公尺", "70公斤"))
         XCTAssertEqual(MultiStep.short("答案：508公尺（3 個網站都這樣說）。\n依據：「主體建築的塔樓高508公尺」（zh.wikipedia.org）")?.host, "zh.wikipedia.org")

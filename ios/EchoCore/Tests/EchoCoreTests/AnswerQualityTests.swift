@@ -272,6 +272,9 @@ final class CompareTests: XCTestCase {
         XCTAssertEqual(Understanding.cutVerbTail("東京都"), "東京都")
         XCTAssertEqual(Understanding.cutVerbTail("阿拉伯聯合大公國"), "阿拉伯聯合大公國")
         XCTAssertEqual(Understanding.smallNumber("五"), 5)
+        // 資料常說「北歐五國」時，「丹麥、挪威、瑞典和芬蘭同意成立四國護照聯盟」這種在數別的事的句子不算
+        let two = "北歐五國的合作很緊密。\n1952年北歐的丹麥、挪威、瑞典和芬蘭同意這四國護照互免。"
+        XCTAssertNil(Understanding.countedList([.init(text: two, host: "w")], noun: "國家", subject: "北歐"))
         // 數目對不上就不算
         XCTAssertNil(Understanding.countedList([.init(text: "北歐包括丹麥、芬蘭和瑞典這五個國家。", host: "w")], noun: "國家", subject: "北歐"))
     }

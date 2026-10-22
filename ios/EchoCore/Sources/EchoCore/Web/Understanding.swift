@@ -445,6 +445,17 @@ extension Understanding {
         let subj = subject.filter { $0.isLetter || $0.isNumber }
         let nounRe = noun.hasSuffix("國家") || noun == "國" ? "(?:個國家|國家|國)" : "(?:個)?" + NSRegularExpression.escapedPattern(for: noun)
         let pattern = "([^，。；：、]{1,14}(?:、[^，。；：、]{1,10})+(?:以及|和|及|與)[^，。；：、]{1,10}?)(?:這|等|共|總共|共計)?([一二兩三四五六七八九十\\d]{1,3})" + nounRe
+        // 資料裡常說「北歐五國」：句子列的是別的幾國（「…四國同意成立護照聯盟」）就不算
+        var known: [Int: Int] = [:]
+        if !subj.isEmpty {
+            let kr = NSRegularExpression.escapedPattern(for: subj) + "([一二兩三四五六七八九十\\d]{1,3})" + nounRe
+            for p in pages {
+                for line in p.text.components(separatedBy: "\n") {
+                    if let m = match(line, kr), let n = smallNumber(m[1]) { known[n, default: 0] += 1 }
+                }
+            }
+        }
+        let usual = known.max { $0.value < $1.value }?.key
         for p in pages {
             for sent in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) where subj.isEmpty || sent.contains(subj) {
                 guard let m = match(sent, pattern), let n = smallNumber(m[2]), n >= 2 else { continue }
@@ -457,8 +468,9 @@ extension Understanding {
                 }
                 if let l = parts.last, let r = l.range(of: "以及") ?? l.range(of: "和") ?? l.range(of: "及") ?? l.range(of: "與") {
                     parts[parts.count - 1] = String(l[..<r.lowerBound])
-                    parts.append(String(l[r.upperBound...]))
+                    parts.append(cutVerbTail(String(l[r.upperBound...])))
                 }
+                if let usual, usual != n { continue }
                 let items = parts.compactMap { item($0) }
                 if items.count == n && items.count == parts.count && Set(items).count == n { return (items, [p.host]) }
             }
