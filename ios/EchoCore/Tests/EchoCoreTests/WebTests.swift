@@ -150,7 +150,7 @@ final class WebThinkingTests: XCTestCase {
         XCTAssertEqual(WebSearch.wikiTerm("日本的首都是哪裡"), "日本 首都")
         XCTAssertEqual(WebAgent.readablePath("https://zh.wikipedia.org/zh-tw/%E6%AD%90%E6%B4%B2"), "zh-tw/歐洲")
 
-        // 腦筋急轉彎：本地直接答，不用上網
+        // 腦筋急轉彎這類日常問題不在 App 裡存答案：交出去（有金鑰交給 AI，沒有就上網）
         #if os(Linux)
         let t = EchoCoreTests(name: "helper", testClosure: { _ in })
         #else
@@ -158,10 +158,8 @@ final class WebThinkingTests: XCTestCase {
         #endif
         let engine = try t.makeEngine(seed: 3)
         let ctx = EchoEngine.Context(now: t.date(2026, 9, 30, 11))
-        for (q, must) in [("把冰箱放進大象裡需要多少步", "打開大象"), ("把大象放進冰箱需要幾步", "三步"), ("一公斤的鐵和一公斤的棉花哪個重", "一樣重")] {
-            let r = engine.reply(to: q, context: ctx)
-            XCTAssertTrue(r.turn.text.contains(must), "\(q) → \(r.turn.text.prefix(40))")
-            XCTAssertNil(r.webQuery, q)
+        for q in ["把冰箱放進大象裡需要多少步", "一公斤的鐵和一公斤的棉花哪個重"] {
+            XCTAssertNotNil(engine.reply(to: q, context: ctx).webQuery, q)
         }
         // 上網的回覆不帶宮位標籤；追問要補主題
         let a = engine.reply(to: "加拿大有多少個省？", context: ctx)

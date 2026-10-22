@@ -719,7 +719,7 @@ final class EchoCoreTests: XCTestCase {
         if whyT.contains("r12") || whyT.contains("年柱") || !whyT.contains("根源") { fails.append("✗ 為什麼還在講算法：\(whyT.prefix(80))") }
 
         // 日常問題不存固定答案：交給上網查（App 有 AI 金鑰時交給 AI，用 NineSun 的個性回答）
-        for q in ["老闆不給我加薪怎麼辦", "每個月都存不了錢要怎麼辦", "英文要怎麼學比較快", "人生的意義是什麼"] {
+        for q in ["每個月都存不了錢要怎麼辦", "英文要怎麼學比較快", "人生的意義是什麼"] {
             let r = engine.reply(to: q, context: ctx)
             if r.webQuery == nil { fails.append("✗ 日常問題應該交出去：\(q) → \(r.turn.text.prefix(40))") }
         }

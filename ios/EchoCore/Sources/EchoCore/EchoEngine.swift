@@ -166,7 +166,7 @@ public final class EchoEngine {
                 }
             } else if miss == .personal {
                 var me = replyCore(to: "你" + Understanding.plain(message), history: history, context: context, onToken: onToken)
-                if me.webQuery != nil { me = replyCore(to: "你是誰", history: history, context: context, onToken: onToken) }
+                if me.webQuery != nil || !me.turn.text.contains("NineSun") { me = replyCore(to: "你是誰", history: history, context: context, onToken: onToken) }
                 me.turn.text = "你是問我嗎？" + me.turn.text
                 me.webQuery = nil
                 me.turn.palace = nil
