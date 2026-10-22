@@ -10,7 +10,7 @@ struct ChatView: View {
 
     private var quick: [String] {
         switch vm.language {
-        case .zh: return ["幫我做完整解讀", "今天運勢", "今晚運勢", "明天運勢", "這週運勢", "這個月運勢", "今年運勢", "我今年感情運如何",
+        case .zh: return ["幫我做完整解讀", "謝謝用西班牙文怎麼說", "台北101比玉山高多少", "今天運勢", "今晚運勢", "明天運勢", "這週運勢", "這個月運勢", "今年運勢", "我今年感情運如何",
                           "今年哪個月最好", "我什麼時候會結婚", "這個月哪天適合告白", "今年和明年哪個好", "我今年哪方面比較順",
                           "我的大運", "我的命盤", "我壓力大的時候會怎樣", "我適合什麼工作", "我的八字", "我的八字今年運勢", "紫微斗數", "紫微今年運勢", "算一卦"]
         case .en: return ["today's fortune", "tomorrow's fortune", "how's my love life this year", "my career this year", "this month's fortune",
