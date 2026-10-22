@@ -213,6 +213,15 @@ final class WebConversationLiveTests: XCTestCase {
         let res = EchoCoreTests.resources
         Brain.shared = try? Brain(weights: Data(contentsOf: res.appendingPathComponent("reader.bin")),
                                   metaJSON: Data(contentsOf: res.appendingPathComponent("reader.json")))
+        // 診斷：北歐五國的頁面裡，瑞典、挪威那幾行長什麼樣子（名單為什麼漏掉它們）
+        if let page = await WebSearch.pageText("https://zh.wikipedia.org/wiki/%E5%8C%97%E6%AD%90%E4%BA%94%E5%9C%8B", .zh) {
+            let rows = page.components(separatedBy: "\n").filter { $0.contains("瑞典") || $0.contains("挪威") || $0.contains("芬蘭") }
+            say("LIVE PAGE 北歐五國 lines=\(page.components(separatedBy: "\n").count) match=\(rows.count)")
+            for r in rows.prefix(14) { say("LIVE PAGE | " + r.prefix(160)) }
+        }
+        // 線上翻譯（沒有內建翻譯、沒有 AI 金鑰時用）在 CI 上能不能用
+        let tr = await Translate.online(.init(text: "Where is the train station?", source: .en, target: .zh))
+        say("LIVE TRANSLATE online → \(tr?.text ?? "nil")")
         var history: [ChatTurn] = []
         var slow = 0
         for q in conversation {
