@@ -38,7 +38,7 @@ final class TranslateTests: XCTestCase {
 
     func testReplyFormat() {
         let r = Translate.reply(.init(text: "謝謝", source: nil, target: .ar), .init(text: "شكرا", pron: "šukran", source: .zh, via: "AI"))
-        XCTAssertTrue(r.contains("把「謝謝」從繁體中文翻成阿拉伯文") && r.contains("شكرا") && r.contains("šukran"), r)
+        XCTAssertEqual(r, "شكرا　〔šukran〕")
     }
 
     func testGoogleResponse() throws {
@@ -111,10 +111,8 @@ final class TranslateTests: XCTestCase {
         XCTAssertEqual(r.text, "apple")
         XCTAssertEqual(r.alternatives, ["pome"])
         XCTAssertEqual(r.source, .zh)
-        var res = Translate.Result(text: "Have you eaten?", source: .zh, via: "test")
-        res.back = "你吃飯了嗎？"
-        let out = Translate.reply(.init(text: "你吃飯了嗎", source: .zh, target: .en), res)
-        XCTAssertTrue(out.contains("🔁 翻回繁體中文核對：你吃飯了嗎？（跟原文一樣"), out)
+        let res = Translate.Result(text: "Have you eaten?", alternatives: ["Did you eat?"], source: .zh, via: "test")
+        XCTAssertEqual(Translate.reply(.init(text: "你吃飯了嗎", source: .zh, target: .en), res), "Have you eaten?\n也可以說：Did you eat?")
         XCTAssertEqual(Translate.parse("中翻英：我想喝咖啡"), .init(text: "我想喝咖啡", source: nil, target: .en))
         XCTAssertEqual(Translate.parse("謝謝 翻西"), .init(text: "謝謝", source: nil, target: .es))
     }

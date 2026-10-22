@@ -364,14 +364,6 @@ final class ChatViewModel: ObservableObject {
                     r.alternatives = g.alternatives.filter { $0.lowercased() != r.text.lowercased() }
                     if r.alternatives.isEmpty, g.text.lowercased() != r.text.lowercased() { r.alternatives = [g.text] }
                 }
-                // 翻回原文核對意思（句子才做；單字翻回來常常是同義詞，沒意義）
-                if !Translate.isWordish(req.text) {
-                    let backReq = Translate.Request(text: r.text, source: req.target, target: r.source)
-                    var back: Translate.Result?
-                    if #available(iOS 18.0, *) { back = await AppleTranslator.shared.translate(backReq, allowDownload: false) }
-                    if back == nil { back = await Translate.google(backReq) }
-                    r.back = back?.text ?? ""
-                }
                 res = r
             }
             let text = res.map { Translate.reply(req, $0) }

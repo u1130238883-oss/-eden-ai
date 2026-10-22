@@ -403,15 +403,10 @@ public enum Translate {
 
     // MARK: - 寫成回答
 
+    /// 只給譯文（中文附拼音），單字再加其他說法；不加說明、來源
     public static func reply(_ r: Request, _ res: Result) -> String {
-        var lines = ["🧠 我理解成：把「\(r.text)」從\(res.source.name)翻成\(r.target.name)", res.text + (res.pron.isEmpty ? "" : "　〔\(res.pron)〕")]
+        var lines = [res.text + (res.pron.isEmpty ? "" : "　〔\(res.pron)〕")]
         if !res.alternatives.isEmpty { lines.append("也可以說：" + res.alternatives.joined(separator: "、")) }
-        if !res.notes.isEmpty { lines.append("📖 " + res.notes.prefix(4).joined(separator: "\n")) }
-        if !res.back.isEmpty {
-            let same = norm(res.back) == norm(r.text)
-            lines.append("🔁 翻回\(res.source.name)核對：\(res.back)" + (same ? "（跟原文一樣，意思沒跑掉 ✓）" : ""))
-        }
-        lines.append("（\(res.via)）")
         return lines.joined(separator: "\n")
     }
 
