@@ -111,6 +111,9 @@ public enum Synthesize {
             for part in line.components(separatedBy: sentenceEnd) {
                 let p = part.trimmingCharacters(in: .whitespaces)
                 guard p.count >= 8, p.count <= 220, !isMeta(p), !WebAgent.looksLikeJunk(p), !Think.looksLikeNoise(p) else { continue }
+                // 判斷這句是不是內容：廣告、文章介紹、留言、標題都不要
+                let v = Judge.check(p, want: .open, subject: "", inContext: true)
+                guard v == .answer else { continue }
                 out.append(Unit(text: p, host: host, item: numbered))
             }
             i += 1

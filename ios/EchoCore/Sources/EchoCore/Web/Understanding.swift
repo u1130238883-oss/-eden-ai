@@ -85,7 +85,8 @@ public enum Understanding {
         }
         // 結尾：問號、語氣詞
         while let last = t.last, "？?！!。～~ 呢嗎啊呀吧啦喔哦耶".contains(last), t.count > 2 { t.removeLast() }
-        return t
+        // 同一個意思換成常用的說法（「何處」→「哪裡」、「有何益處」→「有什麼好處」、「怎麼烹調」→「怎麼做」）
+        return Synonyms.normalize(t)
     }
 
     static let foodWords = ["飯", "菜", "湯", "麵", "蛋", "肉", "魚", "蝦", "雞", "豬", "牛", "餅", "糕", "粥", "醬", "茶", "咖啡", "甜點", "料理", "便當", "披薩", "沙拉", "餃", "包子", "吐司", "麵包"]
@@ -894,10 +895,12 @@ extension Understanding {
     static let stepVerbs = ["加入", "放入", "倒入", "加水", "煮滾", "煮至", "煮約", "小火煮", "大火", "小火", "蒸", "泡水", "浸泡", "洗淨", "切", "攪拌", "關火", "燜", "開火", "撈", "按下", "點選", "設定", "輸入", "分鐘"]
 
     /// 做法：挑一個講到目標的網頁，照順序拿出一步一步的句子
-    public static func extractSteps(_ pages: [Evidence], target: String) -> (steps: [String], host: String)? {
-        var best: (steps: [String], host: String)?
+    public static func extractSteps(_ pages: [Evidence], target: String) -> (steps: [String], host: String, facts: [String])? {
+        var best: (steps: [String], host: String, facts: [String])?
         for p in pages where p.text.contains(target) {
             var steps: [String] = []
+            // 名字由來、典故這類「小知識」不是步驟，另外收起來放在後面
+            var facts: [String] = []
             for line in p.text.components(separatedBy: "\n") {
                 let s = line.trimmingCharacters(in: .whitespaces)
                 guard (8...120).contains(s.count), !s.hasSuffix("？"), !s.hasSuffix("?"), !s.contains("｜"),
@@ -910,14 +913,19 @@ extension Understanding {
                 // 問答（「A: 可能水太多…」）、文章預告（「本文深入探討…」結尾是「…」）不是步驟
                 let faq = ["A:", "Q:", "A：", "Q：", "答：", "問："].contains { s.hasPrefix($0) }
                 guard !faq, !s.contains("本文"), !s.contains("？"), !s.contains("?"), !s.hasSuffix("…"), !s.hasSuffix("...") else { continue }
-                // 每一步都要有動作（加水、煮、泡……），光有編號或營養成分表不算
+                // 每一步都要有動作（加水、煮、泡……），光有編號或營養成分表不算；
+                // 而且要真的是做法：網站自己的廣告（「在 Google 搜尋食譜時，愛料理的食譜會優先出現」）、名字由來（「可能因此取名黃燜」）、留言都不算
                 if stepVerbs.contains(where: { s.contains($0) }) {
                     let clean = s.replacingOccurrences(of: #"^(\d{1,2}[\.、．)）]|[①②③④⑤⑥⑦⑧⑨⑩]|步驟\s*\d+[:：.]?|Step\s*\d+[:：.]?)\s*"#, with: "", options: .regularExpression)
-                    if !steps.contains(clean) { steps.append(clean) }
+                    let v = Judge.check(clean, want: .steps(target: target), subject: target, inContext: true)
+                    if v == .answer, !steps.contains(clean) { steps.append(clean) }
+                    if v == .trivia, facts.count < 2, !facts.contains(clean) { facts.append(clean) }
+                } else if Judge.check(s, want: .steps(target: target), subject: target, inContext: true) == .trivia, facts.count < 2 {
+                    facts.append(s)
                 }
                 if steps.count >= 8 { break }
             }
-            if steps.count >= 3, steps.count > (best?.steps.count ?? 0) { best = (steps, p.host) }
+            if steps.count >= 3, steps.count > (best?.steps.count ?? 0) { best = (steps, p.host, facts) }
         }
         return best
     }
@@ -1003,7 +1011,10 @@ extension WebAgent {
         case let .steps(target):
             guard let s = Understanding.extractSteps(pages, target: target) else { return ("", false) }
             // 每一步列出重點（太長的取到前一個「，」，切到時加「…」），來源標在最前面
-            return ("做法重點（參考 \(s.host)）：\n" + s.steps.enumerated().map { "\($0.offset + 1). " + Cite.step($0.element) }.joined(separator: "\n"), true)
+            var t = "做法重點（參考 \(s.host)）：\n" + s.steps.enumerated().map { "\($0.offset + 1). " + Cite.step($0.element) }.joined(separator: "\n")
+            // 名字由來、典故：不是步驟，是可以多了解的知識
+            if !s.facts.isEmpty { t += "\n\n📖 小知識：" + s.facts.map { Cite.step($0, limit: 60) }.joined(separator: "；") }
+            return (t, true)
         case .place:
             // 問首都、位置：句子要講到這個地方本身，還要有「首都」「位於」這類字
             let marks = fr.searches.first?.contains("首都") == true ? ["首都"] : ["位於", "位在", "坐落", "在"]

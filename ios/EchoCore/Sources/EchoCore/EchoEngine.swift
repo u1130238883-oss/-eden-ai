@@ -138,6 +138,16 @@ public final class EchoEngine {
     /// 逐字產生回覆。`onToken` 每產生一個字就回呼一次。
     public func reply(to message: String, history: [ChatTurn] = [], context: Context,
                       onToken: ((String) -> Void)? = nil) -> Reply {
+        var r = replyMain(to: message, history: history, context: context, onToken: onToken)
+        // 帶著感受回答：對方開心就替他開心、難過就先心疼、罵我就先道歉——回答本來就有這種語氣、或是一般的問題就不加
+        if r.lang == .zh, r.turn.role == .echo, !r.turn.text.isEmpty {
+            r.turn.text = Affect.color(r.turn.text, for: message, seed: message.count)
+        }
+        return r
+    }
+
+    func replyMain(to message: String, history: [ChatTurn] = [], context: Context,
+                   onToken: ((String) -> Void)? = nil) -> Reply {
         // 追問（「那這些國家都是哪些國家」）：先把代名詞換回上一題的主題，再照一般問題處理
         let prevQuestion = lastQuestion, prevQuestionTurn = lastQuestionTurn
         var text = message
@@ -292,6 +302,22 @@ public final class EchoEngine {
             return done(Celebrities.reading(p), .reader)
         }
 
+        // 2.055) 反義詞：「開心的反義詞是什麼」「大和小是反義詞嗎」——詞庫裡有就直接回答，沒有就上網查
+        if L == .zh, let ask = Antonyms.parse(text) {
+            if let a = Antonyms.answer(ask) { return done(a, .knowledge) }
+            switch ask {
+            case let .of(w): return done(Loc.s("webAsk", .zh), .tool, web: "\(w) 反義詞")
+            case let .pair(a, b): return done(Loc.s("webAsk", .zh), .tool, web: "\(a) \(b) 反義詞")
+            }
+        }
+        // 2.06) 近義詞：「開心的近義詞是什麼」「高興和快樂意思一樣嗎」——詞庫裡有就直接回答，沒有就上網查
+        if L == .zh, let ask = Synonyms.parse(text) {
+            if let a = Synonyms.answer(ask) { return done(a, .knowledge) }
+            switch ask {
+            case let .near(w): return done(Loc.s("webAsk", .zh), .tool, web: "\(w) 近義詞")
+            case let .pair(a, b): return done(Loc.s("webAsk", .zh), .tool, web: "\(a) \(b) 意思 差別")
+            }
+        }
         // 2.07) 問世界上的事（不是問自己的命、不是說心情、不是在跟我聊天）：上網查——
         // 不能被「房」「出國」「情緒」這些字帶去算命，也不能被書名裡的「煩惱」帶去安慰
         if L == .zh, EchoEngine.worldQuestion(text) {

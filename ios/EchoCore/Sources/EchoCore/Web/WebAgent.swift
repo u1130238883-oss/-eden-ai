@@ -676,11 +676,17 @@ public enum WebAgent {
             return out
         }
         var sections: [(String, [String])] = []
-        if !strat.angles.isEmpty && !synthesized {
+        // 已經有完整的答案（步驟、名單、數字……）就不再附零散的引文
+        let structured: Bool = {
+            guard let fr, solved?.ok == true else { return false }
+            switch fr.want { case .steps, .list, .number, .time, .place, .person: return true; default: return false }
+        }()
+        if !strat.angles.isEmpty && !synthesized && !structured {
             for (i, a) in strat.angles.enumerated() {
                 // 小問題的補充也要講到主題、不能是網頁雜訊（「上面是兩處疑似是農田的位置」不算在講天空）
                 let angleTopic: Set<String> = fr.map { termSet(Understanding.plain($0.subject)).filter { $0.contains(where: isCJK) } } ?? []
-                let fs = ranked.filter { $0.angle == i && !Think.looksLikeNoise($0.text) && (angleTopic.isEmpty || score($0.text, angleTopic) >= 1) }
+                let fs = ranked.filter { $0.angle == i && !Think.looksLikeNoise($0.text) && (angleTopic.isEmpty || score($0.text, angleTopic) >= 1)
+                    && Judge.check($0.text, want: .open, subject: "", inContext: true) == .answer }
                     .sorted { ($0.trusted ? 1 : 0) > ($1.trusted ? 1 : 0) }
                 let pts = take(fs, i == 0 ? 2 : 3)
                 if !pts.isEmpty { sections.append((a.title, pts)) }
@@ -780,27 +786,16 @@ public enum WebAgent {
             if let note = strat.note { t += "\n\n" + note }
             if !fortune, let warn = Cite.skepticNote(question) { t += "\n\n" + warn }
             if !fortuneBlock.isEmpty { t += "\n\n" + fortuneBlock }
-            if let fr, !fortune {
-                let disagree = answer.contains("來源說法不一")
-                t += "\n\n🧭 我的看法：" + Mind.view(want: fr.want, answered: solved?.ok ?? true, sources: sources.count,
-                                                    trusted: trustedHosts, disagree: disagree, recent: fr.recent)
-                // 只提一個最可能的下一步
-                if let more = Mind.followUps(fr).first { t += "\n💬 你可能還想知道：" + more }
-                if let mine = Mind.forAsker(type: asker, want: fr.want) { t += "\n" + mine }
+            // 只留重點：答案、一個最可能的下一步、來源。看法、思路、把握程度這些說明拿掉（使用者覺得多餘）；
+            // 沒把握時只用一句話提醒
+            if let fr, !fortune, let more = Mind.followUps(fr).first { t += "\n\n💬 你可能還想知道：" + more }
+            if facts != nil { t += "\n（對照方式：把每一句網路說法放到你的盤上檢查——喜忌、身強身弱、命宮主星、化忌宮位對不對得上，對不上的就排除。）" }
+            if covered == 0 && lead == nil && solved?.ok != true {
+                t += "\n（這題網路上的資料跟你問的不太對得上，可以換個說法或講得更具體一點，我再查一次。）"
+            } else if confidence.hasPrefix("低") {
+                t += "\n（資料來源不多，重要的事建議再確認。）"
             }
-            // 我的思路（精簡版）
-            t += "\n\n🔎 我的思路："
-            if let fr { t += fr.restated } else { t += "這是\(kindName[plan.kind] ?? "一般")的問題，主題是「\(fortune ? orderedUnique([topic] + also.map(WebFortune.base)).joined(separator: "、") : plan.core)」。" }
-            t += "查了" + jobs.prefix(3).map { "「\($0.q)」" }.joined(separator: "、") + "，讀了 \(pagesRead) 個網頁"
-            if !trustedHosts.isEmpty { t += "（以 " + trustedHosts.prefix(2).joined(separator: "、") + " 這類原始來源為主）" }
-            t += "。"
-            if !brainNote.isEmpty { t += brainNote }
-            if !checkNote.isEmpty { t += checkNote }
-            if !learnedNotes.isEmpty { t += "\n🧠 經驗：" + learnedNotes.joined(separator: "；") + "。" }
-            if facts != nil { t += "\n對照方式：把每一句網路說法放到你的盤上檢查——喜忌、身強身弱、命宮主星、化忌宮位對不對得上，對不上的就排除。" }
-            t += "\n🤔 把握程度\(confidence)。"
-            if !gaps.isEmpty { t += "還不確定：" + gaps.joined(separator: "；") + "。" }
-            if covered == 0 && lead == nil && solved?.ok != true { t += "這題網路上的資料跟你問的不太對得上，可以換個說法或講得更具體一點，我再查一次。" }
+            _ = (brainNote, checkNote, learnedNotes, gaps, trustedHosts, asker)
             // 來源清單：只列真的引用到的網站
             let cited = SelfTuning.hosts(in: t)
             t += "\n來源：" + (cited.isEmpty ? Array(sources.prefix(3)) : cited).joined(separator: "、")
