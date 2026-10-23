@@ -55,6 +55,8 @@ final class AffectTests: XCTestCase {
                 bad.append("「\(x.q)」（\(m.rawValue)）語氣衝突：\(text.prefix(40))")
             }
         }
+        if let p = ProcessInfo.processInfo.environment["NINESUN_AFF_OUT"] { try bad.joined(separator: "\n").write(toFile: p + ".tone.txt", atomically: true, encoding: .utf8) }
+        print("AFFECT-TONE 共 \(qs.count) 題，不對 \(bad.count) 題\n" + bad.prefix(30).joined(separator: "\n"))
         XCTAssertLessThanOrEqual(bad.count, qs.count / 100, bad.prefix(20).joined(separator: "\n"))
     }
 }

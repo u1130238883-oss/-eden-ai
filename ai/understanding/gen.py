@@ -3,12 +3,18 @@
    route：web（上網查）／fortune（用命盤算）／feeling（說心情，要安慰）／chat（打招呼、問 NineSun 自己）
    want ：web 題要什麼樣的答案（number、person、place、time、definition、reason、list、compare、steps、open）
    subject：要查的主題（理解後的關鍵詞要包含它）
-用法：python3 ai/understanding/gen.py ios/EchoCore/Tests/EchoCoreTests/Fixtures/understanding_questions.json"""
+用法：python3 ai/understanding/gen.py ios/EchoCore/Tests/EchoCoreTests/Fixtures/understanding_questions.json
+      python3 ai/understanding/gen.py 輸出.json --n 500000   （500,000 題：再多加開頭的情境、結尾的客套話）"""
 import json
 import random
 import sys
 
 R = random.Random(20261023)
+N = int(sys.argv[sys.argv.index("--n") + 1]) if "--n" in sys.argv else 50000
+# 500,000 題時多加的包裝：開頭的情境、結尾的客套話（50,000 題的檔案不用，保持原樣）
+PRE2 = ["對了，", "突然想到，", "考考你，", "說真的，", "問一下喔，", "老實說，", "跟你說，", "我一直很好奇，", "有個問題，", "朋友問我",
+        "剛剛在想，", "小孩問我", "嗯…", "話說", "順便問一下，"]
+TAIL = ["", "", "", "，謝謝", "，拜託", "，急", "，快告訴我", "～", "!!", "？？", "…"]
 
 HEIGHT = ["台北101", "玉山", "聖母峰", "富士山", "艾菲爾鐵塔", "杜拜塔", "東京鐵塔", "阿里山", "自由女神像", "帝國大廈", "合歡山", "雪山",
           "吉力馬札羅山", "白朗峰", "晴空塔", "上海中心大廈", "比薩斜塔", "大霸尖山", "高雄85大樓", "長頸鹿"]
@@ -180,6 +186,8 @@ def vary(it):
             q = w.format(q=q)
     if not q.endswith(("嗎", "呢", "啊")) or R.random() < 0.5:
         q = q + R.choice(END)
+    if N > 50000 and it["route"] in ("web", "fortune") and R.random() < 0.6:
+        q = R.choice(PRE2) + q + R.choice(TAIL)
     return dict(it, q=q)
 
 
@@ -193,7 +201,7 @@ def main(dst):
         if it["q"] not in seen:
             seen.add(it["q"]); out.append(it)
     tries = 0
-    while len(out) < 50000 and tries < 2_000_000:
+    while len(out) < N and tries < N * 40:
         tries += 1
         base = R.choice(web) if R.random() < 0.8 else R.choice(local)
         v = vary(base)
@@ -201,9 +209,9 @@ def main(dst):
             continue
         seen.add(v["q"]); out.append(v)
     R.shuffle(out)
-    json.dump(out[:50000], open(dst, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
+    json.dump(out[:N], open(dst, "w", encoding="utf-8"), ensure_ascii=False, indent=0 if N <= 50000 else None)
     from collections import Counter
-    print(len(out[:50000]), Counter(x["route"] for x in out[:50000]), Counter(x["want"] for x in out[:50000] if x["want"]))
+    print(len(out[:N]), Counter(x["route"] for x in out[:N]), Counter(x["want"] for x in out[:N] if x["want"]))
 
 
 if __name__ == "__main__":

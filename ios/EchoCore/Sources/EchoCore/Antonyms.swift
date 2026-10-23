@@ -39,25 +39,42 @@ public enum Antonyms {
         #"^(.{1,8}?)的?(?:相反|反面)(?:的意思)?(?:是什麼|是啥|是)?$"#,
         #"^(?:跟|和|與)(.{1,8}?)(?:意思)?相反的(?:詞|字)(?:是什麼|有哪些|有什麼)?$"#,
         #"^什麼詞(?:跟|和|與)(.{1,8}?)(?:的)?意思相反$"#,
-    ]
-    static let pairPatterns = [
-        #"^(.{1,8}?)(?:和|跟|與|同)(.{1,8}?)(?:是)?(?:反義詞|相反詞|反義字|一對反義詞|相反的意思|意思相反|相反)$"#,
-        #"^(.{1,8}?)的(?:反義詞|相反詞)是(?:不是)?(.{1,8}?)$"#,
-        #"^(.{1,8}?)(?:和|跟|與)(.{1,8}?)的意思是相反的$"#,
+        #"^(?:跟|和|與)(.{1,8}?)(?:意思)?相反的(?:詞|字)(?:是什麼|有哪些|有什麼|是啥)?$"#,
     ]
 
-    public static func parse(_ raw: String) -> Ask? {
-        let t = Synonyms.plainForWords(raw)
-        for p in pairPatterns {
-            if let m = Understanding.match(t, p) {
-                let a = Synonyms.strip(m[1]), b = Synonyms.strip(m[2])
-                if !a.isEmpty, !b.isEmpty, a != b, b != "什麼", b != "哪些" { return .pair(a, b) }
-            }
+    static let asking: Set<String> = ["什麼", "哪些", "啥", "哪個", "甚麼", "什麼詞", "哪個詞", "哪一個", "什麼字"]
+
+    /// 「A和B是反義詞嗎」：連接詞可能在詞裡面（「同意」的「同」、「和平」的「和」），每個切法都試，兩邊都認得的優先
+    static func pair(_ t: String) -> (String, String)? {
+        let tails = #"^(.{1,8}?)(?:是)?(?:反義詞|相反詞|反義字|一對反義詞|相反的意思|意思相反|相反|的意思是相反的)$"#
+        var cands: [(String, String)] = []
+        let cs = Array(t)
+        for i in cs.indices where i > 0 && "和跟與同".contains(cs[i]) {
+            let a = Synonyms.strip(String(cs[..<i])), rest = String(cs[(i + 1)...])
+            guard a.count <= 8, let m = Understanding.match(rest, tails) else { continue }
+            let b = Synonyms.strip(m[1])
+            if !a.isEmpty, !b.isEmpty, a != b, !asking.contains(a), !asking.contains(b) { cands.append((a, b)) }
         }
+        if let m = Understanding.match(t, #"^(.{1,8}?)的(?:反義詞|相反詞)是(?:不是)?(.{1,8}?)$"#) {
+            let a = Synonyms.strip(m[1]), b = Synonyms.strip(m[2])
+            if !a.isEmpty, !b.isEmpty, a != b, !asking.contains(b) { cands.append((a, b)) }
+        }
+        let k: (String) -> Bool = { known($0) || Synonyms.known($0) }
+        return cands.first { k($0.0) && k($0.1) } ?? cands.first { k($0.0) || k($0.1) } ?? cands.first
+    }
+
+    public static func parse(_ raw: String) -> Ask? {
+        let t = Understanding.bare(raw)
+        // 「什麼詞跟忙意思相反」：在問「忙」的反義詞，不是比較「什麼詞」和「忙」
+        if let m = Understanding.match(t, #"^(?:什麼|哪個|哪些)(?:詞|字)(?:跟|和|與)(.{1,8}?)(?:的)?意思相反$"#) {
+            let w = Synonyms.strip(m[1]); if !w.isEmpty { return .of(w) }
+        }
+        if let p = pair(t) { return .pair(p.0, p.1) }
         for p in ofPatterns {
             if let m = Understanding.match(t, p) {
                 let w = Synonyms.strip(m[1])
-                if !w.isEmpty { return .of(w) }
+                // 「什麼是反義詞」「怎麼教小孩反義詞」：不是在問某個詞
+                if !w.isEmpty, w.range(of: "什麼|怎麼|如何|哪|誰|教|學|練習|英文|意思", options: .regularExpression) == nil { return .of(w) }
             }
         }
         return nil

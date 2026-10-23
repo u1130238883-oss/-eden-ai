@@ -141,7 +141,7 @@ public final class EchoEngine {
         var r = replyMain(to: message, history: history, context: context, onToken: onToken)
         // 帶著感受回答：對方開心就替他開心、難過就先心疼、罵我就先道歉——回答本來就有這種語氣、或是一般的問題就不加
         if r.lang == .zh, r.turn.role == .echo, !r.turn.text.isEmpty {
-            r.turn.text = Affect.color(r.turn.text, for: message, seed: message.count)
+            r.turn.text = Affect.color(r.turn.text, for: message, seed: message.count, voice: context.profile.birthday.map { Voice($0) })
         }
         return r
     }
@@ -302,6 +302,17 @@ public final class EchoEngine {
             return done(Celebrities.reading(p), .reader)
         }
 
+        // 2.05) 成語：問意思、用法、近義、反義、某一類的成語、外文說法對應的成語——成語庫裡有就直接回答；
+        //       出處典故、成語庫沒有的成語上網查；用成語說自己的毛病（「我老是三心二意怎麼辦」）→ 用意思上網找改善的方法
+        if L == .zh, let u = Idioms.understand(text), u.intent != "feeling" {
+            if let a = Idioms.answer(u) { return done(a, .knowledge) }
+            switch u.intent {
+            case "origin": return done(Loc.s("webAsk", .zh), .tool, web: "\(u.idiom) 成語 出處 典故")
+            case "problem": if let q = Idioms.problemQuery(u.idiom) { return done(Loc.s("webAsk", .zh), .tool, web: q) }
+            case "meaning", "usage": return done(Loc.s("webAsk", .zh), .tool, web: "\(u.idiom) 成語 意思")
+            default: break
+            }
+        }
         // 2.055) 反義詞：「開心的反義詞是什麼」「大和小是反義詞嗎」——詞庫裡有就直接回答，沒有就上網查
         if L == .zh, let ask = Antonyms.parse(text) {
             if let a = Antonyms.answer(ask) { return done(a, .knowledge) }

@@ -70,6 +70,27 @@ public enum Understanding {
                           "所以", "那麼", "欸", "誒", "唉", "嘿", "喂", "嗯",
                           "誰能", "誰可以", "有沒有人知道", "有沒有人能", "有人知道", "有誰知道", "說說"]
 
+    /// 問句的外殼：情境開頭（「考考你」「我兒子問我」「老師上課說到」）、客套話開頭、結尾的語氣詞、標點、表情都拿掉，只留問題本身（不換說法）
+    public static func bare(_ raw: String) -> String {
+        var t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pre = #"^((考考你|突然想到|老師上課說到|老師說的|老師說|我在書上看到|書上寫|看小說看到|我(兒子|女兒|妹|弟|妹妹|弟弟|小孩)問我|小孩問我|朋友問我|說真的|問你喔|問一下喔|有個問題|今天作文要用|作文要用|麻煩告訴我|跟你請教|請教一下|麻煩一下|老實說|跟你說|剛剛在想|我一直很好奇|你知道嗎|對了|那個|欸|誒|嗯|唉|嘿)[，,：:、…\s]*)+"#
+        for _ in 0..<3 {
+            t = t.replacingOccurrences(of: pre, with: "", options: .regularExpression)
+            var changed = true
+            while changed {
+                changed = false
+                for w in openers where t.hasPrefix(w) && t.count > w.count + 1 {
+                    t = String(t.dropFirst(w.count)).trimmingCharacters(in: CharacterSet(charactersIn: "，,、 …"))
+                    changed = true
+                }
+            }
+        }
+        t = t.replacingOccurrences(of: #"[，,？?](快告訴我|我不太懂|謝謝|拜託|謝啦|急)$"#, with: "", options: .regularExpression)
+        t = t.replacingOccurrences(of: #"[^\p{L}\p{N}」』"”]+$"#, with: "", options: .regularExpression)
+        while let l = t.last, "呢嗎啊呀吧啦喔哦耶".contains(l), t.count > 2 { t.removeLast() }
+        return t
+    }
+
     public static func clean(_ q: String) -> String {
         var t = q.trimmingCharacters(in: .whitespacesAndNewlines)
         var changed = true

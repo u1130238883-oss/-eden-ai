@@ -34,6 +34,8 @@ public enum Native {
     /// 有道地講法就直接給（譯文＋其他說法）；沒有回 nil
     public static func lookup(_ r: Translate.Request) -> Translate.Result? {
         guard let tl = r.target.lex, ["zh", "en", "es", "it"].contains(tl) else { return nil }
+        // 成語：用英西義對應的說法（一石二鳥 → kill two birds with one stone），外文的說法也能翻回成語
+        if let res = Idioms.translate(r) { return res }
         let k = key(r.text)
         guard !k.isEmpty else { return nil }
         // 中文句尾的語氣詞不影響意思（「我好累啊」＝「我好累」）

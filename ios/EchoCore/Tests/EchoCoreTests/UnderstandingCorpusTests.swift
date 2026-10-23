@@ -27,7 +27,7 @@ final class UnderstandingCorpusTests: XCTestCase {
     }
 
     func testUnderstanding() throws {
-        try run("understanding_questions", limit: ProcessInfo.processInfo.environment["NINESUN_UNDERSTAND_ALL"] == "1" ? nil : 6000, min: 0.995)
+        try run("understanding_questions", limit: ProcessInfo.processInfo.environment["NINESUN_UNDERSTAND_ALL"] == "1" || ProcessInfo.processInfo.environment["NINESUN_UNDERSTAND_FILE"] != nil ? nil : 6000, min: 0.995)
     }
 
     /// 沒看過的問法和名稱（不在訓練題裡）：檢查是真的理解，不是背題目
@@ -36,7 +36,9 @@ final class UnderstandingCorpusTests: XCTestCase {
     }
 
     func run(_ name: String, limit: Int?, min: Double) throws {
-        let url = try XCTUnwrap(Bundle.module.url(forResource: name, withExtension: "json", subdirectory: "Fixtures"))
+        // NINESUN_UNDERSTAND_FILE=檔案：跑 500,000 題（ai/understanding/gen.py --n 500000）
+        let file = name == "understanding_questions" ? ProcessInfo.processInfo.environment["NINESUN_UNDERSTAND_FILE"] : nil
+        let url = try file.map { URL(fileURLWithPath: $0) } ?? XCTUnwrap(Bundle.module.url(forResource: name, withExtension: "json", subdirectory: "Fixtures"))
         var qs = try JSONDecoder().decode([Q].self, from: Data(contentsOf: url))
         if let limit { qs = Array(qs.prefix(limit)) }
         #if os(Linux)

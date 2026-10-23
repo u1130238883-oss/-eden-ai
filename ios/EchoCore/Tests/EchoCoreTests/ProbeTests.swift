@@ -1,24 +1,12 @@
 import XCTest
 @testable import EchoCore
 
-/// 臨時：看引擎怎麼接這些問題（只在本機跑）
+/// 除錯用：印出幾句話的理解結果
 final class ProbeTests: XCTestCase {
-    func testProbe() throws {
-        guard let qs = ProcessInfo.processInfo.environment["PROBE"] else { throw XCTSkip("probe") }
-        #if os(Linux)
-        let t = EchoCoreTests(name: "helper", testClosure: { _ in })
-        #else
-        let t = EchoCoreTests()
-        #endif
-        let engine = try t.makeEngine(seed: 5)
-        var ctx = EchoEngine.Context(now: t.date(2026, 9, 30, 11))
-        ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 7, minute: 0, male: true)
-        var history: [ChatTurn] = []
-        let keep = ProcessInfo.processInfo.environment["PROBE_HIST"] != nil
-        for q in qs.split(separator: "|").map(String.init) {
-            let r = engine.reply(to: q, history: keep ? history : [], context: ctx)
-            history += [ChatTurn(role: .user, text: q), r.turn]
-            FileHandle.standardError.write("PROBE> \(q)\n[\(r.turn.source.rawValue)] web=\(r.webQuery ?? "-")\n\(r.turn.text.prefix(ProcessInfo.processInfo.environment["PROBE_FULL"] != nil ? 3000 : 160))\n\n".data(using: .utf8)!)
+    func testProbe() {
+        for q in ["請問「同意」和「巨大」是反義詞嗎", "考考你，「不一樣」和「一樣」是反義詞嗎", "什麼詞跟忙意思相反", "消極的相反詞是啥呢", "今天謝啦", "你知道嗎，謝啦", "和平和戰爭是反義詞嗎", "同意跟反對是反義詞嗎",
+                  "一石二鳥是什麼意思", "kill two birds with one stone的成語是什麼", "我最近心灰意冷", "我老是三心二意怎麼辦"] {
+            print("PROBE「\(q)」 bare=\(Understanding.bare(q)) ant=\(String(describing: Antonyms.parse(q))) mood=\(Affect.detect(q).rawValue) idiom=\(String(describing: Idioms.understand(q)))")
         }
     }
 }
