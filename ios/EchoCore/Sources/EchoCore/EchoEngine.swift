@@ -616,8 +616,13 @@ public final class EchoEngine {
                    "今天", "今晚", "明天", "今年", "明年", "這個月", "下個月", "什麼時候", "會不會", "適合我", "我適合", "我的命", "想死", "不想活", "自殺"]
         if not.contains(where: { raw.contains($0) }) { return false }
         if addressedToMe(raw) || Translate.parse(raw) != nil { return false }
-        if case .steps = Understanding.frame(raw).want { return true }
-        return false
+        // 九型人格的問題（「我怎麼成長」）由 NineSun 自己用你的型回答
+        if Persona.parse(raw, L: .zh) != nil { return false }
+        guard case let .steps(target) = Understanding.frame(raw).want else { return false }
+        // 「那我該怎麼辦」：沒有具體的事，是在追問上一則解讀
+        var t = target
+        for w in ["那", "我", "你", "該", "要", "就", "這樣", "那樣", "現在", "呢", "啊", "的", "了", "還"] { t = t.replacingOccurrences(of: w, with: "") }
+        return t.count >= 2
     }
 
     /// 疾病、法律問題（就算句子裡有「我」也要上網查），但「我今年會不會離婚」這種是在問命

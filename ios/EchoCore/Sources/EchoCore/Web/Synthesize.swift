@@ -157,7 +157,10 @@ public enum Synthesize {
     }
 
     /// 句子裡有沒有「做法」的字眼（可以、建議、先、避免……）
-    public static func actionable(_ s: String) -> Bool { actionWords.contains { s.contains($0) } }
+    /// （「要」「多」「先」太常見，「最主要」「需要」不算做法，這裡不用）
+    public static func actionable(_ s: String) -> Bool {
+        ["可以", "建議", "試著", "試試", "避免", "不要", "記得", "保持", "盡量", "練習", "準備", "應該", "最好", "有助", "改善", "調整", "固定", "減少", "增加"].contains { s.contains($0) }
+    }
 
     static let actionWords = ["可以", "建議", "試著", "試試", "先", "多", "避免", "不要", "別", "記得", "保持", "給自己", "找", "每天", "盡量", "學會",
                               "主動", "練習", "注意", "應該", "要", "適度", "減少", "增加", "培養", "接受", "放下", "停止", "設定", "安排", "選擇"]
@@ -177,6 +180,8 @@ public enum Synthesize {
         case .advice:
             let act = actionWords.filter { u.text.contains($0) }.count
             s += Double(min(act, 2)) + (u.item ? 1.5 : 0)
+            // 沒講到主題、也不是那篇文章裡列出來的一點：大概是別的話題
+            if rel == 0 && !u.item { s -= 2 }
             // 名詞解釋（「咽喉痛是指…」）不是做法
             if defineWords.contains(where: { u.text.contains($0) }) || u.text.contains("是指") { s -= 3 }
         case .reason:
@@ -198,6 +203,10 @@ public enum Synthesize {
         let qg = grams(question)
         var scored: [(Unit, Double)] = []
         for p in pages {
+            // 百科只有名詞解釋和作品劇情，沒有「怎麼做」：建議題不用它
+            if shape == .advice, p.host.contains("wikipedia") || p.host.contains("baike") || p.host.contains("wikiwand") { continue }
+            // 整頁都沒講到主題（問「喜歡一個人」卻是水果去皮的小技巧）：整頁不用
+            if topic.count >= 2, Double(grams(p.text).intersection(topic).count) / Double(topic.count) < 0.5 { continue }
             var seen = Set<String>()
             for u in units(p.text, host: p.host) where seen.insert(String(u.text.prefix(12))).inserted {
                 let s = score(u, shape: shape, topic: topic, question: qg)

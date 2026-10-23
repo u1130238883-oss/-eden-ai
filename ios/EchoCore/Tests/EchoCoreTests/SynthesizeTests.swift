@@ -55,4 +55,15 @@ final class SynthesizeTests: XCTestCase {
         XCTAssertEqual(hits.first?.title, "喜歡一個人怎麼辦？5個方法")
         XCTAssertTrue(hits.first?.snippet.contains("先觀察對方") == true, hits.first?.snippet ?? "")
     }
+
+    /// 開著 API：要查資料的問題讓 Gemini 用 Google 搜尋；聊天、命盤解讀不用；回答附上讀過的網站
+    func testGeminiSearch() throws {
+        XCTAssertTrue(AskAIs.wantsSearch("喜歡一個人該怎麼辦？", system: ""))
+        XCTAssertTrue(AskAIs.wantsSearch("天空為什麼是藍色的", system: ""))
+        XCTAssertFalse(AskAIs.wantsSearch("你好", system: ""))
+        XCTAssertFalse(AskAIs.wantsSearch("今年感情運如何", system: "【NineSun 用九型十二宮算出來的結果】…"))
+        let json = #"{"candidates":[{"content":{"parts":[{"text":"先觀察對方。"}]},"groundingMetadata":{"groundingChunks":[{"web":{"uri":"https://x","title":"womany.net"}},{"web":{"uri":"https://y","title":"heho.com.tw"}}]}}]}"#
+        let r = AskAIs.geminiText(json.data(using: .utf8))
+        XCTAssertEqual(r.text, "先觀察對方。\n\n（Google 搜尋，參考：womany.net、heho.com.tw）")
+    }
 }

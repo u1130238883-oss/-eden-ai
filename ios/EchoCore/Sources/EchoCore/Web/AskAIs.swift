@@ -306,8 +306,9 @@ public enum AskAIs {
     static func oneCall(_ who: String, config: Config, system: String, message: String, past: [Turn]) async -> Reply {
         switch who {
         case "Claude": return await claude(system: system, user: message, key: config.anthropicKey, history: past)
-        // Google 搜尋比較慢：只有要最新資料的問題才讓 Gemini 自己搜尋
-        case "Gemini": return await gemini(system: system, user: message, key: config.geminiKey, history: past, search: needsFresh(message))
+        // 要查資料的問題，Gemini 自己用 Google 搜尋、讀好幾個網站再回答（跟 Google 搜尋頁上的 AI 摘要一樣的做法）；
+        // 聊天、命盤解讀（結果已經算好了）、融合各家回答時不用搜尋
+        case "Gemini": return await gemini(system: system, user: message, key: config.geminiKey, history: past, search: wantsSearch(message, system: system))
         case "OpenRouter":
             let pool = config.models.isEmpty ? await freeModels() : config.models
             var last = Reply(name: "OpenRouter", text: "", error: "沒有可用的模型")
@@ -322,6 +323,18 @@ public enum AskAIs {
             guard let p = config.compat.first(where: { $0.name == who }) else { return Reply(name: who, text: "", error: "沒有金鑰") }
             return await compatible(p, system: system, user: message, history: past)
         }
+    }
+
+    /// 這句話要不要上 Google 查：問資料、做法、原因、推薦……都要；打招呼、閒聊、命盤解讀不用
+    public static func wantsSearch(_ q: String, system: String) -> Bool {
+        if system.contains("NineSun 用九型十二宮算出來的結果") || system.contains("融合成你（NineSun）自己的一個回答") { return false }
+        if needsFresh(q) { return true }
+        if Companion.isSmallTalk(q) { return false }
+        let l = q.lowercased()
+        let cues = ["?", "？", "嗎", "什麼", "怎麼", "如何", "為什麼", "為何", "哪", "誰", "多少", "幾", "推薦", "有沒有", "是不是", "介紹",
+                    "意思", "差別", "比較", "好處", "注意", "方法", "技巧", "建議", "how", "what", "why", "who", "where", "when", "which",
+                    "cómo", "qué", "quién", "dónde", "come ", "cosa", "perché", "chi ", "dove"]
+        return q.count >= 4 && cues.contains { l.contains($0) }
     }
 
     /// 要最新資料的問題（今天、最新、價格、天氣…）
@@ -696,7 +709,14 @@ public enum AskAIs {
         if let fb = o["promptFeedback"] as? [String: Any], fb["blockReason"] != nil { return (nil, true) }
         guard let c = (o["candidates"] as? [[String: Any]])?.first else { return (nil, false) }
         let parts = ((c["content"] as? [String: Any])?["parts"] as? [[String: Any]]) ?? []
-        let t = parts.compactMap { $0["text"] as? String }.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+        var t = parts.compactMap { $0["text"] as? String }.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+        // 有用 Google 搜尋時，附上它讀了哪些網站（title 通常就是網域）
+        let chunks = ((c["groundingMetadata"] as? [String: Any])?["groundingChunks"] as? [[String: Any]]) ?? []
+        var sites: [String] = []
+        for ch in chunks {
+            if let w = ch["web"] as? [String: Any], let title = w["title"] as? String, !title.isEmpty, !sites.contains(title) { sites.append(title) }
+        }
+        if !t.isEmpty, !sites.isEmpty { t += "\n\n（Google 搜尋，參考：" + sites.prefix(5).joined(separator: "、") + "）" }
         if !t.isEmpty { return (t, false) }
         return (nil, (c["finishReason"] as? String) == "SAFETY")
     }

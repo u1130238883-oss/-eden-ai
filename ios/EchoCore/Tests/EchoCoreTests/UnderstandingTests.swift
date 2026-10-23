@@ -30,7 +30,9 @@ final class UnderstandingTests: XCTestCase {
         XCTAssertEqual(want("日本的首都是哪裡"), .place)
         XCTAssertEqual(want("iPhone和安卓哪個好"), .compare("iPhone", "安卓"))
         XCTAssertEqual(want("量子力學是什麼"), .definition)
-        XCTAssertEqual(want("老闆不給我加薪怎麼辦"), .open)
+        XCTAssertEqual(want("老闆不給我加薪怎麼辦"), .steps(target: "老闆不給我加薪"))
+        XCTAssertEqual(want("面試要注意什麼"), .steps(target: "面試"))
+        XCTAssertEqual(want("跟朋友吵架怎麼和好"), .steps(target: "跟朋友吵架和好"))
     }
 
     func testNumberVote() {

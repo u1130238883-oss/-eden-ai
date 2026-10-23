@@ -345,3 +345,24 @@ CI 的「Live web search check」會用真的網路問 40 題（`WebTests.swift`
 - `TranslateLiveTests`（CI「Live translation check」）：抽 120 項用 Google 翻譯，跟語料比，列出不一樣的，常見又翻錯的補進 Native.swift。
 - 新版 Hollow.ipa：只多了 11宮關鍵詞「貴人」，算法逐位元組相同；NineSun 四語關鍵詞、宮位感知詞表同步。
 - 流年「合起來看」加上牽涉的人（起因宮的人 → 帶來好結果那幾宮的人）。
+
+## 2026-10-23：正的意思、405 種本命盤、上網抓答案
+
+- **正 ＝ 年宮和月宮同五行**：引擎在這時果＝日宮本身，等於把這一宮的能量放大——是「能量強」，不是平平、不是中性。
+  所有寫到正的地方（FlowReading 的果宮表、PalaceLore、Reader 的判讀句、Solace、FullReading、Planner）都改成「能量很強，好壞看你怎麼用」；
+  外語的 verdict 名稱（Aligned…）因為模型字表也有，暫時沒改。
+- **405 種本命盤**：出生三數（年、月、日各化成 1–9）有 9×9×9＝729 種，但年數和月數對調得到同一張盤（`read` 對年、月對稱），
+  所以只有 405 種：81 種沒有雙胞胎，324 種兩兩相同（`ai/ninetwelve.py` 驗證）。
+- **命宮**：①「你是誰」改成講本質（`FlowReading.whoYouAre`：命宮所在宮＝本質，判讀＝一生常出現的模式），不再寫「感情桃花這塊」。
+- **解讀白話**：`FlowReading.plain`＝本宮這塊 × 果宮好壞 × 起因（「起因在工作、事業本身」）。
+- **翻譯**：完全不用蘋果內建翻譯（`.translationTask` 隨時可能跳系統畫面）；道地說法表 → AI（開 API）→ Google → MyMemory。
+- **上網抓答案**（`Web/Synthesize.swift`）：好幾個網站的內容拆成重點 → 丟掉標題、文章簡介（「這篇文章旨在…」）、hashtag、廣告 →
+  講同一件事的分成一群、記下幾個網站都提到 → 先給結論、再列重點，用自己的話寫。
+  建議題（X怎麼辦、要注意什麼、有什麼方法）理解成「做法」、直接上網（`EchoEngine.practical`），做法題不讀百科；查不到能照著做的方法就老實說。
+- **搜尋來源**：加了 DuckDuckGo 輕量版、Brave、Mojeek、百度（通用的結果解析 `WebSearch.genericResults`，不靠 CSS 名稱）。
+- **開著 API＋有 Gemini 金鑰**：要查資料的問題都讓 Gemini 用 Google 搜尋回答（`AskAIs.wantsSearch`），附上它讀過的網站；聊天、命盤解讀不搜尋。
+- **網頁錄音帶**（`Web/WebTape.swift`、`.github/workflows/web-tape.yml`）：commit 訊息有 `[tape]` 時 CI 真的上網查
+  `Fixtures/web_questions.txt` 的問題，錄下搜尋結果和網頁文字，發佈成 release `web-tape-N`；
+  離線重播：`NINESUN_TAPE=web_tape.json swift test -c release -Xswiftc -enable-testing --filter WebTapeTests/testReplay`。
+  注意：GitHub 的機器上 Google、Yahoo、DuckDuckGo、Mojeek 幾乎都被擋，Bing 給不相關的結果，所以錄到的網頁九成是維基百科——
+  真正的效果要在手機上看。
