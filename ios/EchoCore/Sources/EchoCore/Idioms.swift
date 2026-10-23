@@ -160,7 +160,10 @@ public enum Idioms {
         // 詞庫沒有的成語：「狐假虎威是什麼意思」——還是知道在問意思（交給上網查）
         if let m = Understanding.match(t, #"^(?:成語)?[「『"“]?(\p{Han}{4})[」』"”]?(?:這個成語|這句成語)?(?:是什麼意思|的意思是什麼|的意思|指的是什麼|怎麼解釋|什麼意思|是啥意思|的含義|代表什麼意思|的涵義是什麼)$"#)
             ?? Understanding.match(t, #"^(?:什麼叫|解釋一下|請解釋|可以解釋)(?:成語)?[「『"“]?(\p{Han}{4})[」』"”]?$"#) {
-            return Understood(intent: "meaning", idiom: m[1], extra: "unknown")
+            // 「聽不懂你的意思」「我不懂他的意思」不是成語：有人稱代名詞、「懂」的不算
+            if m[1].range(of: "[你我他她懂]", options: .regularExpression) == nil {
+                return Understood(intent: "meaning", idiom: m[1], extra: "unknown")
+            }
         }
         return nil
     }

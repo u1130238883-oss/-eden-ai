@@ -290,7 +290,7 @@ public enum Writer {
     }
 
     /// 一段文字由這些段落組成（順序固定）；修改＝補上缺的段落、拿掉平淡的句子
-    enum Part: Int, CaseIterable { case draft, scene, opening, detail, vivid, simile, feel, idiom, view, end, extra1, extra2, extra3, extra4, extra5, extra6 }
+    enum Part: Int, CaseIterable { case draft, scene, opening, detail, vivid, simile, feel, idiom, view, end, extra1, extra2, extra3, extra4, extra5, extra6, extra7, extra8, extra9, extra10 }
 
     static func render(_ parts: Set<Part>, _ a: Ask, seed: Int, userText: String?) -> String {
         let L = a.lang
@@ -417,7 +417,7 @@ public enum Writer {
             }
             return nil
         case problem.hasPrefix("字數不夠"):
-            for p in [Part.detail, .vivid, .feel, .end, .extra1, .extra2, .extra3, .extra4, .extra5, .extra6] where !parts.contains(p) {
+            for p in [Part.detail, .vivid, .feel, .end, .extra1, .extra2, .extra3, .extra4, .extra5, .extra6, .extra7, .extra8, .extra9, .extra10] where !parts.contains(p) {
                 parts.insert(p)
                 return zh ? "多寫一些細節和感想，讓字數夠" : "added more detail to reach the length"
             }

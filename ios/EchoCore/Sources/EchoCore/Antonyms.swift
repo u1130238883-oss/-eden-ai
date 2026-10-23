@@ -64,7 +64,11 @@ public enum Antonyms {
     }
 
     /// 問句的字不是詞（「相同有哪些反義詞」不是比較「相」和「有哪些」）
-    static func asks(_ w: String) -> Bool { asking.contains(w) || w.range(of: "什麼|哪|啥|有沒有|甚麼", options: .regularExpression) != nil }
+    static func asks(_ w: String) -> Bool {
+        // 「相同的反義詞」切在「同」會剩下「的」：虛詞不是詞
+        asking.contains(w) || ["的", "了", "是", "地", "得", "嗎"].contains(w) || w.hasPrefix("的")
+            || w.range(of: "什麼|哪|啥|有沒有|甚麼", options: .regularExpression) != nil
+    }
 
     /// 「消極的」本身在詞庫裡：不要只抓到「消極」
     static func whole(_ w: String, in t: String) -> String {

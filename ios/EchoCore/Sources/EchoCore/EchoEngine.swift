@@ -294,6 +294,8 @@ public final class EchoEngine {
         // 2) 觸發規則
         if let t = ctx.rules.trigger(for: text) { return done(t, .rule) }
 
+        // 2.005) 詞性和仿寫：「分析詞性：…」「仿寫：…」
+        if let g = Grammar.parse(message) { return done(Grammar.reply(g.kind, g.text), .knowledge) }
         // 2.01) 寫作：詳寫（「小明哭了，請詳寫」）、擴寫（「擴寫：樹在成長」「Expand: The tree is growing.」）、修改——
         //       先寫第一稿、自己檢查、一項一項修改到合格（至少原句的 9 倍長，有環境、感受、觀點、比喻、成語）
         if let w = Writer.parse(message) { return done(Writer.reply(w), .knowledge) }

@@ -88,7 +88,7 @@ public enum Affect {
         }
         let t0 = trim(raw)
         // 要寫作（「小明哭了，請詳寫」）：句子裡的「哭」是題目，不是心情
-        if Writer.parse(raw) != nil { return .info }
+        if Writer.parse(raw) != nil || Grammar.parse(raw) != nil { return .info }
         // 「我想知道…」「可以告訴我…」「好奇…」是問問題的開頭，不是心情
         let c = trim(Understanding.clean(t0))
         let t = c.isEmpty ? t0 : c
