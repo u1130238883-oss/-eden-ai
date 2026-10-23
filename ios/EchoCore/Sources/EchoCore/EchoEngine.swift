@@ -669,6 +669,8 @@ public final class EchoEngine {
         for _ in 0..<2 {
             t = t.replacingOccurrences(of: #"[，,？?。.!！\s]*[，,]\s*(謝謝|謝啦|拜託|急|快告訴我|我不太懂)$"#, with: "", options: .regularExpression)
             while let l = t.last, "～~!！。…".contains(l), t.count > 1 { t.removeLast() }
+            // 「你是誰～？」「好嗎!?」：問號前面的口氣符號拿掉
+            t = t.replacingOccurrences(of: #"[～~!！。…]+([？?]+)$"#, with: "$1", options: .regularExpression)
             t = t.replacingOccurrences(of: #"[？?]{2,}$"#, with: "？", options: .regularExpression)
             t = t.replacingOccurrences(of: #"[？?][。，,]+$"#, with: "？", options: .regularExpression)
         }

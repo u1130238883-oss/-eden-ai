@@ -66,7 +66,8 @@ public enum Antonyms {
     /// 問句的字不是詞（「相同有哪些反義詞」不是比較「相」和「有哪些」）
     static func asks(_ w: String) -> Bool {
         // 「相同的反義詞」切在「同」會剩下「的」：虛詞不是詞
-        asking.contains(w) || ["的", "了", "是", "地", "得", "嗎"].contains(w) || w.hasPrefix("的")
+        // （「地」「是」「的確」是詞庫裡的詞——天↔地、是↔非——不算虛詞）
+        asking.contains(w) || !known(w) && !Synonyms.known(w) && (["的", "了", "是", "地", "得", "嗎"].contains(w) || w.hasPrefix("的"))
             || w.range(of: "什麼|哪|啥|有沒有|甚麼", options: .regularExpression) != nil
     }
 

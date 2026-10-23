@@ -374,3 +374,31 @@ CI 的「Live web search check」會用真的網路問 40 題（`WebTests.swift`
 - 作品題：書名、片名裡的「煩惱」「孤獨」不是心情（`asksAboutWork`）；打錯字的書名照搜尋結果修正（`Understanding.spellFix`）。
 - 專業來源：`Cite.field` 判斷領域，`Cite.proQuery` 用 site: 指定去國健署、康健、經理人、天下、博客來……找；整理重點時專業平台加分、口語扣分。
 - 畫面閃黑：打字泡泡換成正式訊息時，以前先拿掉泡泡再淡入新訊息，中間空一下 → 改成同一瞬間換掉、不做動畫（`ChatViewModel.finish`）。
+
+## 2026-10-23（晚）：十二個方面的 500,000 題訓練
+
+每一方面都有：產生題目的程式（`ai/…/gen.py`，500,000 題）＋沒看過的驗證題（`--holdout`，20,000 題，用沒看過的詞、問法、句型）＋
+Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部 500,000 題）。錯的題目依類型分組寫到檔案，照「人會怎麼想」改通用的步驟。
+各方面的錯誤和怎麼教的，寫在各自的 README。
+
+| 方面 | 模組 | 題目 | 測試 |
+|---|---|---|---|
+| 中文理解（問的是什麼） | `Web/Understanding.swift`、`EchoEngine.tidy` | `ai/understanding/gen.py --n 500000` | `UnderstandingCorpusTests`（`NINESUN_UNDERSTAND_FILE`） |
+| 近義詞 | `Synonyms.swift` | `ai/lexicon/gen_tests.py` | `SynonymTests`（`NINESUN_SYN`） |
+| 反義詞 | `Antonyms.swift` | `ai/lexicon/gen_antonym_tests.py` | `AntonymTests`（`NINESUN_ANT`） |
+| 中英西義互譯 | `Translate/Translate.swift` | `ai/translate/gen.py` | `TranslateTrainTests`（`NINESUN_TR`） |
+| 情感（聽出心情、用對語氣） | `Affect.swift` | `ai/affect/gen.py` | `AffectTests`（`NINESUN_AFF`） |
+| 認知（網頁的句子能不能當答案） | `Web/Judge.swift` | `ai/cognition/gen.py` | `CognitionTests`（`NINESUN_COG`） |
+| 成語：理解、近義、反義、翻譯 | `Idioms.swift`（`ai/idioms/idioms.py`，387 個成語） | `ai/idioms/gen.py {understand,near,anti,translate}` | `IdiomTests`（`NINESUN_IDIOM_DIR`） |
+| 個性（405 種人） | `Voice.swift` | `ai/idioms/gen.py voice` | `VoiceTests`（`NINESUN_VOICE`） |
+| 寫作：詳寫、擴寫（中英西義、至少 9 倍長）、修改 | `Writer.swift` | `ai/writing/gen.py` | `WriterTests`（`NINESUN_WR`） |
+| 詞性＋仿寫 | `Grammar.swift` | `ai/grammar/gen.py` | `GrammarTests`（`NINESUN_GR`） |
+
+- **個性**：九型十二宮的本命盤 9×9×9＝729 種，年、月互換是同一張盤 → 405 種不同的人（`Voice.all`）。
+  九型的三個中心（情感 2/3/4、思考 5/6/7、本能 8/9/1）決定開口的方式；本命第一宮的好／正／壞決定能量（正＝能量強，語氣加重）；
+  日的數字決定帶出成語的口頭禪；年、月的數字決定偏好哪一句成語。同一句「我好難過」，405 個人有不同的回應。
+- **寫作**：先寫平淡的第一稿 → 自己檢查（字數至少 9 倍、環境、感受、觀點、比喻、成語／諺語、層次、高級詞、情緒衝突、重複）→
+  一次改兩個問題 → 再檢查，直到沒有問題。回覆裡附上改了幾次、改了什麼。
+- **詞性**：不認得的詞先看最確定的線索（的、地、著、了、很），再用鄰居一步一步推，最後才看字的意思。
+- 引擎的順序：安全 → 規則 → 詞性／仿寫 → 寫作 → 名人命盤 → 成語 → 反義詞 → 近義詞 → 問世界上的事 → 安慰 → ……
+  回答最後再由 `Affect.color` 依心情加上第一句（有生日的話用這個人的個性和成語）。
