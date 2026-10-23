@@ -18,7 +18,9 @@ final class TranslateTrainTests: XCTestCase {
         guard r.target.rawValue == x.target else { return "語言應該是 \(x.target ?? "")，聽成 \(r.target.rawValue)" }
         let a = Self.norm(r.text), b = Self.norm(text)
         // 「請問」「那個」可以是內容也可以是客氣話
-        if a == b || a == "請問" + (b ?? "") || a == "那個" + (b ?? "") { return nil }
+        // 「請問」「那個」可以是客氣話、口頭禪，也可以是內容（「那個三明治」），兩種都對
+        if a == b || a == "請問" + (b ?? "") || a == "那個" + (b ?? "") || "那個" + (a ?? "") == b || "請問" + (a ?? "") == b
+            || "那" + (b ?? "") == a { return nil }   // 「那時鐘」可以是「那（個）時鐘」
         return "內容抓成「\(r.text)」，應該是「\(text)」"
     }
 

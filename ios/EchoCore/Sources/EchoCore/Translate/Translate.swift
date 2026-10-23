@@ -126,8 +126,8 @@ public enum Translate {
         if let r = q.range(of: lead, options: .regularExpression), q[r.upperBound...].count >= 2 { q = String(q[r.upperBound...]) }
         // 同一個意思的不同說法，先換成認得的說法：「中譯英」＝「中翻英」、「X 的英語說法」＝「X 的英語」、
         // 「，請翻西」＝「，翻西」、「這個用國語怎麼表達」＝「用國語怎麼表達」、「… please」
-        for (p, r) in [(#"([中英西義意日韓法德])譯([中英西義意日韓法德])"#, "$1翻$2"), (#"[，,]\s*請翻"#, "，翻"), (#"這個用"#, "用"),
-                       (#"的(\S{2,5}?)說法$"#, "的$1"), (#"(?i)(?<!English|Spanish|Italian|Chinese|Mandarin|inglés|español|chino|italiano|cinese|inglese|spagnolo)\s+please[.!]?$"#, ""), (#"(?i)^please\s+(?=(translate|how|what|say|tell)\b)"#, "")] {
+        for (p, r) in [(#"([中英西義意日韓法德])譯([中英西義意日韓法德])"#, "$1翻$2"), (#"[，,]\s*請翻"#, "，翻"), (#"(?<=[^，,、：:\\s])這個用"#, "用"),
+                       (#"的(\S{2,5}?)說法$"#, "的$1"), (#"(?i)^([^：:]*?),?\s+please[.!]?$"#, "$1"), (#"(?i)^please\s+(?=(translate|how|what|say|tell)\b)"#, "")] {
             q = q.replacingOccurrences(of: p, with: r, options: .regularExpression)
         }
         // 結尾的「～」「~」只是口氣
@@ -166,7 +166,6 @@ public enum Translate {
             ("(?i)^how\\s+(?:do\\s+(?:you|i)\\s+|to\\s+)say\\s+(.+?)\\s+in\\s+" + L + "[.?!]*$", 1, 2),
             ("(?i)^what\\s+is\\s+(.+?)\\s+in\\s+" + L + "[.?!]*$", 1, 2),
             ("(?i)^what'?s\\s+(.+?)\\s+in\\s+" + L + "[.?!]*$", 1, 2),
-            ("(?i)^(.+?)\\s+in\\s+" + L + "\\s*,?\\s*please[.?!]*$", 1, 2),
             ("(?i)^(?:what'?s|what\\s+is)\\s+the\\s+" + L + "\\s+(?:word\\s+)?for\\s+(.+?)[.?!]*$", 2, 1),
             ("(?i)^(?:the\\s+)?" + L + "\\s+(?:word\\s+)?for\\s+(.+?)[.?!]*$", 2, 1),
             ("(?i)^how\\s+(?:do\\s+you|do\\s+i|to)\\s+translate\\s+(.+?)\\s+(?:into|to|in)\\s+" + L + "[.?!]*$", 1, 2),
@@ -180,6 +179,8 @@ public enum Translate {
             ("(?i)^traduc(?:e|ir)\\s+(.+?)\\s+(?:al|a|en)\\s+" + L + "[.!?]*$", 1, 2),
             ("(?i)^come\\s+si\\s+dice\\s+(.+?)\\s+in\\s+" + L + "[?.!]*$", 1, 2),
             ("(?i)^traduci\\s+(.+?)\\s+in\\s+" + L + "[.!?]*$", 1, 2),
+            // 最寬的說法放最後：「X in Spanish (please)」——前面有「come si dice」「traduci」「how do you say」的要先比對
+            ("(?i)^(.+?)\\s+in\\s+" + L + "(?:\\s*,?\\s*please)?[.?!]*$", 1, 2),
         ]
         for (p, ti, li) in patterns {
             guard let m = match(q, p) else { continue }
@@ -290,6 +291,8 @@ public enum Translate {
                       "(?:要|該)?(?:怎麼|怎樣|咋)(?:說|講|寫)(?:呢)?$"] {
                 content = content.replacingOccurrences(of: p, with: "", options: .regularExpression)
             }
+            // 「英文的話是的怎麼說」「義大利語的話說好怎麼說」：語言那一段吃掉了內容的第一個字（是、說）——只剩一個字時補回去
+            if clean(content).count == 1, let last = c.part.last, "說講是寫".contains(last) { content = String(last) + content }
         } else {
             // 語言前後都有實際的內容（「我在翻英文書」）：是一般的句子，不是要翻譯
             let rest = suffix.replacingOccurrences(of: "^(?:[，,、：:?？!！。～~\\s]|呢|啊|呀|嗎|吧|才自然|比較自然|比較道地|才道地|才對|比較好|最自然|最道地|的話是什麼|的話|是什麼)+$", with: "", options: .regularExpression)
@@ -306,6 +309,11 @@ public enum Translate {
             for _ in 0..<3 { content = content.replacingOccurrences(of: lead, with: "", options: .regularExpression) }
             content = content.replacingOccurrences(of: "(?:要怎麼|該怎麼|怎麼|如何|這句話|這句|這個字|這個詞|[，,、：:?？\\s])+$", with: "", options: .regularExpression)
             // 拿掉包裝後什麼都不剩：那些字本身就是要翻的（「請問」「那個」「翻譯」）
+            // 「我想知道怎麼用義大利語怎麼說」：拿掉客套話之後剩下的「怎麼」本身就是要翻的
+            var kept = original
+            for _ in 0..<3 { kept = kept.replacingOccurrences(of: lead, with: "", options: .regularExpression) }
+            kept = kept.replacingOccurrences(of: "[，,、：:?？\\s]+$", with: "", options: .regularExpression)
+            if clean(content).isEmpty, !clean(kept).isEmpty, kept != original { content = kept }
             if clean(content).isEmpty {
                 content = original.replacingOccurrences(of: "(?:這句話|這句|這個字|這個詞|[，,、：:?？\\s])+$", with: "", options: .regularExpression)
                 content = content.replacingOccurrences(of: "^(?:請問(?=.)|把(?=.))", with: "", options: .regularExpression)
