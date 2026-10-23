@@ -272,7 +272,7 @@ enum IdiomData {
 風和日麗|天氣晴朗溫和|fine and sunny|un día espléndido|una giornata splendida|開心
 狂風暴雨|又大又急的風雨|a raging storm|una tormenta furiosa|una tempesta furiosa|擔心
 傾盆大雨|雨下得非常大|raining cats and dogs|llover a cántaros|piovere a catinelle|驚訝,幽默
-天寒地凍|天氣非常寒冷|freezing cold|un frío que pela|un freddo cane|擔心
+天寒地凍|天氣非常寒冷|bitter freezing weather|un frío que pela|un freddo cane|擔心
 汗流浹背|流了很多汗|drenched in sweat|sudar la gota gorda|sudare sette camicie|幽默
 力不從心|心裡想做，能力卻不夠|the spirit is willing but the flesh is weak|querer y no poder|lo spirito è forte ma la carne è debole|難過,安慰
 得心應手|做起來非常順手|be in one's element|como pez en el agua|come un pesce nell'acqua|稱讚
@@ -344,7 +344,7 @@ enum IdiomData {
 千載難逢|很難遇到的好機會|once-in-a-lifetime|una oportunidad única|un'occasione unica|開心
 機不可失|機會不可以錯過|seize the day|aprovechar la ocasión|cogliere l'attimo|鼓勵
 坐失良機|白白錯過好機會|miss the boat|perder el tren|perdere il treno|難過,提醒
-司空見慣|常常見到，不覺得奇怪|old hat|lo más normal del mundo|roba di tutti i giorni|道理
+司空見慣|常常見到，不覺得奇怪|nothing out of the ordinary|lo más normal del mundo|roba di tutti i giorni|道理
 層出不窮|接連出現，沒有窮盡|keep cropping up|surgir sin parar|spuntare di continuo|驚訝
 寥寥無幾|非常少|few and far between|contados con los dedos|pochissimi|道理
 不計其數|多得數不清|countless|incontables|innumerevoli|驚訝

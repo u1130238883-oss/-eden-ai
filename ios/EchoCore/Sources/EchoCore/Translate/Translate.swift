@@ -287,10 +287,13 @@ public enum Translate {
         var content: String
         if suffixReal && prefix.range(of: "^" + wrap + "*$", options: .regularExpression) != nil {
             content = suffix
-            for p in ["^[，,、：:\\s]+", "^(?:跟|對|和|向)(?:他|她|他們|她們|你|對方|朋友|老外|外國人|老闆|客人|別人|大家)(?:說|講)",
-                      "(?:要|該)?(?:怎麼|怎樣|咋)(?:說|講|寫)(?:呢)?$"] {
+            for p in ["^[，,、：:\\s]+", "^(?:跟|對|和|向)(?:他|她|他們|她們|你|對方|朋友|老外|外國人|老闆|客人|別人|大家)(?:說|講)"] {
                 content = content.replacingOccurrences(of: p, with: "", options: .regularExpression)
             }
+            // 「需要怎麼說」：「要」可能是內容的一部分——拿掉「要怎麼說」只剩一個字時，只拿掉「怎麼說」
+            let withYao = content.replacingOccurrences(of: "(?:要|該)?(?:怎麼|怎樣|咋)(?:說|講|寫)(?:呢)?$", with: "", options: .regularExpression)
+            content = clean(withYao).count >= 2 || !content.hasSuffix("說") && !content.hasSuffix("講") && !content.hasSuffix("寫") && !content.hasSuffix("呢")
+                ? withYao : content.replacingOccurrences(of: "(?:怎麼|怎樣|咋)(?:說|講|寫)(?:呢)?$", with: "", options: .regularExpression)
             // 「英文的話是的怎麼說」「義大利語的話說好怎麼說」：語言那一段吃掉了內容的第一個字（是、說）——只剩一個字時補回去
             if clean(content).count == 1, let last = c.part.last, "說講是寫".contains(last) { content = String(last) + content }
         } else {
@@ -314,6 +317,8 @@ public enum Translate {
             for _ in 0..<3 { kept = kept.replacingOccurrences(of: lead, with: "", options: .regularExpression) }
             kept = kept.replacingOccurrences(of: "(?:這句話|這句|這個字|這個詞|[，,、：:?？\\s])+$", with: "", options: .regularExpression)
             if clean(content).isEmpty, !clean(kept).isEmpty, kept != original { content = kept }
+            // 「迴轉義大利語咋說」「雇用意大利語怎樣說」：語言那一段吃掉了內容的最後一個字（轉、用）——只剩一個字時補回去
+            if clean(content).count == 1, let first = c.part.first, "翻譯換轉用以拿".contains(first) { content += String(first) }
             if clean(content).isEmpty {
                 content = original.replacingOccurrences(of: "(?:這句話|這句|這個字|這個詞|[，,、：:?？\\s])+$", with: "", options: .regularExpression)
                 content = content.replacingOccurrences(of: "^(?:請問(?=.)|把(?=.))", with: "", options: .regularExpression)
