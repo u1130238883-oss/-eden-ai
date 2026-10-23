@@ -342,6 +342,8 @@ public enum Translate {
 
     /// 有把握才說是哪種語言（中文、日文這些看字就知道；拉丁字母要有明顯的特徵字或重音），沒把握回 nil
     static func confidentLang(_ text: String) -> Code? {
+        // 成語的外文說法：知道是哪一種語言（「la goccia scava la pietra」是義大利文，不是西班牙文）；兩種語言都有的字不確定
+        if !Idioms.foreignHits(text).isEmpty { return Idioms.foreignLang(text).flatMap { Code(rawValue: $0) } }
         let d = detect(text)
         if ![Code.en, .es, .it].contains(d) { return d }
         let lower = text.lowercased()

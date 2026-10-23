@@ -73,22 +73,35 @@ public enum Idioms {
             .filter { $0.isLetter || $0.isNumber || $0 == "'" || $0 == " " }
             .split(separator: " ").joined(separator: " ")
     }
-    static let foreignIndex: [String: (Entry, String)] = {
-        var d: [String: (Entry, String)] = [:]
+    /// 外文說法 → 成語（同一個字可能西班牙文、義大利文都有：erudito）
+    static let foreignIndex: [String: [(Entry, String)]] = {
+        var d: [String: [(Entry, String)]] = [:]
         for e in all {
-            for (l, fs) in [("en", e.en), ("es", e.es), ("it", e.it)] { for f in fs where d[key(f)] == nil { d[key(f)] = (e, l) } }
+            for (l, fs) in [("en", e.en), ("es", e.es), ("it", e.it)] { for f in fs { d[key(f), default: []].append((e, l)) } }
         }
         return d
     }()
-    public static func fromForeign(_ s: String) -> (entry: Entry, lang: String)? {
+    static func foreignHits(_ s: String) -> [(Entry, String)] {
         var k = key(s)
         // 「the Chinese idiom for X」「'X'」：拿掉引號、冠詞
-        if let e = foreignIndex[k] { return (e.0, e.1) }
+        if let e = foreignIndex[k] { return e }
         for art in ["to ", "the ", "a "] where k.hasPrefix(art) {
             k = String(k.dropFirst(art.count))
-            if let e = foreignIndex[k] { return (e.0, e.1) }
+            if let e = foreignIndex[k] { return e }
         }
-        return nil
+        return []
+    }
+    /// not：要翻成的語言（原文是哪一種語言時，優先挑不是目標語言的那一個）
+    public static func fromForeign(_ s: String, not: String? = nil) -> (entry: Entry, lang: String)? {
+        let hits = foreignHits(s)
+        guard let first = hits.first else { return nil }
+        let h = hits.first { $0.1 != not } ?? first
+        return (h.0, h.1)
+    }
+    /// 這句外文是成語的哪一種語言說法（兩種語言都有就不確定）
+    public static func foreignLang(_ s: String) -> String? {
+        let ls = Set(foreignHits(s).map(\.1))
+        return ls.count == 1 ? ls.first : nil
     }
 
     public static func understand(_ raw: String) -> Understood? {
@@ -157,9 +170,15 @@ public enum Idioms {
         let cs = Array(t)
         for i in cs.indices where i > 0 && "和跟與同".contains(cs[i]) {
             let a = Synonyms.strip(String(cs[..<i]))
-            guard byName[a] != nil, let m = Understanding.match(String(cs[(i + 1)...]), tail) else { continue }
-            let b = Synonyms.strip(m[1])
-            if byName[b] != nil, a != b { return (a, b) }
+            guard byName[a] != nil else { continue }
+            let rest = Array(cs[(i + 1)...])
+            // 第二個成語的長度每種都試（「實事求是」的「是」不是「是反義詞」的「是」）
+            for n in stride(from: min(8, rest.count), through: 2, by: -1) {
+                let b = Synonyms.strip(String(rest[..<n]))
+                guard byName[b] != nil, a != b else { continue }
+                let after = "＿" + String(rest[n...])
+                if Understanding.match(after, "^＿" + String(tail.dropFirst("^(.+?)".count))) != nil { return (a, b) }
+            }
         }
         return nil
     }
@@ -255,11 +274,14 @@ public enum Idioms {
             }
             return Translate.Result(text: out[0], alternatives: Array(out.dropFirst().prefix(2)), source: .zh, via: "成語對照：\(e.meaning)")
         }
-        guard let f = fromForeign(text) else { return nil }
+        guard let f = fromForeign(text, not: tl) else { return nil }
         let src: Translate.Code = Translate.Code(rawValue: f.lang) ?? .en
         switch tl {
         case "zh": return Translate.Result(text: f.entry.idiom, alternatives: [], source: src, via: "成語對照：\(f.entry.meaning)")
-        case f.lang: return nil
+        case f.lang:
+            // 兩種語言都是同一個字（erudito）：翻過去還是它
+            let out = tl == "es" ? f.entry.es : tl == "it" ? f.entry.it : f.entry.en
+            return Translate.Result(text: out[0], alternatives: Array(out.dropFirst().prefix(2)), source: src, via: "成語「\(f.entry.idiom)」")
         case "en": return Translate.Result(text: f.entry.en[0], alternatives: Array(f.entry.en.dropFirst().prefix(2)), source: src, via: "成語「\(f.entry.idiom)」")
         case "es": return Translate.Result(text: f.entry.es[0], alternatives: Array(f.entry.es.dropFirst().prefix(2)), source: src, via: "成語「\(f.entry.idiom)」")
         default: return Translate.Result(text: f.entry.it[0], alternatives: Array(f.entry.it.dropFirst().prefix(2)), source: src, via: "成語「\(f.entry.idiom)」")
