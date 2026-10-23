@@ -19,6 +19,8 @@ final class SynonymTests: XCTestCase {
             guard let a = ans else { return "詞庫有這個詞，卻沒回答" }
             return x.expect.contains(where: { a.contains($0) }) ? nil : "回答裡沒有近義詞：\(a.prefix(40))"
         case "pair":
+            // 意思不相近的兩個詞問「有什麼不同」：是在比較兩樣東西，交給上網（不是近義詞題）
+            if Self.comparesThings(x) { return Synonyms.parse(x.q) == nil ? nil : "在比較兩樣東西，卻當成近義詞題" }
             guard case let .pair(a, b)? = Synonyms.parse(x.q) else { return "沒認出是在比較兩個詞" }
             guard a == x.a, b == x.b else { return "詞抓成「\(a)」「\(b)」" }
             guard let ans = Synonyms.answer(.pair(a, b)) else { return "沒有回答" }
@@ -30,6 +32,10 @@ final class SynonymTests: XCTestCase {
             let n = UnderstandingCorpusTests.norm
             return n(f.subject).contains(n(x.a)) || f.searches.contains(where: { n($0).contains(n(x.a)) }) ? nil : "主題應該包含「\(x.a)」，理解成「\(f.subject)」"
         }
+    }
+
+    static func comparesThings(_ x: Q) -> Bool {
+        x.type == "pair" && x.expect == ["不一樣"] && Synonyms.comparesThings(Synonyms.plainForWords(x.q), x.a, x.b)
     }
 
     func run(_ name: String, path: String?, min: Double) throws {
@@ -72,7 +78,8 @@ final class SynonymTests: XCTestCase {
         for x in qs {
             let r = engine.reply(to: x.q, context: ctx)
             let web = r.webQuery != nil
-            if x.web != web || (!x.web && r.turn.source != .knowledge) { bad.append("「\(x.q)」→ web=\(web) \(r.turn.source.rawValue)：\(r.turn.text.prefix(30))") }
+            let wantWeb = x.web || Self.comparesThings(x)
+            if wantWeb != web || (!wantWeb && r.turn.source != .knowledge) { bad.append("「\(x.q)」→ web=\(web) \(r.turn.source.rawValue)：\(r.turn.text.prefix(30))") }
         }
         XCTAssertLessThanOrEqual(bad.count, qs.count / 100, bad.prefix(15).joined(separator: "\n"))
     }

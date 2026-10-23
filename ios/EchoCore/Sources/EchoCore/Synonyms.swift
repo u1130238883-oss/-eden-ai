@@ -88,6 +88,11 @@ public enum Synonyms {
         return t
     }
 
+    static func comparesThings(_ t: String, _ a: String, _ b: String) -> Bool {
+        !same(a, b) && t.range(of: "不同|差別|差異|區別|比較", options: .regularExpression) != nil
+            && t.range(of: "意思|同義|近義|一樣|相同|意義|詞", options: .regularExpression) == nil
+    }
+
     public static func parse(_ raw: String) -> Ask? {
         let t = plainForWords(raw)
         // 「X 可以換成什麼」：在問近義詞
@@ -95,7 +100,11 @@ public enum Synonyms {
         // 先看是不是在比較兩個詞（「理想和夢想是同義詞嗎」不是在問「理想和夢想是」的同義詞）；
         // 但兩邊都要是詞庫裡的詞——「碳中和有什麼近義詞」切成「碳中」「有什麼」不是兩個詞，是在問「碳中和」
         let cands = pairCandidates(t)
-        if let p = cands.first(where: { known($0.0) && known($0.1) }) { return .pair(p.0, p.1) }
+        if let p = cands.first(where: { known($0.0) && known($0.1) }) {
+            // 「跑步跟游泳有什麼不同」：兩個意思不相近的詞、問「不同、差別」又沒提到意思——是在比較兩樣東西，不是問近義詞
+            if comparesThings(t, p.0, p.1) { return nil }
+            return .pair(p.0, p.1)
+        }
         for p in nearPatterns {
             if let m = Understanding.match(t, p) {
                 var w = strip(m[1])
