@@ -156,6 +156,9 @@ public enum Synthesize {
         return String(s.dropFirst(c.count + 1)).trimmingCharacters(in: .whitespaces)
     }
 
+    /// 句子裡有沒有「做法」的字眼（可以、建議、先、避免……）
+    public static func actionable(_ s: String) -> Bool { actionWords.contains { s.contains($0) } }
+
     static let actionWords = ["可以", "建議", "試著", "試試", "先", "多", "避免", "不要", "別", "記得", "保持", "給自己", "找", "每天", "盡量", "學會",
                               "主動", "練習", "注意", "應該", "要", "適度", "減少", "增加", "培養", "接受", "放下", "停止", "設定", "安排", "選擇"]
     static let reasonWords = ["因為", "由於", "原因", "所以", "導致", "造成", "使得", "是因", "來自", "引起", "刺激", "產生", "散射", "反射", "作用"]
@@ -174,6 +177,8 @@ public enum Synthesize {
         case .advice:
             let act = actionWords.filter { u.text.contains($0) }.count
             s += Double(min(act, 2)) + (u.item ? 1.5 : 0)
+            // 名詞解釋（「咽喉痛是指…」）不是做法
+            if defineWords.contains(where: { u.text.contains($0) }) || u.text.contains("是指") { s -= 3 }
         case .reason:
             let why = reasonWords.contains { u.text.contains($0) }
             s += why ? 3 : -2

@@ -635,6 +635,10 @@ public enum WebAgent {
             if lead != "", let syn = Synthesize.compose(question: question, subject: fr.subject, want: fr.want, pages: texts, lead: lead) {
                 answer = syn
                 synthesized = true
+            } else if case .steps = fr.want, !numberedSteps, !Synthesize.actionable(answer) || Synthesize.isMeta(answer) {
+                // 問做法，讀到的卻不是做法（「早起偏好者被比喻為百靈鳥」）：老實說，不拿不相關的句子充數
+                answer = "我讀了幾個網站，沒找到清楚、可以照著做的方法；你可以講得更具體一點（例如什麼情況、想達到什麼），我再查一次。"
+                solved = (answer, false)
             }
         }
         var used: [String] = [answer]
