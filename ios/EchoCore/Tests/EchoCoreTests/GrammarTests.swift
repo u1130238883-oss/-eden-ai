@@ -16,7 +16,7 @@ final class GrammarTests: XCTestCase {
         let got = Grammar.content(t).map { [$0.text, $0.pos!.rawValue] }
         if x.kind == "tag" {
             if got != x.tokens {
-                let i = zip(got, x.tokens).firstIndex { $0 != $1 } ?? min(got.count, x.tokens.count)
+                let i = (0..<min(got.count, x.tokens.count)).first { got[$0] != x.tokens[$0] } ?? min(got.count, x.tokens.count)
                 let g = i < got.count ? got[i].joined(separator: "/") : "（沒有）", w = i < x.tokens.count ? x.tokens[i].joined(separator: "/") : "（沒有）"
                 return "詞性標錯：\(g)，應該是 \(w)"
             }

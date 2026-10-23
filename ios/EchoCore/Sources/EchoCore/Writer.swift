@@ -320,7 +320,8 @@ public enum Writer {
                 default:
                     let i = part.rawValue - Part.extra1.rawValue
                     let ex = X.extra[L] ?? []
-                    s = ex.isEmpty ? nil : ex[(seed + i) % ex.count]
+                    let filled = Set(out)
+                    s = (0..<ex.count).lazy.map { ex[(seed + i + $0) % ex.count] }.first { !filled.contains(fill($0, a, n: n)) }
                 }
                 if let s { out.append(fill(s, a, n: n)) }
             }
@@ -357,8 +358,10 @@ public enum Writer {
                 case .end: s = pick(c.end, seed, 8)
                 default:
                     let i = part.rawValue - Part.extra1.rawValue
+                    // 多寫的句子：從還沒用過的句子裡挑（重複的句子會被刪掉，等於沒多寫）
                     let ex = c.inner + c.simile + c.body + c.end + c.feel
-                    s = ex[(seed + i * 3 + 1) % ex.count]
+                    let filled = Set(out)
+                    s = (0..<ex.count).lazy.map { ex[(seed + i * 3 + 1 + $0) % ex.count] }.first { !filled.contains(fill($0, a, n: n)) }
                 }
                 if let s { out.append(fill(s, a, n: n)) }
             }

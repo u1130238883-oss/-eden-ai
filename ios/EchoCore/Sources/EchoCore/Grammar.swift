@@ -32,18 +32,34 @@ public enum Grammar {
 
     // MARK: - 斷詞
 
-    /// 最長的認得的詞優先；認不得的字連在一起當一個詞（太長的兩個字一組）
+    /// 字本身的意思（不認得的詞，上下文決定不了時才看）：藍、瑩、嫩像形容詞；滾、爬、唱像動詞；極、相像程度副詞
+    static let adjChars = Set("藍紅綠白黃金瑩嫩盛麗亮暖冷美茂鮮晶柔靜清甜香淨豔碧翠嬌濃淡寬窄圓胖瘦")
+    static let verbChars = Set("行滾爬呼唱睡坐舉抬握罩綴芽開跑跳飛游走吟追轉步笑叫讀畫拿抱看撿摸提捧擦照閃飄流吹潤落吻長放曳綻發盤旋")
+    static let degreeChars = Set("極相頗甚挺超太更最格十")
+    static let nounEnd = Set("花掌杏鵝豚馬師居哥姐灘園谷套杯籠光星鼠鷹樹草魚")
+
+    /// 最長的認得的詞優先；認不得的字連在一起，再切成像詞的長度（名詞常是三個字：仙人掌；動詞、形容詞常是兩個字）
     public static func segment(_ s: String) -> [Token] {
         let cs = Array(s)
         var out: [Token] = [], unknown = "", i = 0
         func flush() {
             guard !unknown.isEmpty else { return }
             let u = Array(unknown)
-            if u.count >= 4 {
-                // 「偶爾徐徐」「極其晶瑩」：兩個不認得的詞連在一起，兩個字一組
+            var sizes: [Int] = []
+            switch u.count {
+            case 0...3: sizes = [u.count]
+            case 5 where !nounEnd.contains(u[2]): sizes = verbChars.contains(u[4]) || adjChars.contains(u[4]) ? [3, 2] : [2, 3]
+            default:
+                // 「牽牛花相當嬌嫩」：開頭三個字、第三個字像名詞的結尾（花、掌、鵝…）→ 先切三個字
                 var j = 0
-                while j < u.count { let n = (u.count - j == 3) ? 3 : 2; out.append(Token(text: String(u[j..<min(u.count, j + n)]), pos: nil, cat: nil)); j += n }
-            } else { out.append(Token(text: unknown, pos: nil, cat: nil)) }
+                while j < u.count {
+                    let left = u.count - j
+                    let k = left == 3 || (left > 4 && nounEnd.contains(u[j + 2]) && !nounEnd.contains(u[j + 1])) ? 3 : min(2, left)
+                    sizes.append(k); j += k
+                }
+            }
+            var j = 0
+            for k in sizes { out.append(Token(text: String(u[j..<(j + k)]), pos: nil, cat: nil)); j += k }
             unknown = ""
         }
         while i < cs.count {
@@ -66,31 +82,55 @@ public enum Grammar {
     // MARK: - 標詞性
 
     static let degree: Set<String> = Set(byCat["advd"] ?? [])
+    static let boundary: Set<String> = ["。", "，", "！", "？", "；", "："]
 
+    static func isDegree(_ t: Token) -> Bool { degree.contains(t.text) || (t.cat == nil && t.text.contains { degreeChars.contains($0) }) }
+
+    /// 像人一樣：先用最確定的線索（的、地、著、了、很），再用已經判斷出來的鄰居一步一步推，最後才看字本身的意思
     public static func tag(_ s: String) -> [Token] {
         var t = segment(s)
-        // 連在一起的不認得的詞（兩個字一組切開的）：句首的是主角（名詞），其他的是修飾後面的（副詞）
-        for i in t.indices where t[i].cat == nil && t[i].pos == nil && i + 1 < t.count && t[i + 1].cat == nil && t[i + 1].pos == nil {
-            let pt = i > 0 ? t[i - 1].text : "。"
-            t[i].pos = ["。", "，", "！", "？", "和"].contains(pt) ? .noun : .adv
+        let unknown = t.indices.filter { t[$0].cat == nil && t[$0].pos == nil }
+        func txt(_ i: Int) -> String { i >= 0 && i < t.count ? t[i].text : "。" }
+        func pos(_ i: Int) -> POS? { i >= 0 && i < t.count ? t[i].pos : nil }
+        // ① 最確定的線索（順序有意義：越確定的越先看）
+        for i in unknown {
+            let pt = txt(i - 1), nt = txt(i + 1)
+            let nextIsAdj = pos(i + 1) == .adj || (i + 1 < t.count && t[i + 1].cat == nil && txt(i + 2) == "的")
+            if nt == "地" { t[i].pos = .adv }                                                  // 「徐徐地」
+            else if nt == "的" { t[i].pos = .adj }                                             // 「嬌嫩的手套」
+            else if pt == "的" { t[i].pos = .noun }                                            // 「的銀杏」
+            else if nextIsAdj { t[i].pos = .adv }                                              // 「相當柔軟」「極其晶瑩的」
+            else if i > 0, degree.contains(t[i - 1].text) { t[i].pos = .adj }                 // 「很蔚藍」
+            else if ["著", "了", "起來"].contains(nt) || pt == "地" { t[i].pos = .verb }      // 「抬著」「盛開了」「地翻滾」
+            else if ["著", "把", "在", "和"].contains(pt) { t[i].pos = .noun }                 // 「著手套」「把陶杯」「在沙灘」
+            else if ["裡", "上", "和", "覺得", "把"].contains(nt) { t[i].pos = .noun }        // 「沙灘上」「企鵝和」
+            else if ["裡", "上"].contains(pt) { t[i].pos = .verb }                             // 「沙灘上靜坐」
+            else if boundary.contains(pt) && nt == "，" { t[i].pos = .adv }                    // 「頓時，」
+            else if boundary.contains(pt) { t[i].pos = .noun }                                 // 句首是主角
         }
-        for i in t.indices where t[i].cat == nil && t[i].pos == nil {
-            let prev = i > 0 ? t[i - 1] : nil, next = i + 1 < t.count ? t[i + 1] : nil
-            let pt = prev?.text ?? "", nt = next?.text ?? ""
-            let p: POS
-            if nt == "地" { p = .adv }
-            else if let pv = prev, pv.pos == .adv, degree.contains(pv.text) { p = .adj }
-            else if nt == "的" { p = .adj }
-            else if ["裡", "上"].contains(pt) { p = .verb }
-            else if ["著", "了", "起來"].contains(nt) || pt == "地" { p = .verb }
-            else if ["裡", "上"].contains(nt) || ["的", "著", "把", "和", "在"].contains(pt) { p = .noun }
-            else if ["和", "在", "覺得", "把"].contains(nt) { p = .noun }
-            else if nt == "，", prev == nil || ["。", "，"].contains(pt) { p = .adv }
-            else if let nx = next, nx.pos == .adv || nx.pos == .verb { p = .noun }
-            else if let pv = prev, pv.pos == .adv, ["。", "，", ""].contains(nt) { p = .verb }
-            else if let pv = prev, pv.pos == .noun { p = .verb }
-            else { p = .noun }
-            t[i].pos = p
+        // ② 用判斷出來的鄰居推（重複幾次，直到推不動）
+        for _ in 0..<4 {
+            for i in unknown where t[i].pos == nil {
+                let pp = pos(i - 1), np = pos(i + 1), nt = txt(i + 1)
+                // 「斑馬偶爾滑行。」：主角後面兩個不認得的詞、接著句號——前面的是副詞，後面的是動詞
+                if pp == .noun, np == nil, i + 1 < t.count, t[i + 1].cat == nil, boundary.contains(txt(i + 2)) { t[i].pos = .adv; continue }
+                if pp == .noun || pp == .adv {
+                    if np == .adv || np == .verb || nt == "在" { t[i].pos = .adv }               // 主角後面、動詞前面：副詞（「海豚依然徐徐地」）
+                    else if boundary.contains(nt) {
+                        if pp == .adv, i > 0, isDegree(t[i - 1]) { t[i].pos = .adj }          // 「極其晶瑩。」
+                        else if pp == .adv, t[i].text.contains(where: { adjChars.contains($0) }) && !t[i].text.contains(where: { verbChars.contains($0) }) { t[i].pos = .adj }
+                        else { t[i].pos = .verb }                                              // 「海豚又滑行。」
+                    }
+                } else if np == .adj, t[i].text.contains(where: { degreeChars.contains($0) }) { t[i].pos = .adv }
+            }
+        }
+        // ③ 還是推不出來：看字的意思，再不行就當名詞
+        for i in unknown where t[i].pos == nil {
+            let w = t[i].text
+            if w.contains(where: { degreeChars.contains($0) }) { t[i].pos = .adv }
+            else if w.contains(where: { verbChars.contains($0) }) { t[i].pos = .verb }
+            else if w.contains(where: { adjChars.contains($0) }) { t[i].pos = .adj }
+            else { t[i].pos = .noun }
         }
         return t
     }
@@ -194,7 +234,7 @@ public enum Grammar {
             for w in words where w.pos == p && !seen.contains(w.text) { seen.append(w.text) }
             return seen.isEmpty ? "（沒有）" : seen.joined(separator: "、")
         }
-        let marked = t.map { $0.pos.map { p in "\(tkText($0))(\(p.short))" } ?? $0.text }.joined()
+        let marked = t.map { tk in tk.pos.map { p in "\(tk.text)(\(p.short))" } ?? tk.text }.joined()
         if kind == .tag {
             return "🔍 詞性分析：\n名詞：\(list(.noun))\n動詞：\(list(.verb))\n形容詞：\(list(.adj))\n副詞：\(list(.adv))\n\n逐詞標注：\(marked)"
         }
@@ -202,5 +242,4 @@ public enum Grammar {
         return "✍️ 仿寫：\n\(new)\n\n📐 原文的結構：\(skeleton(t))\n（照同樣的詞性順序：名詞換名詞、動詞換動詞、形容詞換形容詞、副詞換副詞；的、地、著、了這些功能詞不變）\n\n🔍 原文的詞性：\(marked)"
     }
 
-    static func tkText(_ t: Token) -> String { t.text }
 }
