@@ -291,6 +291,10 @@ public final class EchoEngine {
             return done(Celebrities.reading(p), .reader)
         }
 
+        // 2.09) 生活上的「怎麼做」（怎麼存錢、面試要注意什麼、被主管罵了怎麼辦）：上網看好幾個網站，整理出共同的做法
+        if L == .zh, EchoEngine.practical(text) {
+            return done(Loc.s("webAsk", .zh), .tool, web: EchoEngine.searchQuery(text))
+        }
         // 2.1) 心情：用你的生日看此刻的大運、流年、流月、日夜宮，說出處境和情緒，溫柔地安慰
         if L == .zh, let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now,
                                 again: history.suffix(4).contains { $0.role == .echo && $0.text.contains("我看了你此刻走到的地方") }) {
@@ -600,6 +604,20 @@ public final class EchoEngine {
     static let selfMarkers = ["我", "運", "命", "宮", "八字", "紫微", "卦", "大限", "流年", "流月", "流日", "九型", "星盤", "合婚", "桃花", "時辰", "生肖", "你"]
     static func strongInfo(_ raw: String) -> Bool {
         strongMarkers.contains { raw.contains($0) } && !selfMarkers.contains { raw.contains($0) }
+    }
+
+    /// 生活上的「怎麼做」：「怎麼存錢」「面試要注意什麼」「被主管罵了怎麼辦」——要的是實際做法，上網看好幾個網站再整理；
+    /// 問命（運勢、流年、什麼時候、會不會）、問 NineSun 自己、翻譯、單純說心情的不算
+    static func practical(_ raw: String) -> Bool {
+        let how = ["怎麼", "如何", "怎樣", "注意什麼", "注意哪些", "注意事項", "方法", "技巧", "秘訣", "訣竅", "該怎麼做", "要怎麼做"]
+        guard how.contains(where: { raw.contains($0) }) else { return false }
+        let not = ["怎麼樣", "怎麼了", "怎麼會", "怎麼回事", "怎麼說", "怎麼講", "怎麼念", "怎麼唸", "怎麼稱呼", "怎麼用這", "怎麼玩這",
+                   "運", "命", "宮", "流年", "大運", "流月", "八字", "紫微", "卦", "塔羅", "占卜", "算", "九型", "星座", "生肖", "風水",
+                   "今天", "今晚", "明天", "今年", "明年", "這個月", "下個月", "什麼時候", "會不會", "適合我", "我適合", "我的命", "想死", "不想活", "自殺"]
+        if not.contains(where: { raw.contains($0) }) { return false }
+        if addressedToMe(raw) || Translate.parse(raw) != nil { return false }
+        if case .steps = Understanding.frame(raw).want { return true }
+        return false
     }
 
     /// 疾病、法律問題（就算句子裡有「我」也要上網查），但「我今年會不會離婚」這種是在問命

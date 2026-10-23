@@ -133,6 +133,8 @@ public enum Think {
         // 參考書目（「（中文） 梁慶標：三島由紀夫《假面自白》主要內容簡介及賞析」）
         if t.hasPrefix("（") || t.contains("簡介及賞析") || t.contains("ISBN") || t.contains("出版社") && t.contains("：") { return true }
         if t.hasSuffix("？") || t.hasSuffix("?") || t.hasSuffix("...") || t.hasSuffix("…") { return true }
+        // 文章簡介、hashtag 標題（「這篇文章旨在幫助你瞭解…」「⭐ 免費算命#喜歡一個人#…」）：講的是文章，不是答案
+        if t.contains("#") || t.contains("＃") || ["這篇文章", "本篇文章", "旨在", "小編", "懶人包", "延伸閱讀", "推薦閱讀", "帶你了解", "帶你瞭解", "一起來看"].contains(where: { t.contains($0) }) { return true }
         if t.contains(" - ") || t.contains("｜") || t.contains(" | ") { return true }
         if t.range(of: #"^\d+(\.\d+)*[\.、]\s*"#, options: .regularExpression) != nil && t.count <= 40 { return true }
         let digits = t.filter(\.isNumber).count

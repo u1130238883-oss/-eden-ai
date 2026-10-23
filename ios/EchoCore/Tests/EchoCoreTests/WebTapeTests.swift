@@ -29,6 +29,7 @@ final class WebTapeTests: XCTestCase {
         defer { WebTape.shared = nil }
         var out = ""
         for q in try WebTapeTests.questions() {
+            FileHandle.standardError.write("TAPE> \(q)\n".data(using: .utf8)!)
             let r = engine.reply(to: q, context: ctx)
             out += "===== 問：\(q)\n"
             guard let wq = r.webQuery else {

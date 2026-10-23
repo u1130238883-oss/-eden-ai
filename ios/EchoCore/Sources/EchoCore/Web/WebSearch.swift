@@ -5,7 +5,7 @@ import FoundationNetworking
 
 /// 上網查資料（全部免費、不需要任何金鑰）。
 /// 同時問好幾個來源，誰有結果就用誰：
-///   Bing（RSS 與網頁）、DuckDuckGo（網頁與即時答案）、Yahoo、Google（基本版網頁）、維基百科、Google 新聞 RSS、Open-Meteo 天氣。
+///   Bing（RSS 與網頁）、DuckDuckGo（網頁、輕量版與即時答案）、Brave、Mojeek、百度、Yahoo、Google（基本版網頁）、維基百科、Google 新聞 RSS、Open-Meteo 天氣。
 /// 每一次都是即時上網查，不在手機裡存舊答案。
 public enum WebSearch {
     public struct Hit: Equatable, Sendable, Codable {
@@ -61,16 +61,17 @@ public enum WebSearch {
             async let wk = soon(4, [], { await wikiSearch(wikiTerm(q), L) })
             let a = await soon(4, [], { await bingRSS(q, L) })
             let b: [Hit] = a.count < 3 ? await soon(3, [], { await yahoo(q, L) }) : []
+            let c: [Hit] = a.count + b.count < 3 ? await soon(3, [], { await ddgLite(q, L) }) : []
             // Bing 跟 Yahoo 都給不出什麼：不放棄，再問 Google
             let g: [Hit] = a.count + b.count < 3 ? await soon(3, [], { await google(q, L) }) : []
             let w = await wk
             var seen = Set<String>()
             var hits: [Hit] = []
-            for i in 0..<max(a.count, b.count, w.count, g.count) {
-                for l in [a, w, b, g] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
+            for i in 0..<max(a.count, b.count, c.count, w.count, g.count) {
+                for l in [a, c, w, b, g] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
             }
             return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)),
-                          engines: ["bing": a.count, "yahoo": b.count, "google": g.count, "wikipedia": w.count])
+                          engines: ["bing": a.count, "yahoo": b.count, "ddg-lite": c.count, "google": g.count, "wikipedia": w.count])
         }
         async let ws = soon(4, [], { await wikiSearch(wikiTerm(q), L) })
         async let inst = soon(3, nil, { await ddgInstant(q, L) })
@@ -88,9 +89,13 @@ public enum WebSearch {
             g.addTask { ("duckduckgo", await ddgHTML(q, L)) }
             g.addTask { ("yahoo", await yahoo(q, L)) }
             g.addTask { ("google", await google(q, L)) }
+            g.addTask { ("ddg-lite", await ddgLite(q, L)) }
+            g.addTask { ("mojeek", await mojeek(q, L)) }
+            g.addTask { ("brave", await brave(q, L)) }
+            g.addTask { ("baidu", await baidu(q, L)) }
             g.addTask { try? await Task.sleep(nanoseconds: 2_500_000_000); return ("_soft", []) }
             g.addTask { try? await Task.sleep(nanoseconds: 4_000_000_000); return ("_late", []) }
-            var waiting = 6
+            var waiting = 10
             while waiting > 0, let r = await g.next() {
                 let (name, l) = r
                 if name.hasPrefix("_") {
@@ -105,7 +110,7 @@ public enum WebSearch {
             g.cancelAll()
         }
         got["wikipedia"] = await ws
-        let lists: [(String, [Hit])] = ["news", "bing", "bing-web", "duckduckgo", "yahoo", "google", "wikipedia"].map { ($0, got[$0] ?? []) }
+        let lists: [(String, [Hit])] = ["news", "bing", "bing-web", "duckduckgo", "ddg-lite", "brave", "baidu", "mojeek", "yahoo", "google", "wikipedia"].map { ($0, got[$0] ?? []) }
         var engines: [String: Int] = [:]
         var hits: [Hit] = []
         var seen = Set<String>()
@@ -261,6 +266,78 @@ public enum WebSearch {
             let link = ddgRealURL(href)
             if link.contains("duckduckgo.com/y.js") { continue }
             out.append(Hit(title: clean(title), snippet: clean(snip), url: link, engine: "DuckDuckGo"))
+            if out.count >= 8 { break }
+        }
+        return out
+    }
+
+    // MARK: - 更多來源（多看幾個網站才能比對；某些來源被擋時，其他的還能用）
+
+    /// 通用的結果解析：不靠網站的 CSS 名稱（常常改版），找「連到別的網站、文字夠長的連結」當標題，
+    /// 它後面一小段文字當摘要。engine：搜尋引擎自己的網域（自己的連結不算結果）
+    static func genericResults(_ html: String, engine: String, skip: [String] = [], name: String) -> [Hit] {
+        guard let re = try? NSRegularExpression(pattern: #"<a\b[^>]*href="(https?://[^"]+)"[^>]*>(.*?)</a>"#, options: [.dotMatchesLineSeparators, .caseInsensitive]) else { return [] }
+        let ns = html as NSString
+        let ms = re.matches(in: html, range: NSRange(location: 0, length: ns.length))
+        var out: [Hit] = [], seen = Set<String>()
+        let bad = [engine, "google.", "bing.", "microsoft.", "apple.com", "facebook.", "twitter.", "x.com", "instagram.", "youtube.com/@", "javascript:"] + skip
+        for (k, m) in ms.enumerated() {
+            let url = ns.substring(with: m.range(at: 1)).replacingOccurrences(of: "&amp;", with: "&")
+            let title = clean(ns.substring(with: m.range(at: 2)))
+            let h = host(url)
+            guard title.count >= 6, !bad.contains(where: { h.contains($0) || url.hasPrefix($0) }),
+                  seen.insert(normURL(url)).inserted else { continue }
+            // 摘要：這個連結後面、到下一個結果之前的文字
+            let from = m.range.location + m.range.length
+            let to = k + 1 < ms.count ? ms[k + 1].range.location : min(ns.length, from + 1500)
+            var snip = to > from ? clean(ns.substring(with: NSRange(location: from, length: min(to - from, 1500)))) : ""
+            if snip.count > 200 { snip = String(snip.prefix(200)) }
+            // 網址本身、麵包屑當摘要沒意義
+            if snip.hasPrefix(h) || snip.hasPrefix("http") { snip = "" }
+            out.append(Hit(title: title, snippet: snip, url: url, engine: name))
+            if out.count >= 8 { break }
+        }
+        return out
+    }
+
+    /// DuckDuckGo 輕量版（一般版被擋時這個常常還能用）
+    static func ddgLite(_ q: String, _ L: Lang) async -> [Hit] {
+        let region = ["zh": "tw-tzh", "en": "us-en", "es": "es-es", "it": "it-it"][L.rawValue] ?? "wt-wt"
+        guard let url = URL(string: "https://lite.duckduckgo.com/lite/?q=\(enc(q))&kl=\(region)"),
+              let html = await text(url, L, ua: desktopUA) else { return [] }
+        let fixed = html.replacingOccurrences(of: "href=\"//duckduckgo.com/l/?", with: "href=\"https://duckduckgo.com/l/?")
+        return genericResults(fixed, engine: "duckduckgo.com", name: "DuckDuckGo").map {
+            Hit(title: $0.title, snippet: $0.snippet, url: ddgRealURL($0.url), engine: $0.engine)
+        }
+    }
+
+    /// Mojeek（獨立的搜尋引擎，不太擋程式）
+    static func mojeek(_ q: String, _ L: Lang) async -> [Hit] {
+        let lang = ["zh": "zh", "en": "en", "es": "es", "it": "it"][L.rawValue] ?? "en"
+        guard let url = URL(string: "https://www.mojeek.com/search?q=\(enc(q))&lb=\(lang)"),
+              let html = await text(url, L, ua: desktopUA) else { return [] }
+        return genericResults(html, engine: "mojeek.com", name: "Mojeek")
+    }
+
+    /// Brave 搜尋
+    static func brave(_ q: String, _ L: Lang) async -> [Hit] {
+        guard let url = URL(string: "https://search.brave.com/search?q=\(enc(q))&source=web"),
+              let html = await text(url, L, ua: desktopUA) else { return [] }
+        return genericResults(html, engine: "brave.com", skip: ["imgs.search.brave"], name: "Brave")
+    }
+
+    /// 百度：中文的生活、做法類網站多（知乎、百度經驗、各種教學）；簡體會再轉成繁體
+    static func baidu(_ q: String, _ L: Lang) async -> [Hit] {
+        guard L == .zh, let url = URL(string: "https://www.baidu.com/s?wd=\(enc(q))&rn=10"),
+              let html = await text(url, L, ua: desktopUA) else { return [] }
+        var out: [Hit] = []
+        // 每一筆結果的容器上有 mu="原網址"
+        for block in html.components(separatedBy: "class=\"result c-container").dropFirst() {
+            guard let real = first(#"mu="(https?://[^"]+)""#, block, group: 1) ?? first(#"<h3[^>]*>\s*<a[^>]*href="(https?://[^"]+)""#, block, group: 1),
+                  let title = first(#"<h3[^>]*>(.*?)</h3>"#, block, group: 1) else { continue }
+            let snip = first(#"class="[^"]*content-right[^"]*"[^>]*>(.*?)</span>"#, block, group: 1)
+                ?? first(#"class="c-abstract[^"]*"[^>]*>(.*?)</div>"#, block, group: 1) ?? ""
+            out.append(Hit(title: clean(title), snippet: clean(snip), url: real, engine: "Baidu"))
             if out.count >= 8 { break }
         }
         return out

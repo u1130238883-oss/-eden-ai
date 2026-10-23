@@ -71,8 +71,11 @@ public enum WebAgent {
         else if has(["新聞", "最新", "最近發生", "今天發生", "消息", "股價", "股市", "台股", "美股", "大盤", "匯率", "油價", "金價", "比分",
                      "latest", "news", "noticias", "notizie", "stock market", "exchange rate"]) { kind = .news }
         else if WebStrategy.isLegal(q) { kind = .legal }
-        else if WebStrategy.isHealth(q) { kind = .health }
-        else if has(["差別", "區別", "比較", "哪個好", "哪一個好", " vs", "difference", "better than", "diferencia", "differenza"]) { kind = .compare }
+        // 「怎麼克服拖延症」「如何改善失眠」：問的是自己可以怎麼做，不是疾病介紹
+        else if WebStrategy.isHealth(q) && q.range(of: "(怎麼|如何|怎樣)(才能|可以)?(克服|戒|改善|擺脫|提升|培養|養成|讓|改掉|減少)", options: .regularExpression) == nil { kind = .health }
+        // 「比較快」「比較好」不是在比較兩樣東西；要有兩邊（和、跟、還是）才算
+        else if has(["差別", "區別", "哪個好", "哪一個好", " vs", "difference", "better than", "diferencia", "differenza"])
+                    || q.contains("比較") && has(["和", "跟", "與", "還是"]) { kind = .compare }
         else if has(["為什麼", "為何", "原因", "why", "por qué", "perché"]) { kind = .reason }
         else if has(["怎麼", "如何", "方法", "步驟", "教我", "how to", "how do", "how can", "cómo", "come si"]) { kind = .method }
         else if has(["推薦", "哪裡好玩", "哪裡好吃", "去哪裡玩", "recommend", "best ", "recomienda", "consiglia"]) { kind = .recommend }
@@ -286,8 +289,9 @@ public enum WebAgent {
                 let page = h.title + h.snippet
                 // 搜尋結果頁、分類頁（「/search/白飯」）是一堆食譜的卡片，不是一份做法
                 let listing: Int = ["/search", "/tag", "/category", "/categories", "?q=", "/list"].contains { h.url.lowercased().contains($0) } ? 3 : 0
-                let wiki: Int = host.contains("wikipedia") ? 2 : 0
-                let recipe: Int = ["做法", "作法", "食譜", "步驟", "教學", "怎麼做", "怎麼煮"].contains { page.contains($0) } ? 2 : 0
+                // 百科只有名詞解釋（問「怎麼早起」它講「晨型人被比喻為百靈鳥」），做法、建議題排最後
+                let wiki: Int = host.contains("wikipedia") || host.contains("baike") ? 5 : 0
+                let recipe: Int = ["做法", "作法", "食譜", "步驟", "教學", "怎麼做", "怎麼煮", "方法", "技巧", "建議", "怎麼", "如何", "秘訣", "訣竅", "注意"].contains { page.contains($0) } ? 2 : 0
                 return recipe - wiki - listing - low
             }
             // 原始來源（官方、政府、學術、百科）優先；問答網站、論壇、內容農場放最後
@@ -328,6 +332,7 @@ public enum WebAgent {
             for await (h, t) in g { if let t { out.append((h, t)) } }
             return out
         }
+        var readPages = pages
         clock.append(("讀\(pages.count)頁", Date()))
         progress?("③ 讀了 \(pages.count) 個網頁，一段一段判斷哪些真的在回答你的問題…")
 
@@ -513,6 +518,7 @@ public enum WebAgent {
                     return out
                 }
                 pagesRead += more.count
+                readPages += more
                 readHosts += more.map { WebSearch.host($0.0.url) }
                 s = judge(ev(pages + more), snips)
                 checkNote = (s.ok ? "第一輪的資料沒有直接回答，改查「" : "第一輪沒有直接回答，改查「") + retryQs.joined(separator: "」「")
@@ -612,6 +618,25 @@ public enum WebAgent {
                 }
             }
         }
+        // ⑦-1 整理：好幾個網站的內容拆成重點、互相比對，用自己的話寫出來（不貼標題、不貼文章簡介）
+        var synthesized = false
+        if zh, !fortune, let fr {
+            let texts = readPages.map { (host: WebSearch.host($0.0.url), text: WebStrategy.toTraditional($0.1)) }
+                + findings.map { (host: $0.host, text: $0.text) }
+            let ok = solved?.ok == true && !answer.isEmpty && !Synthesize.isMeta(answer.components(separatedBy: "\n").first ?? "")
+            // 步驟題：已經從一份教學／食譜整理出有順序的步驟就用它（不同網站的步驟混在一起順序會亂）
+            let numberedSteps = answer.components(separatedBy: "\n").filter { $0.range(of: #"^\s*(\d+[\.、]|[①②③④⑤⑥⑦⑧⑨])"#, options: .regularExpression) != nil }.count >= 3
+            var lead: String? = nil
+            switch fr.want {
+            case .steps: if ok && numberedSteps { lead = "" }
+            case .reason, .definition, .open: if ok { lead = answer }
+            default: lead = ""
+            }
+            if lead != "", let syn = Synthesize.compose(question: question, subject: fr.subject, want: fr.want, pages: texts, lead: lead) {
+                answer = syn
+                synthesized = true
+            }
+        }
         var used: [String] = [answer]
         // 每個網站最多引一句（回答裡已經引過的網站，補充就不再引它）
         var quotedHosts = Set(SelfTuning.hosts(in: answer))
@@ -648,6 +673,8 @@ public enum WebAgent {
             let heads = hits.filter { $0.hit.engine == "Google 新聞" }.prefix(6).map { WebStrategy.toTraditional($0.hit.snippet) }
             if !heads.isEmpty { sections.append(("最新消息", Array(heads))) }
             if lead2 == nil && !heads.isEmpty { answer = zh ? "我找到這些最新的相關新聞：" : "Latest related news:" }
+        } else if synthesized {
+            // 已經把各網站的重點比對、整理好了，不用再附零散的句子
         } else if brainAnswered {
             // 大腦已經把各網站的說法比對、整理好了，不用再附零散的句子
         } else if let fr, solved?.ok == true, { if case .list = fr.want { return true }; if case .steps = fr.want { return true }; return false }() {
@@ -669,7 +696,7 @@ public enum WebAgent {
         }
         if simpleFact { sections.removeAll() }
         // 反過來想：找爭議、誤解、轉折的說法（簡單的事實題不用）
-        if zh, !simpleFact, let fr, !fortune, plan.kind != .news, plan.kind != .weather {
+        if zh, !simpleFact, !synthesized, let fr, !fortune, plan.kind != .news, plan.kind != .weather {
             let topicTerms = termSet(Understanding.plain(fr.subject)).filter { $0.contains(where: isCJK) }
             let other = Mind.otherSide(findings.map { ($0.text, $0.host) }, topic: topicTerms, exclude: used)
             if !other.isEmpty { sections.append(("換個角度（也有這些說法）", other)) }
@@ -827,7 +854,8 @@ public enum WebAgent {
                      "帶你", "一次看懂", "讓我們", "接下來", "下面就", "以下將", "快來看"]
         if fluff.contains(where: { t.hasPrefix($0) }) { return true }
         // 「本文將透過…帶你詳細瞭解…」這種介紹文章在講什麼、卻沒有內容的句子
-        return ["帶你詳細", "帶你了解", "帶你瞭解", "帶大家", "一起來看", "告訴你", "整理給你"].contains { t.contains($0) }
+        if t.contains("#") || t.contains("＃") { return true }
+        return ["帶你詳細", "帶你了解", "帶你瞭解", "帶大家", "一起來看", "告訴你", "整理給你", "旨在", "這篇文章", "本篇文章", "懶人包", "延伸閱讀", "推薦閱讀", "免費算命"].contains { t.contains($0) }
     }
 
     /// 各來源說的數字（「46 個」「約 50 個」），一個來源一票
