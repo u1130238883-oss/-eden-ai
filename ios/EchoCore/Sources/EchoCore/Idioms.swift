@@ -277,7 +277,8 @@ public enum Idioms {
             }
             return Translate.Result(text: out[0], alternatives: Array(out.dropFirst().prefix(2)), source: .zh, via: "成語對照：\(e.meaning)")
         }
-        guard let f = fromForeign(text, not: tl) else { return nil }
+        // 外文只有一個字（careless、selfish、humilde）是一般的詞，照一般的翻譯；好幾個字的說法（kill two birds with one stone）才是成語
+        guard text.split(separator: " ").count >= 2, let f = fromForeign(text, not: tl) else { return nil }
         let src: Translate.Code = Translate.Code(rawValue: f.lang) ?? .en
         switch tl {
         case "zh": return Translate.Result(text: f.entry.idiom, alternatives: [], source: src, via: "成語對照：\(f.entry.meaning)")

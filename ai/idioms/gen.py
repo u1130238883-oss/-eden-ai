@@ -186,7 +186,11 @@ def translate():
             q = R.choice(TO_FOREIGN_EN).format(X=e["idiom"], L=ENL[t])
         return {"q": q, "idiom": e["idiom"], "src": "zh", "target": CODE[t], "text": e["idiom"], "expect": e[t]}
     s = R.choice(["en", "es", "it"])
-    f = R.choice(e[s])
+    # 外文只有一個字的（careless、erudito）是一般的詞，不當成語的說法出題
+    multi = [x for x in e[s] if len(x.split()) >= 2]
+    if not multi:
+        return translate()
+    f = R.choice(multi)
     if r < 0.8:
         tpl = R.choice(TO_IDIOM)
         q = tpl.format(F=f) if tpl.startswith(("what", "Chinese")) else R.choice(TPRE) + tpl.format(F=f) + R.choice(TPOST)

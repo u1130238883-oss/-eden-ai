@@ -126,7 +126,7 @@ public enum Translate {
         if let r = q.range(of: lead, options: .regularExpression), q[r.upperBound...].count >= 2 { q = String(q[r.upperBound...]) }
         // 同一個意思的不同說法，先換成認得的說法：「中譯英」＝「中翻英」、「X 的英語說法」＝「X 的英語」、
         // 「，請翻西」＝「，翻西」、「這個用國語怎麼表達」＝「用國語怎麼表達」、「… please」
-        for (p, r) in [(#"([中英西義意日韓法德])譯([中英西義意日韓法德])"#, "$1翻$2"), (#"[，,]\s*請翻"#, "，翻"), (#"(?<=[^，,、：:\\s])這個用"#, "用"),
+        for (p, r) in [(#"([中英西義意日韓法德])譯([中英西義意日韓法德])"#, "$1翻$2"), (#"[，,]\s*請翻"#, "，翻"), (#"(?<=[^，,、：:\s])這個用"#, "用"),
                        (#"的(\S{2,5}?)說法$"#, "的$1"), (#"(?i)^([^：:]*?),?\s+please[.!]?$"#, "$1"), (#"(?i)^please\s+(?=(translate|how|what|say|tell)\b)"#, "")] {
             q = q.replacingOccurrences(of: p, with: r, options: .regularExpression)
         }
@@ -312,7 +312,7 @@ public enum Translate {
             // 「我想知道怎麼用義大利語怎麼說」：拿掉客套話之後剩下的「怎麼」本身就是要翻的
             var kept = original
             for _ in 0..<3 { kept = kept.replacingOccurrences(of: lead, with: "", options: .regularExpression) }
-            kept = kept.replacingOccurrences(of: "[，,、：:?？\\s]+$", with: "", options: .regularExpression)
+            kept = kept.replacingOccurrences(of: "(?:這句話|這句|這個字|這個詞|[，,、：:?？\\s])+$", with: "", options: .regularExpression)
             if clean(content).isEmpty, !clean(kept).isEmpty, kept != original { content = kept }
             if clean(content).isEmpty {
                 content = original.replacingOccurrences(of: "(?:這句話|這句|這個字|這個詞|[，,、：:?？\\s])+$", with: "", options: .regularExpression)
