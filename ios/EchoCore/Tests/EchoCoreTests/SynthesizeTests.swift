@@ -31,7 +31,7 @@ final class SynthesizeTests: XCTestCase {
         let t = Synthesize.compose(question: "喜歡一個人該怎麼辦", subject: "喜歡一個人", want: .steps(target: "喜歡一個人"),
                                    pages: [("ai.shareba.com", a), ("love.example.tw", b), ("psy.example.com", c)])
         let out = try! XCTUnwrap(t)
-        XCTAssertTrue(out.hasPrefix("我讀了 3 個網站"), out)
+        XCTAssertTrue(out.hasPrefix("綜合 3 個網站的建議"), out)
         XCTAssertFalse(out.contains("這篇文章"), out)
         XCTAssertFalse(out.contains("#"), out)
         XCTAssertFalse(out.contains("延伸閱讀"), out)
@@ -65,5 +65,35 @@ final class SynthesizeTests: XCTestCase {
         let json = #"{"candidates":[{"content":{"parts":[{"text":"先觀察對方。"}]},"groundingMetadata":{"groundingChunks":[{"web":{"uri":"https://x","title":"womany.net"}},{"web":{"uri":"https://y","title":"heho.com.tw"}}]}}]}"#
         let r = AskAIs.geminiText(json.data(using: .utf8))
         XCTAssertEqual(r.text, "先觀察對方。\n\n（Google 搜尋，參考：womany.net、heho.com.tw）")
+    }
+
+    /// 打錯字：標題裡大多是正確的名稱 → 照正確的名稱查
+    func testSpellFix() {
+        let titles = ["少年維特的煩惱 - 維基百科，自由的百科全書", "《少年維特的煩惱》：歌德的書信體小說｜博客來", "少年維特的煩惱 讀後感", "歌德 - 維基百科"]
+        XCTAssertEqual(Understanding.spellFix("少年懷特的煩惱", titles: titles), "少年維特的煩惱")
+        XCTAssertNil(Understanding.spellFix("少年維特的煩惱", titles: titles))
+        XCTAssertNil(Understanding.spellFix("台北101", titles: ["台北市政府", "台北101觀景台"]))
+    }
+
+    /// 問作品：書名裡有「煩惱」「孤獨」也不是在說心情
+    func testWorkQuestions() {
+        XCTAssertTrue(EchoEngine.asksAboutWork("少年懷特的煩惱這本書講了什麼？"))
+        XCTAssertTrue(EchoEngine.asksAboutWork("孤獨的美食家好看嗎"))
+        XCTAssertTrue(EchoEngine.asksAboutWork("悲傷逆流成河講了什麼"))
+        XCTAssertFalse(EchoEngine.asksAboutWork("我好煩惱"))
+        XCTAssertFalse(EchoEngine.asksAboutWork("這本書講了什麼"))
+        XCTAssertFalse(EchoEngine.asksAboutWork("我今年的運勢講了什麼"))
+        XCTAssertEqual(Understanding.frame("少年懷特的煩惱這本書講了什麼").subject, "少年懷特的煩惱")
+        XCTAssertEqual(Understanding.frame("孤獨的美食家好看嗎").searches.first, "孤獨的美食家 評價")
+    }
+
+    /// 依領域去專業網站找
+    func testProfessionalSources() {
+        XCTAssertEqual(Cite.field("失眠怎麼辦"), .health)
+        XCTAssertEqual(Cite.field("面試要注意什麼"), .work)
+        XCTAssertEqual(Cite.field("少年維特的煩惱講了什麼"), .culture)
+        XCTAssertTrue(Cite.proQuery("失眠", question: "失眠怎麼辦")?.contains("site:hpa.gov.tw") == true)
+        XCTAssertNil(Cite.proQuery("台北101", question: "台北101有多高"))
+        XCTAssertTrue(Cite.isProfessional("www.commonhealth.com.tw"))
     }
 }

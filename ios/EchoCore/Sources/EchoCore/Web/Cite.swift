@@ -86,6 +86,44 @@ public enum Cite {
                           "sciencedirect", "springer", "nih.gov", "arxiv.org", "sec.gov", "cdc.gov", "moe.gov", "cwa.gov"]
 
     public static func isLowQuality(_ host: String) -> Bool { lowQuality.contains { host.lowercased().contains($0) } }
+
+    /// 專業、有編輯把關的中文知識平台（依領域）：查的時候指定去這些網站找，挑資料時也優先
+    public enum Field { case science, health, mind, work, money, law, culture, general }
+    static let professional: [Field: [String]] = [
+        .science: ["pansci.asia", "research.sinica.edu.tw", "scitechvista.nat.gov.tw", "case.ntu.edu.tw", "sciam.com.tw", "highscope.ch.ntu.edu.tw", "natgeomedia.com"],
+        .health: ["hpa.gov.tw", "cdc.gov.tw", "mohw.gov.tw", "commonhealth.com.tw", "heho.com.tw", "health.udn.com", "msdmanuals.com", "cgmh.org.tw", "ntuh.gov.tw", "mmh.org.tw", "vghtpe.gov.tw", "kingnet.com.tw"],
+        .mind: ["womany.net", "heho.com.tw", "commonhealth.com.tw", "cheers.com.tw", "parenting.com.tw", "psychologies.com.tw", "mindfulness.org.tw", "thenewslens.com"],
+        .work: ["managertoday.com.tw", "cw.com.tw", "gvm.com.tw", "businessweekly.com.tw", "cheers.com.tw", "bnext.com.tw", "104.com.tw", "1111.com.tw", "yourator.co"],
+        .money: ["fsc.gov.tw", "twse.com.tw", "moneydj.com", "businessweekly.com.tw", "cw.com.tw", "wealth.com.tw", "smart.businessweekly.com.tw"],
+        .law: ["law.moj.gov.tw", "mol.gov.tw", "judicial.gov.tw", "lawbank.com.tw", "laf.org.tw", "legis-pedia.com"],
+        .culture: ["books.com.tw", "openbook.org.tw", "readmoo.com", "okapi.books.com.tw", "movies.yahoo.com.tw", "imdb.com", "douban.com", "wikipedia.org"],
+        .general: ["wikipedia.org", "pedia.cloud.edu.tw", "terms.naer.edu.tw", "britannica.com", "pansci.asia", "cw.com.tw"],
+    ]
+    public static func isProfessional(_ host: String) -> Bool {
+        let h = host.lowercased()
+        return professional.values.contains { $0.contains { h.contains($0) } }
+    }
+
+    /// 這題屬於哪個領域（決定去哪些專業網站找）
+    public static func field(_ q: String) -> Field {
+        func has(_ ws: [String]) -> Bool { ws.contains { q.contains($0) } }
+        if has(["書", "小說", "電影", "劇", "動畫", "漫畫", "歌", "作品", "作者", "導演", "在講什麼", "講了什麼", "劇情", "好看", "詩", "畫"]) { return .culture }
+        if WebStrategy.isLegal(q) || has(["法律", "違法", "罰", "合約", "勞基法", "權益"]) { return .law }
+        if WebStrategy.isHealth(q) || has(["失眠", "減肥", "飲食", "營養", "運動", "睡眠", "健康"]) { return .health }
+        if has(["焦慮", "壓力", "自信", "情緒", "感情", "喜歡", "告白", "朋友", "溝通", "人際", "拖延", "專注", "心理", "戀愛", "分手"]) { return .mind }
+        if has(["工作", "面試", "履歷", "主管", "老闆", "加薪", "職場", "離職", "同事", "升遷", "創業"]) { return .work }
+        if has(["存錢", "理財", "投資", "股票", "基金", "ETF", "保險", "貸款", "利率", "通膨", "複利"]) { return .money }
+        if has(["為什麼", "原理", "科學", "宇宙", "物理", "化學", "生物", "地球", "太陽", "月亮", "黑洞", "量子", "演化", "天空"]) { return .science }
+        return .general
+    }
+
+    /// 指定去專業網站找的查詢（搜尋引擎的 site: 語法；一次最多 4 個網站，太長會被忽略）
+    public static func proQuery(_ topic: String, question: String) -> String? {
+        let f = field(question)
+        guard f != .general, let sites = professional[f] else { return nil }
+        let picks = sites.filter { !$0.contains("wikipedia") }.prefix(4)
+        return topic + " (" + picks.map { "site:" + $0 }.joined(separator: " OR ") + ")"
+    }
     public static func isPrimary(_ host: String) -> Bool { primary.contains { host.lowercased().contains($0) } }
 
     /// 查詢要短（中文最多 16 個字）

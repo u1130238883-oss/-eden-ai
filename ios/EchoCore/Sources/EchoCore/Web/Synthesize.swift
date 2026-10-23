@@ -167,13 +167,20 @@ public enum Synthesize {
     static let reasonWords = ["因為", "由於", "原因", "所以", "導致", "造成", "使得", "是因", "來自", "引起", "刺激", "產生", "散射", "反射", "作用"]
     static let defineWords = ["是指", "指的是", "是一種", "是一個", "稱為", "是一門", "意思是", "又稱", "簡稱", "定義", "是用來"]
 
+    /// 寫得好不好：口語、部落格腔扣分；完整、正式、有根據的句子加分
+    static let casual = ["我覺得", "我自己", "小編", "XD", "哈哈", "啦", "喔", "欸", "超級", "真的很", "網友", "大家好", "哈囉", "不囉嗦", "必看", "神器", "懶人包", "爆"]
+    static let formal = ["研究", "指出", "根據", "專家", "醫師", "心理師", "因此", "此外", "有助於", "能夠", "建議", "顯示", "發現", "原則", "關鍵"]
+    static func style(_ s: String) -> Double {
+        -1.5 * Double(casual.filter { s.contains($0) }.count) + min(1.5, 0.5 * Double(formal.filter { s.contains($0) }.count))
+    }
+
     /// 一句話對這題有多好用
     static func score(_ u: Unit, shape: Shape, topic: Set<String>, question: Set<String>) -> Double {
         let g = grams(u.text)
         // 跟問題幾乎一樣的句子是標題（「喜歡一個人該怎麼辦？」），不是答案
         if !question.isEmpty, Double(g.intersection(question).count) / Double(max(1, g.count)) > 0.7 { return -1 }
         let rel = Double(g.intersection(topic).count)
-        var s = min(rel, 3)
+        var s = min(rel, 3) + style(u.text) + (Cite.isProfessional(u.host) && !u.host.contains("wikipedia") ? 1.5 : 0)
         let n = u.text.count
         s += n >= 14 && n <= 90 ? 1 : (n > 140 ? -1 : 0)
         switch shape {
@@ -250,15 +257,16 @@ public enum Synthesize {
             let head = lead.components(separatedBy: "\n\n").first ?? lead
             t = head + "\n\n其他網站也提到：\n" + chosen.enumerated().map { line($0.offset, $0.element) }.joined(separator: "\n")
         } else {
+            let n = allHosts.count
             switch shape {
             case .advice:
-                t = "我讀了 \(allHosts.count) 個網站，整理出最常被提到的做法：\n"
+                t = (n >= 2 ? "綜合 \(n) 個網站的建議，可以這樣做：\n" : "可以這樣做：\n")
             case .reason:
                 t = "簡單說：" + chosen[0].text + "\n\n其他原因：\n"
             case .definition:
                 t = "簡單說：" + chosen[0].text + "\n\n重點：\n"
             case .open:
-                t = "我讀了 \(allHosts.count) 個網站，重點是：\n"
+                t = (n >= 2 ? "綜合 \(n) 個網站的資料，重點如下：\n" : "重點如下：\n")
             }
             let rest = (shape == .reason || shape == .definition) ? Array(chosen.dropFirst()) : chosen
             t += rest.enumerated().map { line($0.offset, $0.element) }.joined(separator: "\n")

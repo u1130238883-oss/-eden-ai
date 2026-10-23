@@ -32,7 +32,7 @@ public enum WebAgent {
         public var trusted: Bool = false
     }
     public struct Result {
-        public let text: String
+        public var text: String
         public let card: FortuneCard?
         /// 有沒有真的查到東西
         public let found: Bool
@@ -174,7 +174,7 @@ public enum WebAgent {
     /// avoid：上次答錯時用過的網站（反思後這次避開）；reflect：被指正後重查，先用備用查法
     /// asker：問問題的人的九型（從他的生日算出來），用他在意的方式交代重點
     public static func run(_ question: String, facts: String? = nil, also: [String] = [], lang L: Lang,
-                           avoid: [String] = [], reflect: Bool = false, asker: Int? = nil,
+                           avoid: [String] = [], reflect: Bool = false, asker: Int? = nil, spellChecked: Bool = false,
                            progress: (@Sendable (String) -> Void)? = nil) async -> Result {
         // 使用者給了網址：直接讀那個網頁
         if facts == nil, let url = firstURL(question), url.count >= question.count - 2 { return await readLink(url, lang: L) }
@@ -218,6 +218,8 @@ public enum WebAgent {
         for (i, q) in firstQs.enumerated() { jobs.append((-1, q, i == 0 || strat.angles.isEmpty)) }
         if let canon { jobs.append((-1, canon, true)) }
         for q in also.prefix(2) where !jobs.contains(where: { $0.q == q }) { jobs.append((-1, q, true)) }
+        // 指定去這個領域的專業網站找（健康：國健署、康健、Heho；職場：經理人、天下；書：博客來、Openbook……）
+        if zh, !fortune, let pq = Cite.proQuery(fr?.subject ?? plan.core, question: question) { jobs.append((-1, pq, false)) }
         for (i, a) in strat.angles.enumerated() { jobs.append((i, topic + a.suffix, false)) }
         // 完整的搜尋一次最多兩組，查完再查下一批（太密集會被搜尋引擎當成機器人，回一堆無關的結果）；
         // 小問題的輕量搜尋（Bing＋維基）跟第一批一起查，不用多等一輪
@@ -242,6 +244,16 @@ public enum WebAgent {
             start += 2
         } while start < fullJobs.count
         let answers: [(Int, WebSearch.Answer)] = got.sorted { $0.0 < $1.0 }.map { ($0.1, $0.2) }
+        // 錯字：問「少年懷特的煩惱」，搜尋結果的標題幾乎都是「少年維特的煩惱」——照正確的名稱重新查一次，並告訴使用者
+        if zh, !fortune, !spellChecked, let fr,
+           let fix = Understanding.spellFix(fr.subject, titles: answers.flatMap { $0.1.hits.map { WebStrategy.toTraditional($0.title) } }) {
+            let q2 = question.replacingOccurrences(of: fr.subject, with: fix)
+            if q2 != question {
+                var r = await run(q2, facts: facts, also: also, lang: L, avoid: avoid, reflect: reflect, asker: asker, spellChecked: true, progress: progress)
+                r.text = "（你寫的是「\(fr.subject)」，我想你指的是「\(fix)」，以下照「\(fix)」查。）\n\n" + r.text
+                return r
+            }
+        }
         clock.append(("查詢\(jobs.count)組", Date()))
         progress?("② 用 \(jobs.count) 組關鍵字上網搜尋，找到 \(answers.reduce(0) { $0 + $1.1.hits.count }) 筆結果，挑可信的來讀…")
 
@@ -292,10 +304,10 @@ public enum WebAgent {
                 // 百科只有名詞解釋（問「怎麼早起」它講「晨型人被比喻為百靈鳥」），做法、建議題排最後
                 let wiki: Int = host.contains("wikipedia") || host.contains("baike") ? 5 : 0
                 let recipe: Int = ["做法", "作法", "食譜", "步驟", "教學", "怎麼做", "怎麼煮", "方法", "技巧", "建議", "怎麼", "如何", "秘訣", "訣竅", "注意"].contains { page.contains($0) } ? 2 : 0
-                return recipe - wiki - listing - low
+                return recipe - wiki - listing - low + (Cite.isProfessional(host) && !host.contains("wikipedia") ? 2 : 0)
             }
-            // 原始來源（官方、政府、學術、百科）優先；問答網站、論壇、內容農場放最後
-            return (Cite.isPrimary(host) ? 3 : 0) - low
+            // 原始來源（官方、政府、學術、百科）、有編輯把關的專業平台優先；問答網站、論壇、內容農場放最後
+            return (Cite.isPrimary(host) ? 3 : 0) + (Cite.isProfessional(host) ? 2 : 0) - low
         }
         func pick(_ tag: Int, _ n: Int) -> [WebSearch.Hit] {
             hits.filter { $0.tag == tag && !$0.hit.url.contains("news.google.com") }.map(\.hit)

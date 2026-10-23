@@ -209,7 +209,7 @@ public final class EchoEngine {
     static func substituteAnaphor(_ text: String, previous prev: String) -> String? {
         let t0 = text.trimmingCharacters(in: .whitespacesAndNewlines)
         // 「這個月」「那個時候」是時間，不是在指上一題；要算運勢的也不接
-        let timeWords = ["這個月", "那個月", "這個禮拜", "這個星期", "這個時候", "那個時候", "這個年", "這個週末"]
+        let timeWords = ["這個月", "那個月", "這個禮拜", "這個星期", "這個時候", "那個時候", "這個年", "這個週末", "那些年", "那些日子"]
         if timeWords.contains(where: { t0.contains($0) }) || fortuneIntent(t0) { return nil }
         var t = t0
         for w in ["我是說", "我的意思是", "我是問", "那麼", "那"] where t.hasPrefix(w) { t.removeFirst(w.count); break }
@@ -233,7 +233,8 @@ public final class EchoEngine {
     /// 追問：「那這些國家都是哪些國家」→「歐洲 國家 哪些國家 列表」
     static func resolveFollowUp(_ text: String, query q: String, previous: String?, gap: Int) -> String {
         var cur = q
-        let refers = anaphora.contains { text.contains($0) }
+        // 「那些年，我們一起追的女孩」是片名，不是在指上一題
+        let refers = anaphora.contains { text.contains($0) } && !text.contains("那些年") && !text.contains("那些日子")
         if refers {
             for w in anaphora + ["我是說", "我的意思是", "都是", "那"] { cur = cur.replacingOccurrences(of: w, with: " ") }
         }
@@ -254,7 +255,7 @@ public final class EchoEngine {
     func replyCore(to message: String, history: [ChatTurn] = [], context: Context,
                    onToken: ((String) -> Void)? = nil) -> Reply {
         var ctx = context
-        let text = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        let text = EchoEngine.tidy(message)
         let L = ctx.autoDetect ? Lang.detect(text, fallback: ctx.language) : ctx.language
         func done(_ t: String, _ src: ChatTurn.Source, card: FortuneCard? = nil, palace: Int? = nil,
                   tokens: [Int]? = nil, profile: UserProfile? = nil, rules: RuleBook? = nil, web: String? = nil) -> Reply {
@@ -291,6 +292,15 @@ public final class EchoEngine {
             return done(Celebrities.reading(p), .reader)
         }
 
+        // 2.07) 問世界上的事（不是問自己的命、不是說心情、不是在跟我聊天）：上網查——
+        // 不能被「房」「出國」「情緒」這些字帶去算命，也不能被書名裡的「煩惱」帶去安慰
+        if L == .zh, EchoEngine.worldQuestion(text) {
+            return done(Loc.s("webAsk", .zh), .tool, web: EchoEngine.searchQuery(text))
+        }
+        // 2.08) 問一部作品（書名裡有「煩惱」「孤獨」也不是在說心情）：上網查
+        if L == .zh, EchoEngine.asksAboutWork(text) {
+            return done(Loc.s("webAsk", .zh), .tool, web: EchoEngine.searchQuery(text))
+        }
         // 2.09) 生活上的「怎麼做」（怎麼存錢、面試要注意什麼、被主管罵了怎麼辦）：上網看好幾個網站，整理出共同的做法
         if L == .zh, EchoEngine.practical(text) {
             return done(Loc.s("webAsk", .zh), .tool, web: EchoEngine.searchQuery(text))
@@ -506,7 +516,7 @@ public final class EchoEngine {
             var r = done(Loc.s("webAsk", L), .tool, palace)
             r.webQuery = EchoEngine.searchQuery(text)
             return r
-        } else if EchoEngine.infoQuestion(text) || (asking && !text.contains("我") && !asksMe) {
+        } else if !asksMe, EchoEngine.infoQuestion(text) || (asking && !text.contains("我")) {
             // 知識題、跟自己無關的問題：上網查
             var r = done(Loc.s("webAsk", L), .tool, palace)
             r.webQuery = EchoEngine.searchQuery(text)
@@ -594,6 +604,9 @@ public final class EchoEngine {
         if t.contains("我的") || t.contains("運勢") || (t.contains("我") && ManticReader.wants(t)) { return nil }
         // 「你可以上網找資料嗎」「你會上網嗎」是在問 NineSun 的能力，不是要它去查
         if ["你可以", "你會", "你能", "你有辦法"].contains(where: { t.hasPrefix($0) }) && (t.hasSuffix("嗎") || t.hasSuffix("？") || t.hasSuffix("?")) { return nil }
+        // 保留整個問題（「幫我查一下原子習慣是誰寫的」→「原子習慣是誰寫的」）；拆成關鍵字會丟掉「是誰」，就不知道要找人名
+        let c = Understanding.clean(t)
+        if c != t, c.count >= 2 { return c }
         let q = WebAgent.keywords(t)
         return q.isEmpty || q == t ? nil : q
     }
@@ -606,18 +619,118 @@ public final class EchoEngine {
         strongMarkers.contains { raw.contains($0) } && !selfMarkers.contains { raw.contains($0) }
     }
 
+    /// 語氣：開頭的「嘿」「欸」「喂」、結尾的「～」只是口氣，先拿掉（「嘿你是誰～」＝「你是誰」）
+    static func tidy(_ raw: String) -> String {
+        var t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        while let l = t.last, "～~!！。".contains(l), t.count > 1 { t.removeLast() }
+        for w in ["嘿", "欸", "誒", "喂", "哈囉，", "嗨，"] where t.hasPrefix(w) && t.count > w.count + 1 {
+            t = String(t.dropFirst(w.count)).trimmingCharacters(in: CharacterSet(charactersIn: "，, "))
+            break
+        }
+        return t
+    }
+
+    /// 在問自己的命（用命盤算）：運勢、命盤、宮位、流年……，或問自己的未來（「我什麼時候會結婚」「我適合換工作嗎」）。
+    /// 「羅浮宮」「故宮」的「宮」不算
+    static func fortuneAsk(_ t: String) -> Bool {
+        let marks = #"運勢|運氣|運程|運如何|運怎麼樣|運好嗎|運好不好|運不好|命盤|命宮|本命|[0-9０-９一二三四五六七八九十]{1,2}宮|十二宮|宮位(?!於)|幾宮|哪一宮|哪個宮|什麼宮|流年|大運|流月|流日|八字|紫微|卦|塔羅|占卜|算命|幫我算|九型|第幾型|星座|生肖|風水|桃花運|財運|事業運|感情運|正緣|姻緣|日宮|夜宮|解讀"#
+        if t.range(of: marks, options: .regularExpression) != nil { return true }
+        // 命理的術語（「什麼是化忌」）：用 NineSun 自己的資料庫回答
+        if t.range(of: #"化忌|化祿|化權|化科|四化|天干|地支|十神|日主|喜用神|忌神|用神|身強|身弱|主星|命主|身主|大限|小限|飛宮|果宮|因宮|好正壞|日宮|夜宮|五行"#, options: .regularExpression) != nil { return true }
+        // 問自己這段時間的運（「今年哪幾個月感情比較順」「下個月適合搬家嗎」）
+        if t.range(of: #"(今年|明年|這個月|下個月|這週|下週|今天|明天|哪幾個月|哪個月|哪一年|哪年|哪天|哪幾天).{0,8}(比較順|最順|順嗎|順不順|最好|比較好|旺|適合)"#, options: .regularExpression) != nil { return true }
+        if t.contains("我"), t.range(of: #"會不會|什麼時候會|哪一年會|哪年會|幾歲會|適合我|我適合|適合.*嗎|會有.*嗎|會結婚|會升職|會有錢|會成功|會變好|能不能成功"#, options: .regularExpression) != nil { return true }
+        return false
+    }
+
+    /// 說的是自己的心情（「我好累」「最近很難過，怎麼辦」）：要安慰。
+    /// 在問一個東西（「憂鬱症是什麼」「解釋一下情緒勒索」「快樂王子講了什麼」）不算，就算句子裡有情緒字
+    static let moodWords = "煩|累|難過|焦慮|孤單|孤獨|寂寞|沮喪|傷心|生氣|失落|迷茫|害怕|緊張|低落|空虛|委屈|崩潰|痛苦|憂鬱|難受|不開心|鬱悶|無聊|想哭|沒用|沒價值|差勁|自卑"
+
+    static func selfFeeling(_ t: String) -> Bool {
+        guard !asksAboutWork(t) else { return false }
+        // 「我孤單到睡不著」「我失落」「好沮喪」：說的是自己的心情
+        if t.range(of: "(\(moodWords))到|^我(好|很|超|太|真的|有點|一直|最近)?(\(moodWords))|(好|很|超|太|一直|有點|真的|覺得|感到|非常|蠻|滿)\\S{0,2}(\(moodWords))|壓力\\S{0,2}大", options: .regularExpression) != nil,
+           t.range(of: #"緩解|改善|克服|擺脫|減輕|消除|治療|方法|技巧|如何"#, options: .regularExpression) == nil { return true }
+        guard Solace.isFeeling(t) else { return false }
+        // 想解決它（「如何緩解焦慮」「改善失眠的方法」）：要的是方法，上網查
+        let remedy = #"緩解|改善|克服|擺脫|減輕|消除|治療|調整|預防|避免|戒掉|走出|方法|技巧|秘訣|如何|怎樣才能|怎麼才能"#
+        if t.range(of: remedy, options: .regularExpression) != nil { return false }
+        // 心情本身（「好煩」「很沮喪」「想哭」「心情很差」）：安慰
+        let mood = #"(好|很|超|太|一直|有點|真的|覺得|感到|非常|蠻|滿|好想)\S{0,2}(煩|累|難過|焦慮|孤單|孤獨|寂寞|沮喪|傷心|生氣|失落|迷茫|害怕|緊張|低落|空虛|委屈|崩潰|痛苦|憂鬱|難受|不開心|鬱悶|無聊|沒用|哭|放棄|想念)|想哭|心情\S{0,2}(差|不好|糟|低落)|想放棄|不想活|沒有人懂|被分手|失戀|想念|壓力\S{0,2}大"#
+        if t.range(of: mood, options: .regularExpression) != nil { return true }
+        // 問一件事（失眠、胃痛、考試考不好、被排擠怎麼辦）：要的是做法
+        if t.range(of: #"怎麼辦|怎麼處理|該怎麼做"#, options: .regularExpression) != nil { return false }
+        if t.contains("我") || t.contains("自己") { return true }
+        let info = #"是什麼|什麼是|是誰|誰是|誰寫|誰發明|哪裡|哪一|哪個|幾|多少|為什麼|為何|講了什麼|在講什麼|在說什麼|內容|劇情|大綱|故事|意思|解釋|定義|作者|小說|電影|好看|症狀|原因|治療|怎麼治|的好處|有哪些"#
+        return t.range(of: info, options: .regularExpression) == nil
+    }
+
+    /// 問世界上的事（定義、人、地點、時間、數字、原因、做法、比較、名單、作品、好處……），
+    /// 不是問自己的命、不是說自己的心情、不是在跟 NineSun 聊天——這種要上網查，不能被「房」「出國」「情緒」這些字帶去算命或安慰
+    static func worldQuestion(_ raw: String) -> Bool {
+        let t = Understanding.clean(raw)
+        // 問作品（「你的名字講了什麼」：劇情、好不好看不會是在問我）
+        if !fortuneAsk(t), asksAboutWork(t) { return true }
+        if fortuneAsk(t) || selfFeeling(t) || addressedToMe(t) || Translate.parse(raw) != nil || Companion.isSmallTalk(t) { return false }
+        switch Understanding.frame(t).want {
+        case .open:
+            // 「我的優點是什麼」是在問自己（九型），不是問世界上的事
+            if t.hasPrefix("我") { return false }
+            return t.range(of: #"好處|壞處|優點|缺點|功效|內容|劇情|大綱|故事|在講什麼|講了什麼|在說什麼|評價|好看|好玩|值得|是什麼|什麼是|是誰|作者"#, options: .regularExpression) != nil
+        case .steps:
+            return practical(t)
+        default:
+            // 講自己的事（「我幾點睡比較好」「我有多高」）不算
+            return !t.hasPrefix("我")
+        }
+    }
+
+    /// 在問一部作品（書、電影、歌、動畫……）：「少年維特的煩惱這本書講了什麼」「孤獨的美食家好看嗎」——
+    /// 書名裡的「煩惱」「悲傷」「孤獨」不是在說心情，要上網查
+    static func asksAboutWork(_ raw: String) -> Bool {
+        let t = raw.replacingOccurrences(of: #"[？?！!。\s]+$"#, with: "", options: .regularExpression)
+        let fortune = ["運", "命", "宮", "流年", "大運", "八字", "紫微", "卦", "塔羅"]
+        if fortune.contains(where: { t.contains($0) }) { return false }
+        // 只說「這本書講了什麼」、沒有名稱：是在接著前面的話，不能拿去查
+        let name = t.replacingOccurrences(of: #"(這|那)(本|部|首|篇|齣|套)\S{0,3}?(講了什麼|講了些什麼|在講什麼|講什麼|講的是什麼|說了什麼|在說什麼|寫了什麼|內容是什麼|的?內容|的?劇情|好看嗎|好聽嗎)"#, with: "", options: .regularExpression)
+        if name.count < 2 { return false }
+        let kinds = "書|小說|電影|影片|片|劇|影集|動畫|漫畫|歌|曲|專輯|作品|遊戲|詩|散文|繪本|紀錄片|音樂劇|舞台劇"
+        let asks = "講了什麼|講了些什麼|在講什麼|講什麼|講的是什麼|說了什麼|在說什麼|寫了什麼|內容是什麼|內容|劇情|大綱|主旨|主題是什麼|心得|讀後感|結局|好看嗎?|好聽嗎?|值得看嗎?|值得讀嗎?|推薦嗎|的作者是誰|是誰寫的|是誰拍的|是誰唱的|是什麼(\(kinds))"
+        // 「這本書講了什麼」「這部電影在講什麼」「《X》講了什麼」
+        if t.range(of: #"(這|那)(本|部|首|篇|齣|套)(\#(kinds))?"#, options: .regularExpression) != nil,
+           t.range(of: "(\(asks))$", options: .regularExpression) != nil { return true }
+        if t.contains("《") || t.contains("〈") { return t.range(of: "(\(asks))$", options: .regularExpression) != nil }
+        // 「少年維特的煩惱講了什麼」「悲傷逆流成河在講什麼」：主語是一個名稱（不是「我」「你」開頭）
+        // 「你的名字講了什麼」也是：劇情、好不好看不會是在問我
+        if t.range(of: "^[^我他她].{2,20}(講了什麼|講了些什麼|在講什麼|講的是什麼|在說什麼|劇情是什麼|的劇情|的結局|的?故事大綱|的大綱|的作者是誰|是誰寫的|好看嗎?|好聽嗎?|值得看嗎?|值得讀嗎?)$", options: .regularExpression) != nil { return true }
+        // 「誰是寂寞的鯨魚的作者」「誰寫了憂鬱的貓」
+        if t.range(of: "^(誰是.{2,20}的(作者|導演|作曲者|主唱)|誰(寫|拍|唱)了.{2,20})$", options: .regularExpression) != nil { return true }
+        return false
+    }
+
     /// 生活上的「怎麼做」：「怎麼存錢」「面試要注意什麼」「被主管罵了怎麼辦」——要的是實際做法，上網看好幾個網站再整理；
     /// 問命（運勢、流年、什麼時候、會不會）、問 NineSun 自己、翻譯、單純說心情的不算
-    static func practical(_ raw: String) -> Bool {
-        let how = ["怎麼", "如何", "怎樣", "注意什麼", "注意哪些", "注意事項", "方法", "技巧", "秘訣", "訣竅", "該怎麼做", "要怎麼做"]
+    static func practical(_ raw0: String) -> Bool {
+        let raw = Understanding.clean(raw0)
+        if selfFeeling(raw) { return false }
+        let how = ["怎麼", "如何", "怎樣", "注意", "方法", "技巧", "秘訣", "訣竅", "該怎麼做", "要怎麼做", "教我", "從哪裡開始", "有沒有辦法", "辦法"]
         guard how.contains(where: { raw.contains($0) }) else { return false }
-        let not = ["怎麼樣", "怎麼了", "怎麼會", "怎麼回事", "怎麼說", "怎麼講", "怎麼念", "怎麼唸", "怎麼稱呼", "怎麼用這", "怎麼玩這",
+        // 「X 怎麼說」（翻譯）前面已經用 Translate.parse 排除了；「怎麼說服別人」是做法題
+        let not = ["怎麼樣", "怎麼了", "怎麼會", "怎麼回事", "怎麼稱呼", "怎麼用這", "怎麼玩這",
                    "運", "命", "宮", "流年", "大運", "流月", "八字", "紫微", "卦", "塔羅", "占卜", "算", "九型", "星座", "生肖", "風水",
                    "今天", "今晚", "明天", "今年", "明年", "這個月", "下個月", "什麼時候", "會不會", "適合我", "我適合", "我的命", "想死", "不想活", "自殺"]
         if not.contains(where: { raw.contains($0) }) { return false }
         if addressedToMe(raw) || Translate.parse(raw) != nil { return false }
-        // 九型人格的問題（「我怎麼成長」）由 NineSun 自己用你的型回答
-        if Persona.parse(raw, L: .zh) != nil { return false }
+        // 九型人格的問題（「我怎麼成長」「我要怎麼提升自己」）由 NineSun 自己用你的型回答；
+        // 有具體要提升的東西（「我想提升口才」「提升專注力」）就是一般的做法題，上網查
+        if raw.hasPrefix("我"), Persona.parse(raw, L: .zh) != nil {
+            var rest = raw
+            for w in ["我想要", "我想", "我要", "我該", "我", "要", "該", "怎麼", "如何", "做", "才能", "可以", "提升", "成長", "進步", "變更好", "變得更好", "自己", "呢", "嗎", "？", "?", "。"] {
+                rest = rest.replacingOccurrences(of: w, with: "")
+            }
+            if rest.count < 2 { return false }
+        }
         guard case let .steps(target) = Understanding.frame(raw).want else { return false }
         // 「那我該怎麼辦」：沒有具體的事，是在追問上一則解讀
         var t = target
@@ -662,7 +775,7 @@ public final class EchoEngine {
 
     /// 把口語問句整理成搜尋關鍵字
     static func searchQuery(_ raw: String) -> String {
-        var q = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        var q = Understanding.clean(raw)
         if q.hasPrefix("請") && !q.hasPrefix("請問") { q.removeFirst() }
         for w in ["請問", "請你", "請幫我", "幫我查一下", "幫我查", "幫我", "可以告訴我", "告訴我", "你知道", "我想知道", "一下", "呀", "啊", "呢", "吧", "嗎", "？", "?", "！", "!", "。"] {
             q = q.replacingOccurrences(of: w, with: " ")

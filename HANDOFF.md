@@ -366,3 +366,11 @@ CI 的「Live web search check」會用真的網路問 40 題（`WebTests.swift`
   離線重播：`NINESUN_TAPE=web_tape.json swift test -c release -Xswiftc -enable-testing --filter WebTapeTests/testReplay`。
   注意：GitHub 的機器上 Google、Yahoo、DuckDuckGo、Mojeek 幾乎都被擋，Bing 給不相關的結果，所以錄到的網頁九成是維基百科——
   真正的效果要在手機上看。
+
+## 2026-10-23：中文理解訓練 50,000 題、作品題、專業來源、畫面閃黑
+
+- 中文理解訓練：見 `ai/understanding/README.md`（50,000 題訓練＋4,110 題沒看過的驗證題，兩組都 100%；錯誤類型、人會怎麼想、怎麼改都寫在裡面）。
+  路由順序：拿掉客套話 → 問命（`fortuneAsk`）／說自己的心情（`selfFeeling`）／跟 NineSun 聊天 → 其他問世界上的事（`worldQuestion`）上網。
+- 作品題：書名、片名裡的「煩惱」「孤獨」不是心情（`asksAboutWork`）；打錯字的書名照搜尋結果修正（`Understanding.spellFix`）。
+- 專業來源：`Cite.field` 判斷領域，`Cite.proQuery` 用 site: 指定去國健署、康健、經理人、天下、博客來……找；整理重點時專業平台加分、口語扣分。
+- 畫面閃黑：打字泡泡換成正式訊息時，以前先拿掉泡泡再淡入新訊息，中間空一下 → 改成同一瞬間換掉、不做動畫（`ChatViewModel.finish`）。

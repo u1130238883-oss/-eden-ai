@@ -281,8 +281,12 @@ final class ChatViewModel: ObservableObject {
                     return
                 }
                 if let q = reply.webQuery {
-                    self.streaming = nil
-                    self.turns.append(reply.turn)
+                    var tx = Transaction()
+                    tx.disablesAnimations = true
+                    withTransaction(tx) {
+                        self.turns.append(reply.turn)
+                        self.streaming = nil
+                    }
                     // 已經先給了思路庫的答案，網路只是補充：沒查到就不要再跳一則「查不到」
                     // 已經先給了一段像樣的回答（思路庫、建議）時，網路只是補充：沒查到相關的就不要再跳一則
                     self.lookupWeb(q, reply.lang, quietIfNothing: reply.turn.source == .neural || reply.turn.text.count > 40)
@@ -463,10 +467,16 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
+    /// 打字的泡泡換成正式的訊息：同一瞬間換掉、不做淡入動畫。
+    /// （以前先拿掉打字泡泡、再用動畫淡入新訊息，中間那一下是空的，畫面會閃黑一下、捲動位置也會跳）
     private func finish(_ turn: ChatTurn) {
-        streaming = nil
-        thinking = false
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { turns.append(turn) }
+        var tx = Transaction()
+        tx.disablesAnimations = true
+        withTransaction(tx) {
+            turns.append(turn)
+            streaming = nil
+            thinking = false
+        }
         saveHistory()
     }
 

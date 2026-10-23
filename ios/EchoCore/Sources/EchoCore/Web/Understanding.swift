@@ -56,15 +56,39 @@ public enum Understanding {
     }
 
     static func plain(_ q: String) -> String {
-        var t = q.trimmingCharacters(in: .whitespacesAndNewlines)
-        for w in ["請問", "請你", "幫我查一下", "幫我查", "查一下", "幫我", "我想知道", "你知道", "告訴我", "想問"] where t.hasPrefix(w) {
-            t.removeFirst(w.count)
-            break
-        }
+        var t = clean(q)
         t = String(t.filter { !"？?！!。，,；;：:「」 ".contains($0) })
-        while let last = t.last, "呢嗎啊呀吧".contains(last) { t.removeLast() }
+        while let last = t.last, "呢嗎啊呀吧啦喔哦耶".contains(last) { t.removeLast() }
         return t
     }
+
+    /// 開頭的客套和語氣詞（「請問」「我想知道」「所以」「欸」「可以告訴我…嗎」「你知道…嗎」）不是問題本身，先拿掉；
+    /// 「那」只有在當連接詞時才拿掉（「那些年，我們一起追的女孩」「那個人」是名稱的一部分）
+    static let openers = ["你可以告訴我", "可以告訴我", "能不能告訴我", "可不可以告訴我", "幫我查一下", "幫我查查", "幫我查", "幫我上網查", "上網查一下", "上網查",
+                          "幫我搜尋", "搜尋一下", "查一下", "請問一下", "請問", "請你", "想問一下", "想請問", "我想問一下", "我想問", "想問", "我想知道", "想知道",
+                          "我很好奇", "好奇", "你知道", "你曉得", "你懂", "告訴我", "跟我說說", "跟我說", "說說看", "對了", "話說", "順便問一下", "順便問",
+                          "所以", "那麼", "欸", "誒", "唉", "嘿", "喂", "嗯",
+                          "誰能", "誰可以", "有沒有人知道", "有沒有人能", "有人知道", "有誰知道", "說說"]
+
+    public static func clean(_ q: String) -> String {
+        var t = q.trimmingCharacters(in: .whitespacesAndNewlines)
+        var changed = true
+        while changed {
+            changed = false
+            for w in openers where t.hasPrefix(w) && t.count > w.count + 1 {
+                t = String(t.dropFirst(w.count)).trimmingCharacters(in: CharacterSet(charactersIn: "，,、 "))
+                changed = true
+            }
+            if t.hasPrefix("那"), t.count >= 4, let n = t.dropFirst().first, !"些個裡邊時天年種樣位麼一兩".contains(n) {
+                t = String(t.dropFirst()); changed = true
+            }
+        }
+        // 結尾：問號、語氣詞
+        while let last = t.last, "？?！!。～~ 呢嗎啊呀吧啦喔哦耶".contains(last), t.count > 2 { t.removeLast() }
+        return t
+    }
+
+    static let foodWords = ["飯", "菜", "湯", "麵", "蛋", "肉", "魚", "蝦", "雞", "豬", "牛", "餅", "糕", "粥", "醬", "茶", "咖啡", "甜點", "料理", "便當", "披薩", "沙拉", "餃", "包子", "吐司", "麵包"]
 
     static func match(_ s: String, _ pattern: String) -> [String]? {
         guard let re = try? NSRegularExpression(pattern: pattern),
@@ -130,12 +154,99 @@ extension Understanding {
 }
 
 extension Understanding {
+    /// 錯字修正：主題在搜尋結果的標題裡一次都沒出現，卻有兩個以上的標題出現「長度一樣、只差一兩個字」的詞，
+    /// 那個詞多半才是正確的名稱（「少年懷特的煩惱」→「少年維特的煩惱」）
+    public static func spellFix(_ subject: String, titles: [String]) -> String? {
+        let s = Array(subject)
+        guard s.count >= 4, s.count <= 20, s.allSatisfy({ WebAgent.isCJK($0) || $0.isLetter || $0.isNumber }) else { return nil }
+        if titles.contains(where: { $0.contains(subject) }) { return nil }
+        let allow = s.count >= 8 ? 2 : 1
+        var count: [String: Int] = [:]
+        for t in titles {
+            let c = Array(t)
+            guard c.count >= s.count else { continue }
+            var seen = Set<String>()
+            for i in 0...(c.count - s.count) {
+                let w = c[i..<(i + s.count)]
+                var diff = 0
+                for (a, b) in zip(w, s) where a != b { diff += 1; if diff > allow { break } }
+                // 頭尾要一樣（只是中間打錯字），整段要是文字
+                guard diff >= 1, diff <= allow, w.first == s.first, w.last == s.last, w.allSatisfy({ WebAgent.isCJK($0) || $0.isLetter }) else { continue }
+                let k = String(w)
+                if seen.insert(k).inserted { count[k, default: 0] += 1 }
+            }
+        }
+        guard let best = count.max(by: { $0.value < $1.value }), best.value >= 2 else { return nil }
+        return best.key
+    }
+
     public static func frame(_ question: String) -> Frame {
         // 「現在」「目前」只說明要最新的資料，不是主題的一部分
         var t = plain(question)
         for w in recentWords where t.count > w.count + 2 { t = t.replacingOccurrences(of: w, with: "") }
+        // 作品：書名號拿掉，「這本書」「這部電影」只是在說明是什麼，不是名稱的一部分
+        t = t.replacingOccurrences(of: #"[《》〈〉「」『』]"#, with: "", options: .regularExpression)
+        let workKinds = "書|小說|電影|影片|劇|影集|動畫|漫畫|歌|曲|專輯|作品|遊戲|詩|散文|繪本|紀錄片"
+        let stripped = t.replacingOccurrences(of: "(這|那)(本|部|首|篇|齣|套)(\(workKinds))?", with: "", options: .regularExpression)
+        if stripped.count >= 4 { t = stripped }
         func F(_ subject: String, _ want: Want, _ s: [String], _ r: [String], _ wiki: [String], _ restated: String) -> Frame {
             Frame(subject: subject, want: want, searches: uniq(s), retry: uniq(r), wikiTitles: uniq(wiki).filter { $0.count >= 2 }, restated: restated)
+        }
+
+        // 「教我X」＝「怎麼X」
+        if let m = match(t, #"^教我(?:怎麼|如何)?(.{2,})$"#) { return frame("怎麼" + m[1]) }
+        // 時間：「X是哪一年」「X是幾年發生的」「X發生在哪一年」「X什麼時候開始」——要的是時間，不是數量也不是地點
+        if let m = match(t, #"^(.{2,}?)(?:是|在|於|發生在|發生於|始於)?(?:西元)?(?:哪一年|哪年|幾年|什麼時候|何時|哪個年代)(?:發生|開始|結束|成立|建立|推出|出生|過世|上映|出版)?的?$"#),
+           !m[1].hasSuffix("要") && !m[1].hasSuffix("需要") && !m[1].hasSuffix("讀") && !m[1].hasSuffix("活") {
+            let subject = trimTail(m[1], ["是", "在", "的", "發生"])
+            return F(subject, .time, ["\(subject) 年份", "\(subject) 什麼時候"], ["\(subject) 歷史"], [subject],
+                     "你想知道「\(subject)」是什麼時候 → 要一個年份或日期。")
+        }
+        // 作品的內容、劇情：「雪國的內容是什麼」「海角七號的劇情是什麼」——要的是在講什麼，不是名詞解釋
+        if let m = match(t, #"^(.{2,}?)的?(內容|劇情|大綱|主旨|結局|故事|情節)(?:是什麼|是怎樣|在講什麼|講什麼|介紹)?$"#) {
+            let subject = m[1]
+            return F(subject, .open, ["\(subject) 內容", "\(subject) 劇情"], ["\(subject) 簡介"], [subject],
+                     "你想知道「\(subject)」的\(m[2]) → 要講出它在講什麼，不是名詞解釋。")
+        }
+        // 作者：「誰寫了X」「X是誰寫的」「X的作者是誰」
+        if let m = match(t, #"^誰(寫|拍|唱|畫|導演|作曲|設計)了?(.{2,})$"#) {
+            return F(m[2], .person, ["\(m[2]) 作者", "誰\(m[1])了\(m[2])"], ["\(m[2]) 簡介"], [m[2]],
+                     "你想知道「\(m[2])」是誰\(m[1])的 → 要一個名字。")
+        }
+        if let m = match(t, #"^(.{2,}?)的(作者|導演|作曲者|作曲家|主唱|編劇|設計師|發明人|發明者|創辦人)是誰$"#) {
+            return F(m[1], .person, ["\(m[1]) \(m[2])", t], ["\(m[1]) 簡介"], [m[1]],
+                     "你想知道「\(m[1])」的\(m[2])是誰 → 要一個名字。")
+        }
+        if let m = match(t, #"^發明(.{2,}?)的人是誰$"#) { return frame("誰發明了" + m[1]) }
+        // 好處、壞處：「冥想有什麼好處」「游泳有哪些好處」——要幾個重點，不是名單
+        // 「作用」「影響」「功效」前面一定要有「有什麼／的」（「光合作用是什麼」的「作用」是名稱的一部分）
+        if let m = match(t, #"^(.{2,}?)(?:(?:有什麼|有哪些|的)?(好處|壞處|優點|缺點|優缺點)|(?:有什麼|有哪些|的)(功效|作用|影響))(?:是什麼|有哪些|有什麼)?$"#) {
+            let what = m[2].isEmpty ? m[3] : m[2]
+            let subject = m[1]
+            return F(subject, .open, ["\(subject) \(what)", "\(subject)的\(what)"], ["\(subject) \(what) 研究"], [],
+                     "你想知道「\(subject)」的\(what) → 要幾個重點，並說明根據。")
+        }
+        // 原因：「X是為什麼」「X的原因是什麼」
+        if let m = match(t, #"^(.{2,}?)(?:是為什麼|是為何|的原因是什麼|的原因|是什麼原因|是什麼造成的|的原理是什麼|的原理)$"#) {
+            return F(m[1], .reason(pred: m[1]), ["\(m[1]) 原因", "為什麼\(m[1])"], ["\(m[1]) 原理"], [],
+                     "你想知道「\(m[1])」的原因 → 要講出因果，不是只描述現象。")
+        }
+        // 定義：「解釋一下X」「X指的是什麼」「X是什麼意思」
+        if let m = match(t, #"^(?:解釋一下|解釋|說明一下|介紹一下|定義)(.{2,})$"#) { return frame(m[1] + "是什麼") }
+        if let m = match(t, #"^(.{2,}?)(?:指的是什麼|是指什麼|的意思是什麼|是什麼意思|的定義是什麼|的定義|代表什麼)$"#) { return frame(m[1] + "是什麼") }
+        // 比較：「A還是B比較好」
+        if let m = match(t, #"^(.+?)還是(.+?)(?:比較好|比較|好|呢)$"#) {
+            return frame(m[1] + "和" + m[2] + "哪個好")
+        }
+        // 名單：「義大利的城市有哪些」＝「義大利有哪些城市」
+        if let m = match(t, #"^(.{2,}?)的(.{1,6})有哪些$"#), !["好處", "壞處", "優點", "缺點", "方法", "技巧", "注意事項"].contains(m[2]) {
+            return frame(m[1] + "有哪些" + m[2])
+        }
+
+        // 評價：「孤獨的美食家好看嗎」——要大家的評價、優缺點，最後給結論
+        if let m = match(t, #"^(.{2,20}?)(?:好不好看|好看嗎|好看|好不好聽|好聽嗎|好聽|好不好玩|好玩嗎|值得看嗎|值得讀嗎|值得玩嗎|值不值得看|值不值得)$"#) {
+            return F(m[1], .open, ["\(m[1]) 評價", "\(m[1]) 心得 推薦"], ["\(m[1]) 評論"], [m[1]],
+                     "你想知道「\(m[1])」好不好 → 要大家的評價、優點和缺點，再給一個結論。")
         }
 
         // 比較：A 和 B 哪個好
@@ -160,10 +271,15 @@ extension Understanding {
         }
 
         // 要建議、技巧：「面試要注意什麼」「減肥有什麼方法」「讀書的技巧」——要可以照著做的重點，不是名單、不是名詞解釋
-        if let m = match(t, #"^(.+?)(?:要|該|需要|應該)?(?:注意什麼|注意哪些|注意些什麼|有什麼技巧|有什麼方法|有什麼辦法|有什麼建議|有什麼秘訣|有什麼訣竅|有哪些方法|有哪些技巧|的方法|的技巧|的秘訣|的訣竅|的建議|注意事項)$"#) {
+        if let m = match(t, #"^(.+?)(?:要|該|需要|應該)?(?:有什麼要注意的|有什麼需要注意的|有哪些要注意的|有哪些需要注意的|需要注意哪些|需要注意什麼|注意什麼|注意哪些|注意些什麼|有什麼技巧|有什麼方法|有什麼辦法|有什麼建議|有什麼秘訣|有什麼訣竅|有哪些方法|有哪些技巧|的方法|的技巧|的秘訣|的訣竅|的建議|注意事項)$"#) {
             let subject = trimTail(m[1], ["要", "該", "的"])
             return F(subject, .steps(target: subject), ["\(subject) 注意事項 技巧", "\(subject) 建議", t], ["\(subject) 該怎麼做"], [],
                      "你想知道「\(subject)」有什麼要注意、怎麼做比較好 → 要可以照著做的重點。")
+        }
+
+        // 「有沒有什麼方法可以戒菸」「有什麼辦法能早起」：要的是做法，不是名單
+        if let m = match(t, #"^(?:有沒有什麼|有沒有|有什麼|有哪些)(?:好的)?(?:方法|辦法|技巧|訣竅|秘訣)(?:可以|能|能夠|讓我)(.{2,})$"#) {
+            return frame("怎麼" + m[1])
         }
 
         // 名單的其他說法：「歐洲有什麼國家」「有哪幾個國家」「包括什麼國家」「列出歐洲的國家」→ 都當成「歐洲有哪些國家」
@@ -242,7 +358,10 @@ extension Understanding {
             var food = false
             if let m = match(t, #"^(?:要|該)?(?:怎麼|如何|怎樣)(?:才能|可以)?(.+)$"#) {
                 var a = m[1]
-                if let v = a.first, "煮做烤炒蒸泡滷煎燉".contains(v) { food = true; a.removeFirst() }
+                // 煮、炒、煎……是做菜：主題用菜名查「做法」「食譜」；「做簡報」的「做」不是做菜，要留著
+                if let v = a.first, "煮烤炒蒸泡滷煎燉".contains(v) || v == "做" && a.count >= 3 && foodWords.contains(where: { a.contains($0) }) {
+                    food = true; a.removeFirst()
+                }
                 target = a
             } else if let m = match(t, #"^(.+?)(?:要|該)?(?:怎麼|如何)(.+)$"#) {
                 food = m[2].first.map { "煮做烤炒蒸泡滷煎燉".contains($0) } ?? false
@@ -250,6 +369,8 @@ extension Understanding {
                 let generic = ["做", "辦", "處理", "解決", "弄", "應對", "面對", "用", "使用"]
                 target = food || generic.contains(m[2]) ? m[1] : m[1] + m[2]
             }
+            // 「我想存錢該怎麼做」：主題是「存錢」
+            for h in ["我想要", "我想", "我要", "我該", "想要"] where target.hasPrefix(h) && target.count > h.count + 1 { target.removeFirst(h.count); break }
             if !target.isEmpty {
                 let s = food ? ["\(target) 做法", "\(target) 食譜 步驟"] : ["如何\(target)", "\(target) 方法 步驟"]
                 return F(target, .steps(target: target), s, ["\(target) 教學"], [],
@@ -290,7 +411,56 @@ extension Understanding {
         if let m = match(t, #"^(?:什麼是)(.+)$"#) ?? match(t, #"^(.+?)(?:是什麼|是啥|什麼意思)"#) {
             return F(m[1], .definition, ["\(m[1]) 是什麼"], ["\(m[1]) 意思"], [m[1]], "你想知道「\(m[1])」是什麼 → 用一兩句話說清楚。")
         }
+        // 沒有對上固定的說法：像人一樣，先找「在問什麼」的關鍵字，再把問句的字拿掉，剩下的就是主題
+        if let g = general(t) { return g }
         return F(t, .open, [t], [], [], "你問的是「\(t)」。")
+    }
+
+    /// 通用的理解：關鍵字可以出現在句子任何地方（「誰是追風箏的孩子的作者」「有沒有什麼方法可以準備多益」「量子力學的意思」）
+    /// 順序有意義：做法 → 人 → 時間（「在哪一年」先於「在哪」）→ 地點 → 原因 → 作品內容 → 定義 → 數量
+    static let cueGroups: [(String, [String])] = [
+        ("steps", ["有沒有什麼方法可以", "有什麼方法可以", "有沒有什麼辦法", "有沒有辦法", "要從哪裡開始", "從哪裡開始", "怎樣才能", "怎麼樣才能", "如何才能",
+                   "的技巧有哪些", "的方法有哪些", "的技巧", "的方法", "的秘訣", "的訣竅", "的步驟", "該如何處理", "要如何處理", "如何處理", "怎麼處理",
+                   "的話要怎麼辦", "的話怎麼辦", "要怎麼辦", "該怎麼辦", "怎麼辦", "該怎麼做", "要怎麼做", "怎麼做", "該如何", "要如何", "的建議"]),
+        ("person", ["誰是", "是誰提出的", "是誰發現的", "是誰發明的", "是誰創造的", "是誰寫的", "是誰拍的", "是誰唱的", "是誰提出", "是誰發現", "是誰發明",
+                    "是誰", "的作者", "的發明者", "的發明人", "的創始人", "的創辦人", "的導演", "的主唱", "誰提出了", "誰提出", "誰發現了", "誰發現", "誰發明了",
+                    "誰發明", "誰寫了", "誰寫", "是誰的"]),
+        ("time", ["是在哪一年發生的", "是在哪一年", "在哪一年", "是哪一年", "哪一年", "哪年", "發生於何時", "是何時", "何時", "是什麼時候", "什麼時候", "哪個年代", "幾年發生"]),
+        ("place", ["是在哪個國家", "在哪個國家", "在哪個城市", "是哪國的", "是哪個國家的", "哪個國家", "哪個城市", "位於何處", "在什麼地方", "位於哪裡", "在哪裡", "在哪"]),
+        ("reason", ["的原因是什麼", "的原因", "原因是什麼", "是為什麼", "為什麼", "為何", "怎麼會", "為啥", "的原理"]),
+        ("work", ["的故事大綱", "故事大綱", "的大綱", "在說什麼", "在講什麼", "講了什麼", "說了什麼", "的劇情", "的內容", "的故事"]),
+        ("definition", ["到底是什麼", "究竟是什麼", "是什麼意思", "的意思是什麼", "的意思是", "的意思", "的定義", "是指什麼", "指的是什麼", "指的是", "是什麼",
+                        "什麼是", "解釋一下", "解釋", "是啥"]),
+        ("number", ["大概多高", "大約多高", "高度多少", "有多高", "多高", "有多重", "多重", "有多遠", "多遠", "有多長", "多長", "多大", "多久", "多少"]),
+    ]
+    static let leftover = ["有沒有什麼", "有沒有", "可以", "想要", "想", "要", "能", "一下", "的話", "呢", "嗎", "耶", "啊"]
+
+    static func general(_ t: String) -> Frame? {
+        for (want, cues) in cueGroups {
+            guard let cue = cues.first(where: { t.contains($0) }) else { continue }
+            var s = t.replacingOccurrences(of: cue, with: " ")
+            for w in leftover where s.hasPrefix(w) || s.hasSuffix(w) {
+                if s.hasPrefix(w) { s = String(s.dropFirst(w.count)) }
+                if s.hasSuffix(w) { s = String(s.dropLast(w.count)) }
+            }
+            s = s.trimmingCharacters(in: CharacterSet(charactersIn: " 的是在了，,"))
+                .replacingOccurrences(of: " ", with: "")
+            guard s.count >= 2 else { continue }
+            func F(_ w: Want, _ searches: [String], _ restated: String) -> Frame {
+                Frame(subject: s, want: w, searches: uniq(searches), retry: [s], wikiTitles: [s], restated: restated)
+            }
+            switch want {
+            case "steps": return F(.steps(target: s), ["如何\(s)", "\(s) 方法 步驟"], "你想知道怎麼「\(s)」→ 要可以照著做的方法。")
+            case "person": return F(.person, ["\(s) \(cue.contains("作者") ? "作者" : "是誰")", t], "你想知道跟「\(s)」有關的是誰 → 要一個名字。")
+            case "time": return F(.time, ["\(s) 年份", "\(s) 什麼時候"], "你想知道「\(s)」是什麼時候 → 要一個年份或日期。")
+            case "place": return F(.place, ["\(s) 位置", "\(s) 在哪裡"], "你想知道「\(s)」在哪裡 → 要一個地點。")
+            case "reason": return F(.reason(pred: s), ["\(s) 原因", "為什麼\(s)"], "你想知道「\(s)」的原因 → 要講出因果。")
+            case "work": return F(.open, ["\(s) 內容", "\(s) 劇情"], "你想知道「\(s)」在講什麼 → 要內容大意。")
+            case "definition": return F(.definition, ["\(s) 是什麼"], "你想知道「\(s)」是什麼 → 用一兩句話說清楚。")
+            default: return F(.number(attr: "數量", units: []), [t, "\(s) 數字"], "你想知道「\(s)」→ 要一個有單位的數字。")
+            }
+        }
+        return nil
     }
 }
 
