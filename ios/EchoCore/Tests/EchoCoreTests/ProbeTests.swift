@@ -1,12 +1,15 @@
 import XCTest
 @testable import EchoCore
 
-/// 除錯用：印出幾句話的理解結果
+/// 除錯用：印出寫作每一稿和檢查結果
 final class ProbeTests: XCTestCase {
     func testProbe() {
-        for q in ["請問「同意」和「巨大」是反義詞嗎", "考考你，「不一樣」和「一樣」是反義詞嗎", "什麼詞跟忙意思相反", "消極的相反詞是啥呢", "今天謝啦", "你知道嗎，謝啦", "和平和戰爭是反義詞嗎", "同意跟反對是反義詞嗎",
-                  "一石二鳥是什麼意思", "kill two birds with one stone的成語是什麼", "我最近心灰意冷", "我老是三心二意怎麼辦"] {
-            print("PROBE「\(q)」 bare=\(Understanding.bare(q)) ant=\(String(describing: Antonyms.parse(q))) mood=\(Affect.detect(q).rawValue) idiom=\(String(describing: Idioms.understand(q)))")
+        for q in ["Write a paragraph about this: The season has changed.", "老師出的題目：小明被嚇到了，請詳寫", "擴寫：小狗靜靜地等待", "改寫：小明氣炸了，小明很生氣。"] {
+            guard let a = Writer.parse(q) else { print("PROBE 沒聽懂 \(q)"); continue }
+            let r = Writer.write(a)
+            print("PROBE 「\(q)」 kind=\(a.kind) cat=\(a.category) subj=\(a.subject) min=\(a.minUnits)")
+            for (i, d) in r.drafts.enumerated() { print("  稿\(i)：\(Writer.review(d, a))\n    \(d)") }
+            print("  notes=\(r.notes)")
         }
     }
 }

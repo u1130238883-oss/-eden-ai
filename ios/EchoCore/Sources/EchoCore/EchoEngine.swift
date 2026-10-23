@@ -294,6 +294,10 @@ public final class EchoEngine {
         // 2) 觸發規則
         if let t = ctx.rules.trigger(for: text) { return done(t, .rule) }
 
+        // 2.01) 寫作：詳寫（「小明哭了，請詳寫」）、擴寫（「擴寫：樹在成長」「Expand: The tree is growing.」）、修改——
+        //       先寫第一稿、自己檢查、一項一項修改到合格（至少原句的 9 倍長，有環境、感受、觀點、比喻、成語）
+        if let w = Writer.parse(message) { return done(Writer.reply(w), .knowledge) }
+
         // 2.05) 名人命盤：「三島由紀夫的命盤」「跟我同命盤的名人」
         if L == .zh, Celebrities.asksSameChart(text) {
             return done(Celebrities.sameChartReply(ctx.profile.birthday), .reader)
@@ -309,7 +313,7 @@ public final class EchoEngine {
             switch u.intent {
             case "origin": return done(Loc.s("webAsk", .zh), .tool, web: "\(u.idiom) 成語 出處 典故")
             case "problem": if let q = Idioms.problemQuery(u.idiom) { return done(Loc.s("webAsk", .zh), .tool, web: q) }
-            case "meaning", "usage": return done(Loc.s("webAsk", .zh), .tool, web: "\(u.idiom) 成語 意思")
+            case "meaning" where u.extra != "unknown", "usage": return done(Loc.s("webAsk", .zh), .tool, web: "\(u.idiom) 成語 意思")
             default: break
             }
         }
@@ -659,7 +663,17 @@ public final class EchoEngine {
     /// 語氣：開頭的「嘿」「欸」「喂」、結尾的「～」只是口氣，先拿掉（「嘿你是誰～」＝「你是誰」）
     static func tidy(_ raw: String) -> String {
         var t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        while let l = t.last, "～~!！。".contains(l), t.count > 1 { t.removeLast() }
+        // 結尾的客套話、重複的標點只是口氣（「搬家要注意什麼，謝謝」「…？？」「…，快告訴我」）
+        for _ in 0..<2 {
+            t = t.replacingOccurrences(of: #"[，,？?。.!！\s]*[，,]\s*(謝謝|謝啦|拜託|急|快告訴我|我不太懂)$"#, with: "", options: .regularExpression)
+            while let l = t.last, "～~!！。…".contains(l), t.count > 1 { t.removeLast() }
+            t = t.replacingOccurrences(of: #"[？?]{2,}$"#, with: "？", options: .regularExpression)
+            t = t.replacingOccurrences(of: #"[？?][。，,]+$"#, with: "？", options: .regularExpression)
+        }
+        // 開頭的情境、口頭禪（「考考你，」「跟你說，」「老實說，」「我一直很好奇，」「對了，」「話說」「嗯…」）不是問題本身
+        t = t.replacingOccurrences(of: Understanding.contextOpeners, with: "", options: .regularExpression)
+        t = t.replacingOccurrences(of: #"^((對了|話說|順便問一下|順便問|嗯…*|嗯)[，,、…\s]*)+(?=.{2})"#, with: "", options: .regularExpression)
+        t = t.replacingOccurrences(of: Understanding.contextOpeners, with: "", options: .regularExpression)
         for w in ["嘿", "欸", "誒", "喂", "哈囉，", "嗨，"] where t.hasPrefix(w) && t.count > w.count + 1 {
             t = String(t.dropFirst(w.count)).trimmingCharacters(in: CharacterSet(charactersIn: "，, "))
             break

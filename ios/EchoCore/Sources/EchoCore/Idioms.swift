@@ -107,15 +107,18 @@ public enum Idioms {
                 return Understood(intent: "theme", idiom: "", extra: m[1])
             }
         }
-        // 兩個成語：「A和B是反義詞嗎」「A的反義詞是B嗎」「A跟B意思一樣嗎」
-        if let m = Understanding.match(t, #"^(.+?)(?:和|跟|與|同)(.+?)(?:是)?(?:不是)?(?:反義詞|反義成語|相反詞|一對反義詞|相反的意思|意思相反|相反)(?:嗎)?$"#)
-            ?? Understanding.match(t, #"^(.+?)的(?:反義詞|反義成語|相反詞)是(?:不是)?(.+?)$"#),
-           byName[m[1]] != nil, byName[m[2]] != nil {
+        // 兩個成語：「A和B是反義詞嗎」「A的反義詞是B嗎」「A跟B意思一樣嗎」——連接詞可能在成語裡（「心平氣和」的「和」、「大同小異」的「同」），
+        // 每個切法都試，兩邊都是成語的才算
+        if let p = twoIdioms(t, tail: #"^(.+?)(?:是)?(?:不是)?(?:反義詞|反義成語|相反詞|一對反義詞|相反的意思|意思相反|相反)(?:嗎)?$"#) {
+            return Understood(intent: "pairAnti", idiom: p.0, extra: p.1)
+        }
+        if let m = Understanding.match(t, #"^(.+?)的(?:反義詞|反義成語|相反詞)是(?:不是)?(.+?)$"#), byName[m[1]] != nil, byName[m[2]] != nil {
             return Understood(intent: "pairAnti", idiom: m[1], extra: m[2])
         }
-        if let m = Understanding.match(t, #"^(.+?)(?:和|跟|與|同)(.+?)(?:的)?(?:意思)?(?:一樣|相同|差不多|相近|是近義詞|是同義成語|是同義詞|是近義成語|一樣意思)(?:嗎)?$"#)
-            ?? Understanding.match(t, #"^(.+?)是不是就是(.+?)的意思$"#),
-           byName[m[1]] != nil, byName[m[2]] != nil {
+        if let p = twoIdioms(t, tail: #"^(.+?)(?:的)?(?:意思)?(?:一樣|相同|差不多|相近|是近義詞|是同義成語|是同義詞|是近義成語|一樣意思)(?:嗎)?$"#) {
+            return Understood(intent: "pairNear", idiom: p.0, extra: p.1)
+        }
+        if let m = Understanding.match(t, #"^(.+?)是不是就是(.+?)的意思$"#), byName[m[1]] != nil, byName[m[2]] != nil {
             return Understood(intent: "pairNear", idiom: m[1], extra: m[2])
         }
         if let x = find(t) {
@@ -124,6 +127,12 @@ public enum Idioms {
             if has(rest, "近義|同義|相似|意思(一樣|差不多|相近)|相近") { return Understood(intent: "near", idiom: x, extra: "") }
             if has(rest, "出處|典故|出自|由來|成語故事|的故事") { return Understood(intent: "origin", idiom: x, extra: "") }
             if has(rest, "怎麼用|用法|造句|用在|適合用") { return Understood(intent: "usage", idiom: x, extra: "") }
+            // 只說一個成語：說心情的成語（「身心俱疲」）就是在說自己；其他的是在問意思
+            if rest == "＿", let m = IdiomData.selfMood[x] { return Understood(intent: "feeling", idiom: x, extra: m) }
+            // 只丟一句「答非所問」「胡說八道」給 NineSun：是在抱怨它答得不好
+            if rest == "＿" || rest.hasPrefix("你") || rest.hasPrefix("真是"), ["答非所問", "胡說八道", "一派胡言", "文不對題"].contains(x) {
+                return Understood(intent: "feeling", idiom: x, extra: "complainAI")
+            }
             if has(rest, "意思|解釋|指的是|什麼叫|含義|涵義|代表什麼|是啥|^＿$|^成語＿$") { return Understood(intent: "meaning", idiom: x, extra: "") }
             // 用成語說自己的毛病，要找方法：「我老是三心二意怎麼辦」「怎麼改掉半途而廢的毛病」
             if IdiomData.problem.contains(x), has(rest, "怎麼|如何|改|避免|方法|辦法|不再|不會|才能") {
@@ -136,9 +145,21 @@ public enum Idioms {
             return nil
         }
         // 詞庫沒有的成語：「狐假虎威是什麼意思」——還是知道在問意思（交給上網查）
-        if let m = Understanding.match(t, #"^(?:成語)?(\p{Han}{4})(?:這個成語|這句成語)?(?:是什麼意思|的意思是什麼|的意思|指的是什麼|怎麼解釋|什麼意思|是啥意思|的含義|代表什麼意思|的涵義是什麼)$"#)
-            ?? Understanding.match(t, #"^(?:什麼叫|解釋一下|請解釋|可以解釋)(?:成語)?(\p{Han}{4})$"#) {
+        if let m = Understanding.match(t, #"^(?:成語)?[「『"“]?(\p{Han}{4})[」』"”]?(?:這個成語|這句成語)?(?:是什麼意思|的意思是什麼|的意思|指的是什麼|怎麼解釋|什麼意思|是啥意思|的含義|代表什麼意思|的涵義是什麼)$"#)
+            ?? Understanding.match(t, #"^(?:什麼叫|解釋一下|請解釋|可以解釋)(?:成語)?[「『"“]?(\p{Han}{4})[」』"”]?$"#) {
             return Understood(intent: "meaning", idiom: m[1], extra: "unknown")
+        }
+        return nil
+    }
+
+    /// 「A和B……」：在每個連接詞的位置切開，兩邊都是成語庫裡的成語才算
+    static func twoIdioms(_ t: String, tail: String) -> (String, String)? {
+        let cs = Array(t)
+        for i in cs.indices where i > 0 && "和跟與同".contains(cs[i]) {
+            let a = Synonyms.strip(String(cs[..<i]))
+            guard byName[a] != nil, let m = Understanding.match(String(cs[(i + 1)...]), tail) else { continue }
+            let b = Synonyms.strip(m[1])
+            if byName[b] != nil, a != b { return (a, b) }
         }
         return nil
     }
@@ -187,7 +208,7 @@ public enum Idioms {
             return "「\(u.idiom)」的反義成語：" + o.prefix(6).map { w in "\(w)（\(byName[w]?.meaning ?? "")）" }.joined(separator: "、") + "。"
         case "pairNear":
             let a = u.idiom, b = u.extra
-            if isNear(a, b) { return "對，「\(a)」和「\(b)」意思相近：\(byName[a]?.meaning ?? "")。" }
+            if isNear(a, b) { return "相近，「\(a)」和「\(b)」是近義成語，都是：\(byName[a]?.meaning ?? "")。" }
             if isOpposite(a, b) { return "不一樣，「\(a)」和「\(b)」的意思剛好相反。" }
             return "不一樣。「\(a)」是\(byName[a]?.meaning ?? "")；「\(b)」是\(byName[b]?.meaning ?? "")。"
         case "pairAnti":
@@ -220,6 +241,10 @@ public enum Idioms {
         guard let tl = r.target.lex, ["zh", "en", "es", "it"].contains(tl) else { return nil }
         var text = r.text.trimmingCharacters(in: CharacterSet(charactersIn: "「」『』\"“”'‘’ 。.!?！？"))
         if text.hasPrefix("成語") { text = String(text.dropFirst(2)) }
+        // 「那欲速則不達」「把半途而廢」：前面的口頭禪、「把」不是成語的一部分
+        if byName[text] == nil, let r = text.range(of: #"^(那個|那|把|那把|請把|成語)+"#, options: .regularExpression), byName[String(text[r.upperBound...])] != nil {
+            text = String(text[r.upperBound...])
+        }
         if let e = byName[text] {
             let out: [String]
             switch tl {

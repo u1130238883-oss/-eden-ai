@@ -53,7 +53,7 @@ public enum Antonyms {
             let a = Synonyms.strip(String(cs[..<i])), rest = String(cs[(i + 1)...])
             guard a.count <= 8, let m = Understanding.match(rest, tails) else { continue }
             let b = Synonyms.strip(m[1])
-            if !a.isEmpty, !b.isEmpty, a != b, !asking.contains(a), !asking.contains(b) { cands.append((a, b)) }
+            if !a.isEmpty, !b.isEmpty, a != b, !asks(a), !asks(b) { cands.append((a, b)) }
         }
         if let m = Understanding.match(t, #"^(.{1,8}?)的(?:反義詞|相反詞)是(?:不是)?(.{1,8}?)$"#) {
             let a = Synonyms.strip(m[1]), b = Synonyms.strip(m[2])
@@ -63,18 +63,27 @@ public enum Antonyms {
         return cands.first { k($0.0) && k($0.1) } ?? cands.first { k($0.0) || k($0.1) } ?? cands.first
     }
 
+    /// 問句的字不是詞（「相同有哪些反義詞」不是比較「相」和「有哪些」）
+    static func asks(_ w: String) -> Bool { asking.contains(w) || w.range(of: "什麼|哪|啥|有沒有|甚麼", options: .regularExpression) != nil }
+
+    /// 「消極的」本身在詞庫裡：不要只抓到「消極」
+    static func whole(_ w: String, in t: String) -> String {
+        if !known(w), known(w + "的"), t.contains(w + "的") { return w + "的" }
+        return w
+    }
+
     public static func parse(_ raw: String) -> Ask? {
         let t = Understanding.bare(raw)
         // 「什麼詞跟忙意思相反」：在問「忙」的反義詞，不是比較「什麼詞」和「忙」
         if let m = Understanding.match(t, #"^(?:什麼|哪個|哪些)(?:詞|字)(?:跟|和|與)(.{1,8}?)(?:的)?意思相反$"#) {
-            let w = Synonyms.strip(m[1]); if !w.isEmpty { return .of(w) }
+            let w = whole(Synonyms.strip(m[1]), in: t); if !w.isEmpty { return .of(w) }
         }
         if let p = pair(t) { return .pair(p.0, p.1) }
         for p in ofPatterns {
             if let m = Understanding.match(t, p) {
-                let w = Synonyms.strip(m[1])
+                let w = whole(Synonyms.strip(m[1]), in: t)
                 // 「什麼是反義詞」「怎麼教小孩反義詞」：不是在問某個詞
-                if !w.isEmpty, w.range(of: "什麼|怎麼|如何|哪|誰|教|學|練習|英文|意思", options: .regularExpression) == nil { return .of(w) }
+                if !w.isEmpty, w.range(of: "什麼|怎麼|如何|哪|誰|英文|意思", options: .regularExpression) == nil { return .of(w) }
             }
         }
         return nil

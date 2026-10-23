@@ -83,6 +83,10 @@ public enum Understanding {
                     t = String(t.dropFirst(w.count)).trimmingCharacters(in: CharacterSet(charactersIn: "，,、 …"))
                     changed = true
                 }
+                // 「那」只有當連接詞才拿掉（「那些年」「那個人」是名稱）
+                if t.hasPrefix("那"), t.count >= 4, let n = t.dropFirst().first, !"些個裡邊時天年種樣位麼一兩".contains(n) {
+                    t = String(t.dropFirst()); changed = true
+                }
             }
         }
         t = t.replacingOccurrences(of: #"[，,？?](快告訴我|我不太懂|謝謝|拜託|謝啦|急)$"#, with: "", options: .regularExpression)
@@ -91,8 +95,11 @@ public enum Understanding {
         return t
     }
 
+    static let contextOpeners = #"^((考考你|突然想到|老師上課說到|老師說的|老師說|我在書上看到|書上寫|看小說看到|我(兒子|女兒|妹|弟|妹妹|弟弟|小孩)問我|小孩問我|朋友問我|說真的|問你喔|問一下喔|有個問題|今天作文要用|作文要用|麻煩告訴我|跟你請教|請教一下|麻煩一下|老實說|跟你說|剛剛在想|我一直很好奇)[，,：:、…\s]*)+(?=.)"#
+
     public static func clean(_ q: String) -> String {
         var t = q.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: contextOpeners, with: "", options: .regularExpression)
         var changed = true
         while changed {
             changed = false

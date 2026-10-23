@@ -119,7 +119,19 @@ public enum Translate {
 
     /// 這段話是不是要翻譯；是的話要翻什麼、翻成哪種語言
     public static func parse(_ raw: String) -> Request? {
-        let q = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        // 開頭的客套話不是要翻的內容（「請問一下X翻成英文」「麻煩一下，X換成西文」「那X的義大利文」）
+        var q = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        // 「那」後面接外文才是口頭禪（「那short and sweet…」）；「那條毛巾」「那本書」的「那」是內容
+        let lead = #"^(請問一下|麻煩一下|請教一下|麻煩你|請問|告訴我|欸|嗯|那(?=[A-Za-z¿¡「"]))[，,、\s]*(?=.)"#
+        if let r = q.range(of: lead, options: .regularExpression), q[r.upperBound...].count >= 2 { q = String(q[r.upperBound...]) }
+        // 同一個意思的不同說法，先換成認得的說法：「中譯英」＝「中翻英」、「X 的英語說法」＝「X 的英語」、
+        // 「，請翻西」＝「，翻西」、「這個用國語怎麼表達」＝「用國語怎麼表達」、「… please」
+        for (p, r) in [(#"([中英西義意日韓法德])譯([中英西義意日韓法德])"#, "$1翻$2"), (#"[，,]\s*請翻"#, "，翻"), (#"這個用"#, "用"),
+                       (#"的(\S{2,5}?)說法$"#, "的$1"), (#"(?i)\s+please[.!]?$"#, ""), (#"(?i)^please\s+"#, "")] {
+            q = q.replacingOccurrences(of: p, with: r, options: .regularExpression)
+        }
+        // 結尾的「～」「~」只是口氣
+        q = q.replacingOccurrences(of: #"[～~]+$"#, with: "", options: .regularExpression)
         guard !q.isEmpty, q.count <= 600 else { return nil }
         // 有中文的語言名稱：先拆開來想（固定句型容易把「請問」「告訴我」也當成內容）
         if let r = understand(q) { return r }

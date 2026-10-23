@@ -41,6 +41,7 @@ DATA = """
 樂不可支|快樂到了極點|tickled pink|loco de contento|pazzo di gioia|開心,幽默
 欣喜若狂|高興得像發狂一樣|wild with joy|loco de alegría|fuori di sé dalla gioia|開心
 無憂無慮|沒有任何憂慮|carefree|despreocupado|spensierato|開心
+心滿意足|心裡非常滿足|perfectly content|plenamente satisfecho|pienamente soddisfatto|開心
 悶悶不樂|心情煩悶、不快樂|down in the dumps|estar de bajón|essere giù di morale|難過
 心灰意冷|灰心失望、意志消沉|lose heart|desanimarse|perdersi d'animo|難過
 傷心欲絕|傷心到了極點|heartbroken|con el corazón roto|con il cuore spezzato|難過

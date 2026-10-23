@@ -87,6 +87,8 @@ public enum Affect {
                 .replacingOccurrences(of: #"^((其實|欸|誒|嗯|唉|對了|說真的|老實說|那個|跟你說|剛剛|所以)[，,、\s]*)+(?=.)"#, with: "", options: .regularExpression)
         }
         let t0 = trim(raw)
+        // 要寫作（「小明哭了，請詳寫」）：句子裡的「哭」是題目，不是心情
+        if Writer.parse(raw) != nil { return .info }
         // 「我想知道…」「可以告訴我…」「好奇…」是問問題的開頭，不是心情
         let c = trim(Understanding.clean(t0))
         let t = c.isEmpty ? t0 : c
