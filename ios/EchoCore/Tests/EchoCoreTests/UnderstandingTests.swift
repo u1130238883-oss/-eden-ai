@@ -298,7 +298,7 @@ final class YearCompareTests: XCTestCase {
         ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 7, minute: 0, male: true)
         let r = engine.reply(to: "今年和明年哪個好", context: ctx).turn.text
         XCTAssertTrue(r.contains("引動大運 2 個方面（好 0、壞 2）"), r)
-        XCTAssertTrue(r.contains("引動大運 4 個方面（好 1、壞 1、平 2）"), r)
+        XCTAssertTrue(r.contains("引動大運 4 個方面（好 1、壞 1、正 2）"), r)
         XCTAssertTrue(r.contains("起因全部在7宮"), r)
         XCTAssertTrue(r.contains("結論"), r)
     }

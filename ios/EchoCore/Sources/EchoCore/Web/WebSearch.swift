@@ -8,7 +8,7 @@ import FoundationNetworking
 ///   Bing（RSS 與網頁）、DuckDuckGo（網頁與即時答案）、Yahoo、Google（基本版網頁）、維基百科、Google 新聞 RSS、Open-Meteo 天氣。
 /// 每一次都是即時上網查，不在手機裡存舊答案。
 public enum WebSearch {
-    public struct Hit: Equatable, Sendable {
+    public struct Hit: Equatable, Sendable, Codable {
         public let title: String
         public let snippet: String
         public let url: String
@@ -19,7 +19,7 @@ public enum WebSearch {
         }
     }
 
-    public struct Answer {
+    public struct Answer: Codable {
         /// 直接的答案（即時答案、維基百科摘要、天氣）
         public var lead: String?
         public var leadSource: String?
@@ -45,6 +45,17 @@ public enum WebSearch {
     /// 同時問所有來源，合併去重
     /// light：只問 Bing（拆成好幾個方面分開查的時候用，比較快）
     public static func search(_ q: String, lang L: Lang, news: Bool = false, light: Bool = false) async -> Answer {
+        // 錄音帶：重播時直接用錄下來的結果；錄音時照常上網，再把結果記下來
+        if let tape = WebTape.shared {
+            if tape.replaying { return tape.search(q, L, news: news, light: light) ?? Answer(lead: nil, leadSource: nil, hits: [], engines: [:]) }
+            let a = await liveSearch(q, lang: L, news: news, light: light)
+            tape.record(q, L, news: news, light: light, a)
+            return a
+        }
+        return await liveSearch(q, lang: L, news: news, light: light)
+    }
+
+    static func liveSearch(_ q: String, lang L: Lang, news: Bool, light: Bool) async -> Answer {
         if light {
             // 小問題：Bing 一次＋維基百科一次（Bing 不給結果時再問 Yahoo）
             async let wk = soon(4, [], { await wikiSearch(wikiTerm(q), L) })
@@ -529,6 +540,16 @@ public enum WebSearch {
 
     /// 打開網頁，去掉選單、腳本，回傳正文文字
     public static func pageText(_ url: String, _ L: Lang) async -> String? {
+        if let tape = WebTape.shared {
+            if tape.replaying { return tape.page(url) }
+            let t = await livePageText(url, L)
+            tape.record(page: url, t)
+            return t
+        }
+        return await livePageText(url, L)
+    }
+
+    static func livePageText(_ url: String, _ L: Lang) async -> String? {
         guard let u = URL(string: url), u.scheme?.hasPrefix("http") == true else { return nil }
         let req = request(u, L, ua: mobileUA)
         guard let res = try? await session.data(for: req) else { return nil }

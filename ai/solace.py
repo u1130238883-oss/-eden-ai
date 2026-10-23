@@ -212,7 +212,7 @@ def layer_explains(row, focus):
 def clause(row):
     """一層的一句話（照九型十二宮 App 的讀法：起因 → 場域 →（呈現出來的樣子））"""
     r = row.reading
-    tone = {BAD: "比較重", GOOD: "是順的", NEUTRAL: "平平"}[r.verdict]
+    tone = {BAD: "比較重", GOOD: "是順的", NEUTRAL: "能量很強"}[r.verdict]
     if r.cause == row.palace:
         return f"起因和場域都在{DOMAIN_SHORT[row.palace - 1]}（{tone}）"
     return f"{CAUSE_SHORT[r.cause - 1]}，落在{DOMAIN_SHORT[row.palace - 1]}（{tone}）"
@@ -250,7 +250,7 @@ def situation(D, y, m, d, hour, focus):
     elif v == GOOD:
         lines.append(f"{span}其實是往好的方向走的，底子是{nt_emotion(row.reading)}的。現在的難受，比較像路上的一顆小石頭，不會擋住你太久。")
     else:
-        lines.append(f"{span}不算特別順也不算特別卡：{detail(row)}。{extra}心情起伏是正常的。")
+        lines.append(f"{span}的能量特別強，感受會被放大：{detail(row)}。{extra}心情起伏大是正常的，不是你太敏感。")
     return name, row, "\n".join(lines)
 
 
@@ -280,7 +280,7 @@ def nt_emotion(r):
         return good
     if r.verdict == BAD:
         return bad
-    return "在" + good.split("、")[0] + "和" + bad.split("、")[0].split("，")[0] + "之間擺盪"
+    return "感受特別強烈，在" + good.split("、")[0] + "和" + bad.split("、")[0].split("，")[0] + "之間大起大落"
 
 
 def next_good_month(D, y, m, ahead=6):
@@ -360,7 +360,7 @@ def reply(text, birthday=None, now=(2026, 10, 22, 14), again=False):
     area = ASPECT.get(kind) or (topic if topic in AREA_NAME else None)
     if area:
         a = D.luck_aspects(y)[area - 1]
-        tone = {BAD: "這十年本來就比較需要用力", GOOD: "這十年整體是順的，這次只是一時的卡", NEUTRAL: "這十年平平，起伏都還在可以走過的範圍"}[a.reading.verdict]
+        tone = {BAD: "這十年本來就比較需要用力", GOOD: "這十年整體是順的，這次只是一時的卡", NEUTRAL: "這十年能量很強，起伏會很明顯，但都是可以走過的"}[a.reading.verdict]
         hit = "而且今年的流年剛好引動這一方面，所以最近特別有感。" if any(r.palace == area for r in D.triggered_aspects(y)) else ""
         out.append(f"再看你這十年的「{AREA_NAME[area]}」這一方面：{tone}。{hit}")
     note = natal_note(D, focus)

@@ -184,7 +184,7 @@ public enum Planner {
                 text += "這一年沒有引動大運的任何方面，比較平淡，變化主要來自流年本身。\n"
             } else {
                 let neutral = it.trig.count - it.good - it.bad
-                text += "引動大運 \(it.trig.count) 個方面（好 \(it.good)、壞 \(it.bad)" + (neutral > 0 ? "、平 \(neutral)" : "") + "）：\n"
+                text += "引動大運 \(it.trig.count) 個方面（好 \(it.good)、壞 \(it.bad)" + (neutral > 0 ? "、正 \(neutral)" : "") + "）：\n"
                 for a in it.trig {
                     text += "• 第\(a.palace)方面 \(NT.label(a.palace))「\(a.reading.text)」：" + FlowReading.interpret(a) + "\n"
                 }
@@ -209,7 +209,7 @@ public enum Planner {
                 else {
                     if !good.isEmpty { line += "可以把握「\(good)」" }
                     if !bad.isEmpty { line += (good.isEmpty ? "" : "，") + "要小心「\(bad)」" }
-                    if good.isEmpty && bad.isEmpty { line += "引動的方面都是平的，不好不壞" }
+                    if good.isEmpty && bad.isEmpty { line += "引動的方面都是正，能量很強" }
                 }
                 text += line + "；"
             }

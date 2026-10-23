@@ -327,7 +327,7 @@ public enum FortuneRouter {
 
     static func rowQuery(frame: String, label: String, title: String, row: NTRow) -> FortuneQuery {
         let r = row.reading
-        let phrase = ["整體順勢，有助力", "持平穩定，照常發揮就好", "有阻力，要多留意"][r.verdict.rawValue]
+        let phrase = ["整體順勢，有助力", "能量很強，這方面會特別明顯，好壞看你怎麼用", "有阻力，要多留意"][r.verdict.rawValue]
         return FortuneQuery(
             frame: frame,
             mustContain: [NT.label(row.palace), r.text],

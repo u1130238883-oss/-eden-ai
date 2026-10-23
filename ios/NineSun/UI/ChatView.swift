@@ -34,10 +34,6 @@ struct ChatView: View {
             }
             if showLangPicker { langPicker }
         }
-        .background {
-            // 手機內建翻譯（iOS 18 起）需要掛在畫面上的元件
-            if #available(iOS 18.0, *) { AppleTranslatorBridge() }
-        }
         .sheet(isPresented: $showSettings) {
             SettingsView().environmentObject(vm)
         }

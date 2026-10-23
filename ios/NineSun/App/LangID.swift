@@ -2,7 +2,7 @@ import EchoCore
 import NaturalLanguage
 
 /// 判斷原文是哪種語言：用手機內建的語言辨識（離線），比只看常見字準很多（「ti amo」「lo siento」這種短句也認得）。
-/// 蘋果內建翻譯一定要知道原文語言，認錯就會翻壞。
+/// 翻譯要先知道原文語言，認錯就會翻壞。
 enum LangID {
     static let map: [NLLanguage: Translate.Code] = [
         .traditionalChinese: .zh, .simplifiedChinese: .zhHans, .english: .en, .spanish: .es, .italian: .it,

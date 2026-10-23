@@ -28,8 +28,6 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "5.0"
         SWIFT_OPTIMIZATION_LEVEL: "-O"
-        # 內建翻譯（Translation）是 iOS 17.4 以後才有：舊系統上不載入，App 照樣能開
-        OTHER_LDFLAGS: "$(inherited) -weak_framework Translation"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         GENERATE_INFOPLIST_FILE: YES

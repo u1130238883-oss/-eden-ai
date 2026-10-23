@@ -1,0 +1,38 @@
+name: Record web tape
+
+# commit 訊息有 [tape] 時：真的上網查一批問題，把搜尋結果和網頁文字錄下來，發佈成 release（給沒有網路的開發環境離線重播、訓練抓答案）
+on:
+  push:
+    paths:
+      - "ios/**"
+      - ".github/workflows/web-tape.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    if: contains(github.event.head_commit.message, '[tape]') || github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record
+        working-directory: ios/EchoCore
+        run: |
+          NINESUN_TAPE_OUT="$PWD/web_tape.json" NINESUN_TAPE_ANSWERS="$PWD/web_answers.txt" \
+            swift test -c release -Xswiftc -enable-testing --filter WebTapeTests/testRecord > tape.log 2>&1 || true
+          tail -5 tape.log
+          ls -la web_tape.json web_answers.txt
+          gzip -9 -k web_tape.json
+          tail -3 web_answers.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: web-tape-${{ github.run_number }}
+          name: Web tape ${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          files: |
+            ios/EchoCore/web_tape.json.gz
+            ios/EchoCore/web_answers.txt
+          body: 網頁錄音帶（離線重播、訓練用）

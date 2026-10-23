@@ -31,7 +31,7 @@ public enum FullReading {
 
         var t = "【綜合分析 · \(y)年\(m)月\(d)日】\n"
         t += "\n① 你是誰（本命）\n"
-        t += "命宮在\(NT.label(natal.palace))（\(R.topicShort(natal.palace))），本命判讀「\(natal.reading.text)」。\(PalaceLore.text(natal.palace, natal.reading, .zh))\n"
+        t += "命宮在\(NT.label(natal.palace))。" + FlowReading.whoYouAre(natal) + "\n"
         t += "九型是第\(ty)型「\(NT.typeName(ty))」：\(NT.typeTagline(ty))。\n"
 
         t += "\n② 人生現在的階段（大運 \(lp.start)–\(lp.end)）\n"
@@ -64,7 +64,7 @@ public enum FullReading {
                 switch r.verdict {
                 case .bad: t += "建議先從\(FlowReading.area[r.cause - 1])下手：\(FlowReading.remedy[r.cause - 1])。"
                 case .good: t += "這是你的助力，好好用：\(FlowReading.remedy[r.result - 1])。"
-                case .neutral: t += "平平的，看你怎麼用：\(FlowReading.remedy[p - 1])。"
+                case .neutral: t += "這股能量很強，用對地方就是力量：\(FlowReading.remedy[p - 1])。"
                 }
                 t += "\n"
             }
@@ -72,7 +72,9 @@ public enum FullReading {
         let score = [yr.reading.verdict, lp.row.reading.verdict, mo.reading.verdict].map { [1, 0, -1][$0.rawValue] }.reduce(0, +)
         t += score > 0 ? "整體是順風期：想做的事可以主動推進，但記得留意上面標出的重點。"
             : score < 0 ? "整體是蓄力期：外在阻力比較多，重要決定放慢、先穩住基本盤，把力氣花在上面的重點上。"
-            : "整體是持平期：有順有卡，挑最重要的一兩件事專心做。"
+            : [yr.reading.verdict, lp.row.reading.verdict, mo.reading.verdict].filter({ $0 == .neutral }).count >= 2
+                ? "整體是能量很強的時期：事情會很密集、很明顯，好壞看你把力氣用在哪，挑一兩件最重要的事全力做。"
+                : "整體是有順有卡的時期：挑最重要的一兩件事專心做。"
 
         // 其他系統參考：八字流年、紫微流年四化（以九型十二宮為主，這裡只做對照）
         let bd = D.birth

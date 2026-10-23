@@ -347,7 +347,7 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    /// 翻譯：蘋果內建翻譯（離線）→ Google 翻譯 → AI（設定有開 API 時）→ MyMemory；
+    /// 翻譯：道地說法表 → AI（設定有開 API 時）→ Google 翻譯 → MyMemory；
     /// 翻好後念出來。App 裡不存字典。
     private func translate(_ req0: Translate.Request) {
         let cfg = aiConfig, api = apiOn, speak = speakTranslation
@@ -370,14 +370,11 @@ final class ChatViewModel: ObservableObject {
                                            via: "請 " + cfg.names.joined(separator: "、") + " 翻譯")
                 }
             }
-            // 沒開 API：蘋果內建翻譯（只用手機裡已經下載好的語言，不跳出系統的下載畫面）→ Google 翻譯
-            if res == nil, #available(iOS 18.0, *) {
-                res = await AppleTranslator.shared.translate(req, allowDownload: false)
-            }
+            // 不用蘋果內建翻譯：它隨時可能跳出系統畫面（下載語言包、翻譯面板），直接用 Google 翻譯
             if res == nil { res = await Translate.google(req) }
             if res == nil { res = await Translate.online(req) }
             let text = res.map { Translate.reply(req, $0) }
-                ?? "這句我現在翻不出來：Google 翻譯連不上，手機內建翻譯也還沒有這個語言包（要 iOS 18 以上）。請確認手機有連上網路，再試一次。"
+                ?? "這句我現在翻不出來：Google 翻譯連不上。請確認手機有連上網路，再試一次。"
             var turn = ChatTurn(role: .echo, text: text, source: .tool)
             if let r = res {
                 turn.speak = r.text

@@ -41,7 +41,7 @@ public enum Solace {
         case .neutral:
             let g = e.good.components(separatedBy: "、")[0]
             let b = e.bad.components(separatedBy: "、")[0].components(separatedBy: "，")[0]
-            return "在" + g + "和" + b + "之間擺盪"
+            return "感受特別強烈，在" + g + "和" + b + "之間大起大落"
         }
     }
 
@@ -52,7 +52,7 @@ public enum Solace {
     /// 一層的一句話（起因 → 場域 →（呈現出來的樣子））
     static func clause(_ row: NTRow) -> String {
         let r = row.reading
-        let tone = ["是順的", "平平", "比較重"][r.verdict.rawValue]
+        let tone = ["是順的", "能量很強", "比較重"][r.verdict.rawValue]
         if r.cause == row.palace { return "起因和場域都在\(dom(row.palace))（\(tone)）" }
         return "\(SolaceData.causeShort[r.cause - 1])，落在\(dom(row.palace))（\(tone)）"
     }
@@ -86,7 +86,7 @@ public enum Solace {
         case .good:
             lines.append("\(span)其實是往好的方向走的，底子是\(emotion(row.reading))的。現在的難受，比較像路上的一顆小石頭，不會擋住你太久。")
         case .neutral:
-            lines.append("\(span)不算特別順也不算特別卡：\(detail(row))。\(extra)心情起伏是正常的。")
+            lines.append("\(span)的能量特別強，感受會被放大：\(detail(row))。\(extra)心情起伏大是正常的，不是你太敏感。")
         }
         return (name, row, lines.joined(separator: "\n"))
     }
@@ -183,7 +183,7 @@ public enum Solace {
         let area = SolaceData.aspect[f.kind] ?? f.topic.flatMap { SolaceData.areaName[$0] != nil ? $0 : nil }
         if let area {
             let a = D.luckAspects(y)[area - 1]
-            let tone = ["這十年整體是順的，這次只是一時的卡", "這十年平平，起伏都還在可以走過的範圍", "這十年本來就比較需要用力"][a.reading.verdict.rawValue]
+            let tone = ["這十年整體是順的，這次只是一時的卡", "這十年能量很強，起伏會很明顯，但都是可以走過的", "這十年本來就比較需要用力"][a.reading.verdict.rawValue]
             let hit = D.triggeredAspects(y).contains { $0.palace == area } ? "而且今年的流年剛好引動這一方面，所以最近特別有感。" : ""
             out.append("再看你這十年的「\(SolaceData.areaName[area]!)」這一方面：\(tone)。\(hit)")
         }

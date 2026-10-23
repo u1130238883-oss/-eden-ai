@@ -325,7 +325,7 @@ public struct Reader {
             for v in [NTVerdict.good, .bad, .neutral] {
                 let g = group.filter { $0.reading.verdict == v }
                 guard !g.isEmpty else { continue }
-                let areas = g.map { "\(NT.label($0.palace))（得到\(Reader.vword(v))\($0.reading.result)）" }.joined(separator: "、")
+                let areas = g.map { "\(NT.label($0.palace))（得到\($0.reading.verdict.name)\($0.reading.result)）" }.joined(separator: "、")
                 parts.append("\(Reader.vword(v))在" + areas)
             }
             out += "\n合起來看：這幾個方面的起因都是\(c)宮（\(what)）——同一個起因落在不同的領域，結果不一樣：" + parts.joined(separator: "；")
@@ -534,7 +534,7 @@ public struct Reader {
 
     /// 依 Hollow 的算法回答「我今年感情運如何」：
     /// 本命第 p 宮 + 這十年的第 p 方面（大運十二方面）+ 流年是否引動 + 流月是否牽動。
-    static func vword(_ v: NTVerdict) -> String { ["好", "中性", "壞"][v.rawValue] }
+    static func vword(_ v: NTVerdict) -> String { ["好", "能量強", "壞"][v.rawValue] }
 
     /// 開頭先說清楚「這個問題看哪幾宮、各代表什麼」
     static func topicIntro(_ ps: [Int]) -> String {
@@ -570,11 +570,11 @@ public struct Reader {
             case (.good, .bad): out.append("5宮好7宮壞：容易有吸引力、有曖昧或短暫的戀愛，但要走到負責任的關係、婚姻比較難，關係裡容易拉扯。")
             case (.bad, .good): out.append("5宮壞7宮好：火花和新鮮感少一點，但穩定的一對一關係、承諾是有的，偏向細水長流。")
             case (.bad, .bad): out.append("5宮和7宮都壞：戀愛沒火花，一對一的關係也卡，這段時間先把自己顧好，不要勉強。")
-            case (.good, _): out.append("戀愛那一面（5宮）比較好，關係和婚姻（7宮）平平，機會多但不一定定下來。")
-            case (_, .good): out.append("關係和婚姻（7宮）比較好，戀愛的火花（5宮）平平，重在穩定。")
-            case (.bad, _): out.append("戀愛和性這一面（5宮）比較弱，關係（7宮）平平，要主動創造交流和新鮮感。")
-            case (_, .bad): out.append("關係和婚姻（7宮）比較辛苦，戀愛（5宮）平平，重點是別被對方牽著走。")
-            default: out.append("戀愛和關係都平平，沒有大起大落。")
+            case (.good, _): out.append("戀愛那一面（5宮）比較好，關係和婚姻（7宮）的能量很強，心思會很放在對方身上。")
+            case (_, .good): out.append("關係和婚姻（7宮）比較好，戀愛（5宮）的能量很強，很想被看見、火花多。")
+            case (.bad, _): out.append("戀愛和性這一面（5宮）比較弱，關係（7宮）的能量很強，心思容易都在對方身上，別把自己放太低。")
+            case (_, .bad): out.append("關係和婚姻（7宮）比較辛苦，戀愛（5宮）的能量很強，火花多，但要分清楚是吸引還是承諾。")
+            default: out.append("戀愛和關係的能量都很強，感情會是這段時間的大主題。")
             }
         }
         if let a = v[2], let b = v[8] {
@@ -583,11 +583,11 @@ public struct Reader {
             case (.good, .bad): out.append("2宮好8宮壞：小錢、薪水正常有進帳，但大筆的錢、投資、借貸、合夥要小心，容易損耗。")
             case (.bad, .good): out.append("2宮壞8宮好：日常開銷容易緊、錢留不住，但會有大一點的錢或別人的資源進來。")
             case (.bad, .bad): out.append("2宮和8宮都壞：小錢留不住，大錢也要防損耗，這段時間以守為主，不要冒險投資或借錢給人。")
-            case (.good, _): out.append("自己賺的小錢（2宮）比較好，大錢（8宮）平平，穩穩存。")
-            case (_, .good): out.append("大錢、別人的錢（8宮）比較有機會，自己的小錢（2宮）平平。")
-            case (.bad, _): out.append("自己的小錢（2宮）比較緊，大錢（8宮）平平，先控制開銷。")
-            case (_, .bad): out.append("大錢（8宮）要小心，投資借貸別衝動；小錢（2宮）平平。")
-            default: out.append("錢財整體平平，收支持平。")
+            case (.good, _): out.append("自己賺的小錢（2宮）比較好，大錢（8宮）的能量很強，大一點的錢進出都明顯，穩穩存。")
+            case (_, .good): out.append("大錢、別人的錢（8宮）比較有機會，自己的小錢（2宮）能量很強，很在意收入和花費。")
+            case (.bad, _): out.append("自己的小錢（2宮）比較緊，大錢（8宮）的能量很強，進出都大，先控制開銷。")
+            case (_, .bad): out.append("大錢（8宮）要小心，投資借貸別衝動；小錢（2宮）的能量很強，很在意錢。")
+            default: out.append("錢的能量很強，收入和開銷都會很明顯。")
             }
         }
         return out.isEmpty ? nil : "合起來看：" + out.joined(separator: "")
@@ -693,7 +693,7 @@ public struct Reader {
             text += "\n• 以大運來看：" + periods.joined(separator: "；")
             text += "\n• 好的年份：" + (good.isEmpty ? "未來十二年流年沒有好的\(name)年" : good.prefix(4).joined(separator: "、"))
             text += "\n• 壞的年份：" + (bad.isEmpty ? "未來十二年流年沒有壞的\(name)年" : bad.prefix(4).joined(separator: "、"))
-            if !mid.isEmpty { text += "\n• 中性的年份：" + mid.prefix(3).joined(separator: "、") }
+            if !mid.isEmpty { text += "\n• 能量特別強的年份（正）：" + mid.prefix(3).joined(separator: "、") }
             let months = (1...12).compactMap { mm -> String? in
                 let mr = D.month(mm, year: y)
                 return mr.palace == p ? "\(mm)月（\(Reader.vword(mr.reading.verdict))，「\(mr.reading.text)」）" : nil
@@ -856,7 +856,7 @@ public struct Reader {
                     s += "\n• 這是順的，力量來自\(NT.label(r.cause))，多用它：\(FlowReading.remedy[FlowReading.i(r.cause)])。"
                     s += "\n• 好的結果會出現在\(NT.label(r.result))，把握住：\(FlowReading.remedy[FlowReading.i(r.result)])。"
                 } else {
-                    s += "\n• 這是中性的，看你怎麼用\(NT.label(r.cause))：\(FlowReading.remedy[FlowReading.i(r.cause)])。"
+                    s += "\n• 這是「正」，能量很強，看你怎麼用\(NT.label(r.cause))：\(FlowReading.remedy[FlowReading.i(r.cause)])。"
                 }
                 if let p = f.palace, p != r.result && p != r.cause {
                     s += "\n• \(NT.label(p))本身：\(FlowReading.remedy[FlowReading.i(p)])。"
@@ -918,7 +918,7 @@ public struct Reader {
         switch r.verdict {
         case .good: s += "\n這是順的：\(NT.palaceName(r.cause))的力量是在幫你，可以順勢用它。"
         case .bad: s += "\n這是卡的：問題不在表面，而是\(NT.palaceName(r.cause))那邊的狀態沒有處理好，先照顧\(r.cause)宮，\(p)宮才會鬆開。"
-        case .neutral: s += "\n這是中性的：不會特別好也不會特別壞，看你怎麼用\(NT.palaceName(r.cause))的力量。"
+        case .neutral: s += "\n這是「正」：年月同五行，把\(NT.label(r.result))的能量放大了，強但不分好壞，看你怎麼用\(NT.palaceName(r.cause))的力量。"
         }
         s += "\n" + tip(r.cause)
         return s
@@ -932,8 +932,8 @@ public struct Reader {
     ]
 
     static let basisText: [[String]] = [
-        ["年月相生", "年月同行", "年月相剋"],
-        ["Year and Month generate", "Year and Month share an element", "Year and Month control"],
+        ["年月相生", "年月同五行，把日宮的能量放大", "年月相剋"],
+        ["Year and Month generate", "Year and Month share an element, amplifying this palace", "Year and Month control"],
         ["El Año y el Mes se generan", "El Año y el Mes comparten elemento", "El Año y el Mes se dominan"],
         ["L'Anno e il Mese si generano", "L'Anno e il Mese condividono l'elemento", "L'Anno e il Mese si dominano"],
     ]
@@ -976,31 +976,31 @@ public struct Reader {
     /// [語言][好/正/壞][說法]
     static let verdictLines: [[[String]]] = [
         [["整體順勢，有助力，可以放心往前推。", "氣是順的，做事容易得到回應。", "有種被推著走的順風感，適合主動一點。"],
-         ["持平穩定，照常發揮就好。", "不好不壞，穩紮穩打最適合。", "沒有大起大落，照自己的節奏走。"],
+         ["能量很強，這方面會特別明顯，好壞看你怎麼用。", "年月同五行，把這一宮放大了：感受強烈，用對地方就是力量。", "力量集中在這裡，事情會很明顯，主動掌握方向就好。"],
          ["有些阻力，這方面要放慢、多留意。", "容易卡關或耗神，先顧好基本盤。", "會有點拉扯，別硬碰硬，留點餘地。"]],
         [["Things are flowing your way — you can push forward with confidence.", "The tide is with you; efforts tend to get a response.", "It feels like a tailwind — a good time to take the initiative."],
-         ["Steady and even — just keep doing what you do.", "Neither good nor bad; steady steps work best.", "No big swings, so stay in your own rhythm."],
+         ["The energy here is strong — this area stands out; good or bad depends on how you use it.", "Year and Month share an element, amplifying this palace: feelings run strong, so aim them well.", "Force is concentrated here; things will be obvious, so take charge of the direction."],
          ["There's some resistance here, so slow down and watch this area.", "Things may snag or drain you — cover the basics first.", "Expect a bit of friction; don't push head-on, leave some room."]],
         [["Todo fluye a tu favor: puedes avanzar con confianza.", "La marea está de tu lado; el esfuerzo suele tener respuesta.", "Se siente como viento a favor: buen momento para tomar la iniciativa."],
-         ["Estable y parejo: sigue con tu ritmo.", "Ni bueno ni malo; los pasos firmes funcionan mejor.", "Sin grandes altibajos, así que mantén tu propio ritmo."],
+         ["La energía aquí es fuerte: esta área destaca; lo bueno o malo depende de cómo la uses.", "Año y Mes comparten elemento y amplifican este palacio: sentimientos intensos, apúntalos bien.", "La fuerza se concentra aquí; todo será evidente, así que toma el rumbo."],
          ["Hay algo de resistencia: ve más despacio y presta atención a esta área.", "Puede haber bloqueos o desgaste: cuida primero lo básico.", "Habrá algo de fricción; no choques de frente y deja margen."]],
         [["Tutto scorre a tuo favore: puoi andare avanti con fiducia.", "La marea è dalla tua parte; gli sforzi trovano risposta.", "Sembra un vento a favore: buon momento per prendere l'iniziativa."],
-         ["Stabile e regolare: continua col tuo ritmo.", "Né bene né male; i passi costanti funzionano meglio.", "Nessun grande sbalzo: segui il tuo ritmo."],
+         ["L'energia qui è forte: quest'area spicca; il bene o il male dipende da come la usi.", "Anno e Mese condividono l'elemento e amplificano questo palazzo: sentimenti intensi, indirizzali bene.", "La forza si concentra qui; tutto sarà evidente, quindi prendi tu la direzione."],
          ["C'è un po' di resistenza: rallenta e presta attenzione a quest'area.", "Possibili intoppi o stanchezza: cura prima le basi.", "Ci sarà un po' di attrito; non scontrarti, lascia margine."]],
     ]
 
     static let adviceLines: [[[String]]] = [
         [["想爭取的、想說的話，這時候不妨主動一點。", "有想推進的事，就趁順風時多走一步。", "把握機會，但仍要留意細節。"],
-         ["維持日常節奏，把手上的事做完就很好。", "適合整理與累積，不必急著改變什麼。", "保持穩定，觀察就好。"],
+         ["能量強的時候，先想清楚要把力氣用在哪。", "這股力量很集中，挑一件最重要的事全力做。", "感受會很強烈，做決定前讓自己冷靜一下。"],
          ["重要決定先緩一緩，多確認一次再行動。", "情緒上來時先深呼吸，別把小事放大。", "遇到卡住的地方先退一步，別急著下結論。"]],
         [["If there's something you've wanted to say or go after, make the first move.", "If you've been meaning to push something forward, take one more step while the wind is behind you.", "Seize the chance, but keep an eye on the details."],
-         ["Keep your routine and finish what's on your plate — that's plenty.", "It's a good time to tidy up and build up; no need to change anything.", "Stay steady and simply observe."],
+         ["When energy runs this strong, decide first where to put it.", "This force is concentrated — pick the one thing that matters most and go all in.", "Feelings will be intense; calm yourself before deciding."],
          ["Put big decisions on hold and double-check before acting.", "When emotions run high, breathe first and don't blow small things up.", "If something jams, step back before you draw conclusions."]],
         [["Si hay algo que quieras decir o conseguir, da el primer paso.", "Si tenías algo pendiente por impulsar, da un paso más mientras el viento sopla a favor.", "Aprovecha la oportunidad, pero cuida los detalles."],
-         ["Mantén tu rutina y termina lo que tienes entre manos; ya es mucho.", "Buen momento para ordenar y acumular; no hace falta cambiar nada.", "Mantente estable y observa."],
+         ["Con tanta energía, decide primero dónde ponerla.", "Esta fuerza está concentrada: elige lo más importante y ve a por ello.", "Los sentimientos serán intensos; cálmate antes de decidir."],
          ["Pospón las decisiones importantes y comprueba dos veces antes de actuar.", "Cuando suban las emociones, respira primero y no agrandes las cosas pequeñas.", "Si algo se atasca, da un paso atrás antes de sacar conclusiones."]],
         [["Se c'è qualcosa che vuoi dire o ottenere, fai il primo passo.", "Se avevi qualcosa da portare avanti, fai un passo in più finché il vento è a favore.", "Cogli l'occasione, ma cura i dettagli."],
-         ["Mantieni la tua routine e porta a termine ciò che hai: basta così.", "È un buon momento per riordinare e accumulare; non serve cambiare nulla.", "Resta stabile e osserva."],
+         ["Con tanta energia, decidi prima dove metterla.", "Questa forza è concentrata: scegli la cosa più importante e dacci dentro.", "I sentimenti saranno intensi; calmati prima di decidere."],
          ["Rimanda le decisioni importanti e ricontrolla prima di agire.", "Quando le emozioni salgono, respira prima e non ingigantire le piccole cose.", "Se qualcosa si blocca, fai un passo indietro prima di trarre conclusioni."]],
     ]
 
