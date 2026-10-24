@@ -46,7 +46,7 @@ public enum WebSearch {
     /// （問「少年維特的煩惱講了什麼」，抓到的是頁尾的「參見…外部連結」和翻譯版本）；改讀書評、影評、專門介紹的網站
     public static func isWiki(_ url: String) -> Bool {
         let h = (URL(string: url)?.host ?? url).lowercased()
-        return ["wikipedia.org", "wikiwand.com", "wiki.kfd.me", "wikimedia.org", "wikiwiki.jp"].contains { h.contains($0) }
+        return ["wikipedia.org", "wikiwand.com", "wiki.kfd.me", "wikimedia.org", "wikiwiki.jp", "wikisource.org"].contains { h.contains($0) }
     }
 
     static func withoutWiki(_ a: Answer) -> Answer {

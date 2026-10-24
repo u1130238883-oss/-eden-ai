@@ -68,6 +68,11 @@ enum WorkView {
               surface: "給小孩聽的床邊故事",
               view: "我覺得它們好看的地方，是用很簡單的情節講很重的道理；長大再讀，會發現這些故事其實很殘酷、很真實——它們是在教孩子認識世界有多危險，也提醒善良要帶著勇氣。",
               audience: "想找能跟孩子一起讀、又能自己重新想一想的故事"),
+        Theme(name: "背叛與救贖", words: ["背叛", "救贖", "贖罪", "愧疚", "罪惡感", "懺悔", "原諒", "彌補", "內疚", "出賣"],
+              explain: "主角做過一件對不起別人的事，之後很多年都被愧疚追著；故事在問：一個人做錯了，還有沒有機會彌補。",
+              surface: "一段成長或友情的故事",
+              view: "我覺得它最打動人的，是它不讓主角輕易被原諒——救贖不是說聲對不起，而是願意回頭，付出代價去做對的事。",
+              audience: "心裡有一件放不下的愧疚"),
         Theme(name: "不被打倒的意志", words: ["堅持", "搏鬥", "不放棄", "奮鬥", "抗爭", "意志", "尊嚴", "打不倒", "打敗"],
               explain: "主角面對的對手比他強大太多，但他沒有放棄；重點不是贏，而是怎麼面對失敗。",
               surface: "一場力量懸殊的戰鬥",
@@ -194,7 +199,10 @@ enum WorkView {
             var clauses = body.components(separatedBy: CharacterSet(charactersIn: "，；：,;:"))
             while let c = clauses.first, clauses.count > 1, commentary.contains(where: { c.contains($0) }) { clauses.removeFirst() }
             // 開頭沒有事情發生的短句（「《老人與海》的故事很簡單」）：拿掉
-            while let c = clauses.first, clauses.count > 1, c.replacingOccurrences(of: "《\(title)》", with: "").count <= 10, !events.contains(where: { c.contains($0) }) {
+            // （「故事講述了突然出現的巨人」雖然短，但它就是在說故事，留著）
+            let telling = ["講述", "描寫", "描述", "敘述", "講的是", "寫的是"]
+            while let c = clauses.first, clauses.count > 1, c.replacingOccurrences(of: "《\(title)》", with: "").count <= 10,
+                  !events.contains(where: { c.contains($0) }), !telling.contains(where: { c.contains($0) }) {
                 clauses.removeFirst()
             }
             clauses = clauses.filter { c in !commentary.contains { c.contains($0) } }
@@ -240,7 +248,8 @@ enum WorkView {
             t = "我認為《\(title)》表面上是\(a.surface)，但真正讓它成為經典的，是它對「\(deep.name)」的刻畫。"
             t += a.view.replacingOccurrences(of: #"^我認為"#, with: "我覺得", options: .regularExpression) + "而且，" + soft(deep.view)
         } else if let b = picked.dropFirst().first {
-            t = "我認為《\(title)》最核心的是「\(a.name)」，再加上「\(b.name)」，讓它不只是\(a.surface)。"
+            // 兩個都是比較深的主題：不要硬套「不只是奇幻故事」這種表面說法
+            t = "我認為《\(title)》最核心的是「\(a.name)」，再加上「\(b.name)」，兩條線交織在一起，讓它的分量遠超過一般的故事。"
             t += a.view.replacingOccurrences(of: #"^我認為"#, with: "我覺得", options: .regularExpression) + "而且，" + soft(b.view)
         } else {
             t = "我認為《\(title)》最值得看的，是它對「\(a.name)」的刻畫。" + a.view

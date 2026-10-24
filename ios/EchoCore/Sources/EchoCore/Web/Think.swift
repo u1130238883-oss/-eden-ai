@@ -411,9 +411,10 @@ public enum Think {
     /// 在講主題、想表達什麼的句子會有的字
     static let themeCues = ["主題", "探討", "反映", "象徵", "批判", "諷刺", "表達了", "揭示", "寓意", "隱喻", "思考", "意義在於", "核心"]
     /// 不是在講作品內容：改編、翻譯、出版、得獎、票房、頁尾連結、寫作經過
-    static let notContent = ["改編", "翻拍", "譯本", "翻譯", "譯者", "出版社", "版本", "獎", "票房", "銷量", "暢銷", "參見", "外部連結", "維基",
+    static let notContent = ["改編", "翻拍", "以原著", "原創內容", "真人版", "外傳", "番外", "衍生", "譯本", "翻譯", "譯者", "出版社", "版本", "獎", "票房", "銷量", "暢銷", "參見", "外部連結", "維基",
                              "原始文獻", "多媒體", "ISBN", "評分", "售價", "購買", "下載", "線上看", "免費", "觀看", "首映", "預告", "演員表", "配音"]
-    static let backstory = ["創作", "寫成", "寫下", "完成了這", "出版", "發表", "問世", "面世", "靈感", "根據自己", "根據作者", "源自", "自身", "親身", "不同於"]
+    static let backstory = ["創作", "寫成", "寫下", "完成了這", "出版", "發表", "問世", "面世", "靈感", "根據自己", "根據作者", "源自", "自身", "親身", "不同於",
+                            "結合自己", "自己的經歷", "自己刻骨", "作者的", "她的人生", "他的人生", "初戀經歷"]
     /// 句子在講「它」（不提書名，但開頭是「小說講述…」「故事發生在…」「書中…」）
     static let referents = ["小說", "故事", "本書", "該書", "全書", "書中", "此書", "這本書", "這部", "作品", "本片", "該片", "片中", "電影", "影片",
                             "劇中", "全劇", "該劇", "本劇", "此劇", "戲劇", "這齣", "動畫", "漫畫", "主角", "主人公", "全片"]
@@ -441,8 +442,15 @@ public enum Think {
             }
         }
         func hits(_ s: String, _ ws: [String]) -> Int { ws.filter { s.contains($0) }.count }
+        // 論壇、表格切下來的碎片（「）相遇…＞＞瀧找工作」「還有與之對抗的年輕人們」）不是一句完整的話
+        func fragment(_ t: String) -> Bool {
+            if let c = t.first, "）)」』】，、；：＞>".contains(c) { return true }
+            if ["還有", "而且", "以及", "和", "與", "並且"].contains(where: { t.hasPrefix($0) }) { return true }
+            return t.contains("＞") || t.contains(">") || t.contains("ㄉ") || t.contains("→")
+        }
         func clean(_ s: S) -> Bool {
-            hits(s.text, notContent) == 0 && !(s.text.contains("《") && !s.text.contains("《\(title)》") && hits(s.text, ["電影", "歌劇", "舞台劇", "版"]) > 0)
+            if fragment(s.text) { return false }
+            return hits(s.text, notContent) == 0 && !(s.text.contains("《") && !s.text.contains("《\(title)》") && hits(s.text, ["電影", "歌劇", "舞台劇", "版"]) > 0)
         }
         // 沒提書名的句子：開頭就是「小說／故事／書中…」才算在講它；有別的《書名》、「這是一部…」（清單文章在介紹別部）不算
         func talksAboutIt(_ s: S) -> Bool {
@@ -465,15 +473,19 @@ public enum Think {
             let after = c[r.upperBound...].replacingOccurrences(of: #"^[》」』]?\s*(?:[（(][^）)]{0,40}[）)])?\s*(?:也稱為[^，,]{0,20}[，,])?\s*"#, with: "", options: .regularExpression)
             return after.hasPrefix("是") || after.hasPrefix("為") || after.hasPrefix("，是") || after.hasPrefix("乃")
         }
+        // 問的不是遊戲：「《進擊的巨人》是一款動作遊戲」是改編的同名遊戲，不是原作
+        let asksGame = ["遊戲", "手遊", "電玩", "game"].contains { question.contains($0) }
         let intro = sents.filter { s in s.named && headed(s.text) && definesIt(s.text) && hits(s.text, genres) > 0 && clean(s) && s.text.count <= 120
-            && hits(s.text, ["名言", "台詞", "語錄", "金句", "禁書"] + meta) == 0 }
+            && hits(s.text, ["名言", "台詞", "語錄", "金句", "禁書"] + meta) == 0
+            && (asksGame || hits(s.text, ["遊戲", "手遊", "電玩", "改編"]) == 0) }
             .max { a, b in (pro(a.host), -a.text.count) < (pro(b.host), -b.text.count) }
         // ② 講了什麼故事
         func plotScore(_ s: S) -> Int {
             hits(s.text, narrates) * 3 + min(hits(s.text, events), 3) * 2 + hits(s.text, plotCues.filter { !narrates.contains($0) && !events.contains($0) })
                 + (s.named ? 2 : 0) + pro(s.host) - hits(s.text, backstory) * 2 - hits(s.text, meta) * 3 - (s.text.count > 120 ? 1 : 0)
         }
-        let plots = sents.filter { s in hits(s.text, plotCues) > 0 && clean(s) && talksAboutIt(s) && plotScore(s) > 1 }
+        // 劇情句不能是寫作經過（「簡正在從事《第一印象》的創作」）：找不到真的在講故事的句子，寧可不說故事
+        let plots = sents.filter { s in hits(s.text, plotCues) > 0 && clean(s) && talksAboutIt(s) && plotScore(s) > 1 && hits(s.text, backstory) == 0 }
             .sorted { plotScore($0) > plotScore($1) }
         // ③ 想表達什麼
         let theme = sents.filter { s in hits(s.text, themeCues) > 0 && clean(s) && talksAboutIt(s) && hits(s.text, backstory) == 0 }

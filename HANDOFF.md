@@ -442,3 +442,16 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
   - 劇情句的分數：真的在說故事（描寫、講述）＞故事裡發生的事（愛上、誤闖、自殺）＞只提到「情節」；寫作經過（源自、寫下）扣分；
   - 像人一樣往下讀：最好的劇情句後面一兩句在說後來發生的事，就接著說（「之後，維特…而自殺」）；
   - 沒提書名的句子要開頭就是「小說／故事／書中…」，有別的《書名》、清單文章介紹的別部作品不算；同一件事不說兩次。
+
+## 2026-10-24（晚）：有主見的作品回答、自己訓練的理解問題模型、為什麼題
+
+- **作品題**（`Think.aboutWork`＋`Web/WorkView.swift`）：它是什麼 → 📖 故事（最好的劇情句＋同一頁接下來發生的事，整理成一段話）→ 💡 主題（20 種主題，用自己的話解釋＋根據）→ 🧠 我的看法（表面的主題 vs 真正讓它成為經典的主題、適合誰）。
+  用真實網頁練：web-tape-28、30（8 部），沒練過的 web-tape-40（6 部）驗證後再修通用的規則（遊戲／改編／外傳不是原作、論壇碎片、寫作經過、沒有好的劇情句就不說故事）。
+- **清單題**（`Understanding.itemsAsk`、`Think.itemsDigest`）：「格林童話有什麼故事」→ 列出最常被提到的幾個、各在講什麼、看法。
+- **理解問題的模型**（`ai/intent/`、`EchoCore/Intent.swift`、`Brain.meaning`）：NineSun 自己從零訓練（NumPy），字的片段＋自己的閱讀模型讀出來的意思；
+  第三組沒看過的說法 89.1%（只背模板 65.7%）。規則認不出、模型有把握時決定用清單或作品的回答方式。見 `ai/intent/README.md`。
+- **為什麼題**（`Synthesize.score` 的 `.reason`）：原因句要講到問的那一點（「藍」）、真的說因果；歷史、「並無法解釋」、「依然…」（補充）不當主要原因。
+- **Apple 智慧**（`NineSun/App/OnDeviceAI.swift`）：設定裡的開關，預設關閉——使用者要 NineSun 用自己訓練的大腦。CI 用 Xcode 26、FoundationModels 弱連結。
+- **Release 被擋（403）**：大約 16:30 之後 Actions 建立 release 一直 403（token 有 contents: write）。錄音帶另外推到分支 `tapes/web-tape-N`、IPA 推到 `builds/ninesun-build-N`
+  （下載：`https://github.com/u1130238883-oss/-eden-ai/raw/builds/ninesun-build-N/NineSun.ipa`）。
+- 每次 push 都會跑一次 50 分鐘的建置，macOS 機器有限：一次推好幾個 commit 時，舊的建置可以取消，免得錄音帶排不到機器。

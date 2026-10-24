@@ -199,6 +199,25 @@ final class AnswerQualityTests: XCTestCase {
         XCTAssertEqual(a.hits.map(\.url), ["https://www.books.com.tw/a"])
     }
 
+    /// 沒練過的作品學到的（web-tape-40）：同名遊戲、改編電影、外傳不是原作；論壇碎片不是一句話；寫作經過不是故事；
+    /// 沒有真的在講故事的句子就不說故事
+    func testUnseenWorksLessons() {
+        let page = """
+        《進擊的巨人》是由某公司開發的一款動作遊戲，於2016年發行。
+        《進擊的巨人》是日本漫畫家諫山創創作的少年漫畫作品，於2009年開始連載。
+        影片以原著故事為基礎，加入一些原創內容，描寫巨人的世界，還有與之對抗的年輕人們。
+        《進擊的巨人外傳》講述的是兩位少女在漫畫之外的故事。
+        ）相遇，然後互相失去記憶＞＞找工作面試碰壁＞天橋上錯身而過。
+        故事講述人類躲在高牆內抵抗吃人的巨人，少年艾倫在母親被巨人吃掉後，發誓要消滅所有巨人。
+        """
+        let a = Think.aboutWork(question: "進擊的巨人在講什麼", pages: [.init(text: page, host: "a.tw")]) ?? ""
+        XCTAssertTrue(a.contains("諫山創") && a.contains("艾倫"), a)
+        for bad in ["遊戲", "原創內容", "外傳", "＞"] { XCTAssertFalse(a.contains(bad), "\(bad)\n\(a)") }
+        let pride = "《傲慢與偏見》是英國小說家簡·奧斯汀的長篇小說。\n三十七歲的奧斯汀結合自己刻骨銘心的初戀經歷，描寫英國鄉村生活。"
+        let b = Think.aboutWork(question: "傲慢與偏見講了什麼", pages: [.init(text: pride, host: "a.tw")]) ?? ""
+        XCTAssertFalse(b.contains("初戀經歷"), b)
+    }
+
     /// 「格林童話有什麼故事」：要的是一份清單（有哪些、各在講什麼），不是「答案：約有 200 多個故事」
     func testItemsQuestionListsTheStories() {
         XCTAssertEqual(Understanding.itemsAsk("格林童話有什麼故事？")?.subject, "格林童話")
