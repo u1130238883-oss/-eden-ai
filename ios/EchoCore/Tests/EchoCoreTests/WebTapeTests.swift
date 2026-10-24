@@ -7,7 +7,8 @@ import XCTest
 /// 回答寫到 NINESUN_TAPE_ANSWERS（沒設就印出來）
 final class WebTapeTests: XCTestCase {
     static func questions() throws -> [String] {
-        let url = try XCTUnwrap(Bundle.module.url(forResource: "web_questions", withExtension: "txt", subdirectory: "Fixtures"))
+        let focus = ProcessInfo.processInfo.environment["NINESUN_TAPE_FOCUS"] != nil
+        let url = try XCTUnwrap(Bundle.module.url(forResource: focus ? "web_questions_focus" : "web_questions", withExtension: "txt", subdirectory: "Fixtures"))
         let only = ProcessInfo.processInfo.environment["NINESUN_TAPE_ONLY"].map { Set($0.split(separator: "|").map(String.init)) }
         return try String(contentsOf: url, encoding: .utf8).split(separator: "\n").map(String.init)
             .filter { !$0.isEmpty && !$0.hasPrefix("#") && (only?.contains($0) ?? true) }
@@ -37,7 +38,10 @@ final class WebTapeTests: XCTestCase {
                 continue
             }
             // 錄的時候像一個人在問：一題問完隔一陣子再問下一題（一口氣問太快，搜尋引擎會把我們當機器人擋掉）
-            if !tape.replaying { try? await Task.sleep(nanoseconds: 8_000_000_000) }
+            if !tape.replaying {
+                let focus = ProcessInfo.processInfo.environment["NINESUN_TAPE_FOCUS"] != nil
+                try? await Task.sleep(nanoseconds: (focus ? 40 : 8) * 1_000_000_000)
+            }
             let w = await WebAgent.run(wq, lang: .zh)
             out += "[題型 \(w.want ?? "-")] \n" + w.text + "\n\n"
         }

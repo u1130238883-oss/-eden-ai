@@ -285,7 +285,8 @@ public enum WebAgent {
             }
         }
         if hits.isEmpty && lead == nil {
-            var r = Result(text: Loc.s("webFail", L, plan.keywords), card: nil, found: false, engines: engines)
+            // 搜尋引擎把我們當成機器人擋住了：老實說，請使用者等一下再問（不是網路上沒有資料）
+            var r = Result(text: WebSearch.resting ? Loc.s("webBlocked", L) : Loc.s("webFail", L, plan.keywords), card: nil, found: false, engines: engines)
             r.debug = "core=\(plan.core) topic=\(topic) need=\(need) terms=\(terms.sorted()) jobs=\(jobs.map(\.q)) dropped=\(dropped)"
             return r
         }

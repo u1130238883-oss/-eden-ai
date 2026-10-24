@@ -309,7 +309,9 @@ public enum WebSearch {
         func blocked(now: Date = Date()) { lock.lock(); blockedUntil = now.addingTimeInterval(rest); tokens = 0; lock.unlock() }
         var resting: Bool { lock.lock(); defer { lock.unlock() }; return Date() < blockedUntil }
     }
-    static let ddgPace = Pace(capacity: 4, perSecond: 1.0 / 3, rest: 120)
+    static let ddgPace = Pace(capacity: 4, perSecond: 1.0 / 4, rest: 120)
+    /// 有用的搜尋引擎（DuckDuckGo、百度）都在休息：剛剛查太多次被擋了
+    public static var resting: Bool { ddgPace.resting && baiduPace.resting }
     static let baiduPace = Pace(capacity: 3, perSecond: 1.0 / 4, rest: 180)
 
     /// 搜尋引擎回的是「你是機器人嗎」的驗證頁
@@ -402,8 +404,10 @@ public enum WebSearch {
     /// DuckDuckGo 輕量版（一般版被擋時這個常常還能用）
     static func ddgLite(_ q: String, _ L: Lang) async -> [Hit] {
         let region = ["zh": "tw-tzh", "en": "us-en", "es": "es-es", "it": "it-it"][L.rawValue] ?? "wt-wt"
-        guard let url = URL(string: "https://lite.duckduckgo.com/lite/?q=\(enc(q))&kl=\(region)"),
+        // 跟一般版是同一家：一起算次數，不然一題就問了 DuckDuckGo 兩倍
+        guard ddgPace.take(), let url = URL(string: "https://lite.duckduckgo.com/lite/?q=\(enc(q))&kl=\(region)"),
               let html = await text(url, L, ua: desktopUA) else { return [] }
+        if isBlockPage(html) { ddgPace.blocked(); return [] }
         let fixed = html.replacingOccurrences(of: "href=\"//duckduckgo.com/l/?", with: "href=\"https://duckduckgo.com/l/?")
         return genericResults(fixed, engine: "duckduckgo.com", name: "DuckDuckGo").map {
             Hit(title: $0.title, snippet: $0.snippet, url: ddgRealURL($0.url), engine: $0.engine)

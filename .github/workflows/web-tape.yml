@@ -19,7 +19,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Record
         working-directory: ios/EchoCore
+        env:
+          FOCUS: ${{ contains(github.event.head_commit.message, '[focus]') && '1' || '' }}
         run: |
+          # [focus]：只錄幾題重點、每題隔久一點（問太多次會被搜尋引擎擋住）
+          if [ -n "$FOCUS" ]; then export NINESUN_TAPE_FOCUS=1; fi
           NINESUN_TAPE_OUT="$PWD/web_tape.json" NINESUN_TAPE_ANSWERS="$PWD/web_answers.txt" \
             swift test -c release -Xswiftc -enable-testing --filter WebTapeTests/testRecord > tape.log 2>&1 || true
           tail -5 tape.log
