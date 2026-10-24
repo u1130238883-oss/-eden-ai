@@ -24,6 +24,8 @@ final class ChatViewModel: ObservableObject {
     @Published var aiModels = "" { didSet { save(aiModels, "aiModels") } }
     /// 打開：日常問題、翻譯、沒把握的題目都用 AI 的 API 回答；關掉：完全不呼叫 AI 的 API，NineSun 自己（本地引擎＋自己上網查）回答
     @Published var useAPI = true { didSet { save(useAPI, "useAPI") } }
+    /// 用手機內建的 Apple 智慧思考（iOS 26、iPhone 15 Pro 以上）；預設關閉，NineSun 用自己訓練的大腦
+    @Published var useApple = false { didSet { save(useApple, "useApple") } }
     /// 翻譯模式：輸入框上的語言按鈕亮著時，打的每一句都直接翻成這個語言
     @Published var translateOn = false { didSet { save(translateOn, "translateOn") } }
     @Published var translateTarget = "en" { didSet { save(translateTarget, "translateTarget") } }
@@ -82,6 +84,8 @@ final class ChatViewModel: ObservableObject {
     private var lastTranslation: Translate.Request?
     /// 設定裡有開 API、也有金鑰
     var apiOn: Bool { useAPI && aiConfig.enabled }
+    /// 用 Apple 智慧思考：有金鑰時用雲端的（比較聰明），沒有才用手機內建的
+    var appleOn: Bool { useApple && !apiOn && OnDeviceAI.available }
 
     init() {
         options = load("options") ?? SamplingOptions()
@@ -92,6 +96,7 @@ final class ChatViewModel: ObservableObject {
         aiAuto = load("aiAuto") ?? true
         aiModels = load("aiModels") ?? ""
         useAPI = load("useAPI") ?? true
+        useApple = load("useApple") ?? false
         speakTranslation = load("speakTranslation") ?? true
         translateOn = load("translateOn") ?? false
         translateTarget = load("translateTarget") ?? "en"
@@ -259,12 +264,18 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
+        // 沒有金鑰、但手機有 Apple 智慧：NineSun 的引擎先找資料、算命盤，再交給它讀懂問題、自己想怎麼回答
+        if appleOn, RuleBook.parse(text) == nil {
+            localReply(text, viaApple: true)
+            return
+        }
+
         localReply(text)
     }
 
     /// NineSun 自己回答（本地的引擎；需要時上網查）
     /// viaAI：算好之後交給 AI，用這些結果回答（開著 API 時的命理問題）
-    private func localReply(_ text: String, viaAI: Bool = false) {
+    private func localReply(_ text: String, viaAI: Bool = false, viaApple: Bool = false) {
         guard let engine else { return }
         let history = turns
         let ctx = EchoEngine.Context(profile: profile, rules: rules, now: Date(), language: language, autoDetect: autoDetect)
@@ -281,15 +292,17 @@ final class ChatViewModel: ObservableObject {
                     return
                 }
                 if let q = reply.webQuery {
+                    // 用 Apple 智慧想的時候：不先貼範本式的回答，查完資料由它整理出完整的答案
+                    let thinkFully = viaApple && reply.lang == .zh
                     var tx = Transaction()
                     tx.disablesAnimations = true
                     withTransaction(tx) {
-                        self.turns.append(reply.turn)
+                        if !thinkFully || reply.turn.text.count <= 40 { self.turns.append(reply.turn) }
                         self.streaming = nil
                     }
                     // 已經先給了思路庫的答案，網路只是補充：沒查到就不要再跳一則「查不到」
                     // 已經先給了一段像樣的回答（思路庫、建議）時，網路只是補充：沒查到相關的就不要再跳一則
-                    self.lookupWeb(q, reply.lang, quietIfNothing: reply.turn.source == .neural || reply.turn.text.count > 40)
+                    self.lookupWeb(q, reply.lang, quietIfNothing: !thinkFully && (reply.turn.source == .neural || reply.turn.text.count > 40))
                     return
                 }
                 if let term = reply.webAugment.first {
@@ -298,7 +311,35 @@ final class ChatViewModel: ObservableObject {
                     self.play(text: reply.turn.text, final: reply.turn) { self.augmentWeb(term, also: also, facts: facts, L) }
                     return
                 }
+                if viaApple, reply.profile == nil, reply.rules == nil {
+                    self.appleThink(text, reply)
+                    return
+                }
                 self.play(text: reply.turn.text, final: reply.turn)
+            }
+        }
+    }
+
+    /// 交給手機內建的 Apple 智慧想：一般的話直接用 NineSun 的個性回答；
+    /// 命盤、運勢、心情先保留 NineSun 算出來的解讀（數字、宮位不能改），再加上它自己的想法。想不出來就用 NineSun 原本的回答
+    private func appleThink(_ text: String, _ reply: EchoEngine.Reply) {
+        guard reply.lang == .zh else { play(text: reply.turn.text, final: reply.turn); return }
+        let reading = Self.isReading(text) || Self.fortuneWords(text)
+        let persona = AskAIs.persona(type: profile.birthday.map { Destiny($0).type }, lang: reply.lang)
+        let past = turns.dropLast().suffix(6).map { (fromUser: $0.role == .user, text: $0.text) }
+        streaming = "🧠 用手機裡的 Apple 智慧想一想…"
+        Task { [self] in
+            let r = await OnDeviceAI.chat(text, history: past, chart: reading ? reply.turn.text : "", persona: persona)
+            await MainActor.run {
+                self.streaming = ""
+                guard let r else { self.play(text: reply.turn.text, final: reply.turn); return }
+                if reading {
+                    var turn = reply.turn
+                    turn.text = reply.turn.text + "\n\n🧠 我的想法：\n" + r
+                    self.play(text: turn.text, final: turn)
+                } else {
+                    self.play(text: r, final: ChatTurn(role: .echo, text: r, source: .neural))
+                }
             }
         }
     }
@@ -416,7 +457,9 @@ final class ChatViewModel: ObservableObject {
         lastWebQuestion = q
         let asker = profile.birthday.map { Destiny($0).type }
         let cfg = aiConfig, auto = aiAuto, api = useAPI
-        let offerAI = api && !cfg.enabled && !aiHintShown
+        let offerAI = api && !cfg.enabled && !aiHintShown && !appleOn
+        let apple = appleOn && L == .zh
+        let persona = AskAIs.persona(type: asker, lang: L)
         // 查資料時一步一步顯示在想什麼（理解問題 → 搜尋 → 閱讀 → 比對），不會像卡住
         let show: @Sendable (String) -> Void = { [weak self] step in DispatchQueue.main.async { self?.streaming = step } }
         Task { [self] in
@@ -426,6 +469,18 @@ final class ChatViewModel: ObservableObject {
                 return
             }
             var text = quietIfNothing ? "我再上網查了一下，補充幾個資料：\n\n" + r.text : r.text
+            // 手機有 Apple 智慧：查到的資料交給它讀懂問題、自己想怎麼回答（不是套模板）；想不出來就用 NineSun 整理的
+            if apple, !quietIfNothing {
+                await MainActor.run { self.streaming = "🧠 資料讀完了，用 Apple 智慧想一想怎麼回答…" }
+                if let a = await OnDeviceAI.answer(question: q, evidence: r.found ? r.evidence : [], notes: r.found ? r.text : "", persona: persona) {
+                    let hosts = Array(Set(r.evidence.compactMap { e -> String? in
+                        guard let open = e.lastIndex(of: "（"), e.hasSuffix("）") else { return nil }
+                        return String(e[e.index(after: open)..<e.index(before: e.endIndex)])
+                    })).sorted()
+                    text = (r.found ? "" : "（網路上沒查到直接的資料，下面是我自己知道的，可能不完全準確。）\n") + a
+                    if !hosts.isEmpty { text += "\n\n📚 我讀過的資料：" + hosts.prefix(5).joined(separator: "、") }
+                }
+            }
             // 沒把握或要推理的題目：同時問其他 AI，整理各家說法、拿網路資料查證後給結論（要先設定金鑰）
             if !quietIfNothing, api, cfg.enabled, forceAI || (auto && AskAIs.shouldAsk(r)) {
                 await MainActor.run { self.streaming = "🤖 正在同時問其他 AI，整理、查證中…" }
