@@ -110,6 +110,16 @@ final class SynthesizeTests: XCTestCase {
         XCTAssertFalse(WebSearch.poisoned(junk + [h("《少年维特之烦恼》剧情及主题理解")], "少年維特的煩惱 劇情"))
         XCTAssertEqual(WebSearch.relevant([h("失眠怎么办-专家文章"), h("披薩")], "失眠 怎麼辦"), 1)
         XCTAssertTrue(WebSearch.poisoned(junk, "少年維特的煩惱 (site:books.com.tw OR site:readmoo.com)"))
+        // 像人一樣慢慢查：短時間內只問幾次，慢慢恢復；被擋就休息一陣子
+        let pace = WebSearch.Pace(capacity: 2, perSecond: 0.5, rest: 60)
+        let t0 = Date()
+        XCTAssertTrue(pace.take(now: t0)); XCTAssertTrue(pace.take(now: t0)); XCTAssertFalse(pace.take(now: t0))
+        XCTAssertTrue(pace.take(now: t0.addingTimeInterval(2)))
+        pace.blocked(now: t0.addingTimeInterval(3))
+        XCTAssertFalse(pace.take(now: t0.addingTimeInterval(30)))
+        XCTAssertTrue(pace.take(now: t0.addingTimeInterval(70)))
+        XCTAssertTrue(WebSearch.isBlockPage("<div class=\"anomaly-modal__title\">"))
+        XCTAssertFalse(WebSearch.isBlockPage("<a class=\"result__a\" href=\"x\">少年維特</a>"))
         XCTAssertTrue(Cite.isProfessional("www.commonhealth.com.tw"))
     }
 }

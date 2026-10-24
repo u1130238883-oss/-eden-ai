@@ -287,6 +287,37 @@ public enum WebSearch {
         c.urlCache = nil
         return URLSession(configuration: c)
     }()
+    /// 像人一樣慢慢查：每個搜尋引擎短時間內只問幾次（一題常常同時有 6～10 組查詢，一起丟過去會被當成機器人擋掉）；
+    /// 被擋（驗證頁、429）就先停一陣子，不要一直問、越擋越久
+    final class Pace: @unchecked Sendable {
+        let capacity: Double, refill: Double, rest: TimeInterval
+        private var tokens: Double, last = Date(), blockedUntil = Date.distantPast
+        private let lock = NSLock()
+        init(capacity: Double, perSecond refill: Double, rest: TimeInterval) {
+            self.capacity = capacity; self.refill = refill; self.rest = rest; tokens = capacity
+        }
+        /// 現在可以問嗎（可以就用掉一次）
+        func take(now: Date = Date()) -> Bool {
+            lock.lock(); defer { lock.unlock() }
+            if now < blockedUntil { return false }
+            tokens = min(capacity, tokens + now.timeIntervalSince(last) * refill)
+            last = now
+            guard tokens >= 1 else { return false }
+            tokens -= 1
+            return true
+        }
+        func blocked(now: Date = Date()) { lock.lock(); blockedUntil = now.addingTimeInterval(rest); tokens = 0; lock.unlock() }
+        var resting: Bool { lock.lock(); defer { lock.unlock() }; return Date() < blockedUntil }
+    }
+    static let ddgPace = Pace(capacity: 4, perSecond: 1.0 / 3, rest: 120)
+    static let baiduPace = Pace(capacity: 3, perSecond: 1.0 / 4, rest: 180)
+
+    /// 搜尋引擎回的是「你是機器人嗎」的驗證頁
+    static func isBlockPage(_ html: String) -> Bool {
+        ["anomaly-modal", "anomaly.js", "captcha", "Unfortunately, bots use DuckDuckGo", "wappass.baidu.com", "安全验证", "百度安全验证", "verify you are human"]
+            .contains { html.contains($0) }
+    }
+
     private static let warmLock = NSLock()
     nonisolated(unsafe) private static var warmed = false
 
@@ -294,12 +325,17 @@ public enum WebSearch {
     /// 在 GitHub 的機器上試過：這樣 80 筆裡有 67 筆跟問題有關（以前沒有 cookie、用 POST 查，一筆都拿不到；Bing 給的是別人查的東西）
     static func ddgHTML(_ q: String, _ L: Lang) async -> [Hit] {
         let region = ["zh": "tw-tzh", "en": "us-en", "es": "es-es", "it": "it-it"][L.rawValue] ?? "wt-wt"
+        guard ddgPace.take() else { return [] }
         func get(_ u: String) async -> String? {
             guard let url = URL(string: u) else { return nil }
             var req = request(url, L, ua: desktopUA)
             req.setValue("https://duckduckgo.com/", forHTTPHeaderField: "Referer")
-            guard let (d, resp) = try? await cookieSession.data(for: req), ((resp as? HTTPURLResponse)?.statusCode ?? 200) < 400 else { return nil }
-            return String(data: d, encoding: .utf8) ?? String(decoding: d, as: UTF8.self)
+            guard let (d, resp) = try? await cookieSession.data(for: req) else { return nil }
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? 200
+            let html = String(data: d, encoding: .utf8) ?? String(decoding: d, as: UTF8.self)
+            // 被擋了：先休息，不要一直問
+            if code == 429 || code == 403 || (code == 202 && !html.contains("result__")) || isBlockPage(html) { ddgPace.blocked(); return nil }
+            return code < 400 ? html : nil
         }
         let needWarm: Bool = { warmLock.lock(); defer { warmLock.unlock() }; return !warmed }()
         if needWarm {
@@ -391,8 +427,9 @@ public enum WebSearch {
 
     /// 百度：中文的生活、做法類網站多（知乎、百度經驗、各種教學）；簡體會再轉成繁體
     static func baidu(_ q: String, _ L: Lang) async -> [Hit] {
-        guard L == .zh, let url = URL(string: "https://www.baidu.com/s?wd=\(enc(q))&rn=10"),
+        guard L == .zh, baiduPace.take(), let url = URL(string: "https://www.baidu.com/s?wd=\(enc(q))&rn=10"),
               let html = await text(url, L, ua: desktopUA) else { return [] }
+        if isBlockPage(html) { baiduPace.blocked(); return [] }
         var out: [Hit] = []
         // 每一筆結果的容器上有 mu="原網址"
         for block in html.components(separatedBy: "class=\"result c-container").dropFirst() {

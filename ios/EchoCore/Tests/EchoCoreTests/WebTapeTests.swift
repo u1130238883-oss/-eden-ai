@@ -36,7 +36,8 @@ final class WebTapeTests: XCTestCase {
                 out += "（沒上網）" + r.turn.text.prefix(200) + "\n\n"
                 continue
             }
-            if !tape.replaying { try? await Task.sleep(nanoseconds: 1_500_000_000) }
+            // 錄的時候像一個人在問：一題問完隔一陣子再問下一題（一口氣問太快，搜尋引擎會把我們當機器人擋掉）
+            if !tape.replaying { try? await Task.sleep(nanoseconds: 8_000_000_000) }
             let w = await WebAgent.run(wq, lang: .zh)
             out += "[題型 \(w.want ?? "-")] \n" + w.text + "\n\n"
         }
