@@ -30,7 +30,17 @@ jobs:
           ls -la web_tape.json web_answers.txt
           gzip -9 -k web_tape.json
           tail -3 web_answers.txt
+      # 發佈成 release 有時會被 GitHub 擋（403）：另外存一份到分支 tapes/web-tape-N（一般的 git push，不需要 release 的權限）
+      - name: Save tape to a branch
+        working-directory: ios/EchoCore
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          D="$RUNNER_TEMP/tape" && mkdir -p "$D" && cp web_tape.json.gz web_answers.txt "$D/"
+          cd "$D" && git init -q && git add . && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "web tape ${{ github.run_number }}"
+          git push -q "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/tapes/web-tape-${{ github.run_number }}
       - uses: softprops/action-gh-release@v2
+        continue-on-error: true
         with:
           tag_name: web-tape-${{ github.run_number }}
           name: Web tape ${{ github.run_number }}

@@ -74,8 +74,21 @@ jobs:
           path: dist/NineSun.ipa
 
       # 只在要出 IPA 時才發佈（commit 訊息裡有 [ipa]，或在 Actions 頁面手動執行）；平常只跑測試、確認能編譯
+      # 發佈成 release 有時會被 GitHub 擋（403）：IPA 另外放到分支 builds/ninesun-build-N，
+      # 手機下載：https://github.com/<repo>/raw/builds/ninesun-build-N/NineSun.ipa
+      - name: Save IPA to a branch
+        if: contains(github.event.head_commit.message, '[ipa]') || github.event_name == 'workflow_dispatch'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          D="$RUNNER_TEMP/ipa" && mkdir -p "$D" && cp dist/NineSun.ipa "$D/"
+          cd "$D" && git init -q && git add . && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "NineSun build ${{ github.run_number }}"
+          git push -q "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/builds/ninesun-build-${{ github.run_number }}
+          echo "下載：https://github.com/${GITHUB_REPOSITORY}/raw/builds/ninesun-build-${{ github.run_number }}/NineSun.ipa"
+
       - name: Publish release
         if: contains(github.event.head_commit.message, '[ipa]') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ninesun-build-${{ github.run_number }}
