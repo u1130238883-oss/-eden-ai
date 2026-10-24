@@ -59,6 +59,8 @@ public enum Synthesize {
         // 去掉表情符號、[1] 這類註腳
         s = String(String.UnicodeScalarView(s.unicodeScalars.filter { !($0.properties.isEmojiPresentation || ($0.properties.isEmoji && $0.value > 0x2000 && $0.value != 0x3001)) }))
         s = s.replacingOccurrences(of: #"\[\d+\]|\[註\d*\]|\[來源請求\]"#, with: "", options: .regularExpression)
+        // 圖片說明（「Photo Credit: 某某 (某某) 正午陽光…」「圖片來源：…」）
+        s = s.replacingOccurrences(of: #"^(?i)(?:photo credit|圖片來源|圖片提供|圖／|圖/)\s*[:：]?[^，。]*?[)）]\s*"#, with: "", options: .regularExpression)
         // 編號：「1.」「(2)」「三、」「Step 3：」「第一步，」「• 」
         let numbering = [#"^[\(（]?\d{1,2}[\)）\.、．:：]\s*"#, #"^[一二三四五六七八九十]{1,3}[、\.．:：]\s*"#, #"^(?i)(step|步驟)\s*\d+\s*[:：\.、]?\s*"#,
                          #"^第[一二三四五六七八九十\d]{1,3}(步|點|個|招|種)?[，、：:\s]*"#, #"^[•●○◆◇■□▶►★☆✓✔➤→·\-\*＊]+\s*"#]
@@ -178,7 +180,8 @@ public enum Synthesize {
     }
 
     /// 一句話對這題有多好用
-    static func score(_ u: Unit, shape: Shape, topic: Set<String>, question: Set<String>) -> Double {
+    /// pred：「為什麼」問的是主題的哪一點（「天空為什麼是藍色的」→ 藍色）；原因句要講到這一點，只提到天空不算
+    static func score(_ u: Unit, shape: Shape, topic: Set<String>, question: Set<String>, pred: Set<String> = []) -> Double {
         let g = grams(u.text)
         // 跟問題幾乎一樣的句子是標題（「喜歡一個人該怎麼辦？」），不是答案
         if !question.isEmpty, Double(g.intersection(question).count) / Double(max(1, g.count)) > 0.7 { return -1 }
@@ -195,9 +198,19 @@ public enum Synthesize {
             // 名詞解釋（「咽喉痛是指…」）不是做法
             if defineWords.contains(where: { u.text.contains($0) }) || u.text.contains("是指") { s -= 3 }
         case .reason:
-            let why = reasonWords.contains { u.text.contains($0) }
-            s += why ? 3 : -2
+            // 真的在說因果（因為、使得、導致）≠ 只提到「原因」「原理」這兩個字；歷史（西元、論文、諾貝爾）是背景，不是原因
+            let strong = ["因為", "由於", "導致", "造成", "使得", "所以", "因此", "引起", "產生", "是因"].contains { u.text.contains($0) }
+            let why = strong || reasonWords.contains { u.text.contains($0) }
+            s += strong ? 3 : (why ? 0.5 : -2)
+            s += ["散射", "波長", "吸收", "反射", "分子", "作用", "機制", "結構", "壓力", "溫度"].contains { u.text.contains($0) } ? 1 : 0
+            if ["西元", "年起", "論文", "諾貝爾", "年前", "世紀", "歷史上"].contains(where: { u.text.contains($0) }) { s -= 2 }
+            // 「依然」「仍然」是在回答接下來的疑問（為什麼不是紫色），是補充，不是主要的原因
+            if ["依然", "仍然", "還是會"].contains(where: { u.text.contains($0) }) { s -= 1.5 }
             if rel == 0 { s -= 2 }
+            // 講到問的那一點（藍色、藍光）才是在回答；只提到主題（天空、雲是白色的）不算
+            if !pred.isEmpty { s += pred.contains(where: { u.text.contains($0) }) ? (why ? 2 : 1) : -3 }
+            // 「並無法解釋…」是文章的鋪陳，說的是「這樣解釋不通」，不是答案
+            if ["無法解釋", "不能解釋", "解釋不了", "並不能說明"].contains(where: { u.text.contains($0) }) { s -= 3 }
         case .definition:
             if defineWords.contains(where: { u.text.contains($0) }) { s += 3 }
             if rel == 0 { s -= 2 }
@@ -208,8 +221,13 @@ public enum Synthesize {
     }
 
     /// 把各網站的句子分群：講同一件事的放一起，記下有幾個網站都這樣說
-    public static func points(question: String, subject: String, shape: Shape, pages: [(host: String, text: String)]) -> [Point] {
+    public static func points(question: String, subject: String, shape: Shape, pages: [(host: String, text: String)], pred: String = "") -> [Point] {
         let topic = grams(Understanding.plain(subject))
+        // 「為什麼」問的那一點：述語的雙字詞去掉主題的、去掉「是」「的」這種虛字組成的
+        // 用關鍵的字（「藍」）而不是詞：網頁會寫「藍光」「藍天」「變藍」
+        let topicChars = Set(Understanding.plain(subject))
+        let filler: Set<Character> = ["是", "的", "會", "很", "麼", "什", "為", "了", "在", "這", "那", "有", "要", "能", "可", "以", "都", "也", "就", "一", "個", "色"]
+        let predG = Set(Understanding.plain(pred).filter { !topicChars.contains($0) && !filler.contains($0) && !$0.isPunctuation }.map(String.init))
         let qg = grams(question)
         var scored: [(Unit, Double)] = []
         for p in pages {
@@ -219,7 +237,7 @@ public enum Synthesize {
             if topic.count >= 2, Double(grams(p.text).intersection(topic).count) / Double(topic.count) < 0.5 { continue }
             var seen = Set<String>()
             for u in units(p.text, host: p.host) where seen.insert(String(u.text.prefix(12))).inserted {
-                let s = score(u, shape: shape, topic: topic, question: qg)
+                let s = score(u, shape: shape, topic: topic, question: qg, pred: predG)
                 if s >= (shape == .advice ? 2.5 : 3) { scored.append((u, s)) }
             }
         }
@@ -241,7 +259,9 @@ public enum Synthesize {
     /// lead：已經找到的直接答案（原因、定義），放在最前面，下面補其他網站也提到的重點
     public static func compose(question: String, subject: String, want: Understanding.Want, pages: [(host: String, text: String)], lead: String? = nil) -> String? {
         guard let shape = shape(want) else { return nil }
-        var pts = points(question: question, subject: subject, shape: shape, pages: pages)
+        var pred = ""
+        if case let .reason(p) = want { pred = p }
+        var pts = points(question: question, subject: subject, shape: shape, pages: pages, pred: pred)
         if let lead {
             // 已經有直接的答案：只補「別的網站也這樣說」的重點，同一個網站的零散句子不補
             let lg = grams(lead)

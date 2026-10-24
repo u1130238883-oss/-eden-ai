@@ -223,6 +223,24 @@ final class AnswerQualityTests: XCTestCase {
         if ProcessInfo.processInfo.environment["NINESUN_SHOW"] != nil { print(a) }
     }
 
+    /// 「天空為什麼是藍色的」：原因要講到「藍」（只講到天空、雲是白色的不算）、要真的說因果（不是「150 年前就知道原理」這種歷史），
+    /// 「並無法解釋」是鋪陳不是答案；圖片說明（Photo Credit）拿掉
+    func testWhyAnswerExplainsTheAskedPoint() {
+        let page = """
+        你現在畫面中的天空應當是白色的，這個例子說明了為什麼雲朵總是白色的。
+        天空是藍色的原因與前述類似，但由於陽光是白色的，並無法解釋天空何以是藍色。
+        人類150年前就知道藍天原理，卻在一世紀後才清楚黑夜的原因。
+        Photo Credit: 某某 (某某) 正午陽光進入大氣後與空氣分子發生瑞利散射，使得天空呈現鮮豔的藍色。
+        紫光散射得更多，但人眼對紫光比較不敏感，因此看到的天空依然是藍色的。
+        """
+        let a = Synthesize.compose(question: "天空為什麼是藍色的", subject: "天空", want: .reason(pred: "是藍色的"),
+                                   pages: [(host: "a.tw", text: page), (host: "b.tw", text: page)]) ?? ""
+        let first = a.components(separatedBy: "\n").first ?? ""
+        XCTAssertTrue(first.contains("散射") && first.contains("藍色"), a)
+        XCTAssertFalse(a.contains("Photo Credit"), a)
+        XCTAssertFalse(first.contains("雲朵") || first.contains("無法解釋") || first.contains("150年"), a)
+    }
+
     /// 原因：表格的一列不是說明；有講到主題（感冒）的句子優先；引整句、不切成看不懂的幾個字
     func testReasonPicksAnExplainingSentence() {
         let ev: [Understanding.Evidence] = [
