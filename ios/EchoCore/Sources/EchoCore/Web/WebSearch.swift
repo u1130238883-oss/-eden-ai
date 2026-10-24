@@ -84,11 +84,15 @@ public enum WebSearch {
 
     static func liveSearch(_ q: String, lang L: Lang, news: Bool, light: Bool) async -> Answer {
         if light {
-            // 小問題：Bing 一次（Bing 不給結果、或給的是無關的東西時，再問百度、Yahoo）
-            var a = await soon(4, [], { await bingRSS(q, L) })
-            if poisoned(a, q) { a = [] }
-            // 在 GitHub 的機器上試過：只有百度給的結果跟問題有關（Bing 給別的查詢的結果，其他幾個都被擋）
-            let d: [Hit] = relevant(a, q) < 3 ? await soon(4, [], { await baidu(q, L) }) : []
+            // 小問題：先問 DuckDuckGo（有 cookie）和百度——在 GitHub 的機器上試過，只有這兩個給的結果跟問題有關；
+            // Bing 常給別人查的東西（問小說給股價），放到最後、而且整批無關就不要
+            async let dd = soon(4, [], { await ddgHTML(q, L) })
+            let d: [Hit] = await soon(4, [], { await baidu(q, L) })
+            var a = await dd
+            if relevant(a + d, q) < 3 {
+                let bing = await soon(4, [], { await bingRSS(q, L) })
+                if !poisoned(bing, q) { a += bing }
+            }
             let b: [Hit] = a.count + d.count < 3 ? await soon(3, [], { await yahoo(q, L) }) : []
             let c: [Hit] = a.count + b.count + d.count < 3 ? await soon(3, [], { await ddgLite(q, L) }) : []
             // 都給不出什麼：不放棄，再問 Google
@@ -99,7 +103,7 @@ public enum WebSearch {
                 for l in [a, d, c, b, g] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
             }
             return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)),
-                          engines: ["bing": a.count, "yahoo": b.count, "ddg-lite": c.count, "google": g.count, "baidu": d.count])
+                          engines: ["bing": a.filter { $0.engine == "Bing" }.count, "yahoo": b.count, "ddg-lite": c.count, "google": g.count, "baidu": d.count, "duckduckgo": a.filter { $0.engine == "DuckDuckGo" }.count])
         }
         async let inst = soon(3, nil, { await ddgInstant(q, L) })
         async let wx = weatherIf(q, L)
@@ -136,7 +140,7 @@ public enum WebSearch {
             g.cancelAll()
         }
         // 跟查詢無關的整批結果不要（新聞不算：標題常常不重複查詢的字）
-        let lists: [(String, [Hit])] = ["news", "bing", "bing-web", "duckduckgo", "ddg-lite", "brave", "baidu", "mojeek", "yahoo", "google"]
+        let lists: [(String, [Hit])] = ["news", "duckduckgo", "baidu", "ddg-lite", "brave", "mojeek", "yahoo", "google", "bing", "bing-web"]
             .map { ($0, got[$0] ?? []) }.map { ($0.0, $0.0 != "news" && poisoned($0.1, q) ? [] : $0.1) }
         var engines: [String: Int] = [:]
         var hits: [Hit] = []
@@ -273,15 +277,39 @@ public enum WebSearch {
 
     // MARK: - DuckDuckGo
 
+    /// 有 cookie 的連線（只在記憶體裡、App 關掉就沒了）：DuckDuckGo 要先開過首頁拿到 cookie，查詢才會給結果
+    static let cookieSession: URLSession = {
+        let c = URLSessionConfiguration.ephemeral
+        c.timeoutIntervalForRequest = 6
+        c.timeoutIntervalForResource = 9
+        c.httpShouldSetCookies = true
+        c.httpCookieAcceptPolicy = .always
+        c.urlCache = nil
+        return URLSession(configuration: c)
+    }()
+    private static let warmLock = NSLock()
+    nonisolated(unsafe) private static var warmed = false
+
+    /// DuckDuckGo：先開首頁拿 cookie，再用一般的網址查。
+    /// 在 GitHub 的機器上試過：這樣 80 筆裡有 67 筆跟問題有關（以前沒有 cookie、用 POST 查，一筆都拿不到；Bing 給的是別人查的東西）
     static func ddgHTML(_ q: String, _ L: Lang) async -> [Hit] {
         let region = ["zh": "tw-tzh", "en": "us-en", "es": "es-es", "it": "it-it"][L.rawValue] ?? "wt-wt"
-        guard let url = URL(string: "https://html.duckduckgo.com/html/") else { return [] }
-        var req = request(url, L, ua: desktopUA)
-        req.httpMethod = "POST"
-        req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        req.setValue("https://html.duckduckgo.com/", forHTTPHeaderField: "Referer")
-        req.httpBody = "q=\(enc(q))&kl=\(region)&b=".data(using: .utf8)
-        guard let html = await text(req) else { return [] }
+        func get(_ u: String) async -> String? {
+            guard let url = URL(string: u) else { return nil }
+            var req = request(url, L, ua: desktopUA)
+            req.setValue("https://duckduckgo.com/", forHTTPHeaderField: "Referer")
+            guard let (d, resp) = try? await cookieSession.data(for: req), ((resp as? HTTPURLResponse)?.statusCode ?? 200) < 400 else { return nil }
+            return String(data: d, encoding: .utf8) ?? String(decoding: d, as: UTF8.self)
+        }
+        let needWarm: Bool = { warmLock.lock(); defer { warmLock.unlock() }; return !warmed }()
+        if needWarm {
+            _ = await get("https://duckduckgo.com/")
+            warmLock.lock(); warmed = true; warmLock.unlock()
+        }
+        guard let html = await get("https://html.duckduckgo.com/html/?q=\(enc(q))&kl=\(region)") else {
+            warmLock.lock(); warmed = false; warmLock.unlock()
+            return []
+        }
         var out: [Hit] = []
         for block in html.components(separatedBy: "result__body").dropFirst() {
             if block.contains("result--ad") || block.contains("badge--ad") { continue }
@@ -294,6 +322,15 @@ public enum WebSearch {
             out.append(Hit(title: clean(title), snippet: clean(snip), url: link, engine: "DuckDuckGo"))
             if out.count >= 8 { break }
         }
+        // 版面改了、抓不到結果的區塊：改用通用的解析（連到別的網站的連結）
+        if out.isEmpty {
+            let fixed = html.replacingOccurrences(of: "href=\"//duckduckgo.com/l/?", with: "href=\"https://duckduckgo.com/l/?")
+            out = genericResults(fixed, engine: "duckduckgo.com", name: "DuckDuckGo").map {
+                Hit(title: $0.title, snippet: $0.snippet, url: ddgRealURL($0.url), engine: $0.engine)
+            }
+        }
+        // 沒有結果：下次重新拿 cookie
+        if out.isEmpty { warmLock.lock(); warmed = false; warmLock.unlock() }
         return out
     }
 
@@ -762,8 +799,9 @@ public enum WebSearch {
     // MARK: - 文字工具
 
     static func enc(_ s: String) -> String {
-        var allowed = CharacterSet.alphanumerics
-        allowed.insert(charactersIn: "-._~")
+        // 只留 ASCII 的英數字（CharacterSet.alphanumerics 連中文都算，中文就沒有編碼）
+        var allowed = CharacterSet()
+        allowed.insert(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")
         return s.addingPercentEncoding(withAllowedCharacters: allowed) ?? s
     }
 
