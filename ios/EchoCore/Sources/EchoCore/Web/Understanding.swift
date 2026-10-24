@@ -75,6 +75,14 @@ public enum Understanding {
         return nil
     }
 
+    /// 作品題怎麼查（像人一樣查）：書 →「X 內容簡介」（書店、出版社的介紹）、「X 劇情 心得」（讀者整理的大意）；
+    /// 電影、劇、動畫 →「X 劇情介紹」「X 影評」。不直接拿問句去查（「X講了什麼」會查到一堆不相干的問答）
+    static func workSearches(_ title: String, _ question: String) -> (first: [String], retry: [String]) {
+        let screen = ["電影", "片", "劇", "動畫", "影集", "卡通", "動漫", "番"].contains { question.contains($0) }
+        if screen { return (["\(title) 劇情介紹", "\(title) 影評"], ["\(title) 劇情 結局 解析", "\(title) 心得"]) }
+        return (["\(title) 內容簡介", "\(title) 劇情 心得"], ["\(title) 導讀 書評", "\(title) 劇情介紹"])
+    }
+
     static func plain(_ q: String) -> String {
         var t = clean(q)
         t = String(t.filter { !"？?！!。，,；;：:「」 ".contains($0) })
@@ -254,7 +262,8 @@ extension Understanding {
         // 作品的內容、劇情：「雪國的內容是什麼」「海角七號的劇情是什麼」——要的是在講什麼，不是名詞解釋
         if let m = match(t, #"^(.{2,}?)的?(內容|劇情|大綱|主旨|結局|故事|情節)(?:是什麼|是怎樣|在講什麼|講什麼|介紹)?$"#) {
             let subject = m[1]
-            return F(subject, .open, ["\(subject) 內容", "\(subject) 劇情"], ["\(subject) 簡介"], [subject],
+            let w = workSearches(subject, question)
+            return F(subject, .open, w.first, w.retry, [subject],
                      "你想知道「\(subject)」的\(m[2]) → 要講出它在講什麼，不是名詞解釋。")
         }
         // 作者：「誰寫了X」「X是誰寫的」「X的作者是誰」
@@ -454,8 +463,10 @@ extension Understanding {
         }
         // 「金閣寺在講什麼」：要內容大意（劇情、主題），不是基本資料
         if let m = match(t, #"^(.{1,12}?)(?:是)?(?:在)?(?:講|說)(?:了|些)?什麼"#) {
-            return F(m[1], .open, ["\(m[1]) 內容", "\(m[1]) 劇情", t], ["\(m[1]) 主題 介紹"], [m[1]],
-                     "你想知道「\(m[1])」在講什麼 → 要內容大意（講了什麼故事、想表達什麼），不是基本資料。")
+            let title = workTitle(question) ?? m[1]
+            let w = workSearches(title, question)
+            return F(title, .open, w.first, w.retry, [title],
+                     "你想知道「\(title)」在講什麼 → 要內容大意（講了什麼故事、想表達什麼），不是基本資料。")
         }
         if let m = match(t, #"^(?:什麼是)(.+)$"#) ?? match(t, #"^(.+?)(?:是什麼|是啥|什麼意思)"#) {
             return F(m[1], .definition, ["\(m[1]) 是什麼"], ["\(m[1]) 意思"], [m[1]], "你想知道「\(m[1])」是什麼 → 用一兩句話說清楚。")

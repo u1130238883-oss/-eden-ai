@@ -94,6 +94,15 @@ final class SynthesizeTests: XCTestCase {
         XCTAssertEqual(Cite.field("少年維特的煩惱講了什麼"), .culture)
         XCTAssertTrue(Cite.proQuery("失眠", question: "失眠怎麼辦")?.contains("site:hpa.gov.tw") == true)
         XCTAssertNil(Cite.proQuery("台北101", question: "台北101有多高"))
+        // 作品：書去書店、書評網站找，電影去影評網站找；查「X 內容簡介」「X 劇情介紹」，不是直接拿問句查
+        XCTAssertTrue(Cite.proQuery("少年維特的煩惱", question: "少年維特的煩惱講了什麼")?.contains("site:books.com.tw") == true)
+        XCTAssertTrue(Cite.proQuery("龍貓", question: "龍貓這部電影講什麼")?.contains("site:movies.yahoo.com.tw") == true)
+        XCTAssertEqual(Understanding.frame("少年維特的煩惱講了什麼").searches.first, "少年維特的煩惱 內容簡介")
+        XCTAssertEqual(Understanding.frame("少年維特的煩惱這本書講了什麼？").subject, "少年維特的煩惱")
+        XCTAssertEqual(Understanding.frame("神隱少女這部電影在講什麼").searches.first, "神隱少女 劇情介紹")
+        XCTAssertEqual(Understanding.frame("老人與海的內容是什麼").searches.first, "老人與海 內容簡介")
+        // 影片、購物、股價頁沒有能讀的說明
+        XCTAssertTrue(Cite.isLowQuality("www.youtube.com") && Cite.isLowQuality("tw.stock.yahoo.com"))
         XCTAssertTrue(Cite.isProfessional("www.commonhealth.com.tw"))
     }
 }

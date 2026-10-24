@@ -80,7 +80,11 @@ public enum Cite {
     /// 問答網站、論壇、內容農場、轉貼站：除非沒有別的資料，不然不用
     static let lowQuality = ["zhidao.baidu", "wenwen.sogou", "answers.com", "answers.yahoo", "commentcamarche", "quora.com", "reddit.com",
                              "ptt.cc", "dcard.tw", "mobile01", "kknews", "toutiao", "163.com", "sohu.com", "read01", "twgreatdaily",
-                             "pinterest", "ifuun", "iask", "xuehua", "360doc", "docin", "doc88", "wenku.baidu", "jingyan.baidu"]
+                             "pinterest", "ifuun", "iask", "xuehua", "360doc", "docin", "doc88", "wenku.baidu", "jingyan.baidu",
+                             // 影片、社群、購物、股價頁：沒有可以讀的說明文字
+                             "youtube.com", "youtu.be", "facebook.com", "instagram.com", "tiktok.com", "douyin.com", "bilibili.com", "ixigua.com",
+                             "weibo.com", "threads.net", "shopee", "momoshop", "ruten.com", "tw.stock.yahoo", "finance.yahoo", "cmoney.tw",
+                             "wantgoo.com", "baijiahao.baidu", "jianshu.com", "zhihu.com", "bomb01", "buzzhand", "teepr.com"]
     /// 原始來源：官方、政府、學術、百科
     static let primary = [".gov", ".edu", "gov.tw", "gov.cn", "go.jp", "who.int", "un.org", "nature.com", "science.org",
                           "sciencedirect", "springer", "nih.gov", "arxiv.org", "sec.gov", "cdc.gov", "moe.gov", "cwa.gov"]
@@ -96,7 +100,8 @@ public enum Cite {
         .work: ["managertoday.com.tw", "cw.com.tw", "gvm.com.tw", "businessweekly.com.tw", "cheers.com.tw", "bnext.com.tw", "104.com.tw", "1111.com.tw", "yourator.co"],
         .money: ["fsc.gov.tw", "twse.com.tw", "moneydj.com", "businessweekly.com.tw", "cw.com.tw", "wealth.com.tw", "smart.businessweekly.com.tw"],
         .law: ["law.moj.gov.tw", "mol.gov.tw", "judicial.gov.tw", "lawbank.com.tw", "laf.org.tw", "legis-pedia.com"],
-        .culture: ["books.com.tw", "openbook.org.tw", "readmoo.com", "okapi.books.com.tw", "movies.yahoo.com.tw", "imdb.com", "douban.com"],
+        .culture: ["books.com.tw", "openbook.org.tw", "readmoo.com", "okapi.books.com.tw", "readingoutpost.com", "eslite.com", "taaze.tw",
+                   "kingstone.com.tw", "sanmin.com.tw", "movies.yahoo.com.tw", "atmovies.com.tw", "imdb.com", "douban.com", "vocus.cc"],
         .general: ["pedia.cloud.edu.tw", "terms.naer.edu.tw", "britannica.com", "pansci.asia", "cw.com.tw"],
     ]
     public static func isProfessional(_ host: String) -> Bool {
@@ -121,7 +126,12 @@ public enum Cite {
     public static func proQuery(_ topic: String, question: String) -> String? {
         let f = field(question)
         guard f != .general, let sites = professional[f] else { return nil }
-        let picks = sites.filter { !$0.contains("wikipedia") }.prefix(4)
+        var picks = Array(sites.prefix(4))
+        // 作品：電影、劇、動畫去影評網站找；書去書店、書評網站找
+        if f == .culture {
+            let screen = ["電影", "片", "劇", "動畫", "影集", "卡通", "動漫"].contains { question.contains($0) }
+            picks = screen ? ["movies.yahoo.com.tw", "atmovies.com.tw", "imdb.com", "douban.com"] : ["books.com.tw", "readmoo.com", "openbook.org.tw", "readingoutpost.com"]
+        }
         return topic + " (" + picks.map { "site:" + $0 }.joined(separator: " OR ") + ")"
     }
     public static func isPrimary(_ host: String) -> Bool { primary.contains { host.lowercased().contains($0) } }
