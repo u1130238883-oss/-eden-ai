@@ -424,8 +424,9 @@ public enum Think {
     /// 「金閣寺在講什麼」「少年維特的煩惱講了什麼」：像人回答一樣——先說它是什麼（誰的什麼作品），再說講了什麼故事，最後說想表達什麼。
     /// 句子要在講這部作品：有書名，或出自在介紹這部作品的頁面、開頭是「小說／故事／書中…」；
     /// 改編的電影、翻譯版本、出版經過、頁尾連結都不是內容。書名不切開（「少年維特的煩惱」不是「少年維特」＋「煩惱」）
-    public static func aboutWork(question: String, pages: [Understanding.Evidence]) -> String? {
-        guard let title = Understanding.workTitle(question) else { return nil }
+    /// subject：規則認不出這種問法（「X到底在演什麼」）、但理解問題的模型判斷是在問內容時，用問題的主題
+    public static func aboutWork(question: String, pages: [Understanding.Evidence], subject fallback: String? = nil) -> String? {
+        guard let title = Understanding.workTitle(question) ?? fallback, title.count >= 2 else { return nil }
         let ct = canonText(title)
         func names(_ s: String) -> Bool { canonText(s).contains(ct) }
         struct S { let text: String; let host: String; let named: Bool; let about: Bool; let page: Int; let idx: Int }

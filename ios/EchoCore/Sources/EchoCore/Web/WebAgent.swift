@@ -431,7 +431,8 @@ public enum WebAgent {
                     return (d, true)
                 }
                 // 「金閣寺在講什麼」：有這部作品就講它的內容（同名的寺廟、改編的電影不算）
-                if let d = Think.aboutWork(question: question, pages: ps + sn) {
+                let asksContent = (Intent.shared?.top(question)).map { $0.label == "content" && $0.p >= 0.6 } ?? false
+                if let d = Think.aboutWork(question: question, pages: ps + sn, subject: asksContent ? fr.subject : nil) {
                     brainNote = "資料裡有這部作品，先說它是什麼，再說講了什麼故事、想表達什麼。"
                     brainAnswered = true
                     digested = true
