@@ -265,7 +265,7 @@ DATA = """
 大功告成|事情圓滿完成|mission accomplished|misión cumplida|missione compiuta|開心,稱讚
 功成名就|事業成功、名聲顯揚|achieve fame and success|alcanzar fama y éxito|raggiungere fama e successo|稱讚
 一敗塗地|徹底失敗|a crushing defeat|una derrota aplastante|una sconfitta schiacciante|難過
-名落孫山|考試沒有考上|fail the exam|suspender el examen|essere bocciato|難過,安慰
+名落孫山|考試沒有考上|fail an exam|suspender el examen|essere bocciato|難過,安慰
 人山人海|人非常多|a sea of people|un mar de gente|un mare di gente|驚訝
 門可羅雀|非常冷清，沒有人來|deserted|desierto|deserto|幽默
 熙熙攘攘|人來人往，很熱鬧|bustling|bullicioso|brulicante|開心

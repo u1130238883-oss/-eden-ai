@@ -114,7 +114,7 @@ public enum Synonyms {
             }
         }
         // 兩個都不認得的詞（「Kindle和紙本書的差別」）：只有明說在問意思（意思、同義、近義、一樣）才算近義詞題，不然是在比較兩樣東西
-        if let p = cands.first(where: { known($0.0) || known($0.1) }) { return .pair(p.0, p.1) }
+        if let p = cands.first(where: { known($0.0) || known($0.1) }) { return comparesThings(t, p.0, p.1) ? nil : .pair(p.0, p.1) }
         if let p = cands.first, t.range(of: "意思|同義|近義|一樣|相同", options: .regularExpression) != nil { return .pair(p.0, p.1) }
         return nil
     }
