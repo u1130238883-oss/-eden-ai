@@ -96,7 +96,13 @@ def main():
     params = [E, W1, b1, W2, b2]
     m = [np.zeros_like(p) for p in params]
     v = [np.zeros_like(p) for p in params]
-    lr, B, step = 3e-3, 128, 0
+    lr, B, step = 2e-3, 128, 0
+    # 沒看過的說法分兩半：一半拿來挑最好的那一輪（dev），另一半才是真正的考試（test），挑的過程不會讓分數灌水
+    half = len(hx) // 2
+    dev = (hx[:half], hyi[:half], None if enc_ho is None else enc_ho[:half])
+    test = (hx[half:], hyi[half:], None if enc_ho is None else enc_ho[half:])
+    best = (-1.0, None, 0)
+    DROP, WD = 0.25, 1e-4
 
     def evaluate(X, Y, EN=None):
         correct = 0
@@ -105,12 +111,18 @@ def main():
             correct += int((lg.argmax(1) == Y[s:s + 1024]).sum())
         return correct / len(X)
 
-    for epoch in range(4):
+    for epoch in range(8):
         order = rng.permutation(len(xs))
         for s in range(0, len(order), B):
             idx = order[s:s + B]
             batch = [xs[i] for i in idx]
             h0, z1, a1, lg = forward(E, W1, b1, W2, b2, batch, None if enc_tr is None else enc_tr[idx])
+            # dropout：每次隨機蓋掉一部分特徵，逼它不要只靠背某幾個細節
+            keep = (rng.random(h0.shape) > DROP).astype(np.float32) / (1 - DROP)
+            h0 = h0 * keep
+            z1 = h0 @ W1 + b1
+            a1 = np.maximum(z1, 0)
+            lg = a1 @ W2 + b2
             p = np.exp(lg - lg.max(1, keepdims=True))
             p /= p.sum(1, keepdims=True)
             g = p
@@ -122,7 +134,9 @@ def main():
             gz1 = ga1 * (z1 > 0)
             gW1 = h0.T @ gz1
             gb1 = gz1.sum(0)
-            gh0 = gz1 @ W1[:D].T
+            gW1 += WD * W1
+            gW2 += WD * W2
+            gh0 = (gz1 @ W1[:D].T) * keep[:, :D]
             gE = np.zeros_like(E)
             for i, f in enumerate(batch):
                 gE[f] += gh0[i] / len(f)
@@ -134,7 +148,14 @@ def main():
                 vh = v[k] / (1 - 0.999 ** step)
                 pp -= lr * mh / (np.sqrt(vh) + 1e-8)
         et = None if enc_tr is None else enc_tr[:20000]
-        print(f"epoch {epoch + 1}: 訓練 {evaluate(xs[:20000], y[:20000], et):.4f}  沒看過的說法 {evaluate(hx, hyi, enc_ho):.4f}", flush=True)
+        d_acc = evaluate(*dev)
+        print(f"epoch {epoch + 1}: 訓練 {evaluate(xs[:20000], y[:20000], et):.4f}  沒看過的說法（挑選用）{d_acc:.4f}", flush=True)
+        if d_acc > best[0]:
+            best = (d_acc, [p_.copy() for p_ in params], epoch + 1)
+    # 用挑選組最好的那一輪；考試組的分數才是真正的成績
+    for p_, b_ in zip(params, best[1]):
+        p_[...] = b_
+    print(f"用第 {best[2]} 輪。考試組（沒看過的說法）：{evaluate(*test):.4f}", flush=True)
 
     # 錯在哪
     _, _, _, lg = forward(E, W1, b1, W2, b2, hx, enc_ho)
