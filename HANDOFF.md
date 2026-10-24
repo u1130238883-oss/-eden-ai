@@ -427,3 +427,18 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
 - 作品題（`Understanding.workTitle`、`Think.aboutWork`）：書名不從「的」切開；回答分三段——它是什麼（誰的什麼作品）→ 📖 講了什麼故事 → 💡 想表達什麼；
   改編、翻譯、出版、寫作經過、頁尾連結不算內容；找不到講內容的句子就不硬湊（`conclude` 對作品題不放寬條件）。
 - `web_questions.txt` 加了 49 題作品題，`[tape]` 錄新的網頁（web-tape-19）；重播時記得維基已經被過濾，能用的網頁會變少。
+
+## 2026-10-24（下午）：搜尋引擎的問題（使用者：「為什麼查到的都是垃圾？」）
+
+- **探針**（`.github/workflows/search-probe.yml`＋`SearchProbeTests`，commit 訊息有 `[probe]` 時跑）：同一批問題丟給每個搜尋引擎、每種寫法，數有幾筆跟問題有關。
+  在 GitHub 的機器上：Bing 給的是**別人查的東西**（問小說給股價、問失眠給披薩，有沒有 cookie 都一樣，79 筆只有 8 筆相關）；
+  Google、Yahoo、Brave、Mojeek、Startpage、Yandex、Ecosia、Qwant 全被擋；**DuckDuckGo 先開首頁拿 cookie 再用 GET 查：80 筆 67 筆相關**；百度 41 筆 34 筆。
+- 改法（`WebSearch`）：DuckDuckGo 用有 cookie 的連線；順序 DuckDuckGo → 百度 → Bing；整批都跟查詢無關的結果丟掉（`poisoned`）；
+  網址編碼只留 ASCII（`CharacterSet.alphanumerics` 連中文都算字母）；
+  **像人一樣慢慢查**（`Pace`）：每個搜尋引擎短時間只問幾次，被擋（驗證頁、429）就休息 2～3 分鐘；都在休息時老實說「被擋了，等一下再問」（`webBlocked`）。
+- GitHub 的機器問十幾次就被 DuckDuckGo 封住 IP，所以完整的 185 題錄不出東西；`[tape] [focus]` 只錄 6 題、每題隔 40 秒（`web_questions_focus.txt`）。
+- 作品題用真實網頁（web-tape-28）訓練：
+  - `Synthesize.compose` 會把整理好的作品答案蓋成「綜合 N 個網站的重點」（讀書心得的閒聊）→ 已經照結構整理的答案（`digested`）不再被蓋、不附「換個角度」；
+  - 劇情句的分數：真的在說故事（描寫、講述）＞故事裡發生的事（愛上、誤闖、自殺）＞只提到「情節」；寫作經過（源自、寫下）扣分；
+  - 像人一樣往下讀：最好的劇情句後面一兩句在說後來發生的事，就接著說（「之後，維特…而自殺」）；
+  - 沒提書名的句子要開頭就是「小說／故事／書中…」，有別的《書名》、清單文章介紹的別部作品不算；同一件事不說兩次。

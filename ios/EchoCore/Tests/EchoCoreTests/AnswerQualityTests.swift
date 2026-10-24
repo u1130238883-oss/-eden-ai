@@ -163,6 +163,22 @@ final class AnswerQualityTests: XCTestCase {
             XCTAssertTrue(a.contains("狂飆突進"), a)
             for bad in ["外部連結", "維基共享", "出版社", "一個月之內"] { XCTAssertFalse(a.contains(bad), "\(bad)\n\(a)") }
         }
+        // 真實網頁學到的：像人一樣往下讀（後來發生的事接著說）；清單文章裡介紹的別部作品不算；寫作經過不是內容
+        let encyclopedia = """
+        《少年維特的煩惱》是德國作家歌德的中篇小說。
+        小說描寫青年維特愛上了已經訂婚的綠蒂。
+        這段愛情的挫折讓維特痛苦萬分。
+        後來維特又覺得自己和社會格格不入，最後走上自殺一途。
+        """
+        let diary = """
+        少年維特的煩惱源自於歌德自身一段無疾而終的戀愛，他寫下了這部名作。
+        這是一部2024年上映的動畫電影，故事圍繞一隻貓經歷洪水求生的冒險。
+        """
+        let real = Think.aboutWork(question: "少年維特的煩惱講了什麼",
+                                   pages: [.init(text: diary, host: "vocus.cc"), .init(text: encyclopedia, host: "newton.com.tw")]) ?? ""
+        XCTAssertTrue(real.contains("挫折") && real.contains("自殺"), real)
+        XCTAssertFalse(real.contains("源自於") || real.contains("2024年"), real)
+
         // 講劇情的句子沒有「煩惱」兩個字，也算在講這本書
         XCTAssertTrue(Think.onTopic(question: "少年維特的煩惱講了什麼", sentence: "小說講述了青年維特愛上綠蒂的故事。", passage: shop))
         XCTAssertFalse(Think.onTopic(question: "少年維特的煩惱講了什麼", sentence: "參見維特效應外部連結維基共享資源。", passage: shop))

@@ -377,6 +377,8 @@ public enum WebAgent {
         var solved: (text: String, ok: Bool)?
         var brainNote = ""
         var brainAnswered = false
+        // 已經照題目的結構整理好的答案（作品：它是什麼→講什麼→想表達什麼；代表作；比較）：不要再被「綜合重點」蓋掉
+        var digested = false
         var checkNote = ""
         var pagesRead = pages.count
         var firstRoundOK = false
@@ -415,12 +417,14 @@ public enum WebAgent {
                 if let d = Think.worksDigest(question: question, pages: ps + sn) {
                     brainNote = "先找出最常被提到的代表作，再找每一部在講什麼的句子。"
                     brainAnswered = true
+                    digested = true
                     return (d, true)
                 }
                 // 「金閣寺在講什麼」：有這部作品就講它的內容（同名的寺廟、改編的電影不算）
                 if let d = Think.aboutWork(question: question, pages: ps + sn) {
-                    brainNote = "資料裡有這部作品，挑描寫它內容的句子。"
+                    brainNote = "資料裡有這部作品，先說它是什麼，再說講了什麼故事、想表達什麼。"
                     brainAnswered = true
+                    digested = true
                     return (d, true)
                 }
                 let old = solve(fr, pages: ps, snippets: sn)
@@ -429,6 +433,7 @@ public enum WebAgent {
                 if case let .compare(a, b) = fr.want, !oldOK, let d = Think.compareDigest(a, b, pages: ps + sn) {
                     brainNote = "很少有資料同時講兩邊，所以分開找各自的優缺點再並排比較。"
                     brainAnswered = true
+                    digested = true
                     return (d, true)
                 }
                 // 要一段說明的題目（在講什麼、怎麼辦、為什麼、X是什麼）：大腦給整句，不切幾個字
@@ -609,7 +614,7 @@ public enum WebAgent {
         }
         // ⑦-1 整理：好幾個網站的內容拆成重點、互相比對，用自己的話寫出來（不貼標題、不貼文章簡介）
         var synthesized = false
-        if zh, !fortune, let fr {
+        if zh, !fortune, !digested, let fr {
             let texts = readPages.map { (host: WebSearch.host($0.0.url), text: WebStrategy.toTraditional($0.1)) }
                 + findings.map { (host: $0.host, text: $0.text) }
             let ok = solved?.ok == true && !answer.isEmpty && !Synthesize.isMeta(answer.components(separatedBy: "\n").first ?? "")
@@ -656,6 +661,7 @@ public enum WebAgent {
         // 已經有完整的答案（步驟、名單、數字……）就不再附零散的引文
         let structured: Bool = {
             guard let fr, solved?.ok == true else { return false }
+            if digested { return true }
             switch fr.want { case .steps, .list, .number, .time, .place, .person: return true; default: return false }
         }()
         if !strat.angles.isEmpty && !synthesized && !structured {
@@ -695,7 +701,7 @@ public enum WebAgent {
         }
         if simpleFact { sections.removeAll() }
         // 反過來想：找爭議、誤解、轉折的說法（簡單的事實題不用）
-        if zh, !simpleFact, !synthesized, let fr, !fortune, plan.kind != .news, plan.kind != .weather {
+        if zh, !simpleFact, !synthesized, !digested, let fr, !fortune, plan.kind != .news, plan.kind != .weather {
             let topicTerms = termSet(Understanding.plain(fr.subject)).filter { $0.contains(where: isCJK) }
             let other = Mind.otherSide(findings.map { ($0.text, $0.host) }, topic: topicTerms, exclude: used)
             if !other.isEmpty { sections.append(("換個角度（也有這些說法）", other)) }

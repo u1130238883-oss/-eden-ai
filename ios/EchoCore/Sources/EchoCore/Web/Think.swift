@@ -345,12 +345,16 @@ public enum Think {
     /// 在講劇情的句子會有的字
     static let plotCues = ["描寫", "講述", "描述", "敘述", "故事", "主角", "主人公", "主人翁", "講的是", "寫的是", "刻畫", "劇情", "情節",
                            "愛上", "一生", "經歷", "冒險", "遭遇", "最後", "最終", "結局", "旅程", "成長", "命運", "追尋", "復仇"]
+    /// 真的在說故事的字（最重要）、故事裡發生的事、只是提到劇情的字（最不重要）
+    static let narrates = ["描寫", "講述", "描述", "敘述", "講的是", "寫的是", "刻畫", "講一個", "說的是"]
+    static let events = ["愛上", "一生", "經歷", "冒險", "遭遇", "最後", "最終", "結局", "旅程", "成長", "命運", "追尋", "復仇", "誤闖", "相遇",
+                         "自殺", "死去", "離開", "回到", "拯救", "發現", "對抗", "愛情", "友情"]
     /// 在講主題、想表達什麼的句子會有的字
     static let themeCues = ["主題", "探討", "反映", "象徵", "批判", "諷刺", "表達了", "揭示", "寓意", "隱喻", "思考", "意義在於", "核心"]
     /// 不是在講作品內容：改編、翻譯、出版、得獎、票房、頁尾連結、寫作經過
     static let notContent = ["改編", "翻拍", "譯本", "翻譯", "譯者", "出版社", "版本", "獎", "票房", "銷量", "暢銷", "參見", "外部連結", "維基",
                              "原始文獻", "多媒體", "ISBN", "評分", "售價", "購買", "下載", "線上看", "免費", "觀看", "首映", "預告", "演員表", "配音"]
-    static let backstory = ["創作", "寫成", "完成了這", "出版", "發表", "問世", "靈感", "根據自己", "根據作者"]
+    static let backstory = ["創作", "寫成", "寫下", "完成了這", "出版", "發表", "問世", "面世", "靈感", "根據自己", "根據作者", "源自", "自身", "親身", "不同於"]
     /// 句子在講「它」（不提書名，但開頭是「小說講述…」「故事發生在…」「書中…」）
     static let referents = ["小說", "故事", "本書", "該書", "全書", "書中", "此書", "這本書", "這部", "作品", "本片", "該片", "片中", "電影", "影片",
                             "劇中", "全劇", "該劇", "本劇", "動畫", "漫畫", "主角", "主人公", "全片"]
@@ -362,22 +366,27 @@ public enum Think {
         guard let title = Understanding.workTitle(question) else { return nil }
         let ct = canonText(title)
         func names(_ s: String) -> Bool { canonText(s).contains(ct) }
-        struct S { let text: String; let host: String; let named: Bool; let about: Bool }
+        struct S { let text: String; let host: String; let named: Bool; let about: Bool; let page: Int; let idx: Int }
         var sents: [S] = []
-        for p in pages {
+        for (pi, p) in pages.enumerated() {
             // 頁面在介紹這部作品：前面就提到書名（搜尋結果的摘要、維基百科的條目）
             let about = names(String(p.text.prefix(400)))
             for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) {
                 let t = raw.trimmingCharacters(in: .whitespaces)
                 guard (8...170).contains(t.count), !looksLikeNoise(t) else { continue }
-                sents.append(S(text: t + "。", host: p.host, named: names(t), about: about))
+                sents.append(S(text: t + "。", host: p.host, named: names(t), about: about, page: pi, idx: sents.count))
             }
         }
         func hits(_ s: String, _ ws: [String]) -> Int { ws.filter { s.contains($0) }.count }
         func clean(_ s: S) -> Bool {
             hits(s.text, notContent) == 0 && !(s.text.contains("《") && !s.text.contains("《\(title)》") && hits(s.text, ["電影", "歌劇", "舞台劇", "版"]) > 0)
         }
-        func talksAboutIt(_ s: S) -> Bool { s.named || s.about && referents.contains { s.text.hasPrefix($0) || s.text.contains("，" + $0) } }
+        // 沒提書名的句子：開頭就是「小說／故事／書中…」才算在講它；有別的《書名》、「這是一部…」（清單文章在介紹別部）不算
+        func talksAboutIt(_ s: S) -> Bool {
+            if s.named { return true }
+            let others = titles(s.text).contains { canonText($0) != ct }
+            return s.about && !others && referents.contains { s.text.hasPrefix($0) }
+        }
         // 書店、影評、書評這類專門介紹作品的網站優先
         func pro(_ h: String) -> Int { Cite.isProfessional(h) ? 1 : 0 }
         func headed(_ s: String) -> Bool {
@@ -390,7 +399,8 @@ public enum Think {
             .max { a, b in (pro(a.host), -a.text.count) < (pro(b.host), -b.text.count) }
         // ② 講了什麼故事
         func plotScore(_ s: S) -> Int {
-            hits(s.text, plotCues) * 2 + (s.named ? 2 : 0) + pro(s.host) - hits(s.text, backstory) * 2 - (s.text.count > 120 ? 1 : 0)
+            hits(s.text, narrates) * 3 + min(hits(s.text, events), 3) * 2 + hits(s.text, plotCues.filter { !narrates.contains($0) && !events.contains($0) })
+                + (s.named ? 2 : 0) + pro(s.host) - hits(s.text, backstory) * 2 - (s.text.count > 120 ? 1 : 0)
         }
         let plots = sents.filter { s in hits(s.text, plotCues) > 0 && clean(s) && talksAboutIt(s) && plotScore(s) > 1 }
             .sorted { plotScore($0) > plotScore($1) }
@@ -408,9 +418,21 @@ public enum Think {
             lines.append(label + Cite.whole(s.text, host: s.host, limit: limit))
         }
         add(intro, "")
-        if let p = plots.first { add(p, "📖 內容：") }
-        // 第二句劇情：同一個網站的下一句（補充故事的經過或結局），或另一個網站的說法
-        if let p2 = plots.dropFirst().first(where: { !used.contains($0.text) }) { add(p2, "📖 ") }
+        // 跟已經說的句子講同一件事（大半的雙字詞都一樣）：不重複
+        func repeats(_ s: S) -> Bool {
+            let g = grams(s.text)
+            return used.contains { u in Double(g.intersection(grams(u)).count) >= 0.45 * Double(max(g.count, 1)) }
+        }
+        if let p = plots.first {
+            add(p, "📖 內容：")
+            // 像人一樣往下讀：同一頁接下來一兩句如果在說後來發生的事（「之後，維特…而自殺」），接著說，故事才完整
+            let next = sents.filter { $0.page == p.page && $0.idx > p.idx && $0.idx <= p.idx + 2 }
+            for more in next where hits(more.text, events) > 0 && clean(more) && hits(more.text, backstory) == 0 && !repeats(more) {
+                add(more, "　")
+            }
+        }
+        // 第二個說法也要真的在說故事（分數夠高）、而且不是重複，不然寧可不說
+        if let p2 = plots.dropFirst().first(where: { !used.contains($0.text) && plotScore($0) >= 5 && !repeats($0) }) { add(p2, "📖 ") }
         add(theme, "💡 想表達的：")
         guard !lines.isEmpty else { return nil }
         return lines.joined(separator: "\n")
