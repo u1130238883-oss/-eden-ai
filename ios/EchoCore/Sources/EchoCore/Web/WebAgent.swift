@@ -420,6 +420,16 @@ public enum WebAgent {
                     digested = true
                     return (d, true)
                 }
+                // 「格林童話有什麼故事」：要的是一份清單——列出最常被提到的幾個、各在講什麼，不是「有 200 多個」。
+                // 規則認得的問法，或 NineSun 自己訓練的理解模型判斷是在問「有哪些」
+                let asksItems = Understanding.itemsAsk(question) != nil
+                    || (Intent.shared?.top(question)).map { $0.label == "items" && $0.p >= 0.6 } ?? false
+                if asksItems, let d = Think.itemsDigest(question: question, pages: ps + sn, subject: fr.subject) {
+                    brainNote = "這題要的是一份清單：先找出最常被提到的幾個，再說每一個在講什麼。"
+                    brainAnswered = true
+                    digested = true
+                    return (d, true)
+                }
                 // 「金閣寺在講什麼」：有這部作品就講它的內容（同名的寺廟、改編的電影不算）
                 if let d = Think.aboutWork(question: question, pages: ps + sn) {
                     brainNote = "資料裡有這部作品，先說它是什麼，再說講了什麼故事、想表達什麼。"

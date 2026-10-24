@@ -213,7 +213,40 @@ public final class Brain {
     }
 
     /// 前向傳播：回傳每個位置「答案從這裡開始／到這裡結束」的分數
+    /// 一句話的「意思」：輸入 [CLS] 句子 [SEP]，最後一層的 [CLS] 向量接上所有字的平均（512 維）。
+    /// 理解問題的模型（Intent）用它來類推沒看過的說法；跟 ai/intent/encode.py 一模一樣
+    public func meaning(_ text: String) -> [Float] {
+        let chars = Array(Brain.norm(text).prefix(qMax))
+        let tokens = [cls] + ids(chars) + [sep]
+        let T = tokens.count, C = config.n_embd
+        let xf = hidden(tokens, [Int](repeating: 0, count: T), [Int](repeating: 0, count: T))
+        var out = Array(xf[0..<C])
+        var mean = [Float](repeating: 0, count: C)
+        let body = T > 2 ? 1..<(T - 1) : 0..<1
+        for t in body { for c in 0..<C { mean[c] += xf[t * C + c] } }
+        for c in 0..<C { mean[c] /= Float(body.count) }
+        out += mean
+        return out
+    }
+
     func logits(_ tokens: [Int], _ segs: [Int], _ mat: [Int]) -> (start: [Float], end: [Float], rel: [Float]?) {
+        let T = tokens.count, C = config.n_embd
+        let xf = hidden(tokens, segs, mat)
+        let lg = Brain.matmul(xf, wspan, bspan, T, C, 2)
+        var rel: [Float]?
+        if let wrel, let brel {
+            // [CLS]（第 0 個位置）→ 三個分數 → 機率
+            let z = Brain.matmul(Array(xf[0..<C]), wrel, brel, 1, C, 3)
+            let m = z.max() ?? 0
+            let e = z.map { exp($0 - m) }
+            let sum = e.reduce(0, +)
+            rel = e.map { $0 / sum }
+        }
+        return ((0..<T).map { lg[$0 * 2] }, (0..<T).map { lg[$0 * 2 + 1] }, rel)
+    }
+
+    /// 編碼器：每個字最後一層的向量（T×C，已經過最後的 LayerNorm）
+    func hidden(_ tokens: [Int], _ segs: [Int], _ mat: [Int]) -> [Float] {
         let T = tokens.count, C = config.n_embd, H = config.n_head, D = C / H
         var x = [Float](repeating: 0, count: T * C)
         for t in 0..<T {
@@ -253,18 +286,7 @@ public final class Brain {
             let pr = Brain.matmul(f, ly.wproj, ly.bproj, T, 4 * C, C)
             for i in 0..<(T * C) { x[i] += pr[i] }
         }
-        let xf = Brain.layerNorm(x, lnfg, lnfb, T, C)
-        let lg = Brain.matmul(xf, wspan, bspan, T, C, 2)
-        var rel: [Float]?
-        if let wrel, let brel {
-            // [CLS]（第 0 個位置）→ 三個分數 → 機率
-            let z = Brain.matmul(Array(xf[0..<C]), wrel, brel, 1, C, 3)
-            let m = z.max() ?? 0
-            let e = z.map { exp($0 - m) }
-            let sum = e.reduce(0, +)
-            rel = e.map { $0 / sum }
-        }
-        return ((0..<T).map { lg[$0 * 2] }, (0..<T).map { lg[$0 * 2 + 1] }, rel)
+        return Brain.layerNorm(x, lnfg, lnfb, T, C)
     }
 
     static func layerNorm(_ x: [Float], _ g: [Float], _ b: [Float], _ T: Int, _ C: Int) -> [Float] {

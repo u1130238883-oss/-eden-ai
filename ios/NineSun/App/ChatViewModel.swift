@@ -128,6 +128,8 @@ final class ChatViewModel: ObservableObject {
                 engine.i18n = try? I18N(bundle: .main)
                 // 大腦（閱讀理解模型）：上網查到的每段文字都由它來讀懂、判斷
                 Brain.shared = try? Brain(bundle: .main)
+                // 理解問題（自己訓練的模型）：看懂這句話要的是什麼——列出有哪些、在講什麼、有幾個……
+                Intent.shared = try? Intent(bundle: .main)
                 let core = try PalaceCore(bundle: .main)
                 if let d = try? Data(contentsOf: Self.coreURL), let s = try? JSONDecoder().decode(PalaceCore.Snapshot.self, from: d) {
                     core.restore(s)

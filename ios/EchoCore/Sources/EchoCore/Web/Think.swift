@@ -306,6 +306,64 @@ public enum Think {
         return out.joined(separator: "\n")
     }
 
+    /// 「格林童話有什麼故事」「宮崎駿有哪些作品」：問的是一份清單——像人一樣，先說它是什麼，
+    /// 再列出網頁上最常被提到的幾個（《書名》、、分開的名字），每一個說它在講什麼，最後說自己的看法
+    /// subject：規則認不出這種問法、但理解問題的模型判斷是在問清單時，用問題的主題
+    public static func itemsDigest(question: String, pages: [Understanding.Evidence], subject fallback: String? = nil) -> String? {
+        guard let ask = Understanding.itemsAsk(question) ?? fallback.map({ (subject: $0, kind: "") }), ask.subject.count >= 2 else { return nil }
+        let subject = ask.subject
+        let sents = contentSentences(pages)
+        var count: [String: Int] = [:]
+        for s in sents where covers(s.text, subject, least: true) {
+            for t in titles(s.text) where !covers(t, subject) && !subject.contains(t) && t.count <= 12 { count[t, default: 0] += 1 }
+        }
+        // 名字也常常寫成「灰姑娘、白雪公主、小紅帽」：跟主題同一句、用頓號分開的短名字
+        for s in sents where covers(s.text, subject, least: true) && !s.text.contains("《") {
+            let parts = s.text.components(separatedBy: "、")
+            guard parts.count >= 3 else { continue }
+            for (i, p) in parts.enumerated() {
+                var name = p
+                if i == 0 { name = String(p.split(whereSeparator: { "，：:是有如像".contains($0) }).last ?? Substring(p)) }
+                if i == parts.count - 1 { name = String(p.split(whereSeparator: { "，。等和及".contains($0) }).first ?? Substring(p)) }
+                name = name.trimmingCharacters(in: .whitespaces)
+                if (2...8).contains(name.count), !covers(name, subject) { count[name, default: 0] += 1 }
+            }
+        }
+        let top = count.filter { $0.value >= 1 }.sorted { ($0.value, -$0.key.count) > ($1.value, -$1.key.count) }.prefix(6).map(\.key)
+        guard top.count >= 2 else { return nil }
+        var lines: [String] = []
+        // 它是什麼（有幾個也一起說）
+        if let intro = sents.first(where: { s in s.text.hasPrefix("《\(subject)》") || s.text.hasPrefix(subject) }), intro.text.count <= 110,
+           ["是", "收錄", "共", "約有", "包含"].contains(where: { intro.text.contains($0) }) {
+            lines.append(Cite.whole(intro.text, host: intro.host))
+        }
+        let what = ask.kind.isEmpty ? "幾個" : "幾個" + ask.kind
+        lines.append("📚 最常被提到的\(what)：")
+        var described = 0
+        for t in top {
+            // 每一個說它在講什麼：有《書名》、有講故事的字的句子
+            let d = describe(t, in: sents) ?? sents.first { s in s.text.contains(t) && narrates.contains { s.text.contains($0) } && !adaptation.contains { s.text.contains($0) } }
+            if let d, described < 4 {
+                described += 1
+                var body = d.text
+                for pre in ["《\(t)》", t] where body.hasPrefix(pre) { body = String(body.dropFirst(pre.count)) }
+                body = body.trimmingCharacters(in: CharacterSet(charactersIn: "：:，, "))
+                lines.append("• 《\(t)》：" + WebSearch.clip(body, 60) + "（\(d.host)）")
+            } else {
+                lines.append("• 《\(t)》")
+            }
+        }
+        // 我的看法：這些故事共同在講什麼
+        let found = WorkView.found(in: sents.filter { s in top.contains { s.text.contains($0) } }.map(\.text), plot: [], title: subject)
+        let picked = WorkView.strong(found)
+        if !picked.isEmpty {
+            lines.append("🧠 我的看法：" + WorkView.opinion(title: subject, medium: "這些作品", picked: picked.map(\.theme)))
+        } else {
+            lines.append("🧠 我的看法：如果只挑一個開始，我會先看《\(top[0])》——它是最常被提到的，通常也最能代表\(subject)的味道。")
+        }
+        return lines.joined(separator: "\n")
+    }
+
     /// 「iPhone和安卓哪個好」：網路上很少有一句話同時把兩邊講清楚，所以分開找——各自的優缺點各找一句，
     /// 有直接比較兩邊的句子也放上，最後給一個怎麼選的判斷（不硬選邊）
     static let compareAliases: [String: [String]] = [

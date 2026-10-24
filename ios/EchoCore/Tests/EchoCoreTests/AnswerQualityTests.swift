@@ -199,6 +199,30 @@ final class AnswerQualityTests: XCTestCase {
         XCTAssertEqual(a.hits.map(\.url), ["https://www.books.com.tw/a"])
     }
 
+    /// 「格林童話有什麼故事」：要的是一份清單（有哪些、各在講什麼），不是「答案：約有 200 多個故事」
+    func testItemsQuestionListsTheStories() {
+        XCTAssertEqual(Understanding.itemsAsk("格林童話有什麼故事？")?.subject, "格林童話")
+        XCTAssertEqual(Understanding.itemsAsk("格林童話有什麼故事？")?.kind, "故事")
+        XCTAssertEqual(Understanding.itemsAsk("宮崎駿的代表作有哪些")?.subject, "宮崎駿")
+        XCTAssertEqual(Understanding.itemsAsk("村上春樹寫過哪些書")?.subject, "村上春樹")
+        XCTAssertNil(Understanding.itemsAsk("你有什麼建議"))
+        let page = """
+        《格林童話》是德國格林兄弟收集整理的童話集，裡面約有200多個故事，大部分源自民間的口頭傳說。
+        格林童話中最有名的有《灰姑娘》、《白雪公主》、《小紅帽》、《青蛙王子》。
+        《灰姑娘》講述善良的少女被繼母虐待，在仙女幫助下參加舞會，最後和王子結婚的故事。
+        《白雪公主》描寫美麗的公主被嫉妒的王后追殺，躲進森林和七個小矮人一起生活。
+        《小紅帽》講述小女孩去探望外婆，途中遇到狡猾的大野狼。
+        《青蛙王子》講述公主遵守承諾，讓被詛咒的青蛙恢復成王子。
+        格林童話不都是對口傳故事的採錄，其中有相當數量的篇幅是來自書面材料。
+        """
+        let a = Think.itemsDigest(question: "格林童話有什麼故事？", pages: [.init(text: page, host: "newton.com.tw")]) ?? ""
+        for t in ["《灰姑娘》", "《白雪公主》", "《小紅帽》", "《青蛙王子》"] { XCTAssertTrue(a.contains(t), "\(t)\n\(a)") }
+        XCTAssertTrue(a.contains("繼母") && a.contains("七個小矮人"), a)
+        XCTAssertTrue(a.contains("🧠 我的看法"), a)
+        XCTAssertFalse(a.hasPrefix("答案："), a)
+        if ProcessInfo.processInfo.environment["NINESUN_SHOW"] != nil { print(a) }
+    }
+
     /// 原因：表格的一列不是說明；有講到主題（感冒）的句子優先；引整句、不切成看不懂的幾個字
     func testReasonPicksAnExplainingSentence() {
         let ev: [Understanding.Evidence] = [

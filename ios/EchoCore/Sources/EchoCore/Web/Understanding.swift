@@ -83,6 +83,23 @@ public enum Understanding {
         return (["\(title) 內容簡介", "\(title) 劇情 心得"], ["\(title) 導讀 書評", "\(title) 劇情介紹"])
     }
 
+    /// 「X有什麼故事」「X有哪些作品」「列出X」「X的代表作有哪些」：問的是一份清單，回傳（主題, 要列的東西）
+    public static func itemsAsk(_ question: String) -> (subject: String, kind: String)? {
+        let t = plain(question).replacingOccurrences(of: #"[《》〈〉「」『』]"#, with: "", options: .regularExpression)
+        let pats = [#"^(.{2,20}?)(?:的)?(?:代表作|作品|名作|經典)(?:有哪些|有什麼|是哪些)$"#,
+                    #"^(.{2,20}?)(?:裡面|裡頭|當中|中)?(?:有|收錄了?|包括|包含|都有)(?:些)?(?:什麼|哪些|哪幾個|哪幾篇|哪幾本|哪幾首|哪幾部|哪幾)(.{0,6})$"#,
+                    #"^(.{2,20}?)(?:寫過|拍過|唱過|畫過)(?:哪些|什麼)(.{0,4})$"#,
+                    #"^(?:列出|舉幾個|說幾個|介紹幾個)(.{2,20}?)(?:的例子)?$"#]
+        for p in pats {
+            guard let m = match(t, p) else { continue }
+            let subject = m[1].trimmingCharacters(in: CharacterSet(charactersIn: "的"))
+            let kind = m.count > 2 ? m[2].replacingOccurrences(of: #"(?:比較)?(?:有名|出名|好看)的?"#, with: "", options: .regularExpression) : ""
+            guard subject.count >= 2, !["你", "我", "他", "這", "那", "這裡", "那裡"].contains(subject) else { return nil }
+            return (subject, kind)
+        }
+        return nil
+    }
+
     static func plain(_ q: String) -> String {
         var t = clean(q)
         t = String(t.filter { !"？?！!。，,；;：:「」 ".contains($0) })
