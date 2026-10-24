@@ -327,7 +327,7 @@ struct SynastryBar: View {
     private func pill<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         ZStack {
             Capsule().fill(Color.black)
-            Capsule().stroke(Z.panel2, lineWidth: 6)
+            Capsule().stroke(Z.cyan, lineWidth: 6)
             ZStack {
                 Capsule().fill(Z.lime.opacity(0.16))
                 Canvas { ctx, size in
