@@ -40,7 +40,7 @@ final class WebTapeTests: XCTestCase {
             // 錄的時候像一個人在問：一題問完隔一陣子再問下一題（一口氣問太快，搜尋引擎會把我們當機器人擋掉）
             if !tape.replaying {
                 let focus = ProcessInfo.processInfo.environment["NINESUN_TAPE_FOCUS"] != nil
-                try? await Task.sleep(nanoseconds: (focus ? 40 : 8) * 1_000_000_000)
+                try? await Task.sleep(nanoseconds: (focus ? 120 : 8) * 1_000_000_000)
             }
             let w = await WebAgent.run(wq, lang: .zh)
             out += "[題型 \(w.want ?? "-")] \n" + w.text + "\n\n"
