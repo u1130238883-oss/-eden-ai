@@ -129,6 +129,9 @@ public enum Think {
     static func looksLikeNoise(_ s: String) -> Bool {
         let t = s.trimmingCharacters(in: .whitespaces)
         if ["跳至內容", "自由的百科全書", "主條目", "參見：", "另見：", "請參閱", "消歧義", "新增話題", "分類：", "維基百科"].contains(where: { t.contains($0) }) { return true }
+        // 頁尾的連結和書目（「參見維特效應外部連結維基共享資源上的相關多媒體資源」「宋碧雲/譯，遠景出版社，1980」）
+        if t.hasPrefix("參見") || t.hasPrefix("另見") || ["外部連結", "外部链接", "維基共享資源", "維基文庫", "多媒體資源", "原始文獻", "相關條目", "參考文獻",
+                                                     "出版社", "/譯", "／譯", "譯本約", "國家圖書館"].contains(where: { t.contains($0) }) { return true }
         if t.contains("食材：") || (t.contains("讚") && t.contains(where: \.isNumber)) { return true }
         // 參考書目（「（中文） 梁慶標：三島由紀夫《假面自白》主要內容簡介及賞析」）
         if t.hasPrefix("（") || t.contains("簡介及賞析") || t.contains("ISBN") || t.contains("出版社") && t.contains("：") { return true }
@@ -206,6 +209,11 @@ public enum Think {
         if let m = Understanding.match(question, #"^(.{2,12}?)的(書|作品|小說|電影|歌|詩|劇)"#) {
             let works = ["《", "小說", "作品", "描寫", "講述", "描述", "敘述", "故事", "主角", "情節", "主題"]
             return covers(passage, m[1], least: true) && works.contains { sentence.contains($0) }
+        }
+        // 「少年維特的煩惱講了什麼」：書名是一個整體，不能從「的」切開成「少年維特」「煩惱」（講劇情的句子常常不提「煩惱」）
+        if let title = Understanding.workTitle(question) {
+            return covers(passage, title) && (covers(sentence, title) || plotCues.contains { sentence.contains($0) })
+                && !notContent.contains { sentence.contains($0) }
         }
         let cs = chunks(question)
         guard let focus = cs.last else { return true }
@@ -331,15 +339,80 @@ public enum Think {
         return out.joined(separator: "\n")
     }
 
-    /// 「金閣寺在講什麼」：資料裡有《金閣寺》這部作品時，用描寫它內容的句子回答（不是寺廟的介紹）
+    /// 作品的類別（「《X》是歌德的書信體小說」）
+    static let genres = ["小說", "電影", "動畫", "影集", "電視劇", "連續劇", "漫畫", "作品", "童話", "散文", "寓言", "史詩", "戲劇", "悲劇", "喜劇",
+                         "劇本", "紀錄片", "遊戲", "詩集", "繪本", "著作", "名著", "長篇", "短篇", "書"]
+    /// 在講劇情的句子會有的字
+    static let plotCues = ["描寫", "講述", "描述", "敘述", "故事", "主角", "主人公", "主人翁", "講的是", "寫的是", "刻畫", "劇情", "情節",
+                           "愛上", "一生", "經歷", "冒險", "遭遇", "最後", "最終", "結局", "旅程", "成長", "命運", "追尋", "復仇"]
+    /// 在講主題、想表達什麼的句子會有的字
+    static let themeCues = ["主題", "探討", "反映", "象徵", "批判", "諷刺", "表達了", "揭示", "寓意", "隱喻", "思考", "意義在於", "核心"]
+    /// 不是在講作品內容：改編、翻譯、出版、得獎、票房、頁尾連結、寫作經過
+    static let notContent = ["改編", "翻拍", "譯本", "翻譯", "譯者", "出版社", "版本", "獎", "票房", "銷量", "暢銷", "參見", "外部連結", "維基",
+                             "原始文獻", "多媒體", "ISBN", "評分", "售價", "購買", "下載", "線上看", "免費", "觀看", "首映", "預告", "演員表", "配音"]
+    static let backstory = ["創作", "寫成", "完成了這", "出版", "發表", "問世", "靈感", "根據自己", "根據作者"]
+    /// 句子在講「它」（不提書名，但開頭是「小說講述…」「故事發生在…」「書中…」）
+    static let referents = ["小說", "故事", "本書", "該書", "全書", "書中", "此書", "這本書", "這部", "作品", "本片", "該片", "片中", "電影", "影片",
+                            "劇中", "全劇", "該劇", "本劇", "動畫", "漫畫", "主角", "主人公", "全片"]
+
+    /// 「金閣寺在講什麼」「少年維特的煩惱講了什麼」：像人回答一樣——先說它是什麼（誰的什麼作品），再說講了什麼故事，最後說想表達什麼。
+    /// 句子要在講這部作品：有書名，或出自在介紹這部作品的頁面、開頭是「小說／故事／書中…」；
+    /// 改編的電影、翻譯版本、出版經過、頁尾連結都不是內容。書名不切開（「少年維特的煩惱」不是「少年維特」＋「煩惱」）
     public static func aboutWork(question: String, pages: [Understanding.Evidence]) -> String? {
-        guard wantsSentences(question), let m = Understanding.match(question, #"^《?(.{1,12}?)》?(?:是)?(?:在)?(?:講|說)(?:了|些)?什麼"#) else { return nil }
-        let sents = contentSentences(pages)
-        guard let first = describe(m[1], in: sents) else { return nil }
-        var lines = [Cite.whole(first.text, host: first.host)]
-        if let second = describe(m[1], in: sents.filter { $0.host != first.host && $0.text != first.text }) {
-            lines.append("• 另外也有說法：" + Cite.whole(second.text, host: second.host, limit: 70))
+        guard let title = Understanding.workTitle(question) else { return nil }
+        let ct = canonText(title)
+        func names(_ s: String) -> Bool { canonText(s).contains(ct) }
+        struct S { let text: String; let host: String; let named: Bool; let about: Bool }
+        var sents: [S] = []
+        for p in pages {
+            // 頁面在介紹這部作品：前面就提到書名（搜尋結果的摘要、維基百科的條目）
+            let about = names(String(p.text.prefix(400)))
+            for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) {
+                let t = raw.trimmingCharacters(in: .whitespaces)
+                guard (8...170).contains(t.count), !looksLikeNoise(t) else { continue }
+                sents.append(S(text: t + "。", host: p.host, named: names(t), about: about))
+            }
         }
+        func hits(_ s: String, _ ws: [String]) -> Int { ws.filter { s.contains($0) }.count }
+        func clean(_ s: S) -> Bool {
+            hits(s.text, notContent) == 0 && !(s.text.contains("《") && !s.text.contains("《\(title)》") && hits(s.text, ["電影", "歌劇", "舞台劇", "版"]) > 0)
+        }
+        func talksAboutIt(_ s: S) -> Bool { s.named || s.about && referents.contains { s.text.hasPrefix($0) || s.text.contains("，" + $0) } }
+        // 書店、影評、書評這類專門介紹作品的網站優先
+        func pro(_ h: String) -> Int { Cite.isProfessional(h) ? 1 : 0 }
+        func headed(_ s: String) -> Bool {
+            guard let r = canonText(s).range(of: ct) else { return false }
+            return canonText(s).distance(from: canonText(s).startIndex, to: r.lowerBound) <= 3
+        }
+
+        // ① 它是什麼：「《少年維特的煩惱》是德國作家歌德的書信體小說」
+        let intro = sents.filter { s in s.named && headed(s.text) && s.text.contains("是") && hits(s.text, genres) > 0 && clean(s) && s.text.count <= 120 }
+            .max { a, b in (pro(a.host), -a.text.count) < (pro(b.host), -b.text.count) }
+        // ② 講了什麼故事
+        func plotScore(_ s: S) -> Int {
+            hits(s.text, plotCues) * 2 + (s.named ? 2 : 0) + pro(s.host) - hits(s.text, backstory) * 2 - (s.text.count > 120 ? 1 : 0)
+        }
+        let plots = sents.filter { s in hits(s.text, plotCues) > 0 && clean(s) && talksAboutIt(s) && plotScore(s) > 1 }
+            .sorted { plotScore($0) > plotScore($1) }
+        // ③ 想表達什麼
+        let theme = sents.filter { s in hits(s.text, themeCues) > 0 && clean(s) && talksAboutIt(s) && hits(s.text, backstory) == 0 }
+            .max { hits($0.text, themeCues) + pro($0.host) < hits($1.text, themeCues) + pro($1.host) }
+
+        guard !plots.isEmpty || theme != nil else { return nil }
+        var used = Set<String>()
+        var lines: [String] = []
+        func add(_ s: S?, _ label: String, limit: Int = 110) {
+            guard let s, used.insert(s.text).inserted else { return }
+            // 跟已經用的句子幾乎一樣（不同網站轉貼）就不重複
+            if lines.count > 0, used.contains(where: { $0 != s.text && Cite.similar($0, s.text) }) { return }
+            lines.append(label + Cite.whole(s.text, host: s.host, limit: limit))
+        }
+        add(intro, "")
+        if let p = plots.first { add(p, "📖 內容：") }
+        // 第二句劇情：同一個網站的下一句（補充故事的經過或結局），或另一個網站的說法
+        if let p2 = plots.dropFirst().first(where: { !used.contains($0.text) }) { add(p2, "📖 ") }
+        add(theme, "💡 想表達的：")
+        guard !lines.isEmpty else { return nil }
         return lines.joined(separator: "\n")
     }
 
@@ -422,7 +495,9 @@ public enum Think {
             var shownFrom: [Reading] = []
             // 先找有「講述、描寫」「因為」「可以、建議」這類字的句子（真的在說明），一句都沒有才放寬
             let want = cues(question)
-            for needCue in (want.isEmpty ? [false] : [true, false]) where lines.isEmpty {
+            // 作品在講什麼：一定要是講內容的句子，找不到寧可說沒找到，不拿頁尾、出版資料湊
+            let strict = Understanding.workTitle(question) != nil
+            for needCue in (want.isEmpty ? [false] : strict ? [true] : [true, false]) where lines.isEmpty {
                 for r in pool where lines.count < 2 {
                     guard r.span.main < 0 ? r.span.score > floor : r.span.main >= 0.35 else { continue }
                     let s = sentence(around: r.span, in: r.passage)

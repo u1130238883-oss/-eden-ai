@@ -55,6 +55,26 @@ public enum Understanding {
         return Cite.isPrimary(h) || [".org.tw"].contains(where: { h.contains($0) }) ? 2 : 1
     }
 
+    /// 問的是一部作品在講什麼（「金閣寺在講什麼」「雪國的內容是什麼」「小王子想表達什麼」「簡單介紹一下老人與海」）：作品名。
+    /// 「這本書」「這部電影」只是說明，不是名稱；「三島由紀夫的書都講了什麼」問的是一個人的作品，不算
+    public static func workTitle(_ question: String) -> String? {
+        var t = plain(question).replacingOccurrences(of: #"[《》〈〉「」『』]"#, with: "", options: .regularExpression)
+        let kinds = "書|小說|電影|影片|劇|影集|動畫|漫畫|作品|遊戲|詩|散文|繪本|紀錄片"
+        t = t.replacingOccurrences(of: "(這|那)(本|部|首|篇|齣|套)(\(kinds))?", with: "", options: .regularExpression)
+        let pats = [#"^(.{2,20}?)的?(?:故事大綱|內容|劇情|大綱|主旨|主題|情節|故事)(?:是什麼|是怎樣|在講什麼|講什麼|介紹)?$"#,
+                    #"^(.{2,20}?)(?:是)?(?:在)?(?:講|說|寫)(?:了|些)?什麼"#,
+                    #"^(.{2,20}?)(?:想|要)(?:表達|傳達|告訴我們|說)(?:的是)?什麼"#,
+                    #"^(?:請|幫我)?(?:簡單)?介紹一下(.{2,20})$"#]
+        for p in pats {
+            guard var title = match(t, p)?[1] else { continue }
+            while let last = title.last, "在是的".contains(last), title.count > 1 { title.removeLast() }
+            if match(title, #"的(書|作品|小說|電影|歌|詩|劇)(都|主要|大多)?$"#) != nil
+                || ["你", "我", "他", "她", "它", "這", "那", "你們", "他們", "大家", "這篇", "這段", "這句", "這句話", "老師", "媽媽"].contains(title) { return nil }
+            return title.count >= 2 ? title : nil
+        }
+        return nil
+    }
+
     static func plain(_ q: String) -> String {
         var t = clean(q)
         t = String(t.filter { !"？?！!。，,；;：:「」 ".contains($0) })

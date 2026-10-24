@@ -42,40 +42,50 @@ public enum WebSearch {
         return URLSession(configuration: c)
     }()
 
+    /// 維基百科（和它的鏡像站）：不讀。條目太長、什麼都講，NineSun 在裡面抓不到重點
+    /// （問「少年維特的煩惱講了什麼」，抓到的是頁尾的「參見…外部連結」和翻譯版本）；改讀書評、影評、專門介紹的網站
+    public static func isWiki(_ url: String) -> Bool {
+        let h = (URL(string: url)?.host ?? url).lowercased()
+        return ["wikipedia.org", "wikiwand.com", "wiki.kfd.me", "wikimedia.org", "wikiwiki.jp"].contains { h.contains($0) }
+    }
+
+    static func withoutWiki(_ a: Answer) -> Answer {
+        let wikiLead = a.leadSource.map(isWiki) ?? false
+        var engines = a.engines
+        engines["wikipedia"] = nil
+        return Answer(lead: wikiLead ? nil : a.lead, leadSource: wikiLead ? nil : a.leadSource, hits: a.hits.filter { !isWiki($0.url) }, engines: engines)
+    }
+
     /// 同時問所有來源，合併去重
     /// light：只問 Bing（拆成好幾個方面分開查的時候用，比較快）
     public static func search(_ q: String, lang L: Lang, news: Bool = false, light: Bool = false) async -> Answer {
         // 錄音帶：重播時直接用錄下來的結果；錄音時照常上網，再把結果記下來
         if let tape = WebTape.shared {
-            if tape.replaying { return tape.search(q, L, news: news, light: light) ?? Answer(lead: nil, leadSource: nil, hits: [], engines: [:]) }
+            if tape.replaying { return withoutWiki(tape.search(q, L, news: news, light: light) ?? Answer(lead: nil, leadSource: nil, hits: [], engines: [:])) }
             let a = await liveSearch(q, lang: L, news: news, light: light)
             tape.record(q, L, news: news, light: light, a)
-            return a
+            return withoutWiki(a)
         }
-        return await liveSearch(q, lang: L, news: news, light: light)
+        return withoutWiki(await liveSearch(q, lang: L, news: news, light: light))
     }
 
     static func liveSearch(_ q: String, lang L: Lang, news: Bool, light: Bool) async -> Answer {
         if light {
-            // 小問題：Bing 一次＋維基百科一次（Bing 不給結果時再問 Yahoo）
-            async let wk = soon(4, [], { await wikiSearch(wikiTerm(q), L) })
+            // 小問題：Bing 一次（Bing 不給結果時再問 Yahoo）
             let a = await soon(4, [], { await bingRSS(q, L) })
             let b: [Hit] = a.count < 3 ? await soon(3, [], { await yahoo(q, L) }) : []
             let c: [Hit] = a.count + b.count < 3 ? await soon(3, [], { await ddgLite(q, L) }) : []
             // Bing 跟 Yahoo 都給不出什麼：不放棄，再問 Google
             let g: [Hit] = a.count + b.count < 3 ? await soon(3, [], { await google(q, L) }) : []
-            let w = await wk
             var seen = Set<String>()
             var hits: [Hit] = []
-            for i in 0..<max(a.count, b.count, c.count, w.count, g.count) {
-                for l in [a, c, w, b, g] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
+            for i in 0..<max(a.count, b.count, c.count, g.count) {
+                for l in [a, c, b, g] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
             }
             return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)),
-                          engines: ["bing": a.count, "yahoo": b.count, "ddg-lite": c.count, "google": g.count, "wikipedia": w.count])
+                          engines: ["bing": a.count, "yahoo": b.count, "ddg-lite": c.count, "google": g.count])
         }
-        async let ws = soon(4, [], { await wikiSearch(wikiTerm(q), L) })
         async let inst = soon(3, nil, { await ddgInstant(q, L) })
-        async let wk = soon(4, nil, { await wikiSummary(wikiTerm(q), L) })
         async let wx = weatherIf(q, L)
         async let fx = exchangeIf(q, L)
         async let mk = marketIf(q, L)
@@ -109,8 +119,7 @@ public enum WebSearch {
             }
             g.cancelAll()
         }
-        got["wikipedia"] = await ws
-        let lists: [(String, [Hit])] = ["news", "bing", "bing-web", "duckduckgo", "ddg-lite", "brave", "baidu", "mojeek", "yahoo", "google", "wikipedia"].map { ($0, got[$0] ?? []) }
+        let lists: [(String, [Hit])] = ["news", "bing", "bing-web", "duckduckgo", "ddg-lite", "brave", "baidu", "mojeek", "yahoo", "google"].map { ($0, got[$0] ?? []) }
         var engines: [String: Int] = [:]
         var hits: [Hit] = []
         var seen = Set<String>()
@@ -131,7 +140,6 @@ public enum WebSearch {
         if lead == nil, let f = await fx { lead = f; leadSource = "open.er-api.com" }
         if lead == nil, let m = await mk { lead = m; leadSource = "finance.yahoo.com" }
         if lead == nil, let a = await inst { lead = a.text; leadSource = a.source }
-        if lead == nil, let w = await wk, related(w.title, q) { lead = w.extract; leadSource = host(w.url) }
         engines["instant"] = lead == nil ? 0 : 1
         if wantsWeather(q) { engines["weather"] = leadSource == "open-meteo.com" ? 1 : 0 }
         return Answer(lead: lead.map { clip($0, 320) }, leadSource: leadSource, hits: Array(hits.prefix(10)), engines: engines)
@@ -617,6 +625,7 @@ public enum WebSearch {
 
     /// 打開網頁，去掉選單、腳本，回傳正文文字
     public static func pageText(_ url: String, _ L: Lang) async -> String? {
+        if isWiki(url) { return nil }
         if let tape = WebTape.shared {
             if tape.replaying { return tape.page(url) }
             let t = await livePageText(url, L)

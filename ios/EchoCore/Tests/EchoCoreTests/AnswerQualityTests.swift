@@ -142,6 +142,47 @@ final class AnswerQualityTests: XCTestCase {
         XCTAssertEqual(Understanding.extractSteps([.init(text: steps, host: "r.tw")], target: "白飯")?.steps.count, 3)
     }
 
+    /// 「少年維特的煩惱講了什麼」：說它是什麼、講了什麼故事、想表達什麼；
+    /// 不是頁尾的「參見…外部連結」、不是「一個月寫完」的寫作經過、不是翻譯版本；維基百科不讀
+    func testWorkContentIsThePlotNotTheFooter() {
+        let shop = """
+        《少年維特的煩惱》是德國作家歌德的書信體小說，1774年出版。
+        小說以書信的形式，講述了青年維特愛上已經訂婚的少女綠蒂，因為這段無望的愛情陷入痛苦，最後開槍自殺的故事。
+        維特在信中描寫他對自然、藝術和綠蒂的熱情，也寫出他和社會格格不入的苦悶。
+        這部作品反映了狂飆突進運動中個人情感與社會禮教的衝突。
+        《少年維特的煩惱》，宋碧雲/譯， 遠景出版社, 1980按國家圖書館全國新書資訊網，《少年維特的煩惱》台灣出版中文譯本約有52種。
+        參見維特效應（自殺模仿）外部連結維基共享資源上的相關多媒體資源：少年維特的煩惱德語維基文庫中相關的原始文獻：
+        """
+        let blog = "相同的感情，相同的遭遇，在歌德內心激起創作的衝動，在一個月之內就完成了這部書信體的小說《少年維特的煩惱》。"
+        let pages: [Understanding.Evidence] = [.init(text: shop, host: "books.com.tw"), .init(text: blog, host: "blog.udn.com")]
+        for q in ["少年維特的煩惱講了什麼", "少年維特的煩惱在講什麼", "少年維特的煩惱這本書講了什麼？", "少年維特的煩惱的內容是什麼", "少年維特的煩惱想表達什麼"] {
+            XCTAssertEqual(Understanding.workTitle(q), "少年維特的煩惱", q)
+            let a = Think.aboutWork(question: q, pages: pages) ?? ""
+            XCTAssertTrue(a.contains("綠蒂") && a.contains("自殺"), "\(q)\n\(a)")
+            XCTAssertTrue(a.contains("歌德的書信體小說"), a)
+            XCTAssertTrue(a.contains("狂飆突進"), a)
+            for bad in ["外部連結", "維基共享", "出版社", "一個月之內"] { XCTAssertFalse(a.contains(bad), "\(bad)\n\(a)") }
+        }
+        // 講劇情的句子沒有「煩惱」兩個字，也算在講這本書
+        XCTAssertTrue(Think.onTopic(question: "少年維特的煩惱講了什麼", sentence: "小說講述了青年維特愛上綠蒂的故事。", passage: shop))
+        XCTAssertFalse(Think.onTopic(question: "少年維特的煩惱講了什麼", sentence: "參見維特效應外部連結維基共享資源。", passage: shop))
+        XCTAssertTrue(Think.looksLikeNoise("參見維特效應（自殺模仿）外部連結維基共享資源上的相關多媒體資源"))
+        XCTAssertEqual(Understanding.workTitle("龍貓這部電影講什麼"), "龍貓")
+        XCTAssertEqual(Understanding.workTitle("簡單介紹一下老人與海"), "老人與海")
+        XCTAssertEqual(Understanding.workTitle("老人與海的故事大綱"), "老人與海")
+        XCTAssertNil(Understanding.workTitle("三島由紀夫的書都講了什麼"))
+        XCTAssertNil(Understanding.workTitle("你在說什麼"))
+        // 維基百科（和鏡像站）不讀
+        XCTAssertTrue(WebSearch.isWiki("https://zh.wikipedia.org/zh-tw/少年維特的煩惱"))
+        XCTAssertTrue(WebSearch.isWiki("https://www.wikiwand.com/zh-tw/articles/x"))
+        XCTAssertFalse(WebSearch.isWiki("https://www.books.com.tw/products/1"))
+        let a = WebSearch.withoutWiki(.init(lead: "維基的摘要", leadSource: "zh.wikipedia.org",
+                                            hits: [.init(title: "w", snippet: "s", url: "https://zh.wikipedia.org/wiki/a", engine: "bing"),
+                                                   .init(title: "b", snippet: "s", url: "https://www.books.com.tw/a", engine: "bing")], engines: [:]))
+        XCTAssertNil(a.lead)
+        XCTAssertEqual(a.hits.map(\.url), ["https://www.books.com.tw/a"])
+    }
+
     /// 原因：表格的一列不是說明；有講到主題（感冒）的句子優先；引整句、不切成看不懂的幾個字
     func testReasonPicksAnExplainingSentence() {
         let ev: [Understanding.Evidence] = [

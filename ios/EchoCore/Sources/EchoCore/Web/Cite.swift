@@ -82,7 +82,7 @@ public enum Cite {
                              "ptt.cc", "dcard.tw", "mobile01", "kknews", "toutiao", "163.com", "sohu.com", "read01", "twgreatdaily",
                              "pinterest", "ifuun", "iask", "xuehua", "360doc", "docin", "doc88", "wenku.baidu", "jingyan.baidu"]
     /// 原始來源：官方、政府、學術、百科
-    static let primary = [".gov", ".edu", "gov.tw", "gov.cn", "go.jp", "who.int", "un.org", "wikipedia.org", "nature.com", "science.org",
+    static let primary = [".gov", ".edu", "gov.tw", "gov.cn", "go.jp", "who.int", "un.org", "nature.com", "science.org",
                           "sciencedirect", "springer", "nih.gov", "arxiv.org", "sec.gov", "cdc.gov", "moe.gov", "cwa.gov"]
 
     public static func isLowQuality(_ host: String) -> Bool { lowQuality.contains { host.lowercased().contains($0) } }
@@ -96,8 +96,8 @@ public enum Cite {
         .work: ["managertoday.com.tw", "cw.com.tw", "gvm.com.tw", "businessweekly.com.tw", "cheers.com.tw", "bnext.com.tw", "104.com.tw", "1111.com.tw", "yourator.co"],
         .money: ["fsc.gov.tw", "twse.com.tw", "moneydj.com", "businessweekly.com.tw", "cw.com.tw", "wealth.com.tw", "smart.businessweekly.com.tw"],
         .law: ["law.moj.gov.tw", "mol.gov.tw", "judicial.gov.tw", "lawbank.com.tw", "laf.org.tw", "legis-pedia.com"],
-        .culture: ["books.com.tw", "openbook.org.tw", "readmoo.com", "okapi.books.com.tw", "movies.yahoo.com.tw", "imdb.com", "douban.com", "wikipedia.org"],
-        .general: ["wikipedia.org", "pedia.cloud.edu.tw", "terms.naer.edu.tw", "britannica.com", "pansci.asia", "cw.com.tw"],
+        .culture: ["books.com.tw", "openbook.org.tw", "readmoo.com", "okapi.books.com.tw", "movies.yahoo.com.tw", "imdb.com", "douban.com"],
+        .general: ["pedia.cloud.edu.tw", "terms.naer.edu.tw", "britannica.com", "pansci.asia", "cw.com.tw"],
     ]
     public static func isProfessional(_ host: String) -> Bool {
         let h = host.lowercased()

@@ -320,26 +320,13 @@ public enum WebAgent {
                 }
                 .prefix(n).map { $0 }
         }
+        // 不讀維基百科（WebSearch.isWiki）：條目太長，抓不到重點
         var toRead: [WebSearch.Hit] = []
-        // 要名單、要數量時，直接打開維基百科的列表頁（「日本都道府縣列表」「加拿大省列表」）
-        var wikiTried = Set<String>()
-        func wikiHit(_ title: String) -> WebSearch.Hit {
-            wikiTried.insert(title)
-            let path = title.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? title
-            return WebSearch.Hit(title: title, snippet: "", url: "https://zh.wikipedia.org/zh-tw/\(path)", engine: "wiki")
-        }
-        if let fr {
-            switch fr.want {
-            case .list, .number: for t in fr.wikiTitles.prefix(1) { toRead.append(wikiHit(t)) }
-            default: break
-            }
-        }
-        let wikiFirst = toRead.count
         toRead += pick(-1, strat.angles.isEmpty ? 3 : 2).filter { h in !toRead.contains { $0.url == h.url } }
         for i in strat.angles.indices { for h in pick(i, 1) where !toRead.contains(where: { $0.url == h.url }) { toRead.append(h) } }
         let pages = await withTaskGroup(of: (WebSearch.Hit, String?).self) { g -> [(WebSearch.Hit, String)] in
             // 最多打開幾個網頁，每個最多等 6 秒（慢的網站就跳過，不讓使用者一直等）
-            for h in toRead.prefix((strat.angles.isEmpty ? 3 : 5) + wikiFirst) { g.addTask { (h, await within(6) { await WebSearch.pageText(h.url, L) } ?? nil) } }
+            for h in toRead.prefix(strat.angles.isEmpty ? 3 : 5) { g.addTask { (h, await within(6) { await WebSearch.pageText(h.url, L) } ?? nil) } }
             var out: [(WebSearch.Hit, String)] = []
             for await (h, t) in g { if let t { out.append((h, t)) } }
             return out
@@ -511,18 +498,7 @@ public enum WebAgent {
                         for x in sentences(h.snippet) { snips.append(.init(text: x, host: WebSearch.host(h.url))) }
                     }
                 }
-                var reread = Array(newHits.prefix(2))
-                // 要名單時，直接問維基百科「有沒有這個列表的條目」，比猜條目名稱準
-                if case .list = fr.want, zh, let q = fr.searches.first {
-                    let wk = await within(6) { await WebSearch.wikiSearch(q, L) } ?? []
-                    for h in wk.prefix(2) where !reread.contains(where: { $0.url == h.url }) && seenURL.insert(WebSearch.normURL(h.url)).inserted {
-                        reread.insert(h, at: 0)
-                    }
-                }
-                for t in fr.wikiTitles where !wikiTried.contains(t) && reread.count < 4 {
-                    if case .list = fr.want { reread.insert(wikiHit(t), at: 0) }
-                    else if case .number = fr.want { reread.insert(wikiHit(t), at: 0) }
-                }
+                let reread = Array(newHits.prefix(3))
                 let more = await withTaskGroup(of: (WebSearch.Hit, String?).self) { g -> [(WebSearch.Hit, String)] in
                     for h in reread { g.addTask { (h, await within(6) { await WebSearch.pageText(h.url, L) } ?? nil) } }
                     var out: [(WebSearch.Hit, String)] = []
