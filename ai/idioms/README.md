@@ -32,6 +32,6 @@ matar dos pájaros de un tiro／prendere due piccioni con una fava）、語氣�
 |---|---|---|
 | anti | 99.22% ／ 98.81% | 99.94% ／ 100% |
 | near | 76.81% ／ 77.24% | 100% ／ 100% |
-| understand | 96.54% ／ 96.38% | 見 HANDOFF |
-| translate | 88.68% ／ 61.85% | 見 HANDOFF |
-| voice | 98.07% ／ 96.79% | 見 HANDOFF ／ 100% |
+| understand | 96.54% ／ 96.38% | 100% ／ 100% |
+| translate | 88.68% ／ 61.85% | 100% ／ 100% |
+| voice | 98.07% ／ 96.79% | 100% ／ 100% |
