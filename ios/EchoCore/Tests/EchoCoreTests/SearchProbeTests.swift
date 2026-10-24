@@ -1,4 +1,7 @@
 import XCTest
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 @testable import EchoCore
 
 /// 搜尋探針（CI 有網路時跑）：同一批問題，用不同的搜尋引擎、不同的寫法（編碼、參數）查，
@@ -26,9 +29,10 @@ final class SearchProbeTests: XCTestCase {
             return WebSearch.rssItems(x).map { .init(title: $0.title, snippet: $0.desc, url: $0.link, engine: "rss") }
         }
         // 有 cookie 的連線：先開首頁拿 cookie，再查（Bing 可能把沒有 cookie 的當成機器人，給別的查詢的結果）
-        let cfg = URLSessionConfiguration.default
-        cfg.httpCookieStorage = HTTPCookieStorage()
+        // ephemeral 的連線有自己的 cookie（只在記憶體裡）
+        let cfg = URLSessionConfiguration.ephemeral
         cfg.httpShouldSetCookies = true
+        cfg.httpCookieAcceptPolicy = .always
         cfg.timeoutIntervalForRequest = 8
         let cookied = URLSession(configuration: cfg)
         func get(_ u: String, ua: String = WebSearch.desktopUA, warm: String? = nil) async -> String? {
