@@ -69,21 +69,37 @@ public enum WebSearch {
         return withoutWiki(await liveSearch(q, lang: L, news: news, light: light))
     }
 
+    /// 這批結果有幾筆跟查詢有關（標題、摘要裡有查詢的雙字詞；簡體先轉繁體）
+    static func relevant(_ hits: [Hit], _ q: String) -> Int {
+        let g = Think.grams(q.components(separatedBy: " (site:").first ?? q).filter { !$0.contains(where: { $0.isASCII && !$0.isLetter && !$0.isNumber }) }
+        guard !g.isEmpty else { return hits.count }
+        return hits.filter { h in
+            let t = Think.canonText(WebStrategy.toTraditional(h.title + " " + h.snippet)).lowercased()
+            return g.contains { t.contains($0.lowercased()) }
+        }.count
+    }
+
+    /// 搜尋引擎給了一整批跟查詢無關的結果（Bing 常把別人查的東西給機器人：問小說給股價、問失眠給披薩），整批不要
+    static func poisoned(_ hits: [Hit], _ q: String) -> Bool { hits.count >= 4 && relevant(hits, q) == 0 }
+
     static func liveSearch(_ q: String, lang L: Lang, news: Bool, light: Bool) async -> Answer {
         if light {
-            // 小問題：Bing 一次（Bing 不給結果時再問 Yahoo）
-            let a = await soon(4, [], { await bingRSS(q, L) })
-            let b: [Hit] = a.count < 3 ? await soon(3, [], { await yahoo(q, L) }) : []
-            let c: [Hit] = a.count + b.count < 3 ? await soon(3, [], { await ddgLite(q, L) }) : []
-            // Bing 跟 Yahoo 都給不出什麼：不放棄，再問 Google
-            let g: [Hit] = a.count + b.count < 3 ? await soon(3, [], { await google(q, L) }) : []
+            // 小問題：Bing 一次（Bing 不給結果、或給的是無關的東西時，再問百度、Yahoo）
+            var a = await soon(4, [], { await bingRSS(q, L) })
+            if poisoned(a, q) { a = [] }
+            // 在 GitHub 的機器上試過：只有百度給的結果跟問題有關（Bing 給別的查詢的結果，其他幾個都被擋）
+            let d: [Hit] = relevant(a, q) < 3 ? await soon(4, [], { await baidu(q, L) }) : []
+            let b: [Hit] = a.count + d.count < 3 ? await soon(3, [], { await yahoo(q, L) }) : []
+            let c: [Hit] = a.count + b.count + d.count < 3 ? await soon(3, [], { await ddgLite(q, L) }) : []
+            // 都給不出什麼：不放棄，再問 Google
+            let g: [Hit] = a.count + b.count + d.count < 3 ? await soon(3, [], { await google(q, L) }) : []
             var seen = Set<String>()
             var hits: [Hit] = []
-            for i in 0..<max(a.count, b.count, c.count, g.count) {
-                for l in [a, c, b, g] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
+            for i in 0..<max(a.count, b.count, c.count, d.count, g.count) {
+                for l in [a, d, c, b, g] where i < l.count && seen.insert(normURL(l[i].url)).inserted { hits.append(l[i]) }
             }
             return Answer(lead: nil, leadSource: nil, hits: Array(hits.prefix(10)),
-                          engines: ["bing": a.count, "yahoo": b.count, "ddg-lite": c.count, "google": g.count])
+                          engines: ["bing": a.count, "yahoo": b.count, "ddg-lite": c.count, "google": g.count, "baidu": d.count])
         }
         async let inst = soon(3, nil, { await ddgInstant(q, L) })
         async let wx = weatherIf(q, L)
@@ -119,7 +135,9 @@ public enum WebSearch {
             }
             g.cancelAll()
         }
-        let lists: [(String, [Hit])] = ["news", "bing", "bing-web", "duckduckgo", "ddg-lite", "brave", "baidu", "mojeek", "yahoo", "google"].map { ($0, got[$0] ?? []) }
+        // 跟查詢無關的整批結果不要（新聞不算：標題常常不重複查詢的字）
+        let lists: [(String, [Hit])] = ["news", "bing", "bing-web", "duckduckgo", "ddg-lite", "brave", "baidu", "mojeek", "yahoo", "google"]
+            .map { ($0, got[$0] ?? []) }.map { ($0.0, $0.0 != "news" && poisoned($0.1, q) ? [] : $0.1) }
         var engines: [String: Int] = [:]
         var hits: [Hit] = []
         var seen = Set<String>()

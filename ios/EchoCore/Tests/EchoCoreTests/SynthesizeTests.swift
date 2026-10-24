@@ -103,6 +103,13 @@ final class SynthesizeTests: XCTestCase {
         XCTAssertEqual(Understanding.frame("老人與海的內容是什麼").searches.first, "老人與海 內容簡介")
         // 影片、購物、股價頁沒有能讀的說明
         XCTAssertTrue(Cite.isLowQuality("www.youtube.com") && Cite.isLowQuality("tw.stock.yahoo.com"))
+        // Bing 給的整批都是別的查詢的結果（CI 錄到的真實例子）：整批不要；有一兩筆相關的就留著，簡體也算
+        func h(_ t: String) -> WebSearch.Hit { .init(title: t, snippet: "", url: "https://x.com/\(t.count)", engine: "Bing") }
+        let junk = ["華邦電 (2344.TW) 走勢圖 - Yahoo股市", "S&P 500 (^GSPC) Historical Data", "拿坡里披薩.炸雞 線上預訂餐點", "大華優利高填息30 (00918.TW)"].map(h)
+        XCTAssertTrue(WebSearch.poisoned(junk, "少年維特的煩惱 劇情"))
+        XCTAssertFalse(WebSearch.poisoned(junk + [h("《少年维特之烦恼》剧情及主题理解")], "少年維特的煩惱 劇情"))
+        XCTAssertEqual(WebSearch.relevant([h("失眠怎么办-专家文章"), h("披薩")], "失眠 怎麼辦"), 1)
+        XCTAssertTrue(WebSearch.poisoned(junk, "少年維特的煩惱 (site:books.com.tw OR site:readmoo.com)"))
         XCTAssertTrue(Cite.isProfessional("www.commonhealth.com.tw"))
     }
 }
