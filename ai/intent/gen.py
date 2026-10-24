@@ -187,6 +187,70 @@ HOLD = {
     "yesno": [("food", "{x}能天天吃嗎"), ("skill", "{x}會不會很難")],
     "chat": [("none", "今天天氣真好"), ("none", "我想睡覺了"), ("none", "你好可愛")],
 }
+# 問法的近義詞（一般的語言知識：同一個意思有好幾種講法）。訓練時隨機換成同組的另一個，模型才學得到「換句話說還是同一件事」。
+# 在不同句子裡意思會變的詞不放（「有什麼故事」是要清單、「有什麼差別」是比較；「推薦」和「介紹」也不一樣）
+PHRASE_SYN = [
+    ["差別", "區別", "差異", "分別", "不同之處", "不一樣的地方", "差在哪"],
+    ["位於", "坐落在", "座落於", "位在", "地處"],
+    ["什麼意思", "代表什麼", "指什麼", "是什麼概念", "的意涵", "是怎麼一回事", "是怎樣的概念"],
+    ["技巧", "訣竅", "秘訣", "竅門", "撇步", "要領"],
+    ["方法", "辦法", "方式", "做法"],
+    ["好看嗎", "值得看嗎", "精彩嗎", "會不會很無聊", "會很悶嗎", "你推不推"],
+    ["怎麼辦", "如何是好", "該怎麼處理", "怎麼解決"],
+    ["為什麼", "為何", "為啥", "怎麼會", "何以"],
+    ["哪一年", "哪年", "什麼時候", "何時", "哪個年代"],
+    ["在講什麼", "講了什麼", "在說什麼", "在演什麼", "的內容是什麼"],
+    ["誰寫的", "作者是誰", "出自誰的手", "是誰的作品"],
+    ["多少錢", "價格多少", "要價多少", "多少費用"],
+    ["可以嗎", "行嗎", "好嗎", "可不可以"],
+    ["開始", "入門", "起步", "著手"],
+]
+
+
+def synonym_groups():
+    """問法的近義詞。不用一般的近義詞表：它不看上下文（「什麼→何物」「好看→標緻」換了反而不像人話）"""
+    return [g for g in PHRASE_SYN if len(g) >= 2]
+
+
+SYN = None
+
+
+def paraphrase(rng, q):
+    """把句子裡的詞隨機換成同組的近義詞（一次最多換兩個）"""
+    global SYN
+    if SYN is None:
+        SYN = sorted(synonym_groups(), key=lambda g: -max(len(w) for w in g))
+    n = 0
+    for g in SYN:
+        hit = next((w for w in sorted(g, key=len, reverse=True) if w in q), None)
+        if hit and rng.random() < 0.6:
+            q = q.replace(hit, rng.choice([w for w in g if w != hit]), 1).replace("是是", "是").replace("的的", "的")
+            n += 1
+            if n >= 2:
+                break
+    return q
+
+
+# 第三組考題：改進的過程完全沒看過、也沒拿來調整的說法（最後的成績只看這組）
+HOLD2 = {
+    "items": [("coll", "{x}名氣大的有哪些"), ("coll", "{x}之中有哪些值得一看"), ("person", "{x}這輩子留下了哪些作品")],
+    "content": [("work", "{x}的情節能講一下嗎"), ("work", "{x}主要的故事線是什麼")],
+    "count": [("coll", "{x}一共幾部"), ("coll", "{x}數量多少")],
+    "define": [("concept", "{x}究竟是指啥"), ("concept", "{x}這個名詞怎麼解釋")],
+    "reason": [("nature", "{x}背後是什麼道理"), ("problem", "人怎麼會{x}")],
+    "howto": [("skill", "{x}該如何下手"), ("skill", "{x}的正確做法")],
+    "advice": [("problem", "{x}讓我很困擾怎麼辦"), ("problem", "碰到{x}要怎麼辦")],
+    "compare": [("pair", "{a}和{b}哪邊比較好"), ("pair", "{a}對比{b}")],
+    "opinion": [("work", "{x}值不值得花時間看"), ("person", "{x}這個人你怎麼評價")],
+    "recommend": [("place", "去{x}有什麼推"), ("coll", "{x}有沒有推薦")],
+    "person": [("work", "{x}的作者叫什麼名字")],
+    "place": [("thing", "{x}在哪個地方")],
+    "time": [("event", "{x}發生的年份")],
+    "quantity": [("thing", "{x}多少公尺高")],
+    "yesno": [("food", "每天吃{x}會怎樣嗎")],
+    "chat": [("none", "今天心情很好"), ("none", "我想吃宵夜")],
+}
+
 OPEN = ["", "", "", "請問", "請問一下", "我想知道", "欸", "那", "你知道", "可以告訴我", "想問", "好奇", "問一下"]
 TAIL = ["", "", "", "？", "?", "嗎", "呢", "啊", "，謝謝", "～"]
 
@@ -200,7 +264,7 @@ def pools(hold):
 
 
 def sample(rng, intent, hold):
-    kind, pat = rng.choice((HOLD if hold else TRAIN)[intent])
+    kind, pat = rng.choice((HOLD2 if hold == 2 else HOLD if hold else TRAIN)[intent])
     P = pools(hold)
     if kind == "pair":
         a, b = rng.choice(P["pair"])
@@ -211,6 +275,9 @@ def sample(rng, intent, hold):
         # 主題不一定是這個種類的（換成別種的主題）：讓模型看問法，不是看主題
         k = kind if rng.random() < 0.75 else rng.choice([k for k in P if k != "pair"])
         q = pat.replace("{x}", rng.choice(P[k]))
+    # 訓練時一半的句子換成近義的說法（驗證題不換：考的就是沒看過的說法）
+    if not hold and rng.random() < 0.5:
+        q = paraphrase(rng, q)
     if intent != "chat":
         o = rng.choice(OPEN)
         t = rng.choice(TAIL)
@@ -221,9 +288,9 @@ def sample(rng, intent, hold):
 
 
 def main():
-    hold = "--holdout" in sys.argv
+    hold = 2 if "--holdout2" in sys.argv else 1 if "--holdout" in sys.argv else 0
     n = int(sys.argv[sys.argv.index("--n") + 1]) if "--n" in sys.argv else (20000 if hold else 200000)
-    rng = random.Random(7 if hold else 1)
+    rng = random.Random({0: 1, 1: 7, 2: 11}[hold])
     intents = list(TRAIN)
     for _ in range(n):
         it = rng.choice(intents)

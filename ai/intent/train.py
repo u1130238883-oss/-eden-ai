@@ -156,6 +156,11 @@ def main():
     for p_, b_ in zip(params, best[1]):
         p_[...] = b_
     print(f"用第 {best[2]} 輪。考試組（沒看過的說法）：{evaluate(*test):.4f}", flush=True)
+    # 第三組：改進的過程完全沒用過的說法，最後的成績
+    if len(sys.argv) > 7:
+        x3, y3 = load(sys.argv[6])
+        e3 = ((np.load(sys.argv[7]) - mu) / sd).astype(np.float32)
+        print(f"第三組（全新的說法，最後的成績）：{evaluate(x3, np.array([li[l] for l in y3]), e3):.4f}", flush=True)
 
     # 錯在哪
     _, _, _, lg = forward(E, W1, b1, W2, b2, hx, enc_ho)
