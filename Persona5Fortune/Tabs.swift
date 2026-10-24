@@ -405,10 +405,7 @@ struct MatchTab: View {
     private func result(_ me: Destiny, _ p: Person) -> some View {
         let other = Destiny(birth: p.birth, anchor: store.anchor)
         let s = me.synastry(with: other)
-        let combined = Num.r9(me.lifeNumber + other.lifeNumber)
-        SynastryBar(names: "\(store.displayName) × \(p.name)",
-                    number: combined,
-                    numberLabel: L("合盤靈數", "SYNC NO.", "Nº VIDA", "Nº VITA"))
+        SynastryBar(names: "\(store.displayName) & \(p.name)")
 
         ForEach(s.chart) { r in
             SimpleRow(label: "\(r.palace) \(Palace.name(r.palace))", row: r,

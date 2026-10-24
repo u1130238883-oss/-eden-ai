@@ -287,49 +287,16 @@ struct Slant: Shape {
     }
 }
 
-/// 合盤橫條：左＝合盤靈數膠囊、右＝兩人名字膠囊（電視螢幕風）
+/// 合盤橫條：兩人名字膠囊（電視螢幕風）
 struct SynastryBar: View {
     let names: String
-    let number: Int
-    let numberLabel: String
 
     var body: some View {
-        HStack(spacing: 10) {
-            pill {
-                VStack(spacing: 0) {
-                    Text(numberLabel)
-                        .font(Z.mono(9))
-                        .foregroundColor(Z.cyan)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                    Text("\(number)")
-                        .font(Z.title(34))
-                        .foregroundColor(Z.text)
-                        .lineLimit(1)
-                }
-                .padding(.horizontal, 6)
-            }
-            .frame(width: 112)
-
-            pill {
-                Text(names)
-                    .font(Z.title(24))
-                    .foregroundColor(Z.text)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .padding(.horizontal, 18)
-            }
-        }
-        .frame(height: 100)
-    }
-
-    /// 外層深灰膠囊＋內層螢光框掃描線螢幕
-    private func pill<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         ZStack {
             Capsule().fill(Color.black)
             Capsule().stroke(Z.panel2, lineWidth: 6)
             ZStack {
-                Capsule().fill(Z.cyan.opacity(0.16))
+                Capsule().fill(Z.lime.opacity(0.16))
                 Canvas { ctx, size in
                     var y: CGFloat = 0
                     while y < size.height {
@@ -339,11 +306,16 @@ struct SynastryBar: View {
                     }
                 }
                 .clipShape(Capsule())
-                Capsule().stroke(Z.cyan, lineWidth: 3)
-                content()
+                Capsule().stroke(Z.lime, lineWidth: 3)
+                Text(names)
+                    .font(Z.title(24))
+                    .foregroundColor(Z.text)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .padding(.horizontal, 18)
             }
             .padding(12)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(height: 100)
     }
 }
