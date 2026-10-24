@@ -299,7 +299,7 @@ struct SynastryBar: View {
                 VStack(spacing: 0) {
                     Text(numberLabel)
                         .font(Z.mono(9))
-                        .foregroundColor(Z.lime)
+                        .foregroundColor(Z.cyan)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                     Text("\(number)")
@@ -327,9 +327,9 @@ struct SynastryBar: View {
     private func pill<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         ZStack {
             Capsule().fill(Color.black)
-            Capsule().stroke(Z.cyan, lineWidth: 6)
+            Capsule().stroke(Z.panel2, lineWidth: 6)
             ZStack {
-                Capsule().fill(Z.lime.opacity(0.16))
+                Capsule().fill(Z.cyan.opacity(0.16))
                 Canvas { ctx, size in
                     var y: CGFloat = 0
                     while y < size.height {
@@ -339,7 +339,7 @@ struct SynastryBar: View {
                     }
                 }
                 .clipShape(Capsule())
-                Capsule().stroke(Z.lime, lineWidth: 3)
+                Capsule().stroke(Z.cyan, lineWidth: 3)
                 content()
             }
             .padding(12)
