@@ -1,0 +1,60 @@
+name: Build unsigned IPA
+
+on:
+  push:
+    branches: ["**"]
+    paths-ignore:
+      - "dist/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build app (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Persona5Fortune.xcodeproj \
+            -scheme Persona5Fortune \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tee xcodebuild.log | grep -E "error|warning: unre|BUILD" || true
+          test -d build/Build/Products/Release-iphoneos/Persona5Fortune.app || (tail -200 xcodebuild.log; exit 1)
+
+      - name: Package IPA
+        run: |
+          rm -rf Payload && mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/Persona5Fortune.app Payload/
+          mkdir -p dist
+          rm -f dist/Persona5Fortune.ipa
+          zip -qry dist/Persona5Fortune.ipa Payload
+          ls -la dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Persona5Fortune-ipa
+          path: dist/Persona5Fortune.ipa
+
+      - name: Commit IPA back to branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f dist/Persona5Fortune.ipa
+          git commit -m "Build unsigned IPA [skip ci]" || exit 0
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
