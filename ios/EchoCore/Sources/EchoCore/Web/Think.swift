@@ -348,7 +348,8 @@ public enum Think {
     /// 真的在說故事的字（最重要）、故事裡發生的事、只是提到劇情的字（最不重要）
     static let narrates = ["描寫", "講述", "描述", "敘述", "講的是", "寫的是", "刻畫", "講一個", "說的是"]
     static let events = ["愛上", "一生", "經歷", "冒險", "遭遇", "最後", "最終", "結局", "旅程", "成長", "命運", "追尋", "復仇", "誤闖", "相遇",
-                         "自殺", "死去", "離開", "回到", "拯救", "發現", "對抗", "愛情", "友情"]
+                         "自殺", "死去", "離開", "回到", "拯救", "發現", "對抗", "愛情", "友情", "謀害", "殺死", "害死", "篡", "復仇", "報仇",
+                         "背叛", "逃離", "變成", "被捕", "揭發", "革命", "驅逐"]
     /// 在講主題、想表達什麼的句子會有的字
     static let themeCues = ["主題", "探討", "反映", "象徵", "批判", "諷刺", "表達了", "揭示", "寓意", "隱喻", "思考", "意義在於", "核心"]
     /// 不是在講作品內容：改編、翻譯、出版、得獎、票房、頁尾連結、寫作經過
@@ -357,7 +358,10 @@ public enum Think {
     static let backstory = ["創作", "寫成", "寫下", "完成了這", "出版", "發表", "問世", "面世", "靈感", "根據自己", "根據作者", "源自", "自身", "親身", "不同於"]
     /// 句子在講「它」（不提書名，但開頭是「小說講述…」「故事發生在…」「書中…」）
     static let referents = ["小說", "故事", "本書", "該書", "全書", "書中", "此書", "這本書", "這部", "作品", "本片", "該片", "片中", "電影", "影片",
-                            "劇中", "全劇", "該劇", "本劇", "動畫", "漫畫", "主角", "主人公", "全片"]
+                            "劇中", "全劇", "該劇", "本劇", "此劇", "戲劇", "這齣", "動畫", "漫畫", "主角", "主人公", "全片"]
+    /// 在講怎麼看、怎麼寫，不是在講故事（「主軸描寫已經相當精采…導演的巧思」「小說的語言特色」）
+    static let meta = ["觀影", "討論", "解讀", "巧思", "讀者", "觀眾", "語言特色", "寫法", "手法", "bonus", "影評", "心得", "推薦", "值得一看", "必看",
+                       "我", "超展開", "必然", "趨勢", "作品發展", "表達了", "諷刺", "被視為", "禁書"]
 
     /// 「金閣寺在講什麼」「少年維特的煩惱講了什麼」：像人回答一樣——先說它是什麼（誰的什麼作品），再說講了什麼故事，最後說想表達什麼。
     /// 句子要在講這部作品：有書名，或出自在介紹這部作品的頁面、開頭是「小說／故事／書中…」；
@@ -395,12 +399,20 @@ public enum Think {
         }
 
         // ① 它是什麼：「《少年維特的煩惱》是德國作家歌德的書信體小說」
-        let intro = sents.filter { s in s.named && headed(s.text) && s.text.contains("是") && hits(s.text, genres) > 0 && clean(s) && s.text.count <= 120 }
+        // 一定是「《X》是…的小說／電影」這種句子：書名後面馬上接「是／為」（「《1984》曾被列為禁書」「…名言台詞金句」不算）
+        func definesIt(_ t: String) -> Bool {
+            let c = canonText(t)
+            guard let r = c.range(of: ct) else { return false }
+            let after = c[r.upperBound...].replacingOccurrences(of: #"^[》」』]?\s*(?:[（(][^）)]{0,40}[）)])?\s*(?:也稱為[^，,]{0,20}[，,])?\s*"#, with: "", options: .regularExpression)
+            return after.hasPrefix("是") || after.hasPrefix("為") || after.hasPrefix("，是") || after.hasPrefix("乃")
+        }
+        let intro = sents.filter { s in s.named && headed(s.text) && definesIt(s.text) && hits(s.text, genres) > 0 && clean(s) && s.text.count <= 120
+            && hits(s.text, ["名言", "台詞", "語錄", "金句", "禁書"] + meta) == 0 }
             .max { a, b in (pro(a.host), -a.text.count) < (pro(b.host), -b.text.count) }
         // ② 講了什麼故事
         func plotScore(_ s: S) -> Int {
             hits(s.text, narrates) * 3 + min(hits(s.text, events), 3) * 2 + hits(s.text, plotCues.filter { !narrates.contains($0) && !events.contains($0) })
-                + (s.named ? 2 : 0) + pro(s.host) - hits(s.text, backstory) * 2 - (s.text.count > 120 ? 1 : 0)
+                + (s.named ? 2 : 0) + pro(s.host) - hits(s.text, backstory) * 2 - hits(s.text, meta) * 3 - (s.text.count > 120 ? 1 : 0)
         }
         let plots = sents.filter { s in hits(s.text, plotCues) > 0 && clean(s) && talksAboutIt(s) && plotScore(s) > 1 }
             .sorted { plotScore($0) > plotScore($1) }
@@ -423,17 +435,46 @@ public enum Think {
             let g = grams(s.text)
             return used.contains { u in Double(g.intersection(grams(u)).count) >= 0.45 * Double(max(g.count, 1)) }
         }
+        // ② 故事：最好的劇情句，像人一樣往下讀（後來發生的事接著說）；整理成一段自己的話，不是一句一句貼
+        var story: [S] = []
         if let p = plots.first {
-            add(p, "📖 內容：")
-            // 像人一樣往下讀：同一頁接下來一兩句如果在說後來發生的事（「之後，維特…而自殺」），接著說，故事才完整
+            story.append(p)
+            used.insert(p.text)
             let next = sents.filter { $0.page == p.page && $0.idx > p.idx && $0.idx <= p.idx + 2 }
-            for more in next where hits(more.text, events) > 0 && clean(more) && hits(more.text, backstory) == 0 && !repeats(more) {
-                add(more, "　")
+            for more in next where hits(more.text, events) > 0 && clean(more) && hits(more.text, backstory) + hits(more.text, meta) == 0 && !repeats(more) {
+                story.append(more); used.insert(more.text)
             }
+            // 別的網站的說法是另一種講法，不是「後來發生的事」：不接在一起（使用者也覺得重複多餘）
+            let told = WorkView.story(story.map(\.text), title: title, events: events)
+            let hosts = story.map(\.host).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
+            if !told.isEmpty { lines.append("📖 故事：" + told + "（" + hosts.joined(separator: "、") + "）") }
+            else { for s in story { lines.append("📖 " + Cite.whole(s.text, host: s.host, limit: 110)) } }
         }
-        // 第二個說法也要真的在說故事（分數夠高）、而且不是重複，不然寧可不說
-        if let p2 = plots.dropFirst().first(where: { !used.contains($0.text) && plotScore($0) >= 5 && !repeats($0) }) { add(p2, "📖 ") }
-        add(theme, "💡 想表達的：")
+        // ③ 主題：從講這部作品的句子找根據，用自己的話解釋（不是只貼一句「象徵」）
+        // 判斷主題時，所有在講劇情的句子都算（別的網站的劇情句不放進「故事」，但它講到的「父母貪吃變成豬」還是根據）
+        var plotTexts = story.map(\.text)
+        for p in plots.prefix(4) where !plotTexts.contains(p.text) { plotTexts.append(p.text) }
+        // 在介紹這部作品的頁面上，講主題的句子常常不提書名：整頁都算（有別的《書名》的句子除外）
+        let onPage = sents.filter { s in (s.about || s.named) && clean(s) && !titles(s.text).contains { canonText($0) != ct } }
+        let found = WorkView.found(in: onPage.map(\.text), plot: plotTexts, title: title)
+        let picked = WorkView.strong(found)
+        if picked.isEmpty {
+            add(theme, "💡 想表達的：")
+        } else {
+            lines.append("💡 主題：")
+            for f in picked {
+                let host = onPage.first { $0.text == f.evidence }?.host ?? story.first { $0.text == f.evidence }?.host ?? ""
+                let ev = f.evidence.isEmpty || story.contains { $0.text == f.evidence } ? "" : "（資料：" + Cite.whole(f.evidence, host: host, limit: 45) + "）"
+                lines.append("• \(f.theme.name)：\(f.theme.explain)" + ev)
+            }
+            // ④ 我的看法：有明確的立場，不是「各有說法」
+            // 這本書／這部片／這部劇：看問題和介紹句怎麼說
+            let said = question + (intro?.text ?? "")
+            let medium = ["電影", "動畫", "影集", "影片", "電視劇", "這部片"].contains { said.contains($0) } ? "這部片"
+                : ["戲劇", "劇本", "舞台劇"].contains { said.contains($0) } ? "這齣戲"
+                : ["小說", "書", "童話", "寓言", "散文", "詩"].contains { said.contains($0) } ? "這本書" : "這部作品"
+            lines.append("🧠 我的看法：" + WorkView.opinion(title: title, medium: medium, picked: picked.map(\.theme)))
+        }
         guard !lines.isEmpty else { return nil }
         return lines.joined(separator: "\n")
     }
