@@ -287,7 +287,7 @@ struct Slant: Shape {
     }
 }
 
-/// 合盤橫條：左框＝合盤靈數、右框＝兩人名字
+/// 合盤橫條：左＝合盤靈數膠囊、右＝兩人名字膠囊（電視螢幕風）
 struct SynastryBar: View {
     let names: String
     let number: Int
@@ -295,67 +295,55 @@ struct SynastryBar: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            block(top: numberLabel, big: "\(number)", color: Z.lime, shadow: Z.orange)
-                .padding(10)
-                .background(panel)
+            pill {
+                VStack(spacing: 0) {
+                    Text(numberLabel)
+                        .font(Z.mono(9))
+                        .foregroundColor(Z.lime)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                    Text("\(number)")
+                        .font(Z.title(34))
+                        .foregroundColor(Z.text)
+                        .lineLimit(1)
+                }
+                .padding(.horizontal, 6)
+            }
+            .frame(width: 112)
 
-            VStack(spacing: 4) {
-                Text("// SYNASTRY")
-                    .font(Z.mono(9))
-                    .foregroundColor(Z.lime)
+            pill {
                 Text(names)
-                    .font(Z.title(20))
-                    .italic()
+                    .font(Z.title(24))
                     .foregroundColor(Z.text)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
-                HazardStripes()
-                    .frame(width: 56, height: 5)
-                    .clipShape(Capsule())
+                    .padding(.horizontal, 18)
             }
-            .padding(.horizontal, 12)
-            .frame(maxWidth: .infinity, minHeight: 96)
-            .background(panel)
         }
-        .padding(.trailing, 4)
-        .padding(.bottom, 5)
+        .frame(height: 100)
     }
 
-    private var panel: some View {
+    /// 外層深灰膠囊＋內層螢光框掃描線螢幕
+    private func pill<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         ZStack {
-            CutCorner(cut: 14).fill(Z.lime).offset(x: 4, y: 5)
-            CutCorner(cut: 14).fill(Color.black)
-            Canvas { ctx, size in
-                var y: CGFloat = 0
-                while y < size.height {
-                    ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)),
-                             with: .color(Z.lime.opacity(0.07)))
-                    y += 4
+            Capsule().fill(Color.black)
+            Capsule().stroke(Z.panel2, lineWidth: 6)
+            ZStack {
+                Capsule().fill(Z.lime.opacity(0.16))
+                Canvas { ctx, size in
+                    var y: CGFloat = 0
+                    while y < size.height {
+                        ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)),
+                                 with: .color(Color.black.opacity(0.28)))
+                        y += 3
+                    }
                 }
+                .clipShape(Capsule())
+                Capsule().stroke(Z.lime, lineWidth: 3)
+                content()
             }
-            .clipShape(CutCorner(cut: 14))
-            CutCorner(cut: 14).stroke(Z.lime.opacity(0.7), lineWidth: 2)
+            .padding(12)
         }
-    }
-
-    private func block(top: String, big: String, color: Color, shadow: Color) -> some View {
-        VStack(spacing: 0) {
-            Text(top)
-                .font(Z.mono(9))
-                .foregroundColor(.black.opacity(0.75))
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
-            Text(big)
-                .font(.system(size: 38, weight: .black, design: .rounded))
-                .italic()
-                .foregroundColor(.black)
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 6)
-        .frame(width: 84, height: 76)
-        .background(Slant(skew: 12).fill(color))
-        .overlay(Slant(skew: 12).stroke(Color.black, lineWidth: 3))
-        .background(Slant(skew: 12).fill(shadow).offset(x: 4, y: 4))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
