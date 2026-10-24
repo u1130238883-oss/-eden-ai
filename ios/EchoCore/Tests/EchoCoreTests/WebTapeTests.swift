@@ -26,6 +26,8 @@ final class WebTapeTests: XCTestCase {
         let res = EchoCoreTests.resources
         Brain.shared = try? Brain(weights: Data(contentsOf: res.appendingPathComponent("reader.bin")),
                                   metaJSON: Data(contentsOf: res.appendingPathComponent("reader.json")))
+        Intent.shared = try? Intent(weights: Data(contentsOf: res.appendingPathComponent("intent.bin")),
+                                    metaJSON: Data(contentsOf: res.appendingPathComponent("intent.json")))
         WebTape.shared = tape
         defer { WebTape.shared = nil }
         var out = ""

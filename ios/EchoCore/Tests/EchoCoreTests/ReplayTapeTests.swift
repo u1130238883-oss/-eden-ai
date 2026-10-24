@@ -9,6 +9,8 @@ final class ReplayTapeTests: XCTestCase {
         guard let paths = ProcessInfo.processInfo.environment["NINESUN_TAPES"] else { throw XCTSkip("") }
         Brain.shared = try? Brain(weights: Data(contentsOf: EchoCoreTests.resources.appendingPathComponent("reader.bin")),
                                   metaJSON: Data(contentsOf: EchoCoreTests.resources.appendingPathComponent("reader.json")))
+        Intent.shared = try? Intent(weights: Data(contentsOf: EchoCoreTests.resources.appendingPathComponent("intent.bin")),
+                                    metaJSON: Data(contentsOf: EchoCoreTests.resources.appendingPathComponent("intent.json")))
         let qs = (ProcessInfo.processInfo.environment["NINESUN_QS"] ?? "").split(separator: "|").map(String.init)
         for path in paths.split(separator: ":").map(String.init) {
             WebTape.shared = try WebTape(contentsOf: URL(fileURLWithPath: path))
