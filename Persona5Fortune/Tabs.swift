@@ -408,10 +408,7 @@ struct MatchTab: View {
         let combined = Num.r9(me.lifeNumber + other.lifeNumber)
         SynastryBar(names: "\(store.displayName) & \(p.name)",
                     number: combined,
-                    numberLabel: L("合盤靈數", "SYNC NO.", "Nº VIDA", "Nº VITA"),
-                    palace: s.chart[0].palace,
-                    palaceName: Palace.name(s.chart[0].palace),
-                    palaceLabel: L("合盤命宮", "LIFE PAL.", "PALACIO", "PALAZZO"))
+                    numberLabel: L("合盤靈數", "SYNC NO.", "Nº VIDA", "Nº VITA"))
 
         ForEach(s.chart) { r in
             SimpleRow(label: "\(r.palace) \(Palace.name(r.palace))", row: r,

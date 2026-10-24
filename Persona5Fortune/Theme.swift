@@ -287,18 +287,17 @@ struct Slant: Shape {
     }
 }
 
-/// 合盤橫條：左＝合盤靈數、中＝兩人名字、右＝合盤命宮
+/// 合盤橫條：左框＝合盤靈數、右框＝兩人名字
 struct SynastryBar: View {
     let names: String
     let number: Int
     let numberLabel: String
-    let palace: Int
-    let palaceName: String
-    let palaceLabel: String
 
     var body: some View {
-        HStack(spacing: 12) {
-            block(top: numberLabel, big: "\(number)", bottom: nil, color: Z.lime, shadow: Z.orange)
+        HStack(spacing: 10) {
+            block(top: numberLabel, big: "\(number)", color: Z.lime, shadow: Z.orange)
+                .padding(10)
+                .background(panel)
 
             VStack(spacing: 4) {
                 Text("// SYNASTRY")
@@ -314,31 +313,32 @@ struct SynastryBar: View {
                     .frame(width: 56, height: 5)
                     .clipShape(Capsule())
             }
-            .frame(maxWidth: .infinity)
-
-            block(top: palaceLabel, big: "\(palace)", bottom: palaceName, color: Z.orange, shadow: Z.lime)
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, minHeight: 96)
+            .background(panel)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 12)
-        .background(
-            ZStack {
-                CutCorner(cut: 16).fill(Z.lime).offset(x: 4, y: 5)
-                CutCorner(cut: 16).fill(Color.black)
-                Canvas { ctx, size in
-                    var y: CGFloat = 0
-                    while y < size.height {
-                        ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)),
-                                 with: .color(Z.lime.opacity(0.07)))
-                        y += 4
-                    }
-                }
-                .clipShape(CutCorner(cut: 16))
-                CutCorner(cut: 16).stroke(Z.lime.opacity(0.7), lineWidth: 2)
-            }
-        )
+        .padding(.trailing, 4)
+        .padding(.bottom, 5)
     }
 
-    private func block(top: String, big: String, bottom: String?, color: Color, shadow: Color) -> some View {
+    private var panel: some View {
+        ZStack {
+            CutCorner(cut: 14).fill(Z.lime).offset(x: 4, y: 5)
+            CutCorner(cut: 14).fill(Color.black)
+            Canvas { ctx, size in
+                var y: CGFloat = 0
+                while y < size.height {
+                    ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)),
+                             with: .color(Z.lime.opacity(0.07)))
+                    y += 4
+                }
+            }
+            .clipShape(CutCorner(cut: 14))
+            CutCorner(cut: 14).stroke(Z.lime.opacity(0.7), lineWidth: 2)
+        }
+    }
+
+    private func block(top: String, big: String, color: Color, shadow: Color) -> some View {
         VStack(spacing: 0) {
             Text(top)
                 .font(Z.mono(9))
@@ -350,13 +350,6 @@ struct SynastryBar: View {
                 .italic()
                 .foregroundColor(.black)
                 .lineLimit(1)
-            if let bottom {
-                Text(bottom)
-                    .font(Z.title(13))
-                    .foregroundColor(.black)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
