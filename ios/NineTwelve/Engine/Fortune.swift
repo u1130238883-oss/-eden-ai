@@ -234,6 +234,15 @@ public struct Destiny: Equatable, Sendable {
         natalChart.filter { $0.reading.cause == palace || $0.reading.result == palace }
     }
 
+    /// 被影響：大運所引動的某一本命宮位，再影響到那段大運十二方面裡的哪幾項
+    /// （十二方面中，因或果落在那一本命宮位的各項）。
+    public func affectedAspects(by natalRow: PalaceRow, in period: LuckPeriod) -> [LuckAspect] {
+        let palace = natalRow.palace
+        return luckAspects(containing: period.startYear).filter {
+            $0.row.reading.cause == palace || $0.row.reading.result == palace
+        }
+    }
+
     // MARK: - 月運
 
     /// 某年的月運盤。

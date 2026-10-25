@@ -211,6 +211,17 @@ class Destiny(
     fun triggeredNatalRows(palace: Int): List<PalaceRow> =
         natalChart.filter { it.reading.cause == palace || it.reading.result == palace }
 
+    /**
+     * 被影響：大運所引動的某一本命宮位，再影響到那段大運十二方面裡的哪幾項
+     * （十二方面中，因或果落在那一本命宮位的各項）。
+     */
+    fun affectedAspects(natalRow: PalaceRow, period: LuckPeriod): List<LuckAspect> {
+        val palace = natalRow.palace
+        return luckAspects(period.startYear).filter {
+            it.row.reading.cause == palace || it.row.reading.result == palace
+        }
+    }
+
     fun monthChart(y: Int): List<MonthRow> {
         val luck = luckPeriod(y).row
         val flow = year(y)

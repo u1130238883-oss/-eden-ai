@@ -207,6 +207,15 @@ final class EngineTests: XCTestCase {
         }
         XCTAssertEqual(own(9), ["2 好2因9", "8 壞9因2"])
         XCTAssertEqual(own(1), [])
+
+        // 作者的例子：大運 2019–2027 引動本命 5宮、11宮，再各自影響這段大運的十二方面
+        let p = d.luckPeriod(containing: 2026)
+        func affected(_ palace: Int) -> [String] {
+            let row = d.triggeredNatalRows(for: p).first { $0.palace == palace }!
+            return d.affectedAspects(by: row, in: p).map { "\($0.aspect) \($0.row.reading.display)" }
+        }
+        XCTAssertEqual(affected(5), ["2 正5因7", "4 壞10因5", "10 好10因5"])
+        XCTAssertEqual(affected(11), ["1 壞4因11", "7 壞11因4", "8 正11因7"])
     }
 
     /// 摘要接在宮位簡稱底下顯示，不可以重複簡稱本身。

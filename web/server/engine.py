@@ -203,6 +203,13 @@ class Destiny:
         return [r for r in self.natal_chart
                 if palace in (r["reading"][1], r["reading"][2])]
 
+    def affected_aspects(self, natal_row, period):
+        """被影響：大運所引動的某一本命宮位，再影響到那段大運十二方面裡的哪幾項
+        （十二方面中，因或果落在那一本命宮位的各項）。"""
+        palace = natal_row["palace"]
+        return [r for r in self.luck_aspects(period["start"])["aspects"]
+                if palace in (r["reading"][1], r["reading"][2])]
+
     # 月運
     def month_chart(self, year):
         luck = self.luck_period_containing(year)["row"]

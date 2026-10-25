@@ -101,6 +101,11 @@ check("大運 2028–2036 引動", trig(d.triggered_natal_rows(d.luck_period_con
 # 本命 9宮 → 本命盤因或果為9的宮位（作者 2026-10-20 的例子）
 check("本命 9宮 引動", trig(d.triggered_natal_by_palace(9)), ["2 好2因9", "8 壞9因2"])
 check("本命 1宮 引動", trig(d.triggered_natal_by_palace(1)), [])
+# 被影響：大運引動的本命宮位，再影響那段大運十二方面裡因或果為那一宮的各項（作者 2026-10-25 的例子）
+p2019 = d.luck_period_containing(2026)
+aff = {r["palace"]: trig(d.affected_aspects(r, p2019)) for r in d.triggered_natal_rows(p2019)}
+check("大運 2019–2027 本命 5宮 被影響", aff[5], ["2 正5因7", "4 壞10因5", "10 好10因5"])
+check("大運 2019–2027 本命 11宮 被影響", aff[11], ["1 壞4因11", "7 壞11因4", "8 正11因7"])
 
 print("\n=== 8. 合盤 ===")
 b = E.Destiny(2007, 1, 23)

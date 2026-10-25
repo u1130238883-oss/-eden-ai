@@ -239,6 +239,15 @@ class EngineTest {
         fun own(p: Int) = d.triggeredNatalRows(p).map { "${it.palace} ${it.reading.display}" }
         assertEquals(listOf("2 好2因9", "8 壞9因2"), own(9))
         assertEquals(emptyList<String>(), own(1))
+
+        // 作者的例子：大運 2019–2027 引動本命 5宮、11宮，再各自影響這段大運的十二方面
+        val p = d.luckPeriod(2026)
+        fun affected(palace: Int): List<String> {
+            val row = d.triggeredNatalRows(p).first { it.palace == palace }
+            return d.affectedAspects(row, p).map { "${it.aspect} ${it.row.reading.display}" }
+        }
+        assertEquals(listOf("2 正5因7", "4 壞10因5", "10 好10因5"), affected(5))
+        assertEquals(listOf("1 壞4因11", "7 壞11因4", "8 正11因7"), affected(11))
     }
 
     /** 摘要接在宮位簡稱底下顯示，不可以重複簡稱本身。 */

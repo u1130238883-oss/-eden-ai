@@ -238,6 +238,8 @@ data class TriggerList(
     val span: String?,
     /** 每一項：(以哪一宮去讀, 那一列)。 */
     val items: List<Pair<Int, PalaceRow>>,
+    /** 每一項底下「被影響」的大運方面，和 items 一一對應（只有大運引動本命時才有）。 */
+    val affected: List<List<Pair<Int, PalaceRow>>> = emptyList(),
 ) {
     enum class Kind { LUCK_ASPECTS, NATAL }
 
@@ -250,11 +252,48 @@ data class TriggerList(
         )
 
         /** 某一段大運所引動的本命宮位。 */
-        fun luck(p: LuckPeriod, destiny: Destiny) = TriggerList(
-            Kind.NATAL,
-            null,
-            destiny.triggeredNatalRows(p).map { it.palace to it },
-        )
+        fun luck(p: LuckPeriod, destiny: Destiny): TriggerList {
+            val rows = destiny.triggeredNatalRows(p)
+            return TriggerList(
+                Kind.NATAL,
+                null,
+                rows.map { it.palace to it },
+                rows.map { r -> destiny.affectedAspects(r, p).map { it.aspect to it.row } },
+            )
+        }
+    }
+}
+
+/** 引動裡的一項：宮位圓圈、宮名、三柱、判定。點開看那一宮的詳情。 */
+@Composable
+private fun TriggerItemRow(
+    item: Pair<Int, PalaceRow>,
+    lang: Lang,
+    onSelect: (Pair<Int, PalaceRow>) -> Unit,
+) {
+    val t = Txt(lang)
+    val (palace, r) = item
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect(item) },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        PalaceChip(palace, lang, highlighted = true)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                t.palaceNamed(palace),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                t.triple(r.triple),
+                style = MaterialTheme.typography.bodySmall,
+                color = secondaryText,
+            )
+        }
+        VerdictBadge(r.reading, lang, compact = true)
     }
 }
 
@@ -278,28 +317,23 @@ private fun TriggerCard(
     }
     Card(title = title, subtitle = triggers.span) {
         triggers.items.forEachIndexed { idx, item ->
-            val (palace, r) = item
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSelect(item) },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                PalaceChip(palace, lang, highlighted = true)
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            TriggerItemRow(item, lang, onSelect)
+
+            // 被影響：這一宮再影響到的大運方面
+            val affected = triggers.affected.getOrNull(idx).orEmpty()
+            if (affected.isNotEmpty()) {
+                Column(
+                    modifier = Modifier.padding(start = 50.dp, top = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
                     Text(
-                        t.palaceNamed(palace),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        t.triple(r.triple),
+                        t("被影響", "Influenced", "Influenciados", "Influenzati"),
                         style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
                         color = secondaryText,
                     )
+                    affected.forEach { sub -> TriggerItemRow(sub, lang, onSelect) }
                 }
-                VerdictBadge(r.reading, lang, compact = true)
             }
             if (idx < triggers.items.size - 1) {
                 HorizontalDivider(

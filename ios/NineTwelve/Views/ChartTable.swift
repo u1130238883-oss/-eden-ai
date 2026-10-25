@@ -320,6 +320,8 @@ struct TriggerList {
     var span: String? = nil
     /// 每一項：以哪一宮去讀，以及那一列。
     let items: [(palace: Int, row: PalaceRow)]
+    /// 每一項底下「被影響」的大運方面，和 items 一一對應（只有大運引動本命時才有）。
+    var affected: [[(palace: Int, row: PalaceRow)]] = []
 
     /// 某一年的流年所引動的大運方面。
     static func year(_ y: Int, in destiny: Destiny) -> TriggerList {
@@ -336,8 +338,17 @@ struct TriggerList {
 
     /// 某一段大運所引動的本命宮位。
     static func luck(_ p: LuckPeriod, in destiny: Destiny) -> TriggerList {
-        TriggerList(kind: .natal,
-                    items: destiny.triggeredNatalRows(for: p).map { (palace: $0.palace, row: $0) })
+        let rows = destiny.triggeredNatalRows(for: p)
+        return TriggerList(kind: .natal,
+                           items: rows.map { (palace: $0.palace, row: $0) },
+                           affected: rows.map { r in
+                               destiny.affectedAspects(by: r, in: p).map { (palace: $0.aspect, row: $0.row) }
+                           })
+    }
+
+    /// 第 idx 項底下被影響的大運方面。
+    func affectedItems(at idx: Int) -> [(palace: Int, row: PalaceRow)] {
+        idx < affected.count ? affected[idx] : []
     }
 }
 
@@ -361,30 +372,53 @@ private struct TriggerCard: View {
         }
     }
 
+    private var affectedTitle: String {
+        t("被影響", "Influenced", "Influenciados", "Influenzati")
+    }
+
+    /// 一項：宮位圓圈、宮名、三柱、判定。點開看那一宮的詳情。
+    private func itemLink(_ item: (palace: Int, row: PalaceRow)) -> some View {
+        NavigationLink {
+            RowDetailView(row: item.row, lang: lang, displayPalace: item.palace)
+        } label: {
+            HStack(spacing: 12) {
+                PalaceChip(palace: item.palace, lang: lang, highlighted: true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(t.palaceNamed(item.palace))
+                        .font(.subheadline.weight(.semibold))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(t.triple(item.row.triple))
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 6)
+                VerdictBadge(reading: item.row.reading, lang: lang, compact: true)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     var body: some View {
         Card(title: title, subtitle: triggers.span) {
             VStack(spacing: 10) {
                 ForEach(Array(triggers.items.enumerated()), id: \.offset) { idx, item in
-                    NavigationLink {
-                        RowDetailView(row: item.row, lang: lang, displayPalace: item.palace)
-                    } label: {
-                        HStack(spacing: 12) {
-                            PalaceChip(palace: item.palace, lang: lang, highlighted: true)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(t.palaceNamed(item.palace))
-                                    .font(.subheadline.weight(.semibold))
-                                    .fixedSize(horizontal: false, vertical: true)
-                                Text(t.triple(item.row.triple))
-                                    .font(.caption)
-                                    .monospacedDigit()
-                                    .foregroundStyle(.secondary)
+                    itemLink(item)
+
+                    // 被影響：這一宮再影響到的大運方面
+                    let affected = triggers.affectedItems(at: idx)
+                    if !affected.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(affectedTitle)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            ForEach(Array(affected.enumerated()), id: \.offset) { _, sub in
+                                itemLink(sub)
                             }
-                            Spacer(minLength: 6)
-                            VerdictBadge(reading: item.row.reading, lang: lang, compact: true)
                         }
-                        .contentShape(Rectangle())
+                        .padding(.leading, 50)
                     }
-                    .buttonStyle(.plain)
 
                     if idx < triggers.items.count - 1 {
                         Rectangle()
