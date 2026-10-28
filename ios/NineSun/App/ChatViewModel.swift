@@ -1,5 +1,6 @@
 import EchoCore
 import SwiftUI
+import UIKit
 
 /// 所有 @Published 狀態只在主執行緒修改；推理在背景佇列執行。
 final class ChatViewModel: ObservableObject {
@@ -83,6 +84,15 @@ final class ChatViewModel: ObservableObject {
     /// 設定裡有開 API、也有金鑰
     var apiOn: Bool { useAPI && aiConfig.enabled }
 
+    /// NineSun 的大腦（手機上跑的大型語言模型，不用網路、不用 API）：下載好了又開著就用它思考
+    @Published var useBrain = true { didSet { save(useBrain, "useBrain") } }
+    @Published var brainTestResult = ""
+    @Published var brainTesting = false
+    var brainPath: String? {
+        guard useBrain, let m = ModelStore.shared.readyModel else { return nil }
+        return ModelStore.shared.path(m).path
+    }
+
     init() {
         options = load("options") ?? SamplingOptions()
         profile = load("profile") ?? UserProfile()
@@ -95,7 +105,12 @@ final class ChatViewModel: ObservableObject {
         speakTranslation = load("speakTranslation") ?? true
         translateOn = load("translateOn") ?? false
         translateTarget = load("translateTarget") ?? "en"
+        useBrain = load("useBrain") ?? true
         UILang.current = language
+        // 記憶體不夠時先放掉大腦（下次用到再讀進來），不要讓系統把 App 關掉
+        NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification, object: nil, queue: .main) { _ in
+            LocalBrain.shared.unload()
+        }
         // 以前的版本會把上網查過的答案存在手機裡；現在每次都即時上網查，舊檔刪掉
         try? FileManager.default.removeItem(at: Self.docs.appendingPathComponent("ninesun-webmemory.json"))
         if let d = try? Data(contentsOf: Self.tuningURL), let st = try? JSONDecoder().decode(SelfTuning.State.self, from: d) {
@@ -154,6 +169,15 @@ final class ChatViewModel: ObservableObject {
                                 "¡Señal conectada! Bienvenido de nuevo. ¿Suerte de hoy, BaZi, Zi Wei, un hexagrama o charlar?",
                                 "Segnale connesso! Bentornato. Fortuna di oggi, BaZi, Zi Wei, un esagramma o due chiacchiere?")
                         self.turns.append(ChatTurn(role: .echo, text: self.rules.enforce(hello), source: .tool))
+                    }
+                    // 還沒有大腦：說一次怎麼讓 NineSun 變聰明
+                    if ModelStore.shared.readyModel == nil, !UserDefaults.standard.bool(forKey: "ninesun.brainTipShown") {
+                        UserDefaults.standard.set(true, forKey: "ninesun.brainTipShown")
+                        self.turns.append(ChatTurn(role: .echo, text: T(
+                            "💡 想讓我更聰明嗎？到右上角「調頻台」→「NineSun 的大腦」按下載（大約 2.7 GB，建議接 Wi-Fi）。下載好之後我會在手機裡自己思考，不用網路、不用 API。",
+                            "💡 Want me smarter? Go to Tuning → NineSun's brain and tap Download (about 2.7 GB, Wi-Fi recommended). Then I think on your phone, offline, no API.",
+                            "💡 ¿Quieres que sea más inteligente? Ve a Ajustes → Cerebro de NineSun y toca Descargar (unos 2,7 GB, mejor con Wi-Fi).",
+                            "💡 Vuoi che sia più intelligente? Vai su Sintonia → Cervello di NineSun e tocca Scarica (circa 2,7 GB, meglio con Wi-Fi)."), source: .tool))
                     }
                     withAnimation(.easeOut(duration: 0.35)) { self.phase = .ready }
                 }
@@ -247,6 +271,12 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
+        // 大腦下載好了（而且沒開雲端 AI）：NineSun 的引擎先算、先查，再交給大腦想怎麼回答；設定生日、規則還是引擎自己處理
+        if !apiOn, let brain = brainPath, RuleBook.parse(text) == nil {
+            localReply(text, brain: brain)
+            return
+        }
+
         // 開著「用 AI API 回答」又有金鑰：一律用 AI 回答。
         // 命盤、運勢、心情先由 NineSun 的九型十二宮引擎算出來，再交給 AI 用這些結果回答（AI 自己算不出你的盤）；
         // 設定生日、規則這種會改資料的話還是 NineSun 自己處理。關掉：全部由 NineSun 自己回答
@@ -266,7 +296,7 @@ final class ChatViewModel: ObservableObject {
 
     /// NineSun 自己回答（本地的引擎；需要時上網查）
     /// viaAI：算好之後交給 AI，用這些結果回答（開著 API 時的命理問題）
-    private func localReply(_ text: String, viaAI: Bool = false) {
+    private func localReply(_ text: String, viaAI: Bool = false, brain: String? = nil) {
         guard let engine else { return }
         let history = turns
         let ctx = EchoEngine.Context(profile: profile, rules: rules, now: Date(), language: language, autoDetect: autoDetect)
@@ -278,6 +308,7 @@ final class ChatViewModel: ObservableObject {
                 if let r = reply.rules { self.rules = r }
                 self.coreSnapshot = snap
                 if let s = snap { self.saveFile(s, Self.coreURL) }
+                if let brain, reply.profile == nil, reply.rules == nil, self.think(text, reply, brain: brain) { return }
                 if viaAI, reply.profile == nil, reply.rules == nil, reply.webQuery == nil {
                     self.aiChat(text, reply.lang, chart: reply.turn.text + (reply.augmentFacts.isEmpty ? "" : "\n" + reply.augmentFacts))
                     return
@@ -303,6 +334,92 @@ final class ChatViewModel: ObservableObject {
                 self.play(text: reply.turn.text, final: reply.turn)
             }
         }
+    }
+
+    // MARK: - 大腦
+
+    /// 引擎算好、查好的東西交給大腦想怎麼說。回傳 false：這種回答照引擎的就好（時間、計算、換算、規則、要你給生日）
+    private func think(_ text: String, _ reply: EchoEngine.Reply, brain: String) -> Bool {
+        let L = reply.lang
+        // 要上網的：要最新資料、要查證的先上網，查到的交給大腦整理；其他的大腦自己就能答，不用等網路
+        if let q = reply.webQuery {
+            if EchoEngine.needsFreshInfo(text) || EchoEngine.needsFreshInfo(q) {
+                lookupWeb(q, L, brain: brain, asked: text)
+            } else {
+                brainAnswer(text, mode: .chat, lang: L, brain: brain) { _ in self.lookupWeb(q, L) }
+            }
+            return true
+        }
+        let fallback: (String) -> Void = { _ in self.play(text: reply.turn.text, final: reply.turn) }
+        switch reply.turn.source {
+        case .tool, .rule:
+            return false
+        case .reader, .grounded, .corrected:
+            // 命盤推算的結果：引擎算的是準的，大腦用白話回答你真正問的
+            if reply.turn.card == nil && reply.turn.text.count < 60 { return false }
+            let reading = reply.turn.text + (reply.augmentFacts.isEmpty ? "" : "\n" + reply.augmentFacts)
+            brainAnswer(text, reading: reading, mode: .reading, lang: L, brain: brain, card: reply.turn.card, onFail: fallback)
+        case .knowledge:
+            brainAnswer(text, facts: reply.turn.text, mode: .grounded, lang: L, brain: brain, card: reply.turn.card, onFail: fallback)
+        case .neural:
+            // 聊天、說心情：說心情時把命盤看到的處境當參考
+            let hint = Solace.isFeeling(text) ? reply.turn.text : ""
+            brainAnswer(text, hint: hint, mode: .chat, lang: L, brain: brain, onFail: fallback)
+        }
+        return true
+    }
+
+    /// 問大腦，一邊寫一邊顯示；寫不出來（模型讀不進來、記憶體不夠）就用 onFail（引擎原本的回答）
+    private func brainAnswer(_ question: String, facts: String = "", evidence: [String] = [], reading: String = "", hint: String = "",
+                             mode: LocalBrain.Mode, lang L: Lang, brain: String, card: FortuneCard? = nil, query: String? = nil,
+                             note: String = "", onFail: @escaping (String) -> Void) {
+        thinking = true
+        streaming = LocalBrain.shared.isLoaded ? "🧠 想一想…" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
+        let past = turns.dropLast().suffix(8).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
+        let persona = AskAIs.persona(type: profile.birthday.map { Destiny($0).type }, lang: L)
+        let system = LocalBrain.system(lang: L.rawValue, persona: persona)
+        let user = LocalBrain.userMessage(question: question, facts: facts, evidence: evidence, reading: reading, hint: hint, lang: L.rawValue)
+        let book = rules
+        LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: user, mode: mode, lang: L.rawValue,
+                              onText: { t in DispatchQueue.main.async { if !t.isEmpty { self.streaming = t } } },
+                              done: { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let r) where !r.text.isEmpty:
+                    var turn = ChatTurn(role: .echo, text: book.enforce(r.text + note), source: .neural, card: card, tokens: query == nil ? nil : [])
+                    turn.query = query
+                    self.finish(turn)
+                case .success:
+                    self.streaming = ""
+                    onFail("沒有寫出東西")
+                case .failure(let e):
+                    self.streaming = ""
+                    onFail("\(e)")
+                }
+            }
+        })
+    }
+
+    /// 設定頁的「測試大腦」：真的問它一句，看速度
+    func testBrain() {
+        guard let m = ModelStore.shared.readyModel else { brainTestResult = "還沒下載大腦。"; return }
+        brainTesting = true
+        brainTestResult = LocalBrain.shared.isLoaded ? "測試中…" : "讀進記憶體中（第一次要幾秒）…"
+        let system = LocalBrain.system(lang: "zh")
+        let user = LocalBrain.userMessage(question: "用兩句話介紹你自己，再說一個你覺得有趣的冷知識。")
+        LocalBrain.shared.ask(modelPath: ModelStore.shared.path(m).path, system: system, history: [], user: user, mode: .chat, lang: "zh",
+                              onText: { t in DispatchQueue.main.async { self.brainTestResult = t } },
+                              done: { result in
+            DispatchQueue.main.async {
+                self.brainTesting = false
+                switch result {
+                case .success(let r):
+                    self.brainTestResult = r.text + String(format: "\n\n✓ %@，每秒 %.1f 個字詞（token）", m.name, r.tokensPerSecond)
+                case .failure(let e):
+                    self.brainTestResult = "✗ 大腦沒有回答：\(e)。可以換「輕量」的模型試試。"
+                }
+            }
+        })
     }
 
     /// 留在 NineSun 自己的系統裡的：命理、心情、規則、叫它上網查、跟它打招呼
@@ -412,7 +529,7 @@ final class ChatViewModel: ObservableObject {
     /// 問題交給 NineSun 自己上網找（理解 → 搜尋 → 讀網頁 → 比對 → 回答），每次都即時查
     /// forceAI：「問AI …」——不管自己有沒有把握，都同時問其他 AI
     private func lookupWeb(_ q: String, _ L: Lang, quietIfNothing: Bool = false, avoid: [String] = [], reflect: Bool = false,
-                           forceAI: Bool = false) {
+                           forceAI: Bool = false, brain: String? = nil, asked: String? = nil) {
         let book = rules
         thinking = true
         lastWebQuestion = q
@@ -423,6 +540,23 @@ final class ChatViewModel: ObservableObject {
         let show: @Sendable (String) -> Void = { [weak self] step in DispatchQueue.main.async { self?.streaming = step } }
         Task { [self] in
             let r = await WebAgent.run(q, facts: nil, lang: L, avoid: avoid, reflect: reflect, asker: asker, progress: quietIfNothing ? nil : show)
+            // 有大腦：網路上查到的交給大腦讀、整理成回答；沒查到（或被擋）就用它自己知道的回答，並老實說
+            if let brain {
+                let got = r.found && !r.text.contains("擋住")
+                var evidence = got ? r.evidence : []
+                if got, r.answered, evidence.isEmpty { evidence = [String(r.text.prefix(800))] }
+                let note = evidence.isEmpty ? "\n\n（這次網路上沒查到資料，上面是我自己知道的，僅供參考。）" : ""
+                await MainActor.run {
+                    self.saveFile(SelfTuning.shared.state, Self.tuningURL)
+                    self.brainAnswer(asked ?? q, evidence: evidence, mode: evidence.isEmpty ? .chat : .grounded, lang: L, brain: brain,
+                                     card: got ? r.card : nil, query: q, note: note) { _ in
+                        var turn = ChatTurn(role: .echo, text: book.enforce(r.text), source: .knowledge, card: r.card, tokens: [])
+                        turn.query = q
+                        self.play(text: turn.text, final: turn)
+                    }
+                }
+                return
+            }
             if quietIfNothing && (!r.found || !r.answered) {
                 await MainActor.run { self.saveFile(SelfTuning.shared.state, Self.tuningURL); self.thinking = false; self.streaming = nil; self.saveHistory() }
                 return

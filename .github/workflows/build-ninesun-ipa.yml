@@ -29,6 +29,16 @@ jobs:
         working-directory: ios/EchoCore
         run: swift test
 
+      # NineSun 的大腦（手機上的語言模型）用 llama.cpp 跑：照 ios/llama-version.txt 的版本編成 iOS 的 framework
+      - name: Build llama.cpp (iOS framework)
+        run: |
+          LLAMA_TAG=$(cat ios/llama-version.txt)
+          git clone --depth 1 --branch "$LLAMA_TAG" https://github.com/ggml-org/llama.cpp "$RUNNER_TEMP/llama.cpp"
+          cd "$RUNNER_TEMP/llama.cpp" && ./build-xcframework.sh ios-device 2>&1 | tail -15
+          mkdir -p "$GITHUB_WORKSPACE/ios/Frameworks"
+          cp -R build-apple/llama.xcframework "$GITHUB_WORKSPACE/ios/Frameworks/"
+          ls "$GITHUB_WORKSPACE/ios/Frameworks/llama.xcframework"
+
       - name: Install XcodeGen
         run: brew install xcodegen
 
@@ -62,6 +72,9 @@ jobs:
           ls -la Payload/NineSun.app | head -30
           test -f Payload/NineSun.app/ninesun.bin
           test -f Payload/NineSun.app/NineSun
+          # 大腦的 llama.cpp 要真的包進去，不然一打開就閃退
+          test -d Payload/NineSun.app/Frameworks/llama.framework
+          otool -L Payload/NineSun.app/NineSun | grep -i llama
           mkdir -p ../dist
           zip -qry ../dist/NineSun.ipa Payload
           ls -la ../dist

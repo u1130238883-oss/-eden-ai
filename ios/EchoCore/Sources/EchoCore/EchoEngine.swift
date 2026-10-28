@@ -681,6 +681,14 @@ public final class EchoEngine {
     /// 明顯是知識、時事類問題（而且不是在問自己的命）
     static let strongMarkers = ["是什麼", "什麼是", "什麼意思", "是誰", "誰是", "新聞", "天氣", "氣溫", "匯率", "股價", "股市", "台股", "美股", "比分", "油價", "颱風", "地震", "怎麼做", "怎麼煮",
                                 "怎麼去", "怎麼用", "教我", "介紹一下", "歷史", "原理", "定義", "公式", "多高", "多遠", "多大", "多久", "多長"]
+    /// 要最新、要查證的資料（新聞、天氣、價格、誰是現任…、健康法律、作品內容、某個人是誰）：有大腦時也先上網查，再交給大腦整理；
+    /// 其他的（解釋、建議、聊天、常識）大腦自己就能回答，不用等網路
+    static let freshMarkers = ["新聞", "天氣", "氣溫", "下雨嗎", "匯率", "股價", "股市", "台股", "美股", "比分", "油價", "最新", "最近", "現在的", "目前的", "今天的",
+                               "價格", "多少錢", "售價", "票價", "營業時間", "幾點開", "幾點關", "地址", "電話號碼", "選舉", "總統", "首相", "總理", "市長", "部長",
+                               "票房", "排行榜", "上映", "發售", "推出", "疫情", "是誰", "誰是", "哪一隊", "冠軍", "2024", "2025", "2026", "2027"]
+    public static func needsFreshInfo(_ raw: String) -> Bool {
+        explicitSearch(raw) != nil || freshMarkers.contains { raw.contains($0) } || healthOrLegal(raw) || asksAboutWork(raw)
+    }
     static let selfMarkers = ["我", "運", "命", "宮", "八字", "紫微", "卦", "大限", "流年", "流月", "流日", "九型", "星盤", "合婚", "桃花", "時辰", "生肖", "你"]
     static func strongInfo(_ raw: String) -> Bool {
         strongMarkers.contains { raw.contains($0) } && !selfMarkers.contains { raw.contains($0) }

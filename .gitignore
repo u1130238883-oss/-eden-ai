@@ -10,3 +10,4 @@ web/NineSunWeb/.build/
 web/site/dist/
 ios/EchoCore/.build/
 .build/
+ios/Frameworks/

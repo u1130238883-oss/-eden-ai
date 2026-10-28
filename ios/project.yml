@@ -2,7 +2,7 @@ name: NineSun
 options:
   bundleIdPrefix: com.ninesun
   deploymentTarget:
-    iOS: "16.0"
+    iOS: "16.4"
   developmentLanguage: zh-Hant
 packages:
   EchoCore:
@@ -19,6 +19,9 @@ targets:
         buildPhase: resources
     dependencies:
       - package: EchoCore
+      # NineSun 的大腦：llama.cpp（CI 照 llama-version.txt 編好放在 Frameworks/）
+      - framework: Frameworks/llama.xcframework
+        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ninesun.app

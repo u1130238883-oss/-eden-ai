@@ -107,9 +107,15 @@ final class LocalBrain {
     }
 
     /// 交給大腦的訊息：問題＋引擎給的東西
-    static func userMessage(question: String, facts: String = "", evidence: [String] = [], reading: String = "", lang: String = "zh") -> String {
+    /// hint：參考用的（NineSun 用命盤看到的心情處境），挑一兩句用，不用照抄
+    static func userMessage(question: String, facts: String = "", evidence: [String] = [], reading: String = "", hint: String = "",
+                            lang: String = "zh") -> String {
         let zh = !["en", "es", "it"].contains(lang)
         var s = ""
+        if !hint.isEmpty {
+            s += (zh ? "【NineSun 從對方的命盤看到的（參考就好，挑一兩句自然地用，不要整段照抄）】\n" : "[What NineSun sees in their chart] (optional; use a sentence or two at most)\n")
+                + String(hint.prefix(700)) + "\n\n"
+        }
         if !reading.isEmpty {
             s += (zh ? "【命盤推算結果】（NineSun 的九型十二宮引擎精確算出來的，不能改）\n" : "[chart results] (computed exactly by NineSun's engine; do not change)\n")
             s += String(reading.prefix(1400)) + "\n\n"

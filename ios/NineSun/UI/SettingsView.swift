@@ -12,6 +12,7 @@ struct SettingsView: View {
     @State private var dateTouched = false
     @State private var isLoading = true
     @State private var confirmClear = false
+    @ObservedObject private var store = ModelStore.shared
 
     var body: some View {
         ZStack {
@@ -31,6 +32,7 @@ struct SettingsView: View {
 
                     languageSection
                     profileSection
+                    brainSection
                     aiSection
                     section(T("記憶", "Memory", "Memoria", "Memoria") + " · MEMORY") {
                         button(T("清空對話", "Clear chat", "Borrar chat", "Cancella chat"), color: Theme.neonPink) { confirmClear = true }
@@ -208,6 +210,68 @@ struct SettingsView: View {
     private var range: ClosedRange<Date> {
         let cal = Calendar(identifier: .gregorian)
         return (cal.date(from: DateComponents(year: 1900, month: 1, day: 1)) ?? .distantPast)...Date()
+    }
+
+    // MARK: - 大腦
+
+    private var brainSection: some View {
+        section(T("NineSun 的大腦", "NineSun's brain", "Cerebro de NineSun", "Cervello di NineSun") + " · BRAIN") {
+            Toggle(isOn: $vm.useBrain) {
+                label(T("用大腦思考（手機上的 AI）", "Think with the on-phone brain", "Pensar con el cerebro local", "Pensa con il cervello locale"), "")
+            }
+            .tint(Theme.hazard)
+            Text(T("大腦是在手機裡跑的語言模型，下載一次之後完全離線、不用 API。NineSun 先算命盤、查常識、上網找資料，再由大腦讀懂你的問題、想好怎麼回答。建議接 Wi-Fi 下載，下載時可以切到別的 App。",
+                   "The brain is a language model running on your phone: download once, then fully offline, no API. NineSun computes charts and looks things up, then the brain works out the answer. Use Wi-Fi to download.",
+                   "El cerebro es un modelo de lenguaje en tu teléfono: se descarga una vez y funciona sin conexión. Usa Wi-Fi para descargarlo.",
+                   "Il cervello è un modello linguistico sul telefono: si scarica una volta e poi funziona offline. Usa il Wi-Fi per scaricarlo."))
+                .font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
+            ForEach(ModelStore.models) { m in modelRow(m) }
+            if store.readyModel != nil {
+                button(vm.brainTesting ? T("測試中…", "Testing…", "Probando…", "Test in corso…") : T("測試大腦", "Test the brain", "Probar el cerebro", "Prova il cervello"),
+                       color: Theme.hazard) { if !vm.brainTesting { vm.testBrain() } }
+                if !vm.brainTestResult.isEmpty {
+                    Text(vm.brainTestResult).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.paper).textSelection(.enabled)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func modelRow(_ m: ModelStore.Model) -> some View {
+        let st = store.states[m.id] ?? .absent
+        let chosen = store.selectedID == m.id
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text((chosen ? "● " : "○ ") + m.name).font(.system(size: 14, weight: .bold)).foregroundColor(Theme.paper)
+                Spacer()
+                Text(ModelStore.gb(m.bytes)).font(Theme.hud(12)).foregroundColor(Theme.dim)
+            }
+            Text(m.detail).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
+            switch st {
+            case .absent:
+                button(T("下載", "Download", "Descargar", "Scarica")) { store.selectedID = m.id; store.download(m) }
+            case .downloading(let done, let total):
+                ProgressView(value: total > 0 ? Double(done) / Double(total) : 0).tint(Theme.hazard)
+                HStack {
+                    Text("\(ModelStore.gb(done)) / \(ModelStore.gb(total))").font(Theme.hud(11)).foregroundColor(Theme.paper)
+                    Spacer()
+                    button(T("取消", "Cancel", "Cancelar", "Annulla"), color: Theme.panelHi) { store.cancel(m) }
+                }
+            case .ready:
+                HStack {
+                    if chosen {
+                        Text(T("✓ 使用中", "✓ In use", "✓ En uso", "✓ In uso")).font(.system(size: 13, weight: .black)).foregroundColor(Theme.hazard)
+                    } else {
+                        button(T("用這個", "Use this", "Usar este", "Usa questo")) { store.selectedID = m.id }
+                    }
+                    Spacer()
+                    button(T("刪除", "Delete", "Borrar", "Elimina"), color: Theme.neonPink) { store.delete(m) }
+                }
+            case .failed(let why):
+                Text(why).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.neonPink)
+                button(T("再下載一次", "Try again", "Reintentar", "Riprova")) { store.selectedID = m.id; store.download(m) }
+            }
+        }
+        .padding(.vertical, 4)
     }
 
     // MARK: - 元件
