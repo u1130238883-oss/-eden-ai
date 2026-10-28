@@ -19,7 +19,7 @@ print("繁體轉換測試：", LocalBrain.tidy("我觉得这个软件的视频�
 
 let loadStart = Date()
 let runner: LlamaRunner
-do { runner = try LlamaRunner(path: args[1], contextSize: 4096, gpu: gpu) } catch { print("讀不進模型：\(error)"); exit(1) }
+do { runner = try LlamaRunner(path: args[1], contextSize: 4096, gpu: gpu, threads: ProcessInfo.processInfo.activeProcessorCount) } catch { print("讀不進模型：\(error)"); exit(1) }
 print(String(format: "模型：%@ 讀取 %.1f 秒（gpu=%@）", (args[1] as NSString).lastPathComponent, Date().timeIntervalSince(loadStart), gpu ? "on" : "off"))
 
 let raw = try String(contentsOfFile: args[2], encoding: .utf8)
