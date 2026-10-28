@@ -451,7 +451,7 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
 - **理解問題的模型**（`ai/intent/`、`EchoCore/Intent.swift`、`Brain.meaning`）：NineSun 自己從零訓練（NumPy），字的片段＋自己的閱讀模型讀出來的意思；
   第三組沒看過的說法 89.1%（只背模板 65.7%）。規則認不出、模型有把握時決定用清單或作品的回答方式。見 `ai/intent/README.md`。
 - **為什麼題**（`Synthesize.score` 的 `.reason`）：原因句要講到問的那一點（「藍」）、真的說因果；歷史、「並無法解釋」、「依然…」（補充）不當主要原因。
-- **Apple 智慧**（`NineSun/App/OnDeviceAI.swift`）：設定裡的開關，預設關閉——使用者要 NineSun 用自己訓練的大腦。CI 用 Xcode 26、FoundationModels 弱連結。
+- **Apple 智慧已拿掉**（2026-10-28）：手機語言是義大利語時 Apple 智慧要求 Siri 同語言才能開，使用者決定不用，要 NineSun 只用自己訓練的大腦。設定恢復成「用 AI API 回答」開關。
 - **Release 被擋（403）**：大約 16:30 之後 Actions 建立 release 一直 403（token 有 contents: write）。錄音帶另外推到分支 `tapes/web-tape-N`、IPA 推到 `builds/ninesun-build-N`
   （下載：`https://github.com/u1130238883-oss/-eden-ai/raw/builds/ninesun-build-N/NineSun.ipa`）。
 - 每次 push 都會跑一次 50 分鐘的建置，macOS 機器有限：一次推好幾個 commit 時，舊的建置可以取消，免得錄音帶排不到機器。

@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 手機內建的 Apple 智慧（Foundation Models）要用 Xcode 26 的 iOS 26 SDK 才編得進去
+      # 用最新的 Xcode 26 編譯
       - name: Use Xcode 26
         run: |
           X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
@@ -62,8 +62,6 @@ jobs:
           ls -la Payload/NineSun.app | head -30
           test -f Payload/NineSun.app/ninesun.bin
           test -f Payload/NineSun.app/NineSun
-          # Apple 智慧要真的編進去了（不是被 canImport 略過）
-          otool -L Payload/NineSun.app/NineSun | grep -i FoundationModels
           mkdir -p ../dist
           zip -qry ../dist/NineSun.ipa Payload
           ls -la ../dist

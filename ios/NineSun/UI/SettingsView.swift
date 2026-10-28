@@ -73,23 +73,6 @@ struct SettingsView: View {
 
     private var aiSection: some View {
         section(T("請其他 AI 幫忙", "Ask other AIs", "Preguntar a otras IA", "Chiedi ad altre IA") + " · OTHER AIs") {
-            // 手機內建的 Apple 智慧：沒有金鑰時用它思考（讀懂問題、整理查到的資料、說出自己的看法）
-            Toggle(isOn: $vm.useApple) {
-                label(T("用手機內建的 Apple 智慧思考", "Think with on-device Apple Intelligence", "Pensar con Apple Intelligence", "Pensa con Apple Intelligence"), "")
-            }
-            .tint(Theme.hazard)
-            Text(OnDeviceAI.status + T(" 打開後優先用它（比雲端的金鑰優先）；用它回答的訊息前面有 🍎。",
-                                       " When on, it is used first (before cloud keys); its replies start with 🍎.",
-                                       " Activado, se usa primero; sus respuestas empiezan con 🍎.",
-                                       " Se attivo, viene usato per primo; le sue risposte iniziano con 🍎."))
-                .font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
-            button(vm.appleTesting ? T("測試中…", "Testing…", "Probando…", "Test in corso…")
-                                   : T("測試 Apple 智慧", "Test Apple Intelligence", "Probar Apple Intelligence", "Prova Apple Intelligence"),
-                   color: Theme.hazard) { if !vm.appleTesting { vm.testApple() } }
-            if !vm.appleTestResult.isEmpty {
-                Text(vm.appleTestResult).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.paper)
-                    .textSelection(.enabled)
-            }
             Toggle(isOn: $vm.useAPI) {
                 label(T("用 AI API 回答", "Answer with AI APIs", "Responder con API de IA", "Rispondi con API IA"), "")
             }
