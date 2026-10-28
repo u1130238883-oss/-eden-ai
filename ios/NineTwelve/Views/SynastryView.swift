@@ -21,27 +21,38 @@ struct SynastryView: View {
                 VStack(spacing: 16) {
                     if let mine = state.destiny {
 
-                        Card(title: t("對方的名字", "The other person's name",
+                        // 還沒合盤時：名字、生日分成兩張卡；合出來之後只顯示結果
+                        if result == nil && nameResult == nil {
+                            Card(title: t("對方的名字", "The other person's name",
     "El nombre de la otra persona",
     "Il nome dell'altra persona")) {
-                            VStack(spacing: 14) {
                                 BirthInputView(name: $name, year: $year, month: $month,
-                                               day: $day, lang: state.lang, forOther: true,
+                                               day: $day, lang: state.lang, showsDate: false,
+                                               forOther: true,
                                                onNameSynastry: {
                                                    result = nil
                                                    nameResult = (name: name, rows: mine.nameRows(name))
                                                })
-                                Button {
-                                    nameResult = nil
-                                    let other = Profile(name: name,
-                                                        birth: BirthDate(year: year, month: month, day: day))
-                                    state.addOther(other)
-                                    result = Synastry(a: mine,
-                                                      b: other.destiny(anchor: state.yearAnchor))
-                                } label: {
-                                    PrimaryButtonLabel(text: t("合盤", "Combine charts",
+                            }
+
+                            Card(title: t("對方的生日", "The other person's date of birth",
+    "La fecha de nacimiento de la otra persona",
+    "La data di nascita dell'altra persona")) {
+                                VStack(spacing: 14) {
+                                    BirthInputView(name: $name, year: $year, month: $month,
+                                                   day: $day, lang: state.lang, showsName: false)
+                                    Button {
+                                        nameResult = nil
+                                        let other = Profile(name: name,
+                                                            birth: BirthDate(year: year, month: month, day: day))
+                                        state.addOther(other)
+                                        result = Synastry(a: mine,
+                                                          b: other.destiny(anchor: state.yearAnchor))
+                                    } label: {
+                                        PrimaryButtonLabel(text: t("合盤", "Combine charts",
     "Combinar cartas",
     "Combina le carte"))
+                                    }
                                 }
                             }
                         }
@@ -69,6 +80,22 @@ struct SynastryView: View {
             .navigationTitle(t("合盤", "Synastry",
     "Sinastría",
     "Sinastria"))
+            .toolbar {
+                // 合出來之後，左上角「返回」回到輸入的畫面
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if result != nil || nameResult != nil {
+                        Button {
+                            result = nil
+                            nameResult = nil
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.left")
+                                Text(t("返回", "Back", "Atrás", "Indietro"))
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

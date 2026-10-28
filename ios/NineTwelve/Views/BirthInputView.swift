@@ -9,6 +9,8 @@ struct BirthInputView: View {
     @Binding var day: Int
     var lang: Lang = .zh
     var showsName: Bool = true
+    /// 合盤用：名字和生日分成兩張卡，名字那張不顯示生日。
+    var showsDate: Bool = true
     /// 合盤用：稱呼後面加冒號，不顯示「例如：自己」
     var forOther: Bool = false
     /// 合盤用：稱呼底下的「開始合盤」（名字合盤）。
@@ -70,43 +72,45 @@ struct BirthInputView: View {
                 }
             }
 
-            HStack(spacing: 0) {
-                NumberWheel(title: t("年", "Year",
-    "Año",
-    "Anno"), value: $year, range: 1900...2100, width: 96)
-                NumberWheel(title: t("月", "Month",
-    "Mes",
-    "Mese"), value: $month, range: 1...12, width: 68)
-                NumberWheel(title: t("日", "Day",
-    "Día",
-    "Giorno"), value: $day, range: 1...maxDay, width: 68)
-            }
-            .frame(height: 132)
-            .onChange(of: month) { _ in clampDay() }
-            .onChange(of: year) { _ in clampDay() }
-
-            HStack(spacing: 10) {
-                PillarSummary(label: t.yearPillar, value: triple.year)
-                PillarSummary(label: t.monthPillar, value: triple.month)
-                PillarSummary(label: t.dayPillar, value: triple.day)
-
-                VStack(spacing: 4) {
-                    Text(t.lifeNumber)
-                        .font(.caption2)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                        .foregroundStyle(Theme.onAccent.opacity(0.8))
-                    Text("\(triple.lifeNumber)")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(Theme.onAccent)
+            if showsDate {
+                HStack(spacing: 0) {
+                    NumberWheel(title: t("年", "Year",
+        "Año",
+        "Anno"), value: $year, range: 1900...2100, width: 96)
+                    NumberWheel(title: t("月", "Month",
+        "Mes",
+        "Mese"), value: $month, range: 1...12, width: 68)
+                    NumberWheel(title: t("日", "Day",
+        "Día",
+        "Giorno"), value: $day, range: 1...maxDay, width: 68)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Theme.accent)
-                )
+                .frame(height: 132)
+                .onChange(of: month) { _ in clampDay() }
+                .onChange(of: year) { _ in clampDay() }
+
+                HStack(spacing: 10) {
+                    PillarSummary(label: t.yearPillar, value: triple.year)
+                    PillarSummary(label: t.monthPillar, value: triple.month)
+                    PillarSummary(label: t.dayPillar, value: triple.day)
+
+                    VStack(spacing: 4) {
+                        Text(t.lifeNumber)
+                            .font(.caption2)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .foregroundStyle(Theme.onAccent.opacity(0.8))
+                        Text("\(triple.lifeNumber)")
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(Theme.onAccent)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Theme.accent)
+                    )
+                }
             }
         }
     }
