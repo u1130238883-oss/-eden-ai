@@ -429,6 +429,11 @@ iOS 已照這個對應改好。**以後要改 iOS 畫面，先看 Android 同一
 ⚠️ 這一輪起，把 IPA 放到公開 Release 會被權限檢查擋下來（倉庫是公開的），要使用者同意才行；
 這個環境也連不到 artifact 的下載主機，只能給使用者 artifact 的連結（要登入、下載下來是 zip）。
 
+第二十一輪（2026-10-28）：
+1. 設定頁拿掉「清除全部資料」按鈕和它的確認視窗（底下那行「所有資料只存在本機……」還在）。
+2. 合盤結果（生日合盤、名字合盤）最下面加「重新合盤」按鈕（Combine again / Combinar de nuevo / Combina di nuovo），
+   按下去收起結果，可以重新合。只改了 `Views/SettingsView.swift`、`Views/SynastryView.swift`。
+
 ## 十一、開著沒決定的
 
 1. （已由 2026-09-28 的新規則涵蓋：2029 年引動 1、5、7 三個方面。）

@@ -5,7 +5,6 @@ struct SettingsView: View {
     @EnvironmentObject private var state: AppState
     @EnvironmentObject private var sub: Subscription
     @State private var editing = false
-    @State private var confirmReset = false
 
     private var t: T { state.t }
 
@@ -120,11 +119,6 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Button(t("清除全部資料", "Erase all data",
-    "Borrar todos los datos",
-    "Cancella tutti i dati"), role: .destructive) {
-                        confirmReset = true
-                    }
                 } footer: {
                     Text(t("所有資料只存在本機，不會上傳任何伺服器。", "Everything is stored on this device only and is never sent to a server.",
     "Todo se guarda solo en este dispositivo y nunca se envía a ningún servidor.",
@@ -137,20 +131,6 @@ struct SettingsView: View {
     "Ajustes",
     "Impostazioni"))
             .sheet(isPresented: $editing) { EditProfileSheet() }
-            .alert(t("清除全部資料？", "Erase all data?",
-    "¿Borrar todos los datos?",
-    "Cancellare tutti i dati?"), isPresented: $confirmReset) {
-                Button(t("清除", "Erase",
-    "Borrar",
-    "Cancella"), role: .destructive) { state.reset() }
-                Button(t("取消", "Cancel",
-    "Cancelar",
-    "Annulla"), role: .cancel) {}
-            } message: {
-                Text(t("本命資料與合盤紀錄都會被刪除，無法復原。", "Your birth details and synastry history will be deleted. This cannot be undone.",
-    "Se borrarán tus datos de nacimiento y el historial de sinastría. No se puede deshacer.",
-    "I tuoi dati di nascita e la cronologia della sinastria verranno eliminati. L'operazione non è reversibile."))
-            }
         }
     }
 }

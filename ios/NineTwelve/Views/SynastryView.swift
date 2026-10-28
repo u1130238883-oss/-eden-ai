@@ -98,6 +98,7 @@ struct SynastryView: View {
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 4)
             }
+            restartButton
         }
     }
 
@@ -116,6 +117,20 @@ struct SynastryView: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
+            restartButton
         }
+    }
+
+    /// 合盤結果最下面的「重新合盤」：收起結果，重新合盤。
+    private var restartButton: some View {
+        Button {
+            result = nil
+            nameResult = nil
+        } label: {
+            PrimaryButtonLabel(text: t("重新合盤", "Combine again",
+    "Combinar de nuevo",
+    "Combina di nuovo"))
+        }
+        .padding(.top, 8)
     }
 }
