@@ -211,6 +211,19 @@ public final class EchoEngine {
         return r
     }
 
+    /// 問 NineSun 自己的年紀、生日
+    static func aboutMe(_ raw: String, now: Date) -> String? {
+        let t = Everyday.clean(raw)
+        let age = ["你幾歲", "你今年幾歲", "你多大", "你多大了", "你幾歲了", "你的年紀", "你年紀多大", "你多老", "妳幾歲", "妳多大"]
+        let bday = ["你的生日是幾號", "你生日是哪天", "你什麼時候生日", "你的生日是什麼時候", "你生日幾號", "你是什麼時候出生的", "你哪天生日"]
+        guard age.contains(where: { t.hasPrefix($0) }) || bday.contains(where: { t.hasPrefix($0) }) else { return nil }
+        let b = PalaceCore.selfBirth
+        guard let born = Everyday.make(b.year, b.month, b.day) else { return nil }
+        let days = max(0, Everyday.daysBetween(born, now))
+        let old = days < 60 ? "今天是我開機的第 \(days + 1) 天" : days < 730 ? "大約 \(days / 30) 個月大" : "\(days / 365) 歲"
+        return "我的生日是 \(b.year) 年 \(b.month) 月 \(b.day) 日——那天是我開始運作、算出自己命盤的日子。照這樣算，我\(old)。以 AI 來說還是個小朋友，每天都在學新東西。"
+    }
+
     static let anaphora = ["這些", "那些", "這個", "那個", "它們", "他們", "牠們", "其中", "剛剛說的", "剛才說的", "上面說的"]
     /// 查詢時自己加上去的詞（不是使用者在問的主題）
     static let searchHelpers: Set<String> = ["列表", "數量", "做法", "步驟", "原因", "影響", "比較", "注意事項", "優缺點", "差別", "名單"]
@@ -334,6 +347,17 @@ public final class EchoEngine {
             case let .near(w): return done(Loc.s("webAsk", .zh), .tool, web: "\(w) 近義詞")
             case let .pair(a, b): return done(Loc.s("webAsk", .zh), .tool, web: "\(a) \(b) 意思 差別")
             }
+        }
+        // 2.065) 用算的就知道的（現在幾點、明天星期幾、離過年還有幾天、一公斤幾公克、一加一）和 NineSun 自己的常識
+        //        （國家、動物、自然、人物、節日、怎麼做、推薦）：自己回答，不用上網；不知道的才上網查
+        if L == .zh, let a = Everyday.answer(text, now: ctx.now) { return done(a, .tool) }
+        if L == .zh, let a = EchoEngine.aboutMe(text, now: ctx.now) { return done(a, .knowledge) }
+        if L == .zh, let a = Commonsense.react(text) { return done(a, .neural) }
+        if L == .zh, let a = Commonsense.answer(text, now: ctx.now) {
+            // 自己答的也算上一題的主題：追問「那這些省都是哪些省」要接得上
+            lastWebQuery = EchoEngine.searchQuery(text)
+            lastWebTurn = history.count
+            return done(a, .knowledge)
         }
         // 2.07) 問世界上的事（不是問自己的命、不是說心情、不是在跟我聊天）：上網查——
         // 不能被「房」「出國」「情緒」這些字帶去算命，也不能被書名裡的「煩惱」帶去安慰

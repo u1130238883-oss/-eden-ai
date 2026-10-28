@@ -59,7 +59,17 @@ final class UnderstandingCorpusTests: XCTestCase {
             let web = r.webQuery != nil
             switch x.route {
             case "web":
-                if !web { why = "route 應該上網，卻在本地回答（\(r.turn.source.rawValue)）：\(r.turn.text.prefix(30))" }
+                // NineSun 自己的常識答得出來就不用上網（Commonsense／Everyday）——但答的要是問題問的那個東西，
+                // 不能把「挪威的森林」當成挪威、「老人與海」當成人
+                if !web {
+                    let sub = Self.norm(x.subject)
+                    let names = Commonsense.subjects(x.q)
+                    let local = r.turn.source == .knowledge || r.turn.source == .tool
+                    // 為什麼題的 subject 是「藍色的」「閃爍」這種說法：認得出問題裡的主角（天空、星星）就算懂
+                    let same = (!sub.isEmpty && (Self.norm(r.turn.text).contains(sub) || names.contains { sub.contains($0) || $0.contains(sub) }))
+                        || (x.want == "reason" && !names.isEmpty)
+                    if !(local && same) { why = "route 應該上網，卻在本地回答（\(r.turn.source.rawValue)）：\(r.turn.text.prefix(30))" }
+                }
             case "fortune":
                 if web { why = "route 應該用命盤算，卻上網查「\(r.webQuery!)」" }
                 else if r.turn.source != .reader && r.turn.source != .tool { why = "route 應該用命盤算，卻是 \(r.turn.source.rawValue)：\(r.turn.text.prefix(30))" }

@@ -14,8 +14,8 @@ final class WebRoutingTests: XCTestCase {
         ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 8, minute: 0, male: true)
 
         let web: [String] = [
-            "台北101有多高？", "上網查 iPhone 17 價格", "幫我查一下今天的新聞", "明天台北天氣如何", "美元對台幣匯率多少",
-            "量子電腦是什麼", "日本首相是誰", "搜尋 珍珠奶茶的由來", "紅燒肉怎麼煮", "世界上最高的山是哪一座",
+            "東京晴空塔有多高？", "上網查 iPhone 17 價格", "幫我查一下今天的新聞", "明天台北天氣如何", "美元對台幣匯率多少",
+            "量子電腦是什麼", "日本首相是誰", "搜尋 珍珠奶茶的由來", "紅燒肉怎麼煮", "世界上第二高的山是哪一座",
             "上網查偏財格", "who won the last world cup", "what is the capital of Peru", "search quantum physics",
             "高雄到台南要多久", "今天股市怎麼樣？", "甲減是什麼", "甲狀腺疾病有哪些", "我有甲減要注意什麼", "甲亢的症狀",
             "橋本氏甲狀腺炎怎麼治療", "糖尿病可以吃什麼", "房東不還押金怎麼辦", "車禍對方不賠償怎麼辦", "老闆不給加班費違法嗎",
@@ -161,9 +161,9 @@ final class WebThinkingTests: XCTestCase {
         for q in ["把冰箱放進大象裡需要多少步", "一公斤的鐵和一公斤的棉花哪個重"] {
             XCTAssertNotNil(engine.reply(to: q, context: ctx).webQuery, q)
         }
-        // 上網的回覆不帶宮位標籤；追問要補主題
+        // 自己的常識答得出來就先答（不帶宮位標籤）；追問要補主題
         let a = engine.reply(to: "加拿大有多少個省？", context: ctx)
-        XCTAssertNotNil(a.webQuery)
+        XCTAssertTrue(a.turn.text.contains("10 個省"), a.turn.text)
         XCTAssertNil(a.turn.palace)
         let b = engine.reply(to: "那這些省都是哪些省", history: [ChatTurn(role: .user, text: "加拿大有多少個省？"), a.turn], context: ctx)
         XCTAssertTrue(b.webQuery?.contains("加拿大") == true, b.webQuery ?? "nil")
