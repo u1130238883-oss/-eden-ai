@@ -10,6 +10,8 @@ struct SynastryView: View {
     @State private var month = 1
     @State private var day = 1
     @State private var result: Synastry?
+    /// 名字合盤的結果：輸入的名字，以及對應到的本命宮位。
+    @State private var nameResult: (name: String, rows: [PalaceRow])?
 
     private var t: T { state.t }
 
@@ -24,8 +26,13 @@ struct SynastryView: View {
     "Dati di nascita dell'altra persona")) {
                             VStack(spacing: 14) {
                                 BirthInputView(name: $name, year: $year, month: $month,
-                                               day: $day, lang: state.lang, forOther: true)
+                                               day: $day, lang: state.lang, forOther: true,
+                                               onNameSynastry: {
+                                                   result = nil
+                                                   nameResult = (name: name, rows: mine.nameRows(name))
+                                               })
                                 Button {
+                                    nameResult = nil
                                     let other = Profile(name: name,
                                                         birth: BirthDate(year: year, month: month, day: day))
                                     state.addOther(other)
@@ -50,6 +57,7 @@ struct SynastryView: View {
                                             year = p.birth.year
                                             month = p.birth.month
                                             day = p.birth.day
+                                            nameResult = nil
                                             result = Synastry(a: mine,
                                                               b: p.destiny(anchor: state.yearAnchor))
                                         } label: {
@@ -77,6 +85,10 @@ struct SynastryView: View {
                         if let s = result {
                             resultSection(s: s)
                         }
+
+                        if let n = nameResult {
+                            nameSection(name: n.name, rows: n.rows, mine: mine)
+                        }
                     }
                 }
                 .padding(16)
@@ -93,6 +105,35 @@ struct SynastryView: View {
             .navigationTitle(t("合盤", "Synastry",
     "Sinastría",
     "Sinastria"))
+        }
+    }
+
+    /// 名字合盤：名字對應到的本命宮位，點開可看引動。
+    @ViewBuilder
+    private func nameSection(name: String, rows: [PalaceRow], mine: Destiny) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionLabel(text: t("名字合盤", "Name synastry",
+    "Sinastría del nombre",
+    "Sinastria del nome") + " — " + name.trimmingCharacters(in: .whitespaces))
+            if rows.isEmpty {
+                Text(t("請輸入英文字母。", "Please enter English letters.",
+    "Introduce letras del alfabeto inglés.",
+    "Inserisci lettere dell'alfabeto inglese."))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 4)
+            } else {
+                ChartTable(rows: rows,
+                           lang: state.lang,
+                           triggersFor: { .natalPalace(rows[$0].palace, in: mine) },
+                           chipTap: .triggers)
+                Text(t("點任一列可看詳細。", "Tap any row for detail.",
+    "Toca cualquier fila para ver el detalle.",
+    "Tocca una riga per il dettaglio."))
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 4)
+            }
         }
     }
 

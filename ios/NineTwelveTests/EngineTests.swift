@@ -218,6 +218,15 @@ final class EngineTests: XCTestCase {
         XCTAssertEqual(affected(11), ["1 壞4因11", "7 壞11因4", "8 正11因7"])
     }
 
+    /// 名字合盤：作者的例子，2006-01-14（靈數5）輸入 china。
+    func testNameRows() {
+        let d = Destiny(birth: BirthDate(year: 2006, month: 1, day: 14))
+        func rows(_ s: String) -> [String] { d.nameRows(s).map { "\($0.palace) \($0.reading.display)" } }
+        XCTAssertEqual(rows("china"), ["8 壞9因2", "1 壞11因4", "2 好2因9", "7 壞4因11", "6 正5因7"])
+        XCTAssertEqual(rows("Chi na"), rows("china"))
+        XCTAssertEqual(rows(""), [])
+    }
+
     /// 摘要接在宮位簡稱底下顯示，不可以重複簡稱本身。
     func testBriefNeverRepeatsShortName() {
         for lang in Lang.allCases {

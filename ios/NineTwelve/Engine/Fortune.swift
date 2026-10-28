@@ -243,6 +243,17 @@ public struct Destiny: Equatable, Sendable {
         }
     }
 
+    // MARK: - 名字合盤
+
+    /// 名字合盤：名字裡的每一個英文字母，依序對應到本命盤的一宮（不是英文字母的略過）。
+    public func nameRows(_ name: String) -> [PalaceRow] {
+        name.lowercased().unicodeScalars.compactMap { u in
+            guard u.value >= 97, u.value <= 122 else { return nil }
+            let palace = Num.r12(lifeNumber + Int(u.value) - 96)
+            return natalChart.first { $0.palace == palace }
+        }
+    }
+
     // MARK: - 月運
 
     /// 某年的月運盤。

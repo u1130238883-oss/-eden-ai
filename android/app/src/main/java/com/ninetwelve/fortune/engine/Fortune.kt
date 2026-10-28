@@ -222,6 +222,17 @@ class Destiny(
         }
     }
 
+    /** 名字合盤：名字裡的每一個英文字母，依序對應到本命盤的一宮（不是英文字母的略過）。 */
+    fun nameRows(name: String): List<PalaceRow> =
+        name.lowercase().mapNotNull { c ->
+            if (c !in 'a'..'z') {
+                null
+            } else {
+                val palace = Num.r12(lifeNumber + (c - 'a' + 1))
+                natalChart.first { it.palace == palace }
+            }
+        }
+
     fun monthChart(y: Int): List<MonthRow> {
         val luck = luckPeriod(y).row
         val flow = year(y)

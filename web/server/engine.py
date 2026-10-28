@@ -210,6 +210,16 @@ class Destiny:
         return [r for r in self.luck_aspects(period["start"])["aspects"]
                 if palace in (r["reading"][1], r["reading"][2])]
 
+    # 名字合盤
+    def name_rows(self, name):
+        """名字合盤：名字裡的每一個英文字母，依序對應到本命盤的一宮（不是英文字母的略過）。"""
+        rows = []
+        for c in name.lower():
+            if "a" <= c <= "z":
+                palace = r12(self.life_number + ord(c) - 96)
+                rows.append(next(r for r in self.natal_chart if r["palace"] == palace))
+        return rows
+
     # 月運
     def month_chart(self, year):
         luck = self.luck_period_containing(year)["row"]

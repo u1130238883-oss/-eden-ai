@@ -59,7 +59,7 @@ struct ChartTable: View {
 
     private var listBody: some View {
         VStack(spacing: 0) {
-            ForEach(Array(rows.enumerated()), id: \.element.id) { idx, row in
+            ForEach(Array(rows.enumerated()), id: \.offset) { idx, row in
                 Button {
                     open(idx, row)
                 } label: {
@@ -417,7 +417,7 @@ private struct TriggerCard: View {
                                 itemLink(sub)
                             }
                         }
-                        .padding(.leading, 50)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     if idx < triggers.items.count - 1 {

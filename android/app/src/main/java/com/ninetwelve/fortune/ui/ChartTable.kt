@@ -323,7 +323,7 @@ private fun TriggerCard(
             val affected = triggers.affected.getOrNull(idx).orEmpty()
             if (affected.isNotEmpty()) {
                 Column(
-                    modifier = Modifier.padding(start = 50.dp, top = 10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Text(

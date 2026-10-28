@@ -107,6 +107,12 @@ aff = {r["palace"]: trig(d.affected_aspects(r, p2019)) for r in d.triggered_nata
 check("大運 2019–2027 本命 5宮 被影響", aff[5], ["2 正5因7", "4 壞10因5", "10 好10因5"])
 check("大運 2019–2027 本命 11宮 被影響", aff[11], ["1 壞4因11", "7 壞11因4", "8 正11因7"])
 
+print("\n=== 7c. 名字合盤 ===")
+# 作者的例子（2026-10-28）：靈數5，china → c 8宮、h 1宮、i 2宮、n 7宮、a 6宮
+check("名字合盤 china", trig(d.name_rows("china")),
+      ["8 壞9因2", "1 壞11因4", "2 好2因9", "7 壞4因11", "6 正5因7"])
+check("名字合盤 大小寫、空白", trig(d.name_rows("Chi na")), trig(d.name_rows("china")))
+
 print("\n=== 8. 合盤 ===")
 b = E.Destiny(2007, 1, 23)
 syn = d.synastry(b)

@@ -11,6 +11,8 @@ struct BirthInputView: View {
     var showsName: Bool = true
     /// 合盤用：稱呼後面加冒號，不顯示「例如：自己」
     var forOther: Bool = false
+    /// 合盤用：稱呼底下的「開始合盤」（名字合盤）。
+    var onNameSynastry: (() -> Void)? = nil
 
     private var t: T { T(lang) }
 
@@ -57,6 +59,15 @@ struct BirthInputView: View {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(Theme.inset)
                 )
+
+                if let onNameSynastry {
+                    Button(action: onNameSynastry) {
+                        PrimaryButtonLabel(text: t("開始合盤", "Start synastry",
+    "Iniciar sinastría",
+    "Avvia sinastria"))
+                    }
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
             }
 
             HStack(spacing: 0) {

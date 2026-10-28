@@ -250,6 +250,16 @@ class EngineTest {
         assertEquals(listOf("1 壞4因11", "7 壞11因4", "8 正11因7"), affected(11))
     }
 
+    /** 名字合盤：作者的例子，2006-01-14（靈數5）輸入 china。 */
+    @Test
+    fun nameRows() {
+        val d = Destiny(BirthDate(2006, 1, 14))
+        fun rows(s: String) = d.nameRows(s).map { "${it.palace} ${it.reading.display}" }
+        assertEquals(listOf("8 壞9因2", "1 壞11因4", "2 好2因9", "7 壞4因11", "6 正5因7"), rows("china"))
+        assertEquals(rows("china"), rows("Chi na"))
+        assertEquals(emptyList<String>(), rows(""))
+    }
+
     /** 摘要接在宮位簡稱底下顯示，不可以重複簡稱本身。 */
     @Test
     fun briefNeverRepeatsShortName() {
