@@ -6,6 +6,8 @@ on:
   push:
     paths:
       - ".github/workflows/brain-eval.yml"
+      - "ios/BrainEval/**"
+      - "ios/NineSun/Brain/**"
   workflow_dispatch:
 
 jobs:
