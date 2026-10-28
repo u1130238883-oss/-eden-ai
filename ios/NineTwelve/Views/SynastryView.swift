@@ -80,22 +80,6 @@ struct SynastryView: View {
             .navigationTitle(t("合盤", "Synastry",
     "Sinastría",
     "Sinastria"))
-            .toolbar {
-                // 合出來之後，左上角「返回」回到輸入的畫面
-                ToolbarItem(placement: .navigationBarLeading) {
-                    if result != nil || nameResult != nil {
-                        Button {
-                            result = nil
-                            nameResult = nil
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "chevron.left")
-                                Text(t("返回", "Back", "Atrás", "Indietro"))
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 
