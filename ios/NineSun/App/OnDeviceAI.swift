@@ -76,8 +76,11 @@ enum OnDeviceAI {
                 let r = try await session.respond(to: p, options: GenerationOptions(temperature: 0.6, maximumResponseTokens: maxTokens))
                 return r.content.replacingOccurrences(of: "**", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
             }
+            // 手機和 Siri 是別的語言（例如義大利語）時，模型偶爾會混進簡體字：中文的回答一律再轉成繁體
+            let zh = instructions.contains("繁體中文")
             do {
-                let t = try await ask(instructions, prompt)
+                var t = try await ask(instructions, prompt)
+                if zh { t = toTraditional(t) }
                 lastError = t.isEmpty ? "Apple 智慧回了空白的答案。" : ""
                 return t.isEmpty ? nil : t
             } catch {
