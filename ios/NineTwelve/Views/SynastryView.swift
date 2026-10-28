@@ -21,9 +21,9 @@ struct SynastryView: View {
                 VStack(spacing: 16) {
                     if let mine = state.destiny {
 
-                        Card(title: t("對方的出生資料", "The other person's birth details",
-    "Datos de nacimiento de la otra persona",
-    "Dati di nascita dell'altra persona")) {
+                        Card(title: t("對方的名字", "The other person's name",
+    "El nombre de la otra persona",
+    "Il nome dell'altra persona")) {
                             VStack(spacing: 14) {
                                 BirthInputView(name: $name, year: $year, month: $month,
                                                day: $day, lang: state.lang, forOther: true,
@@ -42,42 +42,6 @@ struct SynastryView: View {
                                     PrimaryButtonLabel(text: t("合盤", "Combine charts",
     "Combinar cartas",
     "Combina le carte"))
-                                }
-                            }
-                        }
-
-                        if !state.others.isEmpty {
-                            Card(title: t("最近合過的人", "Recently combined",
-    "Combinados recientemente",
-    "Combinati di recente")) {
-                                VStack(spacing: 0) {
-                                    ForEach(state.others) { p in
-                                        Button {
-                                            name = p.name
-                                            year = p.birth.year
-                                            month = p.birth.month
-                                            day = p.birth.day
-                                            nameResult = nil
-                                            result = Synastry(a: mine,
-                                                              b: p.destiny(anchor: state.yearAnchor))
-                                        } label: {
-                                            HStack {
-                                                Text(p.displayName(state.lang))
-                                                    .font(.subheadline)
-                                                Spacer()
-                                                Text(t.date(p.birth))
-                                                    .font(.caption)
-                                                    .foregroundStyle(.secondary)
-                                                Image(systemName: "chevron.right")
-                                                    .font(.caption2)
-                                                    .foregroundStyle(.tertiary)
-                                            }
-                                            .padding(.vertical, 9)
-                                            .contentShape(Rectangle())
-                                        }
-                                        .buttonStyle(.plain)
-                                        if p.id != state.others.last?.id { Divider() }
-                                    }
                                 }
                             }
                         }
