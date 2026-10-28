@@ -12,7 +12,18 @@ jobs:
   eval:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[brain]')
     runs-on: macos-15
-    timeout-minutes: 150
+    timeout-minutes: 75
+    # 每個模型一台機器同時跑
+    strategy:
+      fail-fast: false
+      matrix:
+        model:
+          - name: qwen35-4b
+            url: https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf
+          - name: qwen3-4b-2507
+            url: https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf
+          - name: qwen35-2b
+            url: https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-Q4_K_M.gguf
     steps:
       - uses: actions/checkout@v4
 
@@ -25,51 +36,25 @@ jobs:
         run: |
           LLAMA_TAG=$(cat ios/llama-version.txt)
           git clone --depth 1 --branch "$LLAMA_TAG" https://github.com/ggml-org/llama.cpp "$RUNNER_TEMP/llama.cpp"
-          cd "$RUNNER_TEMP/llama.cpp" && ./build-xcframework.sh macos 2>&1 | tail -20
-          ls build-apple/llama.xcframework
+          cd "$RUNNER_TEMP/llama.cpp" && ./build-xcframework.sh macos 2>&1 | tail -5
 
       - name: Compile eval
         run: |
           F=$(dirname "$(find "$RUNNER_TEMP/llama.cpp/build-apple/llama.xcframework" -maxdepth 2 -name llama.framework -path '*macos*' | head -1)")
-          echo "framework dir: $F"; ls "$F"
           swiftc -O -F "$F" -framework llama -Xlinker -rpath -Xlinker "$F" \
             ios/NineSun/Brain/LlamaRunner.swift ios/NineSun/Brain/LocalBrain.swift ios/BrainEval/main.swift -o brain-eval
 
-      - name: List candidate models
+      - name: Download model
         run: |
-          for r in unsloth/Qwen3.5-4B-GGUF bartowski/Qwen_Qwen3.5-4B-GGUF Qwen/Qwen3.5-4B-GGUF unsloth/Qwen3.5-2B-GGUF unsloth/Qwen3-4B-Instruct-2507-GGUF; do
-            echo "== $r"
-            curl -s "https://huggingface.co/api/models/$r/tree/main" | python3 -c '
-          import json, sys
-          try:
-              for f in json.load(sys.stdin):
-                  if f.get("path", "").endswith(".gguf"): print("  ", f["path"], f.get("size"))
-          except Exception as e: print("   (no listing)", e)'
-          done
+          curl -fsSL --retry 3 -o model.gguf "${{ matrix.model.url }}"
+          ls -la model.gguf
 
-      - name: Download models
-        run: |
-          mkdir -p models
-          get() {  # 名稱 網址…（第一個能下載的）
-            name=$1; shift
-            for u in "$@"; do
-              if curl -fsSL --retry 3 -o "models/$name.gguf" "$u"; then echo "$name ← $u"; ls -la "models/$name.gguf"; return; fi
-            done
-            echo "$name：都下載不到"; rm -f "models/$name.gguf"
-          }
-          get qwen35-4b \
-            https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf \
-            https://huggingface.co/bartowski/Qwen_Qwen3.5-4B-GGUF/resolve/main/Qwen_Qwen3.5-4B-Q4_K_M.gguf
-          get qwen3-4b-2507 \
-            https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf \
-            https://huggingface.co/bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf
-          get qwen35-2b \
-            https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-Q4_K_M.gguf
-          ls -la models
-
+      # 先試 GPU（Metal）；這台機器不支援就改用 CPU。回答一題印一題（逐行輸出，不會等到最後）
       - name: Eval
+        env:
+          NSUnbufferedIO: "YES"
         run: |
-          for m in models/*.gguf; do
-            echo "################ $m"
-            ./brain-eval "$m" ios/BrainEval/questions.txt 2>&1 | grep -v "^llama_\|^load\|^print_info\|^ggml_\|^gguf\|^common\|^\.\.\.\|^graph\|^sched\|^set_abort\|^init_" || true
-          done
+          if ! timeout 900 ./brain-eval model.gguf ios/BrainEval/questions.txt gpu; then
+            echo "######## GPU 不行，改用 CPU"
+            ./brain-eval model.gguf ios/BrainEval/questions.txt
+          fi

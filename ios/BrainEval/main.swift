@@ -1,5 +1,7 @@
 import Foundation
 
+setvbuf(stdout, nil, _IOLBF, 0)   // 一行一行輸出，CI 的紀錄才看得到進度
+
 // 大腦評測（GitHub 的 Mac 上跑）：真的把模型讀進來，用 NineSun 的提示問一批問題，印出回答和速度。
 // 用法：brain-eval 模型.gguf 題目.txt [gpu]
 // 題目檔每題用一行 ---- 分開；開頭可以寫：
@@ -42,7 +44,7 @@ for block in raw.components(separatedBy: "\n----\n") {
                                       reading: reading.trimmingCharacters(in: .whitespacesAndNewlines), lang: lang)
     let prompt = LocalBrain.chatML(system: LocalBrain.system(lang: lang), history: history, user: user)
     do {
-        let r = try runner.generate(prompt: prompt, maxTokens: mode == .chat ? 450 : 800, temperature: mode == .chat ? 0.7 : 0.4,
+        let r = try runner.generate(prompt: prompt, maxTokens: mode == .chat ? 300 : 400, temperature: mode == .chat ? 0.7 : 0.4,
                                     stop: ["<|im_end|>", "<|im_start|>"], seed: 42)
         totalTok += r.tokens; totalSec += r.seconds
         print("\n=== \(q)  [\(mode)]")
