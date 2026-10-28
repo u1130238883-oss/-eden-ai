@@ -136,8 +136,7 @@ struct SynastryView: View {
             SectionLabel(text: t("合盤十二宮", "The combined twelve palaces",
     "Los doce palacios combinados",
     "I dodici palazzi combinati"))
-            ChartTable(rows: s.chart, lang: state.lang, highlightIndex: 0,
-                       chipTap: .meaning)
+            ChartTable(rows: s.chart, lang: state.lang, chipTap: .meaning)
             Text(t("點任一列可看詳細。", "Tap any row for detail.",
     "Toca cualquier fila para ver el detalle.",
     "Tocca una riga per il dettaglio."))
