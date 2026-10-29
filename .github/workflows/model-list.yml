@@ -13,15 +13,13 @@ jobs:
     steps:
       - name: Core ML image models
         run: |
-          for q in "coreml 6bit" "coreml-6bit" "CoreML 6bit anime" "coreml palettized anime" "split-einsum 6bit" "coreml ios stable diffusion"; do
+          for q in "coreml URPM" "coreml uber realistic" "coreml hentai" "coreml erotic" "coreml porn" "coreml LibreEros" "coreml HassanBlend" "coreml pony" "coreml realistic nsfw" "coreml epicrealism" "coreml majicmix" "coreml cyberrealistic"; do
             echo "### search: $q"
-            curl -s "https://huggingface.co/api/models?search=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$q")&sort=downloads&limit=20" | python3 -c '
+            curl -s "https://huggingface.co/api/models?search=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$q")&sort=downloads&limit=10" | python3 -c '
           import json, sys
           for m in json.load(sys.stdin): print("   ", m.get("id"), m.get("downloads"), m.get("likes"))'
           done
-          for r in darkmaniac7/TokForge-RealisticVision-5.1-CoreML-6bit mahmudplx/coreml-realisticvision-5.1-6bit veran666/zoria-realistic-vision-5.1-6bit-coreml \
-                   LocalMuseAI/coreml-cyberillustrious-semi-realistic-play-v4-6bit coreml-community/coreml-OrangeMixs coreml-community/coreml-Counterfeit \
-                   coreml-community/coreml-ReV-Animated coreml-community/coreml-realisticVision-v51VAE_cn machine98/Dreamshaper_coreml_sdxl_nsfw; do
+          for r in coreml-community/coreml-LibreEros coreml-community/coreml-HassanBlend coreml-community/coreml-OrangeMixs coreml-community/coreml-ChilloutMix; do
             echo "== $r"
             curl -s "https://huggingface.co/api/models/$r/tree/main?recursive=1" | python3 -c '
           import json, sys
@@ -31,6 +29,7 @@ jobs:
               else:
                   for f in d:
                       p = f.get("path","")
-                      if f.get("type") == "file" and (p.endswith(".zip") or "Unet" in p and p.endswith("weight.bin") or p.endswith("README.md")): print("   ", p, f.get("size"))
+                      if f.get("type") == "file" and p.endswith(".zip"): print("   ", p, f.get("size"))
           except Exception as e: print("   (no listing)", e)' | head -30
+            curl -s "https://huggingface.co/$r/raw/main/README.md" | head -60
           done
