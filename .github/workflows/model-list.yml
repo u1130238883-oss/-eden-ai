@@ -13,13 +13,7 @@ jobs:
     steps:
       - name: Core ML image models
         run: |
-          for q in "coreml URPM" "coreml uber realistic" "coreml hentai" "coreml erotic" "coreml porn" "coreml LibreEros" "coreml HassanBlend" "coreml pony" "coreml realistic nsfw" "coreml epicrealism" "coreml majicmix" "coreml cyberrealistic"; do
-            echo "### search: $q"
-            curl -s "https://huggingface.co/api/models?search=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$q")&sort=downloads&limit=10" | python3 -c '
-          import json, sys
-          for m in json.load(sys.stdin): print("   ", m.get("id"), m.get("downloads"), m.get("likes"))'
-          done
-          for r in coreml-community/coreml-LibreEros coreml-community/coreml-HassanBlend coreml-community/coreml-OrangeMixs coreml-community/coreml-ChilloutMix; do
+          for r in coreml-community/coreml-URPM-v13 darkmaniac7/TokForge-epiCRealism-CoreML-6bit darkmaniac7/TokForge-CyberRealistic-V9-CoreML-6bit mahmudplx/coreml-epicrealism-6bit; do
             echo "== $r"
             curl -s "https://huggingface.co/api/models/$r/tree/main?recursive=1" | python3 -c '
           import json, sys
@@ -29,7 +23,6 @@ jobs:
               else:
                   for f in d:
                       p = f.get("path","")
-                      if f.get("type") == "file" and p.endswith(".zip"): print("   ", p, f.get("size"))
+                      if f.get("type") == "file" and (p.endswith(".zip") or p.endswith("README.md")): print("   ", p, f.get("size"))
           except Exception as e: print("   (no listing)", e)' | head -30
-            curl -s "https://huggingface.co/$r/raw/main/README.md" | head -60
           done
