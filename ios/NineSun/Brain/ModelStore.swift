@@ -15,7 +15,7 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         let urls: [String]
     }
 
-    /// 全部都是開放（無審查）的模型：使用者試過可以的 Gemma 4 E4B 和它的幾個版本，再加其他家熱門的 8B～9B（大小和它差不多，手機跑得動）
+    /// 全部都是開放（無審查）的模型：使用者試過可以的 Gemma 4 E4B 和它的幾個版本，再加其他家熱門的 8B（大小和它差不多，手機跑得動）；使用者不要千問（Qwen）的
     static let models: [Model] = [
         Model(id: "gemma4-e4b-rp", name: "開放版 Gemma 4 E4B",
               file: "gemma-4-E4B-it-SDFT_Heretic_RP.Q4_K_M.gguf", bytes: 5_335_286_208,
@@ -42,18 +42,6 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
               file: "rpDungeon_Gemma-4-E4B-Luchador-Q4_K_M.gguf", bytes: 5_405_168_288,
               urls: ["https://huggingface.co/bartowski/rpDungeon_Gemma-4-E4B-Luchador-GGUF/resolve/main/rpDungeon_Gemma-4-E4B-Luchador-Q4_K_M.gguf",
                      "https://hf-mirror.com/bartowski/rpDungeon_Gemma-4-E4B-Luchador-GGUF/resolve/main/rpDungeon_Gemma-4-E4B-Luchador-Q4_K_M.gguf"]),
-        Model(id: "qwen35-9b-aggressive", name: "Qwen3.5 9B 無審查 Aggressive",
-              file: "Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf", bytes: 5_627_044_224,
-              urls: ["https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
-                     "https://hf-mirror.com/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf"]),
-        Model(id: "qwen35-9b-ultra", name: "Qwen3.5 9B 超級無審查",
-              file: "Qwen3.5-9B-Ultra-Uncensored-Heretic-Q4_K_S.gguf", bytes: 5_342_716_448,
-              urls: ["https://huggingface.co/llmfan46/Qwen3.5-9B-Ultra-Uncensored-Heretic-GGUF/resolve/main/Qwen3.5-9B-Ultra-Uncensored-Heretic-Q4_K_S.gguf",
-                     "https://hf-mirror.com/llmfan46/Qwen3.5-9B-Ultra-Uncensored-Heretic-GGUF/resolve/main/Qwen3.5-9B-Ultra-Uncensored-Heretic-Q4_K_S.gguf"]),
-        Model(id: "ornith-9b", name: "Ornith 1.5 9B 無審查",
-              file: "Ornith-1.5-9B-uncensored.Q4_K_S.gguf", bytes: 5_351_629_984,
-              urls: ["https://huggingface.co/mradermacher/Ornith-1.5-9B-uncensored-GGUF/resolve/main/Ornith-1.5-9B-uncensored.Q4_K_S.gguf",
-                     "https://hf-mirror.com/mradermacher/Ornith-1.5-9B-uncensored-GGUF/resolve/main/Ornith-1.5-9B-uncensored.Q4_K_S.gguf"]),
         Model(id: "llama31-8b-lexi", name: "Llama 3.1 8B Lexi 無審查",
               file: "Llama-3.1-8B-Lexi-Uncensored-V2-Q4_K_M.gguf", bytes: 4_920_739_104,
               urls: ["https://huggingface.co/bartowski/Llama-3.1-8B-Lexi-Uncensored-V2-GGUF/resolve/main/Llama-3.1-8B-Lexi-Uncensored-V2-Q4_K_M.gguf",

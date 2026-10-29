@@ -542,3 +542,4 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
 - 使用者要其他家的熱門模型：加了 8 個 8B～9B 的無審查模型（大小 4.9～5.6 GB，跟手機跑得動的 Gemma 4 E4B 差不多）：
   Qwen3.5 9B（HauhauCS Aggressive、llmfan46 Ultra Heretic）、Ornith 1.5 9B、Llama 3.1 8B Lexi、Stheno 3.2、Lumimaid 0.2、
   Hermes 3 lorablated、開放版 Ministral 3 8B。都是 Hugging Face 上下載數、按讚數最多的（`model-list.yml` 查的）。
+- 使用者不要千問（Qwen）：Qwen3.5 9B 兩個拿掉；Ornith 1.5 9B 跟 Qwen3.5 9B 同樣的大小、架構（是 Qwen3.5 9B 改的），也拿掉。
