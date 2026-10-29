@@ -107,7 +107,7 @@ final class LocalBrain {
 
     /// 各家模型的對話結束記號（模型說完了卻沒停時用）
     static let stops = ["<|im_end|>", "<|im_start|>", "<end_of_turn>", "<start_of_turn>", "<|eot_id|>", "<|start_header_id|>", "<turn|>", "<|turn>",
-                              "<|end|>", "<|user|>", "<|endoftext|>"]
+                              "<|end|>", "<|user|>", "<|endoftext|>", "[INST]"]
 
     /// 系統指示＋前面的對話＋這次的話（每則太長就截短）
     static func messages(system: String, history: [Turn], user: String) -> [(role: String, content: String)] {

@@ -20,18 +20,14 @@ jobs:
       fail-fast: false
       matrix:
         model:
-          - name: gemma4-e4b-rp
-            url: https://huggingface.co/mradermacher/gemma-4-E4B-it-SDFT_Heretic_RP-GGUF/resolve/main/gemma-4-E4B-it-SDFT_Heretic_RP.Q4_K_M.gguf
-          - name: gemma4-e4b-aggressive
-            url: https://huggingface.co/HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive/resolve/main/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf
-          - name: gemma4-e4b-ultra
-            url: https://huggingface.co/llmfan46/gemma-4-E4B-it-ultra-uncensored-heretic-GGUF/resolve/main/gemma-4-E4B-it-ultra-uncensored-heretic-Q4_K_M.gguf
-          - name: gemma4-e4b-mahou
-            url: https://huggingface.co/mradermacher/gemma4-e4b-mahou-nsfw-GGUF/resolve/main/gemma4-e4b-mahou-nsfw.Q4_K_M.gguf
-          - name: gemma4-e4b-disinhibited
-            url: https://huggingface.co/mradermacher/gemma4-E4B-it-Abliterated-AND-Disinhibited-USE-THIS-GGUF/resolve/main/gemma4-E4B-it-Abliterated-AND-Disinhibited-USE-THIS.Q4_K_M.gguf
-          - name: gemma4-e4b-luchador
-            url: https://huggingface.co/bartowski/rpDungeon_Gemma-4-E4B-Luchador-GGUF/resolve/main/rpDungeon_Gemma-4-E4B-Luchador-Q4_K_M.gguf
+          - name: ornith-9b
+            url: https://huggingface.co/mradermacher/Ornith-1.5-9B-uncensored-GGUF/resolve/main/Ornith-1.5-9B-uncensored.Q4_K_S.gguf
+          - name: ministral3-8b-open
+            url: https://huggingface.co/mradermacher/mistralai_Ministral-3-8B-Instruct-2512-abliterated-GGUF/resolve/main/mistralai_Ministral-3-8B-Instruct-2512-abliterated.Q4_K_M.gguf
+          - name: qwen35-9b-aggressive
+            url: https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf
+          - name: lumimaid-8b
+            url: https://huggingface.co/mradermacher/Lumimaid-v0.2-8B-GGUF/resolve/main/Lumimaid-v0.2-8B.Q4_K_M.gguf
     steps:
       - uses: actions/checkout@v4
 

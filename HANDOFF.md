@@ -539,3 +539,6 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
 - 背景繼續寫：iOS 不讓背景的 App 用 GPU。`LocalBrain.ask` 寫到一半切到背景時，GPU 這次停下（或運算失敗），
   改用 CPU 重讀模型、從寫到的地方接著寫；`BackgroundWork` 跟系統要背景時間：beginBackgroundTask（約 30 秒），
   iOS 26 起在要離開畫面時再送 BGContinuedProcessingTask（`com.ninesun.app.brain-answer`，Info.plist 有登記），系統顯示進度、可以寫完。
+- 使用者要其他家的熱門模型：加了 8 個 8B～9B 的無審查模型（大小 4.9～5.6 GB，跟手機跑得動的 Gemma 4 E4B 差不多）：
+  Qwen3.5 9B（HauhauCS Aggressive、llmfan46 Ultra Heretic）、Ornith 1.5 9B、Llama 3.1 8B Lexi、Stheno 3.2、Lumimaid 0.2、
+  Hermes 3 lorablated、開放版 Ministral 3 8B。都是 Hugging Face 上下載數、按讚數最多的（`model-list.yml` 查的）。

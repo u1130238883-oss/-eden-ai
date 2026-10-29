@@ -15,7 +15,7 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         let urls: [String]
     }
 
-    /// 全部都是 Gemma 4 E4B 的開放（無審查）版本：使用者試過只有這一家可以，其他的都拿掉了
+    /// 全部都是開放（無審查）的模型：使用者試過可以的 Gemma 4 E4B 和它的幾個版本，再加其他家熱門的 8B～9B（大小和它差不多，手機跑得動）
     static let models: [Model] = [
         Model(id: "gemma4-e4b-rp", name: "開放版 Gemma 4 E4B",
               file: "gemma-4-E4B-it-SDFT_Heretic_RP.Q4_K_M.gguf", bytes: 5_335_286_208,
@@ -42,6 +42,41 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
               file: "rpDungeon_Gemma-4-E4B-Luchador-Q4_K_M.gguf", bytes: 5_405_168_288,
               urls: ["https://huggingface.co/bartowski/rpDungeon_Gemma-4-E4B-Luchador-GGUF/resolve/main/rpDungeon_Gemma-4-E4B-Luchador-Q4_K_M.gguf",
                      "https://hf-mirror.com/bartowski/rpDungeon_Gemma-4-E4B-Luchador-GGUF/resolve/main/rpDungeon_Gemma-4-E4B-Luchador-Q4_K_M.gguf"]),
+        Model(id: "qwen35-9b-aggressive", name: "Qwen3.5 9B 無審查 Aggressive",
+              file: "Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf", bytes: 5_627_044_224,
+              urls: ["https://huggingface.co/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
+                     "https://hf-mirror.com/HauhauCS/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-9B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf"]),
+        Model(id: "qwen35-9b-ultra", name: "Qwen3.5 9B 超級無審查",
+              file: "Qwen3.5-9B-Ultra-Uncensored-Heretic-Q4_K_S.gguf", bytes: 5_342_716_448,
+              urls: ["https://huggingface.co/llmfan46/Qwen3.5-9B-Ultra-Uncensored-Heretic-GGUF/resolve/main/Qwen3.5-9B-Ultra-Uncensored-Heretic-Q4_K_S.gguf",
+                     "https://hf-mirror.com/llmfan46/Qwen3.5-9B-Ultra-Uncensored-Heretic-GGUF/resolve/main/Qwen3.5-9B-Ultra-Uncensored-Heretic-Q4_K_S.gguf"]),
+        Model(id: "ornith-9b", name: "Ornith 1.5 9B 無審查",
+              file: "Ornith-1.5-9B-uncensored.Q4_K_S.gguf", bytes: 5_351_629_984,
+              urls: ["https://huggingface.co/mradermacher/Ornith-1.5-9B-uncensored-GGUF/resolve/main/Ornith-1.5-9B-uncensored.Q4_K_S.gguf",
+                     "https://hf-mirror.com/mradermacher/Ornith-1.5-9B-uncensored-GGUF/resolve/main/Ornith-1.5-9B-uncensored.Q4_K_S.gguf"]),
+        Model(id: "llama31-8b-lexi", name: "Llama 3.1 8B Lexi 無審查",
+              file: "Llama-3.1-8B-Lexi-Uncensored-V2-Q4_K_M.gguf", bytes: 4_920_739_104,
+              urls: ["https://huggingface.co/bartowski/Llama-3.1-8B-Lexi-Uncensored-V2-GGUF/resolve/main/Llama-3.1-8B-Lexi-Uncensored-V2-Q4_K_M.gguf",
+                     "https://hf-mirror.com/bartowski/Llama-3.1-8B-Lexi-Uncensored-V2-GGUF/resolve/main/Llama-3.1-8B-Lexi-Uncensored-V2-Q4_K_M.gguf"]),
+        Model(id: "llama3-8b-stheno", name: "Stheno 3.2（Llama 3 8B）",
+              file: "L3-8B-Stheno-v3.2-Q4_K_M.gguf", bytes: 4_920_734_240,
+              urls: ["https://huggingface.co/bartowski/L3-8B-Stheno-v3.2-GGUF/resolve/main/L3-8B-Stheno-v3.2-Q4_K_M.gguf",
+                     "https://hf-mirror.com/bartowski/L3-8B-Stheno-v3.2-GGUF/resolve/main/L3-8B-Stheno-v3.2-Q4_K_M.gguf",
+                     "https://huggingface.co/mradermacher/L3-8B-Stheno-v3.2-GGUF/resolve/main/L3-8B-Stheno-v3.2.Q4_K_M.gguf"]),
+        Model(id: "lumimaid-8b", name: "Lumimaid 0.2（Llama 3.1 8B）",
+              file: "Lumimaid-v0.2-8B.Q4_K_M.gguf", bytes: 4_920_734_880,
+              urls: ["https://huggingface.co/mradermacher/Lumimaid-v0.2-8B-GGUF/resolve/main/Lumimaid-v0.2-8B.Q4_K_M.gguf",
+                     "https://hf-mirror.com/mradermacher/Lumimaid-v0.2-8B-GGUF/resolve/main/Lumimaid-v0.2-8B.Q4_K_M.gguf",
+                     "https://huggingface.co/NeverSleep/Lumimaid-v0.2-8B-GGUF/resolve/main/Lumimaid-v0.2-8B.q4_k_m.gguf"]),
+        Model(id: "hermes3-8b-lorablated", name: "Hermes 3（Llama 3.1 8B）無審查",
+              file: "Hermes-3-Llama-3.1-8B-lorablated-Q4_K_M.gguf", bytes: 4_920_734_400,
+              urls: ["https://huggingface.co/bartowski/Hermes-3-Llama-3.1-8B-lorablated-GGUF/resolve/main/Hermes-3-Llama-3.1-8B-lorablated-Q4_K_M.gguf",
+                     "https://hf-mirror.com/bartowski/Hermes-3-Llama-3.1-8B-lorablated-GGUF/resolve/main/Hermes-3-Llama-3.1-8B-lorablated-Q4_K_M.gguf",
+                     "https://huggingface.co/mlabonne/Hermes-3-Llama-3.1-8B-lorablated-GGUF/resolve/main/hermes-3-llama-3.1-8b-lorablated.Q4_K_M.gguf"]),
+        Model(id: "ministral3-8b-open", name: "開放版 Ministral 3 8B（Mistral）",
+              file: "mistralai_Ministral-3-8B-Instruct-2512-abliterated.Q4_K_M.gguf", bytes: 5_198_387_072,
+              urls: ["https://huggingface.co/mradermacher/mistralai_Ministral-3-8B-Instruct-2512-abliterated-GGUF/resolve/main/mistralai_Ministral-3-8B-Instruct-2512-abliterated.Q4_K_M.gguf",
+                     "https://hf-mirror.com/mradermacher/mistralai_Ministral-3-8B-Instruct-2512-abliterated-GGUF/resolve/main/mistralai_Ministral-3-8B-Instruct-2512-abliterated.Q4_K_M.gguf"]),
     ]
 
     enum State: Equatable {
