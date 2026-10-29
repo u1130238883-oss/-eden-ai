@@ -11,23 +11,12 @@ jobs:
   list:
     runs-on: ubuntu-latest
     steps:
-      - name: Search
-        run: |
-          for q in "gemma-4-E4B" "gemma-4-E4B heretic" "gemma-4-E4B uncensored" "gemma-4-E4B rp" "gemma-4-E4B nsfw" "gemma-4-E4B abliterated" \
-                   "gemma-4 heretic" "gemma-3-4b rp" "Stheno 8B" "Lumimaid 8B" "Lunaris 8B" "8B uncensored roleplay" "Gemma 4 E4B Chinese"; do
-            echo "### search: $q"
-            curl -s "https://huggingface.co/api/models?search=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$q")&filter=gguf&sort=downloads&limit=25" | python3 -c '
-          import json, sys
-          try:
-              for m in json.load(sys.stdin): print("   ", m.get("id"), m.get("downloads"), m.get("likes"))
-          except Exception as e: print("   (none)", e)'
-          done
       - name: List
         run: |
-          for r in mradermacher/Huihui-gemma-4-E4B-it-abliterated-GGUF mradermacher/gemma-4-E4B-it-OBLITERATED-GGUF \
-                   mradermacher/gemma-4-E4B-it-SDFT_Heretic_RP-GGUF mradermacher/gemma-4-E4B-it-heretic-GGUF \
-                   bartowski/L3-8B-Stheno-v3.2-GGUF mradermacher/L3-8B-Stheno-v3.2-GGUF bartowski/Lumimaid-v0.2-8B-GGUF \
-                   bartowski/L3-8B-Lunaris-v1-GGUF mradermacher/L3-8B-Lunaris-v1-GGUF; do
+          for r in HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive llmfan46/gemma-4-E4B-it-ultra-uncensored-heretic-GGUF \
+                   mradermacher/gemma-4-E4B-it-ultra-uncensored-heretic-GGUF mradermacher/gemma4-e4b-mahou-nsfw-GGUF \
+                   bartowski/rpDungeon_Gemma-4-E4B-Luchador-GGUF TrevorJS/gemma-4-E4B-it-uncensored-GGUF \
+                   mradermacher/gemma-4-E4B-it-uncensored-GGUF mradermacher/gemma4-E4B-it-Abliterated-AND-Disinhibited-USE-THIS-GGUF; do
             echo "== $r"
             curl -s "https://huggingface.co/api/models/$r/tree/main" | python3 -c '
           import json, sys
@@ -37,6 +26,6 @@ jobs:
               else:
                   for f in d:
                       p = f.get("path", "")
-                      if ("Q4_K_M" in p or "q4_k_m" in p or "Q4_K_S" in p) and p.endswith(".gguf"): print("   ", p, f.get("size"))
+                      if p.endswith(".gguf") and ("Q4" in p.upper() or "Q5" in p.upper()): print("   ", p, f.get("size"))
           except Exception as e: print("   (no listing)", e)'
           done
