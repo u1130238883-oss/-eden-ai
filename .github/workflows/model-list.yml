@@ -11,12 +11,25 @@ jobs:
   list:
     runs-on: ubuntu-latest
     steps:
+      - name: Search
+        run: |
+          for q in "Lexi Uncensored" "Dolphin3.0 Llama3.1 8B" "Hermes-3-Llama-3.1-8B" "Qwen3-8B abliterated" "Josiefied Qwen3 8B" \
+                   "Qwen3.5-9B abliterated" "Qwen3.5 9B uncensored" "Ministral 8B abliterated" "Ministral-3-8B" "glm-4 9b abliterated" \
+                   "gemma-3n-E4B abliterated" "Lumimaid v0.2 8B" "Mistral 7B uncensored" "8B NSFW" "Llama-3.1-8B abliterated" \
+                   "Qwen3-8B uncensored" "Qwen3-8B heretic" "Llama-3.1-8B heretic" "9B uncensored" "7B roleplay"; do
+            echo "### search: $q"
+            curl -s "https://huggingface.co/api/models?search=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$q")&filter=gguf&sort=downloads&limit=12" | python3 -c '
+          import json, sys
+          try:
+              for m in json.load(sys.stdin): print("   ", m.get("id"), m.get("downloads"), m.get("likes"))
+          except Exception as e: print("   (none)", e)'
+          done
       - name: List
         run: |
-          for r in HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive llmfan46/gemma-4-E4B-it-ultra-uncensored-heretic-GGUF \
-                   mradermacher/gemma-4-E4B-it-ultra-uncensored-heretic-GGUF mradermacher/gemma4-e4b-mahou-nsfw-GGUF \
-                   bartowski/rpDungeon_Gemma-4-E4B-Luchador-GGUF TrevorJS/gemma-4-E4B-it-uncensored-GGUF \
-                   mradermacher/gemma-4-E4B-it-uncensored-GGUF mradermacher/gemma4-E4B-it-Abliterated-AND-Disinhibited-USE-THIS-GGUF; do
+          for r in bartowski/Llama-3.1-8B-Lexi-Uncensored-V2-GGUF Orenguteng/Llama-3.1-8B-Lexi-Uncensored-V2-GGUF \
+                   bartowski/Dolphin3.0-Llama3.1-8B-GGUF bartowski/Hermes-3-Llama-3.1-8B-GGUF NousResearch/Hermes-3-Llama-3.1-8B-GGUF \
+                   mradermacher/Qwen3-8B-abliterated-GGUF bartowski/mlabonne_Qwen3-8B-abliterated-GGUF mradermacher/Josiefied-Qwen3-8B-abliterated-v1-GGUF \
+                   NeverSleep/Lumimaid-v0.2-8B-GGUF mradermacher/Lumimaid-v0.2-8B-GGUF mradermacher/Huihui-gemma-3n-E4B-it-abliterated-GGUF; do
             echo "== $r"
             curl -s "https://huggingface.co/api/models/$r/tree/main" | python3 -c '
           import json, sys
