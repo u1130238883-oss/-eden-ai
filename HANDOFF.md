@@ -504,3 +504,16 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
   只在成人模式打開時才看得到、才會用；一般聊天還是標準的 Qwen3.5 4B。
 - 開放版不一定遵守提示，所以「不寫未成年」寫死在程式裡（`EchoCore/AdultGuard.swift`＋`AdultGuardTests`）：使用者的話、角色設定、
   大腦寫出來的字都檢查（未成年的詞、小於 18 的年紀），碰到就停下、不顯示、改成拒絕。
+
+## 2026-10-29：只留開放模型、加更多模型
+
+- 使用者要拿掉有限制的模型、多加不是千問的開放模型。`ModelStore.models` 現在全部都是開放（abliterated／無審查）模型，
+  不再分「一般」和「成人模式專用」：預設開放版 Qwen3.5 4B；另有開放版 Gemma 4 E2B、開放版 Gemma 3 4B（mlabonne）、
+  Dolphin 3.0（Llama 3.2 3B）、無審查 Llama 3.2 3B、開放版 Phi-4 mini、開放版 SmolLM3 3B、開放版 Qwen3.5 2B（輕量）、
+  （實驗）Gemma 4 E4B 角色扮演版（5.3 GB，要 12 GB 記憶體的手機）。檔名和大小都是 Hugging Face API 列出來的（`model-list.yml`）。
+- 拿掉的舊模型檔（標準 Qwen3.5 4B、輕量 2B）App 打開時會自動刪掉，空出空間。
+- 不同家的模型對話格式不一樣：`LlamaRunner.chatPrompt` 用模型檔裡的格式（`llama_chat_apply_template`），
+  Gemma 4（`<|turn>`）llama.cpp b11969 還不會排，自己排；Qwen 這種會思考的最後放空的 `<think></think>`。
+  斷詞時照模型規定加開頭記號（Gemma、Llama 要）。`LocalBrain.stops` 收各家的結束記號。
+- `brain-eval.yml` 改成測這些新模型，每台機器會先印出對話格式，看排得對不對。
+- AdultGuard 不變：成人模式的使用者的話、角色、大腦寫的字都檢查。

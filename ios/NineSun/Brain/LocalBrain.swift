@@ -66,7 +66,8 @@ final class LocalBrain {
     // MARK: - 提示（給模型的話）
 
     /// 各家模型的對話結束記號（模型說完了卻沒停時用）
-    static let stops = ["<|im_end|>", "<|im_start|>", "<end_of_turn>", "<start_of_turn>", "<|eot_id|>", "<|start_header_id|>", "<turn|>", "<|turn>"]
+    static let stops = ["<|im_end|>", "<|im_start|>", "<end_of_turn>", "<start_of_turn>", "<|eot_id|>", "<|start_header_id|>", "<turn|>", "<|turn>",
+                              "<|end|>", "<|user|>", "<|endoftext|>"]
 
     /// 系統指示＋前面的對話＋這次的話（每則太長就截短）
     static func messages(system: String, history: [Turn], user: String) -> [(role: String, content: String)] {
@@ -189,6 +190,7 @@ final class LocalBrain {
     static func tidy(_ raw: String, lang: String) -> String {
         var s = raw
         if let r = s.range(of: "</think>") { s = String(s[r.upperBound...]) } else if s.contains("<think>") { return "" }
+        s = s.replacingOccurrences(of: #"(?s)<\|channel>.*?<channel\|>"#, with: "", options: .regularExpression)   // Gemma 4 的思考
         s = s.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "<|im_end|>", with: "")
         s = s.replacingOccurrences(of: #"(?m)^#{1,6}\s*"#, with: "", options: .regularExpression)
         s = s.replacingOccurrences(of: #"(?m)^\s*[-*_]{3,}\s*$\n?"#, with: "", options: .regularExpression)   // --- 分隔線

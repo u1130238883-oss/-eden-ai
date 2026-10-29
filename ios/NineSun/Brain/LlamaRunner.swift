@@ -67,18 +67,20 @@ final class LlamaRunner {
     /// llama.cpp 認不得的格式就用 ChatML。Qwen 這種會先想很久的模型，最後先放一段空的思考，讓它直接回答
     func chatPrompt(_ messages: [(role: String, content: String)]) -> String {
         let tmpl = llama_model_chat_template(model, nil).map { String(cString: $0) }
-        var cRoles = messages.map { strdup($0.role) }
-        var cContents = messages.map { strdup($0.content) }
+        // Gemma 4（<|turn>user … <turn|>）llama.cpp 還不會排，自己排
+        if (tmpl ?? "").contains("<|turn>") {
+            return messages.map { "<|turn>\($0.role == "assistant" ? "model" : $0.role)\n\($0.content)<turn|>\n" }.joined() + "<|turn>model\n"
+        }
+        let cRoles = messages.map { strdup($0.role) }
+        let cContents = messages.map { strdup($0.content) }
         defer { cRoles.forEach { free($0) }; cContents.forEach { free($0) } }
         var chat = (0..<messages.count).map { llama_chat_message(role: cRoles[$0], content: cContents[$0]) }
-        let total = messages.reduce(0) { $0 + $1.content.utf8.count } * 2 + 512
-        var buf = [CChar](repeating: 0, count: total)
+        var buf = [CChar](repeating: 0, count: messages.reduce(0) { $0 + $1.content.utf8.count } * 2 + 512)
         var n = llama_chat_apply_template(tmpl, &chat, chat.count, true, &buf, Int32(buf.count))
         if n > Int32(buf.count) {
             buf = [CChar](repeating: 0, count: Int(n) + 1)
             n = llama_chat_apply_template(tmpl, &chat, chat.count, true, &buf, Int32(buf.count))
         }
-        _ = cRoles; _ = cContents
         var out: String
         if n > 0 {
             out = String(decoding: buf.prefix(Int(n)).map { UInt8(bitPattern: $0) }, as: UTF8.self)
@@ -89,13 +91,13 @@ final class LlamaRunner {
         return out
     }
 
-    /// 文字 → 模型的字（special：<|im_start|> 這種控制字要認出來）
+    /// 文字 → 模型的字（special：<|im_start|> 這種控制字要認出來；開頭記號 BOS 照模型的規定加，Gemma、Llama 要、Qwen 不要）
     func tokenize(_ text: String, special: Bool = true) throws -> [llama_token] {
         let bytes = Int32(text.utf8.count)
         var cap = Int(bytes) + 8
         while true {
             var out = [llama_token](repeating: 0, count: cap)
-            let n = llama_tokenize(vocab, text, bytes, &out, Int32(cap), false, special)
+            let n = llama_tokenize(vocab, text, bytes, &out, Int32(cap), true, special)
             if n >= 0 { return Array(out.prefix(Int(n))) }
             guard -Int(n) > cap else { throw Failure.tokenize }
             cap = -Int(n)

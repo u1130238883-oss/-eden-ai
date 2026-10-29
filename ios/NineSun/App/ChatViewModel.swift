@@ -288,10 +288,9 @@ final class ChatViewModel: ObservableObject {
                 finish(ChatTurn(role: .echo, text: AdultGuard.refusal(L), source: .tool))
                 return
             }
-            // 有下載成人模式專用的開放模型就用它，不然用一般的大腦
-            let adultPath = ModelStore.shared.adultModel.map { ModelStore.shared.path($0).path }
-            guard let brain = adultPath ?? (useBrain ? brainPath : nil) ?? ModelStore.shared.readyModel.map({ ModelStore.shared.path($0).path }) else {
-                finish(ChatTurn(role: .echo, text: "成人模式要用 NineSun 的大腦：先到「調頻台」→「NineSun 的大腦」下載（成人模式專用的開放版最適合），再回來聊。", source: .tool))
+            // 用選的那個模型（全部都是開放模型）；「用大腦思考」關著也一樣用
+            guard let brain = ModelStore.shared.readyModel.map({ ModelStore.shared.path($0).path }) else {
+                finish(ChatTurn(role: .echo, text: "成人模式要用 NineSun 的大腦：先到「調頻台」→「NineSun 的大腦」挑一個模型下載，再回來聊。", source: .tool))
                 return
             }
             roleplay(text, L, brain: brain)

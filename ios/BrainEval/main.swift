@@ -21,6 +21,8 @@ let loadStart = Date()
 let runner: LlamaRunner
 do { runner = try LlamaRunner(path: args[1], contextSize: 4096, gpu: gpu, threads: ProcessInfo.processInfo.activeProcessorCount) } catch { print("讀不進模型：\(error)"); exit(1) }
 print(String(format: "模型：%@ 讀取 %.1f 秒（gpu=%@）", (args[1] as NSString).lastPathComponent, Date().timeIntervalSince(loadStart), gpu ? "on" : "off"))
+// 看這個模型的對話格式排得對不對
+print("對話格式：", runner.chatPrompt([("system", "S"), ("user", "U")]).debugDescription)
 
 let raw = try String(contentsOfFile: args[2], encoding: .utf8)
 var totalTok = 0, totalSec = 0.0
@@ -49,6 +51,7 @@ for block in raw.components(separatedBy: "\n----\n") {
         totalTok += r.tokens; totalSec += r.seconds
         print("\n=== \(q)  [\(mode)]")
         print(LocalBrain.tidy(r.text, lang: lang))
+        if r.text.contains("<|") || r.text.contains("|>") { print("（原文有控制字：\(r.text.prefix(200).debugDescription)）") }
         print(String(format: "（提示 %d 字元、寫 %d 個 token、%.1f 秒、%.1f token/秒）", r.promptTokens, r.tokens, r.seconds, r.tokensPerSecond))
     } catch {
         print("\n=== \(q)\n失敗：\(error)")
