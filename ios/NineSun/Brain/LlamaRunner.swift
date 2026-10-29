@@ -63,6 +63,32 @@ final class LlamaRunner {
         llama_model_free(model)
     }
 
+    /// 照這個模型自己的對話格式把對話排好（Qwen 是 ChatML、Gemma 是 <start_of_turn>、Llama 3 是 <|start_header_id|>…）。
+    /// llama.cpp 認不得的格式就用 ChatML。Qwen 這種會先想很久的模型，最後先放一段空的思考，讓它直接回答
+    func chatPrompt(_ messages: [(role: String, content: String)]) -> String {
+        let tmpl = llama_model_chat_template(model, nil).map { String(cString: $0) }
+        var cRoles = messages.map { strdup($0.role) }
+        var cContents = messages.map { strdup($0.content) }
+        defer { cRoles.forEach { free($0) }; cContents.forEach { free($0) } }
+        var chat = (0..<messages.count).map { llama_chat_message(role: cRoles[$0], content: cContents[$0]) }
+        let total = messages.reduce(0) { $0 + $1.content.utf8.count } * 2 + 512
+        var buf = [CChar](repeating: 0, count: total)
+        var n = llama_chat_apply_template(tmpl, &chat, chat.count, true, &buf, Int32(buf.count))
+        if n > Int32(buf.count) {
+            buf = [CChar](repeating: 0, count: Int(n) + 1)
+            n = llama_chat_apply_template(tmpl, &chat, chat.count, true, &buf, Int32(buf.count))
+        }
+        _ = cRoles; _ = cContents
+        var out: String
+        if n > 0 {
+            out = String(decoding: buf.prefix(Int(n)).map { UInt8(bitPattern: $0) }, as: UTF8.self)
+        } else {
+            out = messages.map { "<|im_start|>\($0.role)\n\($0.content)<|im_end|>\n" }.joined() + "<|im_start|>assistant\n"
+        }
+        if (tmpl ?? "").contains("<think>") && out.hasSuffix("<|im_start|>assistant\n") { out += "<think>\n\n</think>\n\n" }
+        return out
+    }
+
     /// 文字 → 模型的字（special：<|im_start|> 這種控制字要認出來）
     func tokenize(_ text: String, special: Bool = true) throws -> [llama_token] {
         let bytes = Int32(text.utf8.count)

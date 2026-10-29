@@ -42,10 +42,10 @@ for block in raw.components(separatedBy: "\n----\n") {
     let mode: LocalBrain.Mode = !reading.isEmpty ? .reading : (!facts.isEmpty || !evidence.isEmpty) ? .grounded : .chat
     let user = LocalBrain.userMessage(question: q, facts: facts.trimmingCharacters(in: .whitespacesAndNewlines), evidence: evidence,
                                       reading: reading.trimmingCharacters(in: .whitespacesAndNewlines), lang: lang)
-    let prompt = LocalBrain.chatML(system: LocalBrain.system(lang: lang), history: history, user: user)
+    let prompt = runner.chatPrompt(LocalBrain.messages(system: LocalBrain.system(lang: lang), history: history, user: user))
     do {
         let r = try runner.generate(prompt: prompt, maxTokens: mode == .chat ? 300 : 400, temperature: mode == .chat ? 0.7 : 0.4,
-                                    stop: ["<|im_end|>", "<|im_start|>"], seed: 42)
+                                    stop: LocalBrain.stops, seed: 42)
         totalTok += r.tokens; totalSec += r.seconds
         print("\n=== \(q)  [\(mode)]")
         print(LocalBrain.tidy(r.text, lang: lang))

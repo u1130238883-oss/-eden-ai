@@ -48,11 +48,11 @@ final class LocalBrain {
                     self.lock.lock(); self.runner = r; self.loadedPath = modelPath; self.lock.unlock()
                 }
                 guard let r = self.runner else { throw LlamaRunner.Failure.context }
-                let prompt = Self.chatML(system: system, history: history, user: user)
+                let prompt = r.chatPrompt(Self.messages(system: system, history: history, user: user))
                 let temp: Float = mode == .roleplay ? 0.85 : mode == .chat ? 0.7 : 0.4
                 let most = mode == .roleplay ? 500 : mode == .chat ? 450 : 800
                 var res = try r.generate(prompt: prompt, maxTokens: most, temperature: temp,
-                                         stop: ["<|im_end|>", "<|im_start|>"],
+                                         stop: Self.stops,
                                          shouldStop: { self.lock.lock(); defer { self.lock.unlock() }; return self.cancelled },
                                          onText: { onText(Self.tidy($0, lang: lang)) })
                 res.text = Self.tidy(res.text, lang: lang)
@@ -64,6 +64,20 @@ final class LocalBrain {
     }
 
     // MARK: - 提示（給模型的話）
+
+    /// 各家模型的對話結束記號（模型說完了卻沒停時用）
+    static let stops = ["<|im_end|>", "<|im_start|>", "<end_of_turn>", "<start_of_turn>", "<|eot_id|>", "<|start_header_id|>", "<turn|>", "<|turn>"]
+
+    /// 系統指示＋前面的對話＋這次的話（每則太長就截短）
+    static func messages(system: String, history: [Turn], user: String) -> [(role: String, content: String)] {
+        var m: [(role: String, content: String)] = [("system", system)]
+        for t in history.suffix(8) {
+            let text = t.text.count > 400 ? String(t.text.prefix(400)) + "…" : t.text
+            m.append((t.fromUser ? "user" : "assistant", text))
+        }
+        m.append(("user", user))
+        return m
+    }
 
     /// Qwen 的對話格式（ChatML）。最後先放一段空的思考，讓它直接回答，不花時間長篇思考
     static func chatML(system: String, history: [Turn], user: String) -> String {
