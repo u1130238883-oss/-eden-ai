@@ -5,7 +5,6 @@ struct ChatView: View {
     @EnvironmentObject var vm: ChatViewModel
     @State private var input = ""
     @State private var showSettings = false
-    @State private var showKnowledge = false
     @State private var showPaint = false
     @State private var showLangPicker = false
     @FocusState private var focused: Bool
@@ -38,9 +37,6 @@ struct ChatView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView().environmentObject(vm)
         }
-        .sheet(isPresented: $showKnowledge) {
-            KnowledgeView().environmentObject(vm)
-        }
         .sheet(isPresented: $showPaint) {
             PaintView().environmentObject(vm)
         }
@@ -71,18 +67,9 @@ struct ChatView: View {
                 }
                 Spacer()
                 SignalBars(active: !vm.thinking)
+                // 原本資料庫的按鈕：現在打開畫室（算命資料拿掉了）
                 Button {
                     showPaint = true
-                } label: {
-                    Image(systemName: "paintbrush.pointed.fill")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(Theme.hazard)
-                        .frame(width: 38, height: 34)
-                        .background(Slanted(skew: 7).fill(Theme.panelHi))
-                }
-                .accessibilityLabel(T("畫室", "Studio", "Estudio", "Studio"))
-                Button {
-                    showKnowledge = true
                 } label: {
                     Image(systemName: "books.vertical.fill")
                         .font(.system(size: 16, weight: .bold))
