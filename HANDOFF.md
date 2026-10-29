@@ -554,3 +554,6 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
 - 中文描述先請大腦翻成英文的 SD 提示；畫之前把大腦整個放掉（`LocalBrain.unloadNow`），記憶體才夠。
 - 底線：只畫成年人（`Painter.crossesLine`：AdultGuard＋teen/少女/學生妹…，提示和翻好的英文都查；不要的內容裡一定加 child、teen、loli…）；
   成人模式沒開時不要的內容加 nsfw、nude…；只有文字畫圖，不能放照片進來改（不做真人換臉）。存相簿要 NSPhotoLibraryAddUsageDescription。
+- 使用者要「生成成人內容沒有限制的圖片的模型」：加了專門練過成人內容的 URPM 1.3、HassanBlend 1.5、LibreEros、
+  AbyssOrangeMix 2 NSFW（original 版、512×768，只能用 GPU：`Model.gpu`）和寫實的 epiCRealism、CyberRealistic 9（6-bit）。
+  底線不變：只畫成年人、不畫真實存在的人（只有文字畫圖）。ChilloutMix 沒放（專門做寫實真人臉）。

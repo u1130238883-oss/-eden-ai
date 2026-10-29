@@ -12,16 +12,41 @@ final class PaintStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         let name: String
         /// zip 的大小（解開後差不多一樣大）
         let bytes: Int64
+        /// original 版只能用 GPU 跑（split-einsum 版用神經網路引擎）
+        var gpu = false
         /// 下載網址（第一個不行就換下一個）
         let urls: [String]
+
+        init(id: String, name: String, bytes: Int64, gpu: Bool = false, urls: [String]) {
+            self.id = id; self.name = name; self.bytes = bytes; self.gpu = gpu; self.urls = urls
+        }
     }
 
-    /// 都是 split-einsum（給 iPhone 的神經網路引擎用的）版本，畫面 512×512
+    /// 成人模式打開時都可以畫成人內容；前面幾個是專門練過成人內容的。只畫成年人
     static let models: [Model] = [
+        Model(id: "urpm-13", name: "寫實成人 URPM 1.3", bytes: 1_981_945_266,
+              urls: ["https://huggingface.co/coreml-community/coreml-URPM-v13/resolve/main/split_einsum/URPM-v13_split-einsum.zip",
+                     "https://hf-mirror.com/coreml-community/coreml-URPM-v13/resolve/main/split_einsum/URPM-v13_split-einsum.zip"]),
+        Model(id: "epicrealism", name: "寫實 epiCRealism", bytes: 913_951_419,
+              urls: ["https://huggingface.co/darkmaniac7/TokForge-epiCRealism-CoreML-6bit/resolve/main/epiCRealism_palettized_split_einsum_v2_compiled.zip",
+                     "https://hf-mirror.com/darkmaniac7/TokForge-epiCRealism-CoreML-6bit/resolve/main/epiCRealism_palettized_split_einsum_v2_compiled.zip",
+                     "https://huggingface.co/mahmudplx/coreml-epicrealism-6bit/resolve/main/epiCRealism_palettized_split_einsum_v2_compiled.zip"]),
+        Model(id: "cyberrealistic-9", name: "寫實 CyberRealistic 9", bytes: 917_040_559,
+              urls: ["https://huggingface.co/darkmaniac7/TokForge-CyberRealistic-V9-CoreML-6bit/resolve/main/CyberRealistic-V9_palettized_split_einsum_v2_compiled.zip",
+                     "https://hf-mirror.com/darkmaniac7/TokForge-CyberRealistic-V9-CoreML-6bit/resolve/main/CyberRealistic-V9_palettized_split_einsum_v2_compiled.zip"]),
         Model(id: "realistic-vision-51", name: "寫實 Realistic Vision 5.1", bytes: 916_522_756,
               urls: ["https://huggingface.co/darkmaniac7/TokForge-RealisticVision-5.1-CoreML-6bit/resolve/main/RealisticVision-5.1_palettized_split_einsum_v2_compiled.zip",
-                     "https://huggingface.co/mahmudplx/coreml-realisticvision-5.1-6bit/resolve/main/RealisticVision-5.1_palettized_split_einsum_v2_compiled.zip",
-                     "https://hf-mirror.com/darkmaniac7/TokForge-RealisticVision-5.1-CoreML-6bit/resolve/main/RealisticVision-5.1_palettized_split_einsum_v2_compiled.zip"]),
+                     "https://hf-mirror.com/darkmaniac7/TokForge-RealisticVision-5.1-CoreML-6bit/resolve/main/RealisticVision-5.1_palettized_split_einsum_v2_compiled.zip",
+                     "https://huggingface.co/mahmudplx/coreml-realisticvision-5.1-6bit/resolve/main/RealisticVision-5.1_palettized_split_einsum_v2_compiled.zip"]),
+        Model(id: "hassanblend-15", name: "寫實成人 HassanBlend 1.5", bytes: 1_973_756_355,
+              urls: ["https://huggingface.co/coreml-community/coreml-HassanBlend/resolve/main/split-einsum/hassanblend1512_split-einsum.zip",
+                     "https://hf-mirror.com/coreml-community/coreml-HassanBlend/resolve/main/split-einsum/hassanblend1512_split-einsum.zip"]),
+        Model(id: "libreeros", name: "成人 LibreEros", bytes: 2_473_526_420,
+              urls: ["https://huggingface.co/coreml-community/coreml-LibreEros/resolve/main/split_einsum/libreeros-v1_no-i2i_split-einsum_ema-vae.zip",
+                     "https://hf-mirror.com/coreml-community/coreml-LibreEros/resolve/main/split_einsum/libreeros-v1_no-i2i_split-einsum_ema-vae.zip"]),
+        Model(id: "aom2-nsfw", name: "動漫成人 AbyssOrangeMix 2 NSFW（直式）", bytes: 1_908_622_926, gpu: true,
+              urls: ["https://huggingface.co/coreml-community/coreml-OrangeMixs/resolve/main/original/512x768/AbyssOrangeMix2-nsfw_no-i2i_original_512x768_ema-vae.zip",
+                     "https://hf-mirror.com/coreml-community/coreml-OrangeMixs/resolve/main/original/512x768/AbyssOrangeMix2-nsfw_no-i2i_original_512x768_ema-vae.zip"]),
         Model(id: "aom3", name: "動漫 AbyssOrangeMix 3", bytes: 1_973_747_442,
               urls: ["https://huggingface.co/coreml-community/coreml-OrangeMixs/resolve/main/split-einsum/AOM3_split-einsum.zip",
                      "https://hf-mirror.com/coreml-community/coreml-OrangeMixs/resolve/main/split-einsum/AOM3_split-einsum.zip"]),

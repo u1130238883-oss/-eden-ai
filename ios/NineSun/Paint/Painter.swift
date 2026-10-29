@@ -57,7 +57,7 @@ final class Painter {
     static let nsfwNegative = "nsfw, nude, naked, nipples, sex, genitals, pussy, penis"
 
     /// 畫一張。adult：成人模式打開了才可以畫成人內容。onStep：第幾步／總共幾步（背景執行緒）
-    func paint(modelURL: URL, prompt: String, adult: Bool, steps: Int = 25, seed: UInt32? = nil,
+    func paint(modelURL: URL, gpu: Bool = false, prompt: String, adult: Bool, steps: Int = 25, seed: UInt32? = nil,
                onStep: @escaping (Int, Int) -> Void, done: @escaping (Result<CGImage, Error>) -> Void) {
         queue.async {
             self.lock.lock(); self.cancelled = false; self.lock.unlock()
@@ -69,7 +69,7 @@ final class Painter {
                     self.pipeline?.unloadResources()
                     self.pipeline = nil
                     let cfg = MLModelConfiguration()
-                    cfg.computeUnits = .cpuAndNeuralEngine
+                    cfg.computeUnits = gpu ? .cpuAndGPU : .cpuAndNeuralEngine
                     let p = try StableDiffusionPipeline(resourcesAt: modelURL, controlNet: [], configuration: cfg,
                                                         disableSafety: true, reduceMemory: true)
                     try p.loadResources()

@@ -109,18 +109,18 @@ struct PaintView: View {
                     let clean = line.trimmingCharacters(in: CharacterSet(charactersIn: "\"' ").union(.whitespaces))
                     if !clean.isEmpty { english = clean }
                 }
-                DispatchQueue.main.async { paint(english, url: url, adult: adult) }
+                DispatchQueue.main.async { paint(english, url: url, gpu: m.gpu, adult: adult) }
             })
         } else {
-            paint(text, url: url, adult: adult)
+            paint(text, url: url, gpu: m.gpu, adult: adult)
         }
     }
 
-    private func paint(_ english: String, url: URL, adult: Bool) {
+    private func paint(_ english: String, url: URL, gpu: Bool, adult: Bool) {
         used = english
         if Painter.crossesLine(english) { status = Painter.Failure.crossesLine.description; busy = false; return }
         status = T("準備畫圖（第一次要讀模型，大約半分鐘）…", "Loading the model…", "Cargando el modelo…", "Carico il modello…")
-        Painter.shared.paint(modelURL: url, prompt: english, adult: adult, onStep: { step, total in
+        Painter.shared.paint(modelURL: url, gpu: gpu, prompt: english, adult: adult, onStep: { step, total in
             DispatchQueue.main.async {
                 progress = Double(step) / Double(max(1, total))
                 status = T("畫圖中 \(step)/\(total)", "Drawing \(step)/\(total)", "Dibujando \(step)/\(total)", "Disegno \(step)/\(total)")
