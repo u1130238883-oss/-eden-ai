@@ -1,6 +1,6 @@
 name: List model files
 
-# 列出 Hugging Face 上幾個模型倉庫裡的 GGUF 檔名和大小（選大腦模型用；這台機器連得到 Hugging Face）
+# 在 Hugging Face 上找模型、列出 GGUF 檔名和大小（選大腦模型用；這台機器連得到 Hugging Face）
 on:
   push:
     paths:
@@ -11,15 +11,23 @@ jobs:
   list:
     runs-on: ubuntu-latest
     steps:
+      - name: Search
+        run: |
+          for q in "gemma-4-E4B" "gemma-4-E4B heretic" "gemma-4-E4B uncensored" "gemma-4-E4B rp" "gemma-4-E4B nsfw" "gemma-4-E4B abliterated" \
+                   "gemma-4 heretic" "gemma-3-4b rp" "Stheno 8B" "Lumimaid 8B" "Lunaris 8B" "8B uncensored roleplay" "Gemma 4 E4B Chinese"; do
+            echo "### search: $q"
+            curl -s "https://huggingface.co/api/models?search=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$q")&filter=gguf&sort=downloads&limit=25" | python3 -c '
+          import json, sys
+          try:
+              for m in json.load(sys.stdin): print("   ", m.get("id"), m.get("downloads"), m.get("likes"))
+          except Exception as e: print("   (none)", e)'
+          done
       - name: List
         run: |
-          for r in mradermacher/Huihui-gemma-4-E2B-it-abliterated-GGUF mradermacher/gemma-4-E2B-it-SDFT_Heretic_RP-GGUF \
-                   bartowski/Dolphin3.0-Llama3.2-3B-GGUF mradermacher/Dolphin3.0-Llama3.2-3B-GGUF \
-                   mradermacher/Huihui-Phi-4-mini-instruct-abliterated-GGUF mradermacher/Phi-4-mini-instruct-abliterated-GGUF \
-                   mradermacher/Huihui-Ministral-3-3B-Instruct-2512-abliterated-GGUF mradermacher/Ministral-3-3B-Instruct-2512-abliterated-GGUF \
-                   mradermacher/Josiefied-Qwen3-4B-abliterated-v2-GGUF bartowski/Goekdeniz-Guelmez_Josiefied-Qwen3-4B-abliterated-v2-GGUF \
-                   mradermacher/Huihui-SmolLM3-3B-abliterated-GGUF mradermacher/Huihui-Llama-3.2-3B-Instruct-abliterated-GGUF \
-                   mradermacher/Huihui-Qwen3-4B-Instruct-2507-abliterated-GGUF; do
+          for r in mradermacher/Huihui-gemma-4-E4B-it-abliterated-GGUF mradermacher/gemma-4-E4B-it-OBLITERATED-GGUF \
+                   mradermacher/gemma-4-E4B-it-SDFT_Heretic_RP-GGUF mradermacher/gemma-4-E4B-it-heretic-GGUF \
+                   bartowski/L3-8B-Stheno-v3.2-GGUF mradermacher/L3-8B-Stheno-v3.2-GGUF bartowski/Lumimaid-v0.2-8B-GGUF \
+                   bartowski/L3-8B-Lunaris-v1-GGUF mradermacher/L3-8B-Lunaris-v1-GGUF; do
             echo "== $r"
             curl -s "https://huggingface.co/api/models/$r/tree/main" | python3 -c '
           import json, sys
@@ -29,6 +37,6 @@ jobs:
               else:
                   for f in d:
                       p = f.get("path", "")
-                      if p.endswith(".gguf") or p.endswith(".safetensors") or p == "README.md": print("   ", p, f.get("size"))
+                      if ("Q4_K_M" in p or "q4_k_m" in p or "Q4_K_S" in p) and p.endswith(".gguf"): print("   ", p, f.get("size"))
           except Exception as e: print("   (no listing)", e)'
           done
