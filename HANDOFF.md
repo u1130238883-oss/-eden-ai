@@ -517,3 +517,6 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
   斷詞時照模型規定加開頭記號（Gemma、Llama 要）。`LocalBrain.stops` 收各家的結束記號。
 - `brain-eval.yml` 改成測這些新模型，每台機器會先印出對話格式，看排得對不對。
 - AdultGuard 不變：成人模式的使用者的話、角色、大腦寫的字都檢查。
+- Mac 上的測試（brain-eval run 10，CPU）：九個模型的對話格式都對、沒有漏出控制字。中文最好的是開放版 Qwen3.5 4B 和開放版 Gemma 4 E2B；
+  Gemma 3 4B 口氣活潑；Dolphin、Llama 3.2 無審查、Phi-4 mini、SmolLM3 中文常弄錯成語和人名（適合英文）；Qwen3.5 2B 算術和地點會錯。
+  有的模型會把提示裡的【NineSun 查到的資料】標題抄回答案：`tidy` 會拿掉。

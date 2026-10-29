@@ -192,6 +192,13 @@ final class LocalBrain {
         if let r = s.range(of: "</think>") { s = String(s[r.upperBound...]) } else if s.contains("<think>") { return "" }
         s = s.replacingOccurrences(of: #"(?s)<\|channel>.*?<channel\|>"#, with: "", options: .regularExpression)   // Gemma 4 的思考
         s = s.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "<|im_end|>", with: "")
+        // 有的模型會把提示裡的資料標題抄回來：答完之後再抄一遍資料的整段拿掉，開頭的標題行拿掉
+        for tag in ["【NineSun 查到的資料】", "[NineSun's facts]", "【命盤推算結果】", "[chart results]"] {
+            if let r = s.range(of: tag) {
+                if s[..<r.lowerBound].trimmingCharacters(in: .whitespacesAndNewlines).count > 20 { s = String(s[..<r.lowerBound]) }
+                else { s = s.replacingOccurrences(of: #"(?m)^.*"# + NSRegularExpression.escapedPattern(for: tag) + #".*\n?"#, with: "", options: .regularExpression) }
+            }
+        }
         s = s.replacingOccurrences(of: #"(?m)^#{1,6}\s*"#, with: "", options: .regularExpression)
         s = s.replacingOccurrences(of: #"(?m)^\s*[-*_]{3,}\s*$\n?"#, with: "", options: .regularExpression)   // --- 分隔線
         s = s.replacingOccurrences(of: #"(?m)^(\s*)[*-]\s+"#, with: "$1• ", options: .regularExpression)       // * 項目 → •
