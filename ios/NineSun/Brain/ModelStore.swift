@@ -14,6 +14,8 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         let bytes: Int64
         /// 下載網址（第一個不行就換下一個）
         let urls: [String]
+        /// 成人模式專用（開放模型），一般聊天不用它
+        var adult = false
     }
 
     static let models: [Model] = [
@@ -26,6 +28,12 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
               file: "Qwen3.5-2B-Q4_K_M.gguf", bytes: 1_300_000_000,
               urls: ["https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-Q4_K_M.gguf",
                      "https://hf-mirror.com/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-Q4_K_M.gguf"]),
+        Model(id: "qwen35-4b-open", name: "成人模式專用（開放版 Qwen3.5 4B）", detail: "拿掉過度拒絕的版本，只在成人模式的角色扮演用",
+              file: "Huihui-Qwen3.5-4B-abliterated.Q4_K_M.gguf", bytes: 2_707_514_688,
+              urls: ["https://huggingface.co/mradermacher/Huihui-Qwen3.5-4B-abliterated-GGUF/resolve/main/Huihui-Qwen3.5-4B-abliterated.Q4_K_M.gguf",
+                     "https://hf-mirror.com/mradermacher/Huihui-Qwen3.5-4B-abliterated-GGUF/resolve/main/Huihui-Qwen3.5-4B-abliterated.Q4_K_M.gguf",
+                     "https://huggingface.co/mradermacher/Huihui-Qwen3.5-4B-abliterated-i1-GGUF/resolve/main/Huihui-Qwen3.5-4B-abliterated.i1-Q4_K_M.gguf"],
+              adult: true),
     ]
 
     enum State: Equatable {
@@ -81,13 +89,16 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         return h.readData(ofLength: 4) == Data("GGUF".utf8)
     }
 
-    var selected: Model { Self.models.first { $0.id == selectedID } ?? Self.models[0] }
+    var selected: Model { Self.models.first { $0.id == selectedID && !$0.adult } ?? Self.models[0] }
 
-    /// 可以用的模型：選的那個下載好了就用它，不然用任何一個下載好的
+    /// 一般聊天用的模型：選的那個下載好了就用它，不然用任何一個下載好的（成人模式專用的不算）
     var readyModel: Model? {
         if states[selected.id] == .ready { return selected }
-        return Self.models.first { states[$0.id] == .ready }
+        return Self.models.first { !$0.adult && states[$0.id] == .ready }
     }
+
+    /// 成人模式專用的模型（下載好了才有）
+    var adultModel: Model? { Self.models.first { $0.adult && states[$0.id] == .ready } }
 
     /// 手機剩下的空間夠不夠（多留 500 MB）
     func hasRoom(_ m: Model) -> Bool {

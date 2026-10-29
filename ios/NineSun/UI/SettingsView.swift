@@ -230,7 +230,7 @@ struct SettingsView: View {
                    "El cerebro es un modelo de lenguaje en tu teléfono: se descarga una vez y funciona sin conexión. Usa Wi-Fi para descargarlo.",
                    "Il cervello è un modello linguistico sul telefono: si scarica una volta e poi funziona offline. Usa il Wi-Fi per scaricarlo."))
                 .font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
-            ForEach(ModelStore.models) { m in modelRow(m) }
+            ForEach(ModelStore.models.filter { !$0.adult }) { m in modelRow(m) }
             // 成人模式：要確認滿 18 歲才打開
             Toggle(isOn: Binding(get: { vm.adultMode }, set: { on in if on { confirmAdult = true } else { vm.adultMode = false } })) {
                 label(T("成人模式（18+）", "Adult mode (18+)", "Modo adulto (18+)", "Modalità adulti (18+)"), "")
@@ -249,6 +249,7 @@ struct SettingsView: View {
                     .foregroundColor(Theme.paper)
                     .padding(10)
                     .background(Theme.panelHi)
+                ForEach(ModelStore.models.filter { $0.adult }) { m in modelRow(m) }
             }
             if store.readyModel != nil {
                 button(vm.brainTesting ? T("測試中…", "Testing…", "Probando…", "Test in corso…") : T("測試大腦", "Test the brain", "Probar el cerebro", "Prova il cervello"),
@@ -262,7 +263,7 @@ struct SettingsView: View {
 
     @ViewBuilder private func modelRow(_ m: ModelStore.Model) -> some View {
         let st = store.states[m.id] ?? .absent
-        let chosen = store.selectedID == m.id
+        let chosen = m.adult || store.selectedID == m.id
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text((chosen ? "● " : "○ ") + m.name).font(.system(size: 14, weight: .bold)).foregroundColor(Theme.paper)
@@ -272,7 +273,7 @@ struct SettingsView: View {
             Text(m.detail).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
             switch st {
             case .absent:
-                button(T("下載", "Download", "Descargar", "Scarica")) { store.selectedID = m.id; store.download(m) }
+                button(T("下載", "Download", "Descargar", "Scarica")) { if !m.adult { store.selectedID = m.id }; store.download(m) }
             case .downloading(let done, let total):
                 ProgressView(value: total > 0 ? Double(done) / Double(total) : 0).tint(Theme.hazard)
                 HStack {
@@ -292,7 +293,7 @@ struct SettingsView: View {
                 }
             case .failed(let why):
                 Text(why).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.neonPink)
-                button(T("再下載一次", "Try again", "Reintentar", "Riprova")) { store.selectedID = m.id; store.download(m) }
+                button(T("再下載一次", "Try again", "Reintentar", "Riprova")) { if !m.adult { store.selectedID = m.id }; store.download(m) }
             }
         }
         .padding(.vertical, 4)

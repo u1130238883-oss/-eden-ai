@@ -283,8 +283,15 @@ final class ChatViewModel: ObservableObject {
                 finish(ChatTurn(role: .echo, text: care, source: .tool))
                 return
             }
-            guard let brain = brainPath else {
-                finish(ChatTurn(role: .echo, text: "成人模式要用 NineSun 的大腦：先到「調頻台」→「NineSun 的大腦」下載，再回來聊。", source: .tool))
+            // 底線寫死在程式裡：提到未成年就不寫
+            if AdultGuard.crosses(text) || AdultGuard.crosses(roleCharacter) {
+                finish(ChatTurn(role: .echo, text: AdultGuard.refusal(L), source: .tool))
+                return
+            }
+            // 有下載成人模式專用的開放模型就用它，不然用一般的大腦
+            let adultPath = ModelStore.shared.adultModel.map { ModelStore.shared.path($0).path }
+            guard let brain = adultPath ?? (useBrain ? brainPath : nil) ?? ModelStore.shared.readyModel.map({ ModelStore.shared.path($0).path }) else {
+                finish(ChatTurn(role: .echo, text: "成人模式要用 NineSun 的大腦：先到「調頻台」→「NineSun 的大腦」下載（成人模式專用的開放版最適合），再回來聊。", source: .tool))
                 return
             }
             roleplay(text, L, brain: brain)
@@ -427,10 +434,16 @@ final class ChatViewModel: ObservableObject {
         let past = turns.dropLast().suffix(12).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
         let system = LocalBrain.roleplaySystem(character: roleCharacter, lang: L.rawValue)
         LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: text, mode: .roleplay, lang: L.rawValue,
-                              onText: { t in DispatchQueue.main.async { if !t.isEmpty { self.streaming = t } } },
+                              onText: { t in
+            // 大腦寫到未成年的內容：馬上停、不顯示
+            if AdultGuard.crosses(t) { LocalBrain.shared.cancel(); return }
+            DispatchQueue.main.async { if !t.isEmpty { self.streaming = t } }
+        },
                               done: { result in
             DispatchQueue.main.async {
                 switch result {
+                case .success(let r) where AdultGuard.crosses(r.text):
+                    self.finish(ChatTurn(role: .echo, text: AdultGuard.refusal(L), source: .tool))
                 case .success(let r) where !r.text.isEmpty:
                     self.finish(ChatTurn(role: .echo, text: r.text, source: .neural))
                 case .success:
