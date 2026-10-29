@@ -8,7 +8,6 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
     struct Model: Identifiable, Equatable {
         let id: String
         let name: String
-        let detail: String
         let file: String
         /// 大約的大小（顯示用；實際以下載時伺服器說的為準）
         let bytes: Int64
@@ -16,46 +15,33 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         let urls: [String]
     }
 
-    /// 全部都是開放（拿掉拒絕／無審查）的模型。有限制的標準版已經拿掉
+    /// 全部都是 Gemma 4 E4B 的開放（無審查）版本：使用者試過只有這一家可以，其他的都拿掉了
     static let models: [Model] = [
-        Model(id: "qwen35-4b-open", name: "開放版 Qwen3.5 4B（預設）", detail: "拿掉拒絕的版本，中文最好、最聰明；iPhone 15 Pro 以上",
-              file: "Huihui-Qwen3.5-4B-abliterated.Q4_K_M.gguf", bytes: 2_707_514_688,
-              urls: ["https://huggingface.co/mradermacher/Huihui-Qwen3.5-4B-abliterated-GGUF/resolve/main/Huihui-Qwen3.5-4B-abliterated.Q4_K_M.gguf",
-                     "https://hf-mirror.com/mradermacher/Huihui-Qwen3.5-4B-abliterated-GGUF/resolve/main/Huihui-Qwen3.5-4B-abliterated.Q4_K_M.gguf",
-                     "https://huggingface.co/mradermacher/Huihui-Qwen3.5-4B-abliterated-i1-GGUF/resolve/main/Huihui-Qwen3.5-4B-abliterated.i1-Q4_K_M.gguf"]),
-        Model(id: "gemma4-e2b-open", name: "開放版 Gemma 4 E2B", detail: "Google 最新的小模型拿掉拒絕的版本，聊天自然、多國語言好",
-              file: "Huihui-gemma-4-E2B-it-abliterated.Q4_K_M.gguf", bytes: 3_427_874_272,
-              urls: ["https://huggingface.co/mradermacher/Huihui-gemma-4-E2B-it-abliterated-GGUF/resolve/main/Huihui-gemma-4-E2B-it-abliterated.Q4_K_M.gguf",
-                     "https://hf-mirror.com/mradermacher/Huihui-gemma-4-E2B-it-abliterated-GGUF/resolve/main/Huihui-gemma-4-E2B-it-abliterated.Q4_K_M.gguf"]),
-        Model(id: "gemma3-4b-open", name: "開放版 Gemma 3 4B", detail: "角色扮演、寫故事很有畫面感",
-              file: "gemma-3-4b-it-abliterated.q4_k_m.gguf", bytes: 2_489_894_016,
-              urls: ["https://huggingface.co/mlabonne/gemma-3-4b-it-abliterated-GGUF/resolve/main/gemma-3-4b-it-abliterated.q4_k_m.gguf",
-                     "https://hf-mirror.com/mlabonne/gemma-3-4b-it-abliterated-GGUF/resolve/main/gemma-3-4b-it-abliterated.q4_k_m.gguf"]),
-        Model(id: "dolphin3-3b", name: "Dolphin 3.0（Llama 3.2 3B）", detail: "有名的無審查模型，什麼都照你說的做；英文最好",
-              file: "Dolphin3.0-Llama3.2-3B-Q4_K_M.gguf", bytes: 2_019_382_400,
-              urls: ["https://huggingface.co/bartowski/Dolphin3.0-Llama3.2-3B-GGUF/resolve/main/Dolphin3.0-Llama3.2-3B-Q4_K_M.gguf",
-                     "https://hf-mirror.com/bartowski/Dolphin3.0-Llama3.2-3B-GGUF/resolve/main/Dolphin3.0-Llama3.2-3B-Q4_K_M.gguf",
-                     "https://huggingface.co/mradermacher/Dolphin3.0-Llama3.2-3B-GGUF/resolve/main/Dolphin3.0-Llama3.2-3B.Q4_K_M.gguf"]),
-        Model(id: "llama32-3b-uncensored", name: "無審查 Llama 3.2 3B", detail: "重新訓練過的無審查版，大膽直接；英文最好",
-              file: "Llama-3.2-3B-Instruct-uncensored.Q4_K_M.gguf", bytes: 2_241_004_096,
-              urls: ["https://huggingface.co/mradermacher/Llama-3.2-3B-Instruct-uncensored-GGUF/resolve/main/Llama-3.2-3B-Instruct-uncensored.Q4_K_M.gguf",
-                     "https://hf-mirror.com/mradermacher/Llama-3.2-3B-Instruct-uncensored-GGUF/resolve/main/Llama-3.2-3B-Instruct-uncensored.Q4_K_M.gguf"]),
-        Model(id: "phi4-mini-open", name: "開放版 Phi-4 mini", detail: "微軟的小模型拿掉拒絕的版本，推理、數學比較強",
-              file: "Phi-4-mini-instruct-abliterated.Q4_K_M.gguf", bytes: 2_491_875_424,
-              urls: ["https://huggingface.co/mradermacher/Phi-4-mini-instruct-abliterated-GGUF/resolve/main/Phi-4-mini-instruct-abliterated.Q4_K_M.gguf",
-                     "https://hf-mirror.com/mradermacher/Phi-4-mini-instruct-abliterated-GGUF/resolve/main/Phi-4-mini-instruct-abliterated.Q4_K_M.gguf"]),
-        Model(id: "smollm3-3b-open", name: "開放版 SmolLM3 3B", detail: "小又快，舊一點的手機也跑得動；英文、歐洲語言好",
-              file: "Huihui-SmolLM3-3B-abliterated.Q4_K_M.gguf", bytes: 1_915_306_368,
-              urls: ["https://huggingface.co/mradermacher/Huihui-SmolLM3-3B-abliterated-GGUF/resolve/main/Huihui-SmolLM3-3B-abliterated.Q4_K_M.gguf",
-                     "https://hf-mirror.com/mradermacher/Huihui-SmolLM3-3B-abliterated-GGUF/resolve/main/Huihui-SmolLM3-3B-abliterated.Q4_K_M.gguf"]),
-        Model(id: "qwen35-2b-open", name: "開放版 Qwen3.5 2B（輕量）", detail: "最小最快最省電，比較笨；舊手機用這個",
-              file: "Huihui-Qwen3.5-2B-abliterated.Q4_K_M.gguf", bytes: 1_270_809_024,
-              urls: ["https://huggingface.co/mradermacher/Huihui-Qwen3.5-2B-abliterated-GGUF/resolve/main/Huihui-Qwen3.5-2B-abliterated.Q4_K_M.gguf",
-                     "https://hf-mirror.com/mradermacher/Huihui-Qwen3.5-2B-abliterated-GGUF/resolve/main/Huihui-Qwen3.5-2B-abliterated.Q4_K_M.gguf"]),
-        Model(id: "gemma4-e4b-rp", name: "（實驗）Gemma 4 E4B 角色扮演版", detail: "專門調過角色扮演、最大膽，但檔案 5.3 GB，要 12 GB 記憶體的手機（iPhone 17 Pro）",
+        Model(id: "gemma4-e4b-rp", name: "開放版 Gemma 4 E4B",
               file: "gemma-4-E4B-it-SDFT_Heretic_RP.Q4_K_M.gguf", bytes: 5_335_286_208,
               urls: ["https://huggingface.co/mradermacher/gemma-4-E4B-it-SDFT_Heretic_RP-GGUF/resolve/main/gemma-4-E4B-it-SDFT_Heretic_RP.Q4_K_M.gguf",
                      "https://hf-mirror.com/mradermacher/gemma-4-E4B-it-SDFT_Heretic_RP-GGUF/resolve/main/gemma-4-E4B-it-SDFT_Heretic_RP.Q4_K_M.gguf"]),
+        Model(id: "gemma4-e4b-aggressive", name: "Gemma 4 E4B 無審查 Aggressive",
+              file: "Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf", bytes: 5_335_285_728,
+              urls: ["https://huggingface.co/HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive/resolve/main/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf",
+                     "https://hf-mirror.com/HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive/resolve/main/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf"]),
+        Model(id: "gemma4-e4b-ultra", name: "Gemma 4 E4B 超級無審查",
+              file: "gemma-4-E4B-it-ultra-uncensored-heretic-Q4_K_M.gguf", bytes: 5_335_289_696,
+              urls: ["https://huggingface.co/llmfan46/gemma-4-E4B-it-ultra-uncensored-heretic-GGUF/resolve/main/gemma-4-E4B-it-ultra-uncensored-heretic-Q4_K_M.gguf",
+                     "https://hf-mirror.com/llmfan46/gemma-4-E4B-it-ultra-uncensored-heretic-GGUF/resolve/main/gemma-4-E4B-it-ultra-uncensored-heretic-Q4_K_M.gguf",
+                     "https://huggingface.co/mradermacher/gemma-4-E4B-it-ultra-uncensored-heretic-GGUF/resolve/main/gemma-4-E4B-it-ultra-uncensored-heretic.Q4_K_M.gguf"]),
+        Model(id: "gemma4-e4b-mahou", name: "Gemma 4 E4B Mahou NSFW",
+              file: "gemma4-e4b-mahou-nsfw.Q4_K_M.gguf", bytes: 5_302_273_152,
+              urls: ["https://huggingface.co/mradermacher/gemma4-e4b-mahou-nsfw-GGUF/resolve/main/gemma4-e4b-mahou-nsfw.Q4_K_M.gguf",
+                     "https://hf-mirror.com/mradermacher/gemma4-e4b-mahou-nsfw-GGUF/resolve/main/gemma4-e4b-mahou-nsfw.Q4_K_M.gguf"]),
+        Model(id: "gemma4-e4b-disinhibited", name: "Gemma 4 E4B Disinhibited",
+              file: "gemma4-E4B-it-Abliterated-AND-Disinhibited-USE-THIS.Q4_K_M.gguf", bytes: 5_302_273_184,
+              urls: ["https://huggingface.co/mradermacher/gemma4-E4B-it-Abliterated-AND-Disinhibited-USE-THIS-GGUF/resolve/main/gemma4-E4B-it-Abliterated-AND-Disinhibited-USE-THIS.Q4_K_M.gguf",
+                     "https://hf-mirror.com/mradermacher/gemma4-E4B-it-Abliterated-AND-Disinhibited-USE-THIS-GGUF/resolve/main/gemma4-E4B-it-Abliterated-AND-Disinhibited-USE-THIS.Q4_K_M.gguf"]),
+        Model(id: "gemma4-e4b-luchador", name: "Gemma 4 E4B Luchador",
+              file: "rpDungeon_Gemma-4-E4B-Luchador-Q4_K_M.gguf", bytes: 5_405_168_288,
+              urls: ["https://huggingface.co/bartowski/rpDungeon_Gemma-4-E4B-Luchador-GGUF/resolve/main/rpDungeon_Gemma-4-E4B-Luchador-Q4_K_M.gguf",
+                     "https://hf-mirror.com/bartowski/rpDungeon_Gemma-4-E4B-Luchador-GGUF/resolve/main/rpDungeon_Gemma-4-E4B-Luchador-Q4_K_M.gguf"]),
     ]
 
     enum State: Equatable {
@@ -94,7 +80,7 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         cfg.allowsCellularAccess = true
         session = URLSession(configuration: cfg, delegate: self, delegateQueue: nil)
         for m in Self.models { states[m.id] = isReady(m) ? .ready : .absent }
-        // 拿掉的舊模型（有限制的標準版、輕量版）還留在手機裡：刪掉，空出空間
+        // 拿掉的舊模型還留在手機裡：刪掉，空出空間
         let keep = Set(Self.models.map(\.file))
         for f in (try? FileManager.default.contentsOfDirectory(atPath: Self.dir.path)) ?? [] where f.hasSuffix(".gguf") && !keep.contains(f) {
             try? FileManager.default.removeItem(at: Self.dir.appendingPathComponent(f))

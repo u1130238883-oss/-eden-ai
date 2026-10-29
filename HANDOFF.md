@@ -529,3 +529,13 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
   `LlamaRunner` 保留上一次算過的開頭（KV 快取），同樣的系統指示和舊對話不用再算（Qwen3.5 這種有遞迴層的模型做不到就整個重算）；
   App 打開時就先把大腦讀進記憶體（`LocalBrain.preload`）。
 - 不要親吻表情（😘💋…）：`LocalBrain.noKiss` 在大腦、雲端 AI、引擎的每則回答都拿掉；角色扮演等待中的 💋 改成「…」。
+
+## 2026-10-29：只留 Gemma 4 E4B 家族、背景繼續寫
+
+- 使用者在手機上試過：只有 Gemma 4 E4B（SDFT_Heretic_RP）可以，其他都不行 → 全部拿掉，只留它（改名「開放版 Gemma 4 E4B」，
+  id、檔名不變，下載過的不用重下），再加五個同大小（約 5.3 GB）的無審查 Gemma 4 E4B：HauhauCS Aggressive、ultra-uncensored heretic、
+  Mahou NSFW、Abliterated-AND-Disinhibited、rpDungeon Luchador（Hugging Face 上下載數最多的幾個，檔名大小由 `model-list.yml` 查到）。
+- 設定裡模型底下的說明、大腦的說明那段都拿掉（使用者要求）。
+- 背景繼續寫：iOS 不讓背景的 App 用 GPU。`LocalBrain.ask` 寫到一半切到背景時，GPU 這次停下（或運算失敗），
+  改用 CPU 重讀模型、從寫到的地方接著寫；`BackgroundWork` 跟系統要背景時間：beginBackgroundTask（約 30 秒），
+  iOS 26 起在要離開畫面時再送 BGContinuedProcessingTask（`com.ninesun.app.brain-answer`，Info.plist 有登記），系統顯示進度、可以寫完。

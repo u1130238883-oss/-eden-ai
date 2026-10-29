@@ -21,6 +21,8 @@ final class LlamaRunner {
         var promptTokens: Int
         var tokens: Int
         var seconds: Double
+        /// 沒寫完就停了（被叫停、或運算失敗——例如切到背景，系統不讓用 GPU）：text 是停之前寫好的
+        var interrupted = false
         var tokensPerSecond: Double { seconds > 0 ? Double(tokens) / seconds : 0 }
     }
 
@@ -143,7 +145,7 @@ final class LlamaRunner {
         while i < tokens.count {
             let n = min(batchSize, tokens.count - i)
             let rc = tokens.withUnsafeMutableBufferPointer { b in llama_decode(ctx, llama_batch_get_one(b.baseAddress! + i, Int32(n))) }
-            if rc != 0 { throw Failure.decode(rc) }
+            if rc != 0 { cached = []; llama_memory_clear(mem, true); throw Failure.decode(rc) }
             i += n
         }
         cached = tokens
@@ -164,7 +166,9 @@ final class LlamaRunner {
         var bytes: [UInt8] = []
         var text = ""
         var produced = 0
-        while produced < maxTokens, !shouldStop() {
+        var interrupted = false
+        while produced < maxTokens {
+            if shouldStop() { interrupted = true; break }
             var t = llama_sampler_sample(chain, ctx, -1)
             if llama_vocab_is_eog(vocab, t) { break }
             produced += 1
@@ -182,9 +186,9 @@ final class LlamaRunner {
             }
             if tokens.count + produced >= contextSize - 1 { break }
             let rc = llama_decode(ctx, llama_batch_get_one(&t, 1))
-            if rc != 0 { cached = []; throw Failure.decode(rc) }
+            if rc != 0 { cached = []; llama_memory_clear(llama_get_memory(ctx), true); interrupted = true; break }
             cached.append(t)
         }
-        return Result(text: text, promptTokens: promptTokens, tokens: produced, seconds: Date().timeIntervalSince(started))
+        return Result(text: text, promptTokens: promptTokens, tokens: produced, seconds: Date().timeIntervalSince(started), interrupted: interrupted)
     }
 }

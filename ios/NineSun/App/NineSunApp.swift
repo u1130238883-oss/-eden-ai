@@ -1,8 +1,14 @@
 import SwiftUI
 import UIKit
 
-/// 大腦在背景下載完時，系統會叫醒 App 交代事情
+/// 大腦在背景下載完時，系統會叫醒 App 交代事情；大腦寫回答時切到背景要繼續寫
 final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        // 大腦寫到一半切到背景也要繼續寫
+        BackgroundWork.setUp()
+        return true
+    }
+
     func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String,
                      completionHandler: @escaping () -> Void) {
         ModelStore.shared.backgroundCompletion = completionHandler

@@ -181,10 +181,10 @@ final class ChatViewModel: ObservableObject {
                     if ModelStore.shared.readyModel == nil, !UserDefaults.standard.bool(forKey: "ninesun.brainTipShown") {
                         UserDefaults.standard.set(true, forKey: "ninesun.brainTipShown")
                         self.turns.append(ChatTurn(role: .echo, text: T(
-                            "💡 想讓我更聰明嗎？到右上角「調頻台」→「NineSun 的大腦」按下載（大約 2.7 GB，建議接 Wi-Fi）。下載好之後我會在手機裡自己思考，不用網路、不用 API。",
-                            "💡 Want me smarter? Go to Tuning → NineSun's brain and tap Download (about 2.7 GB, Wi-Fi recommended). Then I think on your phone, offline, no API.",
-                            "💡 ¿Quieres que sea más inteligente? Ve a Ajustes → Cerebro de NineSun y toca Descargar (unos 2,7 GB, mejor con Wi-Fi).",
-                            "💡 Vuoi che sia più intelligente? Vai su Sintonia → Cervello di NineSun e tocca Scarica (circa 2,7 GB, meglio con Wi-Fi)."), source: .tool))
+                            "💡 想讓我更聰明嗎？到右上角「調頻台」→「NineSun 的大腦」按下載（大約 5 GB，建議接 Wi-Fi）。下載好之後我會在手機裡自己思考，不用網路、不用 API。",
+                            "💡 Want me smarter? Go to Tuning → NineSun's brain and tap Download (about 5 GB, Wi-Fi recommended). Then I think on your phone, offline, no API.",
+                            "💡 ¿Quieres que sea más inteligente? Ve a Ajustes → Cerebro de NineSun y toca Descargar (unos 5 GB, mejor con Wi-Fi).",
+                            "💡 Vuoi che sia più intelligente? Vai su Sintonia → Cervello di NineSun e tocca Scarica (circa 5 GB, meglio con Wi-Fi)."), source: .tool))
                     }
                     withAnimation(.easeOut(duration: 0.35)) { self.phase = .ready }
                 }
@@ -399,9 +399,12 @@ final class ChatViewModel: ObservableObject {
         let system = LocalBrain.system(lang: L.rawValue)
         let user = LocalBrain.userMessage(question: question, facts: facts, evidence: evidence, reading: reading, hint: hint, lang: L.rawValue)
         let book = rules
+        // 切到別的 App 也繼續寫
+        let work = BackgroundWork.start()
         LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: user, mode: mode, lang: L.rawValue,
-                              onText: { t in DispatchQueue.main.async { if !t.isEmpty { self.streaming = LocalBrain.noKiss(t) } } },
+                              onText: { t in work.tick(t.count); DispatchQueue.main.async { if !t.isEmpty { self.streaming = LocalBrain.noKiss(t) } } },
                               done: { result in
+            work.end()
             DispatchQueue.main.async {
                 switch result {
                 case .success(let r) where !r.text.isEmpty:
@@ -425,13 +428,16 @@ final class ChatViewModel: ObservableObject {
         streaming = LocalBrain.shared.isLoaded ? "…" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
         let past = turns.dropLast().suffix(12).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
         let system = LocalBrain.roleplaySystem(character: roleCharacter, lang: L.rawValue)
+        let work = BackgroundWork.start()
         LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: text, mode: .roleplay, lang: L.rawValue,
                               onText: { t in
+            work.tick(t.count)
             // 大腦寫到未成年的內容：馬上停、不顯示
             if AdultGuard.crosses(t) { LocalBrain.shared.cancel(); return }
             DispatchQueue.main.async { if !t.isEmpty { self.streaming = LocalBrain.noKiss(t) } }
         },
                               done: { result in
+            work.end()
             DispatchQueue.main.async {
                 switch result {
                 case .success(let r) where AdultGuard.crosses(r.text):

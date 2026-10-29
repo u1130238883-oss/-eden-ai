@@ -225,11 +225,6 @@ struct SettingsView: View {
                 label(T("用大腦思考（手機上的 AI）", "Think with the on-phone brain", "Pensar con el cerebro local", "Pensa con il cervello locale"), "")
             }
             .tint(Theme.hazard)
-            Text(T("大腦是在手機裡跑的語言模型，下載一次之後完全離線、不用 API。NineSun 先算命盤、查常識、上網找資料，再由大腦讀懂你的問題、想好怎麼回答。全部都是沒有限制的開放模型，挑一個下載就好。建議接 Wi-Fi 下載，下載時可以切到別的 App。",
-                   "The brain is a language model running on your phone: download once, then fully offline, no API. NineSun computes charts and looks things up, then the brain works out the answer. Use Wi-Fi to download.",
-                   "El cerebro es un modelo de lenguaje en tu teléfono: se descarga una vez y funciona sin conexión. Usa Wi-Fi para descargarlo.",
-                   "Il cervello è un modello linguistico sul telefono: si scarica una volta e poi funziona offline. Usa il Wi-Fi per scaricarlo."))
-                .font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
             ForEach(ModelStore.models) { m in modelRow(m) }
             // 成人模式：要確認滿 18 歲才打開
             Toggle(isOn: Binding(get: { vm.adultMode }, set: { on in if on { confirmAdult = true } else { vm.adultMode = false } })) {
@@ -269,7 +264,6 @@ struct SettingsView: View {
                 Spacer()
                 Text(ModelStore.gb(m.bytes)).font(Theme.hud(12)).foregroundColor(Theme.dim)
             }
-            Text(m.detail).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
             switch st {
             case .absent:
                 button(T("下載", "Download", "Descargar", "Scarica")) { store.selectedID = m.id; store.download(m) }

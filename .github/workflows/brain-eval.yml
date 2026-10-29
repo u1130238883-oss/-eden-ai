@@ -20,22 +20,18 @@ jobs:
       fail-fast: false
       matrix:
         model:
-          - name: qwen35-4b-open
-            url: https://huggingface.co/mradermacher/Huihui-Qwen3.5-4B-abliterated-GGUF/resolve/main/Huihui-Qwen3.5-4B-abliterated.Q4_K_M.gguf
-          - name: gemma4-e2b-open
-            url: https://huggingface.co/mradermacher/Huihui-gemma-4-E2B-it-abliterated-GGUF/resolve/main/Huihui-gemma-4-E2B-it-abliterated.Q4_K_M.gguf
-          - name: gemma3-4b-open
-            url: https://huggingface.co/mlabonne/gemma-3-4b-it-abliterated-GGUF/resolve/main/gemma-3-4b-it-abliterated.q4_k_m.gguf
-          - name: dolphin3-3b
-            url: https://huggingface.co/bartowski/Dolphin3.0-Llama3.2-3B-GGUF/resolve/main/Dolphin3.0-Llama3.2-3B-Q4_K_M.gguf
-          - name: llama32-3b-uncensored
-            url: https://huggingface.co/mradermacher/Llama-3.2-3B-Instruct-uncensored-GGUF/resolve/main/Llama-3.2-3B-Instruct-uncensored.Q4_K_M.gguf
-          - name: phi4-mini-open
-            url: https://huggingface.co/mradermacher/Phi-4-mini-instruct-abliterated-GGUF/resolve/main/Phi-4-mini-instruct-abliterated.Q4_K_M.gguf
-          - name: smollm3-3b-open
-            url: https://huggingface.co/mradermacher/Huihui-SmolLM3-3B-abliterated-GGUF/resolve/main/Huihui-SmolLM3-3B-abliterated.Q4_K_M.gguf
-          - name: qwen35-2b-open
-            url: https://huggingface.co/mradermacher/Huihui-Qwen3.5-2B-abliterated-GGUF/resolve/main/Huihui-Qwen3.5-2B-abliterated.Q4_K_M.gguf
+          - name: gemma4-e4b-rp
+            url: https://huggingface.co/mradermacher/gemma-4-E4B-it-SDFT_Heretic_RP-GGUF/resolve/main/gemma-4-E4B-it-SDFT_Heretic_RP.Q4_K_M.gguf
+          - name: gemma4-e4b-aggressive
+            url: https://huggingface.co/HauhauCS/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive/resolve/main/Gemma-4-E4B-Uncensored-HauhauCS-Aggressive-Q4_K_M.gguf
+          - name: gemma4-e4b-ultra
+            url: https://huggingface.co/llmfan46/gemma-4-E4B-it-ultra-uncensored-heretic-GGUF/resolve/main/gemma-4-E4B-it-ultra-uncensored-heretic-Q4_K_M.gguf
+          - name: gemma4-e4b-mahou
+            url: https://huggingface.co/mradermacher/gemma4-e4b-mahou-nsfw-GGUF/resolve/main/gemma4-e4b-mahou-nsfw.Q4_K_M.gguf
+          - name: gemma4-e4b-disinhibited
+            url: https://huggingface.co/mradermacher/gemma4-E4B-it-Abliterated-AND-Disinhibited-USE-THIS-GGUF/resolve/main/gemma4-E4B-it-Abliterated-AND-Disinhibited-USE-THIS.Q4_K_M.gguf
+          - name: gemma4-e4b-luchador
+            url: https://huggingface.co/bartowski/rpDungeon_Gemma-4-E4B-Luchador-GGUF/resolve/main/rpDungeon_Gemma-4-E4B-Luchador-Q4_K_M.gguf
     steps:
       - uses: actions/checkout@v4
 
@@ -66,7 +62,7 @@ jobs:
         env:
           NSUnbufferedIO: "YES"
         run: |
-          if ! timeout 900 ./brain-eval model.gguf ios/BrainEval/questions.txt gpu; then
+          if ! timeout 900 ./brain-eval model.gguf ios/BrainEval/quick.txt gpu; then
             echo "######## GPU 不行，改用 CPU"
-            ./brain-eval model.gguf ios/BrainEval/questions.txt
+            ./brain-eval model.gguf ios/BrainEval/quick.txt
           fi

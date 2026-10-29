@@ -24,8 +24,10 @@ final class LocalBrain {
     private let queue = DispatchQueue(label: "ninesun.brain", qos: .userInitiated)
     private var runner: LlamaRunner?
     private var loadedPath: String?
+    private var loadedGPU = true
     private let lock = NSLock()
     private var cancelled = false
+    private var background = false
 
     /// 模型讀進記憶體了沒（第一次要幾秒）
     var isLoaded: Bool { lock.lock(); defer { lock.unlock() }; return runner != nil }
@@ -33,38 +35,68 @@ final class LocalBrain {
     /// 中斷正在寫的回答
     func cancel() { lock.lock(); cancelled = true; lock.unlock() }
 
+    /// App 在不在背景：iOS 不讓背景的 App 用 GPU，在背景就改用 CPU 接著寫
+    func setBackground(_ on: Bool) { lock.lock(); background = on; lock.unlock() }
+    private var inBackground: Bool { lock.lock(); defer { lock.unlock() }; return background }
+    private var isCancelled: Bool { lock.lock(); defer { lock.unlock() }; return cancelled }
+
     /// 先把模型讀進記憶體（App 打開時），第一個問題就不用等
     func preload(modelPath: String) {
-        queue.async {
-            guard self.loadedPath != modelPath, let r = try? LlamaRunner(path: modelPath, contextSize: 2048) else { return }
-            self.lock.lock(); self.runner = r; self.loadedPath = modelPath; self.lock.unlock()
-        }
+        queue.async { _ = try? self.runner(modelPath, gpu: true) }
     }
 
     /// 記憶體不夠時放掉模型（下次用到再讀）
     func unload() { queue.async { self.lock.lock(); self.runner = nil; self.loadedPath = nil; self.lock.unlock() } }
 
+    /// 要用的模型（換模型、或 GPU／CPU 換了就重讀；先放掉舊的，記憶體才夠）
+    private func runner(_ path: String, gpu: Bool) throws -> LlamaRunner {
+        if let r = runner, loadedPath == path, loadedGPU == gpu { return r }
+        lock.lock(); runner = nil; loadedPath = nil; lock.unlock()
+        let r = try LlamaRunner(path: path, contextSize: 2048, gpu: gpu)
+        lock.lock(); runner = r; loadedPath = path; loadedGPU = gpu; lock.unlock()
+        return r
+    }
+
     /// 問大腦。onText：寫到哪就回呼到哪（已經整理成繁體、去掉思考過程）；done：寫完或失敗（在背景執行緒）
+    /// 寫到一半切到背景：GPU 停下來，改用 CPU 從寫到的地方接著寫
     func ask(modelPath: String, system: String, history: [Turn], user: String, mode: Mode, lang: String,
              onText: @escaping (String) -> Void, done: @escaping (Swift.Result<LlamaRunner.Result, Error>) -> Void) {
         queue.async {
             self.lock.lock(); self.cancelled = false; self.lock.unlock()
+            let messages = Self.messages(system: system, history: history, user: user)
+            let temp: Float = mode == .roleplay ? 0.85 : mode == .chat ? 0.7 : 0.4
+            let most = mode == .roleplay ? 400 : mode == .chat ? 300 : 450
+            var written = ""
+            var tokens = 0
+            var switches = 0
+            let started = Date()
             do {
-                if self.loadedPath != modelPath {
-                    self.lock.lock(); self.runner = nil; self.lock.unlock()
-                    let r = try LlamaRunner(path: modelPath, contextSize: 2048)
-                    self.lock.lock(); self.runner = r; self.loadedPath = modelPath; self.lock.unlock()
+                while true {
+                    let gpu = !self.inBackground
+                    let r: LlamaRunner
+                    let res: LlamaRunner.Result
+                    do {
+                        r = try self.runner(modelPath, gpu: gpu)
+                        let sofar = written
+                        res = try r.generate(prompt: r.chatPrompt(messages) + sofar, maxTokens: max(1, most - tokens), temperature: temp,
+                                             stop: Self.stops,
+                                             shouldStop: { self.isCancelled || (gpu && self.inBackground) },
+                                             onText: { onText(Self.tidy(sofar + $0, lang: lang)) })
+                    } catch {
+                        // GPU 在背景被系統擋掉：改用 CPU 再試
+                        if gpu && self.inBackground && switches < 2 && !self.isCancelled { switches += 1; continue }
+                        throw error
+                    }
+                    written += res.text
+                    tokens += res.tokens
+                    if res.interrupted && gpu && self.inBackground && switches < 2 && !self.isCancelled && tokens < most {
+                        switches += 1
+                        continue
+                    }
+                    done(.success(LlamaRunner.Result(text: Self.tidy(written, lang: lang), promptTokens: res.promptTokens, tokens: tokens,
+                                                     seconds: Date().timeIntervalSince(started))))
+                    return
                 }
-                guard let r = self.runner else { throw LlamaRunner.Failure.context }
-                let prompt = r.chatPrompt(Self.messages(system: system, history: history, user: user))
-                let temp: Float = mode == .roleplay ? 0.85 : mode == .chat ? 0.7 : 0.4
-                let most = mode == .roleplay ? 400 : mode == .chat ? 300 : 450
-                var res = try r.generate(prompt: prompt, maxTokens: most, temperature: temp,
-                                         stop: Self.stops,
-                                         shouldStop: { self.lock.lock(); defer { self.lock.unlock() }; return self.cancelled },
-                                         onText: { onText(Self.tidy($0, lang: lang)) })
-                res.text = Self.tidy(res.text, lang: lang)
-                done(.success(res))
             } catch {
                 done(.failure(error))
             }
