@@ -86,6 +86,9 @@ final class ChatViewModel: ObservableObject {
 
     /// NineSun 的大腦（手機上跑的大型語言模型，不用網路、不用 API）：下載好了又開著就用它思考
     @Published var useBrain = true { didSet { save(useBrain, "useBrain") } }
+    /// 成人模式（18+）：大腦照設定的角色做成人角色扮演；預設關，要確認滿 18 歲才能打開
+    @Published var adultMode = false { didSet { save(adultMode, "adultMode") } }
+    @Published var roleCharacter = "" { didSet { save(roleCharacter, "roleCharacter") } }
     @Published var brainTestResult = ""
     @Published var brainTesting = false
     var brainPath: String? {
@@ -106,6 +109,8 @@ final class ChatViewModel: ObservableObject {
         translateOn = load("translateOn") ?? false
         translateTarget = load("translateTarget") ?? "en"
         useBrain = load("useBrain") ?? true
+        adultMode = load("adultMode") ?? false
+        roleCharacter = load("roleCharacter") ?? ""
         UILang.current = language
         // 記憶體不夠時先放掉大腦（下次用到再讀進來），不要讓系統把 App 關掉
         NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification, object: nil, queue: .main) { _ in
@@ -271,6 +276,21 @@ final class ChatViewModel: ObservableObject {
             return
         }
 
+        // 成人模式：照設定的角色聊（說想死的話還是先接住；命理、規則照常）
+        if adultMode, RuleBook.parse(text) == nil, !Self.isReading(text) || Solace.isFeeling(text) {
+            let L = autoDetect ? Lang.detect(text, fallback: language) : language
+            if let care = Safety.crisisReply(text, L) {
+                finish(ChatTurn(role: .echo, text: care, source: .tool))
+                return
+            }
+            guard let brain = brainPath else {
+                finish(ChatTurn(role: .echo, text: "成人模式要用 NineSun 的大腦：先到「調頻台」→「NineSun 的大腦」下載，再回來聊。", source: .tool))
+                return
+            }
+            roleplay(text, L, brain: brain)
+            return
+        }
+
         // 大腦下載好了（而且沒開雲端 AI）：NineSun 的引擎先算、先查，再交給大腦想怎麼回答；設定生日、規則還是引擎自己處理
         if !apiOn, let brain = brainPath, RuleBook.parse(text) == nil {
             localReply(text, brain: brain)
@@ -395,6 +415,28 @@ final class ChatViewModel: ObservableObject {
                 case .failure(let e):
                     self.streaming = ""
                     onFail("\(e)")
+                }
+            }
+        })
+    }
+
+    /// 成人模式的角色扮演：前面的對話一起給大腦，接著劇情寫
+    private func roleplay(_ text: String, _ L: Lang, brain: String) {
+        thinking = true
+        streaming = LocalBrain.shared.isLoaded ? "💋 …" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
+        let past = turns.dropLast().suffix(12).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
+        let system = LocalBrain.roleplaySystem(character: roleCharacter, lang: L.rawValue)
+        LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: text, mode: .roleplay, lang: L.rawValue,
+                              onText: { t in DispatchQueue.main.async { if !t.isEmpty { self.streaming = t } } },
+                              done: { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let r) where !r.text.isEmpty:
+                    self.finish(ChatTurn(role: .echo, text: r.text, source: .neural))
+                case .success:
+                    self.finish(ChatTurn(role: .echo, text: "（大腦這次沒有寫出東西，再說一次試試。）", source: .tool))
+                case .failure(let e):
+                    self.finish(ChatTurn(role: .echo, text: "（大腦這次沒有回答：\(e)）", source: .tool))
                 }
             }
         })

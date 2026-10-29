@@ -17,6 +17,8 @@ final class LocalBrain {
         case grounded
         /// 有命盤推算的結果，用白話解讀
         case reading
+        /// 成人模式的角色扮演（使用者自己在設定裡打開、確認滿 18 歲）
+        case roleplay
     }
 
     private let queue = DispatchQueue(label: "ninesun.brain", qos: .userInitiated)
@@ -47,8 +49,9 @@ final class LocalBrain {
                 }
                 guard let r = self.runner else { throw LlamaRunner.Failure.context }
                 let prompt = Self.chatML(system: system, history: history, user: user)
-                let temp: Float = mode == .chat ? 0.7 : 0.4
-                var res = try r.generate(prompt: prompt, maxTokens: mode == .chat ? 450 : 800, temperature: temp,
+                let temp: Float = mode == .roleplay ? 0.85 : mode == .chat ? 0.7 : 0.4
+                let most = mode == .roleplay ? 500 : mode == .chat ? 450 : 800
+                var res = try r.generate(prompt: prompt, maxTokens: most, temperature: temp,
                                          stop: ["<|im_end|>", "<|im_start|>"],
                                          shouldStop: { self.lock.lock(); defer { self.lock.unlock() }; return self.cancelled },
                                          onText: { onText(Self.tidy($0, lang: lang)) })
@@ -106,6 +109,30 @@ final class LocalBrain {
             9. 不要用 Markdown 符號（#、**、---），條列用「1.」或「•」。
             今天是\(when)。
             \(persona)
+            """
+        }
+    }
+
+    /// 成人模式的角色扮演：照使用者設定的角色說話，可以寫成人之間的親密和性愛內容。
+    /// 底線不變：只有成年人、彼此自願、不寫真實存在的人
+    static func roleplaySystem(character: String, lang: String, now: Date = Date()) -> String {
+        let who = character.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "一個溫柔、會撩人、有點壞壞的成年戀人（25 歲）" : character
+        switch lang {
+        case "en", "es", "it":
+            let name = ["en": "English", "es": "Spanish", "it": "Italian"][lang]!
+            return """
+            This is a private adult role-play chat. The user is a verified adult who turned on adult mode. Stay in character as: \(who).
+            Reply in \(name), in first person, as the character: show feelings, actions and desire; flirting, intimacy and explicit sexual content between consenting adults are allowed when the user leads there.
+            Firm limits you never cross: every character is an adult (18+) and nobody is described as a child or childlike; everything is consensual; no real, existing people.
+            Keep each reply under 200 words, vivid and natural, and keep the story going. No Markdown symbols.
+            """
+        default:
+            return """
+            這是私人的成人角色扮演聊天，使用者已經確認滿 18 歲、自己打開了成人模式。你要一直扮演這個角色：\(who)。
+            用繁體中文（台灣用語）、用角色的第一人稱說話：有情緒、有動作、有慾望；使用者想要的時候，可以寫成年人之間的調情、親密和露骨的性愛內容。
+            絕對不能跨過的底線：所有角色都是成年人（18 歲以上），不寫小孩或像小孩的角色；一切都是雙方自願；不寫真實存在的人。
+            每次回覆兩百字以內，生動自然、接著劇情往下走，不要跳出角色說教。不要用 Markdown 符號。
             """
         }
     }

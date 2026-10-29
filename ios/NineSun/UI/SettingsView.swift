@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var isLoading = true
     @State private var confirmClear = false
     @ObservedObject private var store = ModelStore.shared
+    @State private var confirmAdult = false
 
     var body: some View {
         ZStack {
@@ -45,6 +46,10 @@ struct SettingsView: View {
         }
         .preferredColorScheme(.dark)
         .onAppear(perform: load)
+        .alert(T("你已經滿 18 歲了嗎？", "Are you 18 or older?", "¿Tienes 18 años o más?", "Hai almeno 18 anni?"), isPresented: $confirmAdult) {
+            Button(T("我已滿 18 歲", "I'm 18 or older", "Tengo 18 o más", "Ho almeno 18 anni")) { vm.adultMode = true }
+            Button(T("取消", "Cancel", "Cancelar", "Annulla"), role: .cancel) {}
+        }
         .alert(T("清空所有對話？", "Clear all messages?", "¿Borrar todos los mensajes?", "Cancellare tutti i messaggi?"), isPresented: $confirmClear) {
             Button(T("清空", "Clear", "Borrar", "Cancella"), role: .destructive) { vm.clear() }
             Button(T("取消", "Cancel", "Cancelar", "Annulla"), role: .cancel) {}
@@ -226,6 +231,25 @@ struct SettingsView: View {
                    "Il cervello è un modello linguistico sul telefono: si scarica una volta e poi funziona offline. Usa il Wi-Fi per scaricarlo."))
                 .font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
             ForEach(ModelStore.models) { m in modelRow(m) }
+            // 成人模式：要確認滿 18 歲才打開
+            Toggle(isOn: Binding(get: { vm.adultMode }, set: { on in if on { confirmAdult = true } else { vm.adultMode = false } })) {
+                label(T("成人模式（18+）", "Adult mode (18+)", "Modo adulto (18+)", "Modalità adulti (18+)"), "")
+            }
+            .tint(Theme.neonPink)
+            if vm.adultMode {
+                Text(T("大腦會照下面的角色跟你聊，可以有成人內容。所有角色都是成年人、彼此自願，不寫真實存在的人。說「運勢」「命盤」還是會用命理回答。",
+                       "The brain role-plays the character below and may include adult content. All characters are adults, everything is consensual, no real people.",
+                       "El cerebro interpreta al personaje de abajo y puede incluir contenido adulto. Todos son adultos, todo es consentido.",
+                       "Il cervello interpreta il personaggio qui sotto e può includere contenuti per adulti. Tutti adulti, tutto consensuale."))
+                    .font(.system(size: 12, weight: .medium)).foregroundColor(Theme.dim)
+                TextField(T("角色（例如：溫柔又有點壞的成年戀人小夜，25 歲）", "Character (e.g. a teasing adult lover, 25)",
+                            "Personaje (p. ej. una amante adulta, 25)", "Personaggio (es. un'amante adulta, 25)"), text: $vm.roleCharacter, axis: .vertical)
+                    .lineLimit(2...5)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(Theme.paper)
+                    .padding(10)
+                    .background(Theme.panelHi)
+            }
             if store.readyModel != nil {
                 button(vm.brainTesting ? T("測試中…", "Testing…", "Probando…", "Test in corso…") : T("測試大腦", "Test the brain", "Probar el cerebro", "Prova il cervello"),
                        color: Theme.hazard) { if !vm.brainTesting { vm.testBrain() } }
