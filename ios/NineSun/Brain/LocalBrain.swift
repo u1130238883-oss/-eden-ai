@@ -48,6 +48,9 @@ final class LocalBrain {
     /// 記憶體不夠時放掉模型（下次用到再讀）
     func unload() { queue.async { self.lock.lock(); self.runner = nil; self.loadedPath = nil; self.lock.unlock() } }
 
+    /// 馬上放掉（等它真的放掉才回來；畫圖前用，記憶體才夠）。不能在大腦自己的佇列上叫
+    func unloadNow() { queue.sync { self.lock.lock(); self.runner = nil; self.loadedPath = nil; self.lock.unlock() } }
+
     /// 要用的模型（換模型、或 GPU／CPU 換了就重讀；先放掉舊的，記憶體才夠）
     private func runner(_ path: String, gpu: Bool) throws -> LlamaRunner {
         if let r = runner, loadedPath == path, loadedGPU == gpu { return r }

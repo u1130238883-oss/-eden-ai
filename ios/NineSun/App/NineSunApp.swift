@@ -11,7 +11,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
     func application(_ application: UIApplication, handleEventsForBackgroundURLSession identifier: String,
                      completionHandler: @escaping () -> Void) {
-        ModelStore.shared.backgroundCompletion = completionHandler
+        if identifier == PaintStore.sessionID { PaintStore.shared.backgroundCompletion = completionHandler }
+        else { ModelStore.shared.backgroundCompletion = completionHandler }
     }
 }
 
@@ -21,6 +22,7 @@ struct NineSunApp: App {
     @StateObject private var vm = ChatViewModel()
     /// 一開 App 就把下載接回來（上次還沒下載完的）
     private let models = ModelStore.shared
+    private let paintModels = PaintStore.shared
 
     var body: some Scene {
         WindowGroup {

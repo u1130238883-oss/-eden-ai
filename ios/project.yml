@@ -7,6 +7,13 @@ options:
 packages:
   EchoCore:
     path: EchoCore
+  # 畫室：Apple 的 Core ML Stable Diffusion，和解開模型 zip 用的 ZIPFoundation
+  StableDiffusion:
+    url: https://github.com/apple/ml-stable-diffusion
+    from: "1.1.0"
+  ZIPFoundation:
+    url: https://github.com/weichsel/ZIPFoundation
+    from: "0.9.19"
 targets:
   NineSun:
     type: application
@@ -19,6 +26,8 @@ targets:
         buildPhase: resources
     dependencies:
       - package: EchoCore
+      - package: StableDiffusion
+      - package: ZIPFoundation
       # NineSun 的大腦：llama.cpp（CI 照 llama-version.txt 編好放在 Frameworks/）
       - framework: Frameworks/llama.xcframework
         embed: true
@@ -37,6 +46,7 @@ targets:
         INFOPLIST_FILE: Support/Info.plist
         INFOPLIST_KEY_CFBundleDisplayName: "NineSun"
         INFOPLIST_KEY_UIStatusBarStyle: UIStatusBarStyleLightContent
+        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: "把畫室畫好的圖存到你的相簿"
         INFOPLIST_KEY_UIUserInterfaceStyle: Dark
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"

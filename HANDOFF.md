@@ -543,3 +543,14 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
   Qwen3.5 9B（HauhauCS Aggressive、llmfan46 Ultra Heretic）、Ornith 1.5 9B、Llama 3.1 8B Lexi、Stheno 3.2、Lumimaid 0.2、
   Hermes 3 lorablated、開放版 Ministral 3 8B。都是 Hugging Face 上下載數、按讚數最多的（`model-list.yml` 查的）。
 - 使用者不要千問（Qwen）：Qwen3.5 9B 兩個拿掉；Ornith 1.5 9B 跟 Qwen3.5 9B 同樣的大小、架構（是 Qwen3.5 9B 改的），也拿掉。
+
+## 2026-10-29：畫室（手機上畫圖）
+
+- 影片在手機上生不出來（開源影片模型要電腦的大顯示卡），所以做圖片。聊天畫面上方的筆刷按鈕打開「畫室」（`UI/PaintView.swift`）。
+- 引擎：Apple 的 ml-stable-diffusion（SwiftPM，`StableDiffusionPipeline`，split-einsum、cpuAndNeuralEngine、reduceMemory）；
+  模型是 Core ML 編好的 zip，第一次用時背景下載（`Paint/PaintStore.swift`，背景 session `com.ninesun.app.paint-download`），
+  用 ZIPFoundation 解開，找出有 TextEncoder.mlmodelc 的那層資料夾。模型：Realistic Vision 5.1（6-bit，0.9 GB，寫實）、
+  AbyssOrangeMix 3、Counterfeit 3（動漫，各 2 GB）。都是 512×512。
+- 中文描述先請大腦翻成英文的 SD 提示；畫之前把大腦整個放掉（`LocalBrain.unloadNow`），記憶體才夠。
+- 底線：只畫成年人（`Painter.crossesLine`：AdultGuard＋teen/少女/學生妹…，提示和翻好的英文都查；不要的內容裡一定加 child、teen、loli…）；
+  成人模式沒開時不要的內容加 nsfw、nude…；只有文字畫圖，不能放照片進來改（不做真人換臉）。存相簿要 NSPhotoLibraryAddUsageDescription。

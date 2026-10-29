@@ -6,6 +6,7 @@ struct ChatView: View {
     @State private var input = ""
     @State private var showSettings = false
     @State private var showKnowledge = false
+    @State private var showPaint = false
     @State private var showLangPicker = false
     @FocusState private var focused: Bool
 
@@ -40,6 +41,9 @@ struct ChatView: View {
         .sheet(isPresented: $showKnowledge) {
             KnowledgeView().environmentObject(vm)
         }
+        .sheet(isPresented: $showPaint) {
+            PaintView().environmentObject(vm)
+        }
     }
 
     // MARK: - 頂部
@@ -67,6 +71,16 @@ struct ChatView: View {
                 }
                 Spacer()
                 SignalBars(active: !vm.thinking)
+                Button {
+                    showPaint = true
+                } label: {
+                    Image(systemName: "paintbrush.pointed.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(Theme.hazard)
+                        .frame(width: 38, height: 34)
+                        .background(Slanted(skew: 7).fill(Theme.panelHi))
+                }
+                .accessibilityLabel(T("畫室", "Studio", "Estudio", "Studio"))
                 Button {
                     showKnowledge = true
                 } label: {
