@@ -175,6 +175,8 @@ final class ChatViewModel: ObservableObject {
                                 "Segnale connesso! Bentornato. Fortuna di oggi, BaZi, Zi Wei, un esagramma o due chiacchiere?")
                         self.turns.append(ChatTurn(role: .echo, text: self.rules.enforce(hello), source: .tool))
                     }
+                    // 大腦下載好了：先讀進記憶體，第一個問題就不用等
+                    if let brain = self.brainPath { LocalBrain.shared.preload(modelPath: brain) }
                     // 還沒有大腦：說一次怎麼讓 NineSun 變聰明
                     if ModelStore.shared.readyModel == nil, !UserDefaults.standard.bool(forKey: "ninesun.brainTipShown") {
                         UserDefaults.standard.set(true, forKey: "ninesun.brainTipShown")
@@ -364,33 +366,25 @@ final class ChatViewModel: ObservableObject {
 
     // MARK: - 大腦
 
-    /// 引擎算好、查好的東西交給大腦想怎麼說。回傳 false：這種回答照引擎的就好（時間、計算、換算、規則、要你給生日）
+    /// 大腦直接回答（不上網、不先查資料，最快）。回傳 false：這種回答照引擎的就好（時間、計算、換算、規則、要你給生日）
     private func think(_ text: String, _ reply: EchoEngine.Reply, brain: String) -> Bool {
         let L = reply.lang
-        // 要上網的：要最新資料、要查證的先上網，查到的交給大腦整理；其他的大腦自己就能答，不用等網路
+        let fallback: (String) -> Void = { _ in self.play(text: reply.turn.text, final: reply.turn) }
         if let q = reply.webQuery {
-            if EchoEngine.needsFreshInfo(text) || EchoEngine.needsFreshInfo(q) {
-                lookupWeb(q, L, brain: brain, asked: text)
-            } else {
-                brainAnswer(text, mode: .chat, lang: L, brain: brain) { _ in self.lookupWeb(q, L) }
-            }
+            // 大腦寫不出來才用原本的上網查
+            brainAnswer(text, mode: .chat, lang: L, brain: brain) { _ in self.lookupWeb(q, L) }
             return true
         }
-        let fallback: (String) -> Void = { _ in self.play(text: reply.turn.text, final: reply.turn) }
         switch reply.turn.source {
         case .tool, .rule:
             return false
         case .reader, .grounded, .corrected:
-            // 命盤推算的結果：引擎算的是準的，大腦用白話回答你真正問的
+            // 命盤推算的結果：只有引擎算得出你的盤，大腦用白話回答
             if reply.turn.card == nil && reply.turn.text.count < 60 { return false }
             let reading = reply.turn.text + (reply.augmentFacts.isEmpty ? "" : "\n" + reply.augmentFacts)
             brainAnswer(text, reading: reading, mode: .reading, lang: L, brain: brain, card: reply.turn.card, onFail: fallback)
-        case .knowledge:
-            brainAnswer(text, facts: reply.turn.text, mode: .grounded, lang: L, brain: brain, card: reply.turn.card, onFail: fallback)
-        case .neural:
-            // 聊天、說心情：說心情時把命盤看到的處境當參考
-            let hint = Solace.isFeeling(text) ? reply.turn.text : ""
-            brainAnswer(text, hint: hint, mode: .chat, lang: L, brain: brain, onFail: fallback)
+        case .knowledge, .neural:
+            brainAnswer(text, mode: .chat, lang: L, brain: brain, onFail: fallback)
         }
         return true
     }
@@ -401,13 +395,12 @@ final class ChatViewModel: ObservableObject {
                              note: String = "", onFail: @escaping (String) -> Void) {
         thinking = true
         streaming = LocalBrain.shared.isLoaded ? "🧠 想一想…" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
-        let past = turns.dropLast().suffix(8).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
-        let persona = AskAIs.persona(type: profile.birthday.map { Destiny($0).type }, lang: L)
-        let system = LocalBrain.system(lang: L.rawValue, persona: persona)
+        let past = turns.dropLast().suffix(6).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
+        let system = LocalBrain.system(lang: L.rawValue)
         let user = LocalBrain.userMessage(question: question, facts: facts, evidence: evidence, reading: reading, hint: hint, lang: L.rawValue)
         let book = rules
         LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: user, mode: mode, lang: L.rawValue,
-                              onText: { t in DispatchQueue.main.async { if !t.isEmpty { self.streaming = t } } },
+                              onText: { t in DispatchQueue.main.async { if !t.isEmpty { self.streaming = LocalBrain.noKiss(t) } } },
                               done: { result in
             DispatchQueue.main.async {
                 switch result {
@@ -429,14 +422,14 @@ final class ChatViewModel: ObservableObject {
     /// 成人模式的角色扮演：前面的對話一起給大腦，接著劇情寫
     private func roleplay(_ text: String, _ L: Lang, brain: String) {
         thinking = true
-        streaming = LocalBrain.shared.isLoaded ? "💋 …" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
+        streaming = LocalBrain.shared.isLoaded ? "…" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
         let past = turns.dropLast().suffix(12).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
         let system = LocalBrain.roleplaySystem(character: roleCharacter, lang: L.rawValue)
         LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: text, mode: .roleplay, lang: L.rawValue,
                               onText: { t in
             // 大腦寫到未成年的內容：馬上停、不顯示
             if AdultGuard.crosses(t) { LocalBrain.shared.cancel(); return }
-            DispatchQueue.main.async { if !t.isEmpty { self.streaming = t } }
+            DispatchQueue.main.async { if !t.isEmpty { self.streaming = LocalBrain.noKiss(t) } }
         },
                               done: { result in
             DispatchQueue.main.async {
@@ -660,6 +653,8 @@ final class ChatViewModel: ObservableObject {
     /// 打字的泡泡換成正式的訊息：同一瞬間換掉、不做淡入動畫。
     /// （以前先拿掉打字泡泡、再用動畫淡入新訊息，中間那一下是空的，畫面會閃黑一下、捲動位置也會跳）
     private func finish(_ turn: ChatTurn) {
+        var turn = turn
+        if turn.role == .echo { turn.text = LocalBrain.noKiss(turn.text) }
         var tx = Transaction()
         tx.disablesAnimations = true
         withTransaction(tx) {
@@ -672,7 +667,7 @@ final class ChatViewModel: ObservableObject {
 
     /// 打字機效果（then：打完之後接著做的事）
     private func play(text: String, final: ChatTurn, then: (() -> Void)? = nil) {
-        let chars = text.map(String.init)
+        let chars = LocalBrain.noKiss(text).map(String.init)
         var i = 0
         let step = max(1, chars.count / 60)
         func tick() {

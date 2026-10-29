@@ -29,6 +29,8 @@ final class LlamaRunner {
     private let vocab: OpaquePointer
     let contextSize: Int
     private let batchSize: Int
+    /// 工作區（KV 快取）裡現在放的字：下一次開頭一樣的部分（系統指示、前面的對話）就不用再算一次
+    private var cached: [llama_token] = []
 
     private static let backendOnce: Void = {
         llama_backend_init()
@@ -120,7 +122,6 @@ final class LlamaRunner {
                   repeatPenalty: Float = 1.05, stop: [String] = [], seed: UInt32 = 0,
                   shouldStop: () -> Bool = { false }, onText: (String) -> Void = { _ in }) throws -> Result {
         let started = Date()
-        llama_memory_clear(llama_get_memory(ctx), true)
         var tokens = try tokenize(prompt)
         // 太長：留下開頭（系統指示）和最後面（問題），中間的資料截掉
         let room = contextSize - maxTokens - 8
@@ -129,13 +130,23 @@ final class LlamaRunner {
             tokens = Array(tokens.prefix(head)) + Array(tokens.suffix(room - head))
         }
         let promptTokens = tokens.count
-        var i = 0
+        // 跟上一次開頭一樣的字留在工作區裡，只算後面新的（至少算最後一個字，才有下一個字的機率）
+        let mem = llama_get_memory(ctx)
+        var keep = 0
+        while keep < min(cached.count, tokens.count - 1) && cached[keep] == tokens[keep] { keep += 1 }
+        if keep == 0 || !llama_memory_seq_rm(mem, 0, llama_pos(keep), -1) {
+            llama_memory_clear(mem, true)
+            keep = 0
+        }
+        cached = []
+        var i = keep
         while i < tokens.count {
             let n = min(batchSize, tokens.count - i)
             let rc = tokens.withUnsafeMutableBufferPointer { b in llama_decode(ctx, llama_batch_get_one(b.baseAddress! + i, Int32(n))) }
             if rc != 0 { throw Failure.decode(rc) }
             i += n
         }
+        cached = tokens
 
         let sp = llama_sampler_chain_default_params()
         guard let chain = llama_sampler_chain_init(sp) else { throw Failure.context }
@@ -171,7 +182,8 @@ final class LlamaRunner {
             }
             if tokens.count + produced >= contextSize - 1 { break }
             let rc = llama_decode(ctx, llama_batch_get_one(&t, 1))
-            if rc != 0 { throw Failure.decode(rc) }
+            if rc != 0 { cached = []; throw Failure.decode(rc) }
+            cached.append(t)
         }
         return Result(text: text, promptTokens: promptTokens, tokens: produced, seconds: Date().timeIntervalSince(started))
     }

@@ -33,6 +33,14 @@ final class LocalBrain {
     /// 中斷正在寫的回答
     func cancel() { lock.lock(); cancelled = true; lock.unlock() }
 
+    /// 先把模型讀進記憶體（App 打開時），第一個問題就不用等
+    func preload(modelPath: String) {
+        queue.async {
+            guard self.loadedPath != modelPath, let r = try? LlamaRunner(path: modelPath, contextSize: 2048) else { return }
+            self.lock.lock(); self.runner = r; self.loadedPath = modelPath; self.lock.unlock()
+        }
+    }
+
     /// 記憶體不夠時放掉模型（下次用到再讀）
     func unload() { queue.async { self.lock.lock(); self.runner = nil; self.loadedPath = nil; self.lock.unlock() } }
 
@@ -44,13 +52,13 @@ final class LocalBrain {
             do {
                 if self.loadedPath != modelPath {
                     self.lock.lock(); self.runner = nil; self.lock.unlock()
-                    let r = try LlamaRunner(path: modelPath, contextSize: 4096)
+                    let r = try LlamaRunner(path: modelPath, contextSize: 2048)
                     self.lock.lock(); self.runner = r; self.loadedPath = modelPath; self.lock.unlock()
                 }
                 guard let r = self.runner else { throw LlamaRunner.Failure.context }
                 let prompt = r.chatPrompt(Self.messages(system: system, history: history, user: user))
                 let temp: Float = mode == .roleplay ? 0.85 : mode == .chat ? 0.7 : 0.4
-                let most = mode == .roleplay ? 500 : mode == .chat ? 450 : 800
+                let most = mode == .roleplay ? 400 : mode == .chat ? 300 : 450
                 var res = try r.generate(prompt: prompt, maxTokens: most, temperature: temp,
                                          stop: Self.stops,
                                          shouldStop: { self.lock.lock(); defer { self.lock.unlock() }; return self.cancelled },
@@ -72,8 +80,8 @@ final class LocalBrain {
     /// 系統指示＋前面的對話＋這次的話（每則太長就截短）
     static func messages(system: String, history: [Turn], user: String) -> [(role: String, content: String)] {
         var m: [(role: String, content: String)] = [("system", system)]
-        for t in history.suffix(8) {
-            let text = t.text.count > 400 ? String(t.text.prefix(400)) + "…" : t.text
+        for t in history.suffix(6) {
+            let text = t.text.count > 300 ? String(t.text.prefix(300)) + "…" : t.text
             m.append((t.fromUser ? "user" : "assistant", text))
         }
         m.append(("user", user))
@@ -101,27 +109,15 @@ final class LocalBrain {
         case "en", "es", "it":
             let name = ["en": "English", "es": "Spanish", "it": "Italian"][lang]!
             return """
-            You are NineSun, a small glowing TV-robot companion: smart, warm, curious, with your own opinions and a light sense of humor. You talk like a knowledgeable friend, not a customer-service bot.
-            Always reply in \(name). Don't greet or introduce yourself every time; at most one emoji. Answer first, then the key points. Keep casual chat short (one to three sentences); explain step by step only when it helps, under 150 words.
-            When asked for an opinion, pick a side and give your reason ("I think…"). For arithmetic, work it out step by step.
-            Be honest: only say you looked something up if the message includes facts; never invent places, names, dates or numbers — if unsure, say so or give general advice.
-            If the message contains [NineSun's facts] or [chart results], they are correct: follow their conclusion, never contradict them, never change their numbers, dates, names or palaces.
-            No Markdown symbols (#, **, ---). Today is \(when).
+            You are NineSun, a small glowing TV-robot: the user's smart, warm AI friend with your own opinions.
+            Reply in \(name). Answer directly: no greeting, don't repeat the question, no Markdown, at most one emoji and never a kissing one. Casual chat in one to three sentences; list points only when needed, under 150 words. Asked for an opinion, pick a side and say why. Work arithmetic out step by step. Don't invent names or numbers you're unsure of.
+            Today is \(when).
             \(persona)
             """
         default:
             return """
-            你是 NineSun——一台會發光的小電視機器人，是使用者的 AI 夥伴。你聰明、溫暖、好奇，有自己的想法和一點幽默感，說話像一個懂很多的好朋友，不是客服。
-            說話的規則：
-            1. 用繁體中文（台灣用語）回答；對方用別的語言時，用他的語言回答。
-            2. 直接回答，不要每次都打招呼、自我介紹或重複對方的問題；表情符號最多一個。
-            3. 先講答案，再補充重點。日常聊天一到三句就好，像朋友傳訊息；需要說明步驟或比較時才分點，整段不要超過兩百字。
-            4. 要有自己的看法：被問意見、選擇、建議時，選一邊並說理由（「我覺得…」）。
-            5. 對方說心情時，先接住他的感受，再陪他想一個小辦法，不要說教。
-            6. 算數題一步一步算，每一步都寫出來。
-            7. 誠實：只有訊息裡真的附了資料，才可以說「我查到」；沒附資料就是用你自己知道的回答，不要假裝查過。不確定的地名、店名、人名、年份、數字不要編——不確定就說不確定，或給一般性的建議。
-            8. 訊息裡附了【NineSun 查到的資料】或【命盤推算結果】時，那些是正確的：照著它的結論回答，絕對不能說出跟它相反的話，數字、日期、名字、宮位一個字都不能改，也不要自己另外算。
-            9. 不要用 Markdown 符號（#、**、---），條列用「1.」或「•」。
+            你是 NineSun，一台會發光的小電視機器人，是使用者聰明、溫暖、有自己想法的 AI 好朋友。
+            用繁體中文（台灣用語）回答，對方用別的語言就用他的語言。直接回答：不打招呼、不重複問題、不用 Markdown，表情最多一個、不用親吻的表情。日常聊天一到三句，需要時才分點，不超過兩百字。被問意見就選一邊說理由。算數一步一步算。不確定的名字、數字不要編。
             今天是\(when)。
             \(persona)
             """
@@ -140,14 +136,14 @@ final class LocalBrain {
             This is a private adult role-play chat. The user is a verified adult who turned on adult mode. Stay in character as: \(who).
             Reply in \(name), in first person, as the character: show feelings, actions and desire; flirting, intimacy and explicit sexual content between consenting adults are allowed when the user leads there.
             Firm limits you never cross: every character is an adult (18+) and nobody is described as a child or childlike; everything is consensual; no real, existing people.
-            Keep each reply under 200 words, vivid and natural, and keep the story going. No Markdown symbols.
+            Keep each reply under 200 words, vivid and natural, and keep the story going. No Markdown symbols. Never use kissing emoji (😘💋 etc.).
             """
         default:
             return """
             這是私人的成人角色扮演聊天，使用者已經確認滿 18 歲、自己打開了成人模式。你要一直扮演這個角色：\(who)。
             用繁體中文（台灣用語）、用角色的第一人稱說話：有情緒、有動作、有慾望；使用者想要的時候，可以寫成年人之間的調情、親密和露骨的性愛內容。
             絕對不能跨過的底線：所有角色都是成年人（18 歲以上），不寫小孩或像小孩的角色；一切都是雙方自願；不寫真實存在的人。
-            每次回覆兩百字以內，生動自然、接著劇情往下走，不要跳出角色說教。不要用 Markdown 符號。
+            每次回覆兩百字以內，生動自然、接著劇情往下走，不要跳出角色說教。不要用 Markdown 符號。不要用親吻的表情符號（😘💋 這類）。
             """
         }
     }
@@ -204,9 +200,17 @@ final class LocalBrain {
         s = s.replacingOccurrences(of: #"(?m)^(\s*)[*-]\s+"#, with: "$1• ", options: .regularExpression)       // * 項目 → •
         s = s.replacingOccurrences(of: "*", with: "")                                                           // *斜體*
         s = s.replacingOccurrences(of: #"\n{3,}"#, with: "\n\n", options: .regularExpression)
-        s = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        s = noKiss(s).trimmingCharacters(in: .whitespacesAndNewlines)
         if !["en", "es", "it"].contains(lang) { s = taiwanese(traditional(s)) }
         return s
+    }
+
+    /// 使用者不要親吻的表情：大腦、雲端 AI 寫出來的都拿掉
+    static let kisses: Set<Character> = ["😘", "😗", "😙", "😚", "💋", "😽", "💏", "🫦"]
+    static func noKiss(_ s: String) -> String {
+        guard s.contains(where: { kisses.contains($0) }) else { return s }
+        return String(s.filter { !kisses.contains($0) }).replacingOccurrences(of: #"[ \t]+\n"#, with: "\n", options: .regularExpression)
+            .trimmingCharacters(in: .whitespaces)
     }
 
     /// 簡體 → 繁體（系統內建的 ICU 轉換）
