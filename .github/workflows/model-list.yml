@@ -1,0 +1,31 @@
+name: List model files
+
+# 列出 Hugging Face 上幾個模型倉庫裡的 GGUF 檔名和大小（選大腦模型用；這台機器連得到 Hugging Face）
+on:
+  push:
+    paths:
+      - ".github/workflows/model-list.yml"
+  workflow_dispatch:
+
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List
+        run: |
+          for r in mradermacher/Huihui-Qwen3.5-4B-abliterated-GGUF mradermacher/Huihui-Qwen3.5-4B-abliterated-i1-GGUF \
+                   huihui-ai/Huihui-Qwen3.5-4B-abliterated-GGUF bartowski/huihui-ai_Huihui-Qwen3.5-4B-abliterated-GGUF \
+                   huihui-ai/Huihui-Qwen3.5-4B-abliterated mradermacher/Huihui-Qwen3-4B-Instruct-2507-abliterated-GGUF \
+                   huihui-ai/Huihui-Qwen3-4B-Instruct-2507-abliterated-GGUF; do
+            echo "== $r"
+            curl -s "https://huggingface.co/api/models/$r/tree/main" | python3 -c '
+          import json, sys
+          try:
+              d = json.load(sys.stdin)
+              if isinstance(d, dict): print("   ", d.get("error"))
+              else:
+                  for f in d:
+                      p = f.get("path", "")
+                      if p.endswith(".gguf") or p.endswith(".safetensors") or p == "README.md": print("   ", p, f.get("size"))
+          except Exception as e: print("   (no listing)", e)'
+          done
