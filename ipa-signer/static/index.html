@@ -70,7 +70,8 @@ details summary{padding:12px 16px;color:var(--accent);cursor:pointer;list-style:
 
     <h2>簽名 IPA</h2>
     <form id="signForm" class="card">
-      <label><span>IPA 文件</span><input type="file" name="ipa" required></label>
+      <label><span>IPA 文件</span><input type="file" name="ipa"></label>
+      <label><span>或者 IPA 網址</span><input type="text" name="ipa_url" autocapitalize="off" placeholder="https://…/app.ipa"></label>
       <details>
         <summary>進階選項（可不填）</summary>
         <label><span>新 Bundle ID</span><input type="text" name="bundle_id" autocapitalize="off" placeholder="不改"></label>
@@ -195,12 +196,15 @@ $('#certForm').onsubmit = async e => {
 $('#signForm').onsubmit = e => {
   e.preventDefault();
   const msg = $('#signMsg'), bar = $('#signProgress'), btn = $('#signBtn');
+  const form = new FormData(e.target);
+  if (!form.get('ipa')?.size) form.delete('ipa');
+  if (!form.has('ipa') && !form.get('ipa_url').trim()) { msg.className = 'msg bad'; msg.textContent = '請選擇 IPA 文件，或者填寫 IPA 網址'; return; }
   const xhr = new XMLHttpRequest();
   xhr.open('POST', '/api/sign');
   xhr.upload.onprogress = ev => {
     if (!ev.lengthComputable) return;
     bar.value = ev.loaded / ev.total * 100;
-    msg.textContent = ev.loaded < ev.total ? `上傳中 ${Math.round(bar.value)}%` : '簽名中，請稍候…';
+    msg.textContent = ev.loaded < ev.total ? `上傳中 ${Math.round(bar.value)}%` : (form.has('ipa') ? '簽名中，請稍候…' : '下載並簽名中，請稍候…');
   };
   xhr.onload = async () => {
     btn.disabled = false; bar.hidden = true;
@@ -214,7 +218,7 @@ $('#signForm').onsubmit = e => {
   };
   xhr.onerror = () => { btn.disabled = false; bar.hidden = true; msg.className = 'msg bad'; msg.textContent = '網絡錯誤，請重試'; };
   btn.disabled = true; bar.hidden = false; bar.value = 0; msg.className = 'msg'; msg.textContent = '上傳中 0%';
-  xhr.send(new FormData(e.target));
+  xhr.send(form);
 };
 
 $('#apps').onclick = async e => {

@@ -1,0 +1,54 @@
+name: NeoSign
+options:
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  NeoSign:
+    type: application
+    platform: iOS
+    sources:
+      - path: NeoSign
+    info:
+      path: NeoSign/Info.plist
+      properties:
+        CFBundleDisplayName: 霓簽
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIUserInterfaceStyle: Dark
+        LSSupportsOpeningDocumentsInPlace: false
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: iOS App
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [com.apple.itunes.ipa]
+          - CFBundleTypeName: Signing Certificate
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [com.rsa.pkcs-12, com.apple.mobileprovision, public.zip-archive]
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: com.apple.itunes.ipa
+            UTTypeDescription: iOS App
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [ipa]
+          - UTTypeIdentifier: com.apple.mobileprovision
+            UTTypeDescription: Provisioning Profile
+            UTTypeConformsTo: [public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [mobileprovision]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.neosign.app
+        PRODUCT_NAME: NeoSign
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        SWIFT_OBJC_BRIDGING_HEADER: NeoSign/Bridging-Header.h
+        HEADER_SEARCH_PATHS: $(SRCROOT)/bridge
+        LIBRARY_SEARCH_PATHS: $(SRCROOT)/build-deps/lib
+        OTHER_LDFLAGS: -lzsign -lcrypto -lc++
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGN_IDENTITY: ""
+        ENABLE_BITCODE: "NO"

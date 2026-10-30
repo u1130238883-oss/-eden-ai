@@ -1,0 +1,5 @@
+build-deps/
+build/
+out/
+*.xcodeproj/
+NeoSign/Info.plist

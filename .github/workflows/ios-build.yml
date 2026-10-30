@@ -1,0 +1,72 @@
+name: Build NeoSign IPA
+
+on:
+  push:
+    branches: [claude/ipa-signer]
+    paths:
+      - "ios-app/**"
+      - ".github/workflows/ios-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache OpenSSL
+        uses: actions/cache@v4
+        with:
+          path: ios-app/build-deps/openssl
+          key: openssl-3.0.15-ios16-arm64-v1
+
+      - name: Build OpenSSL + zsign for iOS
+        run: ios-app/scripts/build-deps.sh
+
+      - name: Generate Xcode project
+        working-directory: ios-app
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Build app
+        working-directory: ios-app
+        run: |
+          xcodebuild -project NeoSign.xcodeproj -target NeoSign \
+            -configuration Release -sdk iphoneos \
+            SYMROOT="$PWD/build" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build > build.log 2>&1 && status=0 || status=$?
+          grep -E "error:|BUILD (SUCCEEDED|FAILED)" build.log | head -n 60 || true
+          tail -n 30 build.log
+          exit $status
+
+      - name: Package IPA
+        working-directory: ios-app
+        run: |
+          rm -rf out && mkdir -p out/Payload
+          cp -R build/Release-iphoneos/NeoSign.app out/Payload/
+          cd out && zip -qry NeoSign.ipa Payload
+          ls -la NeoSign.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NeoSign-ipa
+          path: ios-app/out/NeoSign.ipa
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete neosign-latest --yes --cleanup-tag || true
+          gh release create neosign-latest ios-app/out/NeoSign.ipa \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "霓簽 NeoSign（未簽名）" \
+            --notes "未簽名的 IPA。複製下載鏈接，貼到你的簽名網站「IPA 網址」一欄簽名安裝。"

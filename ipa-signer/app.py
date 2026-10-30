@@ -248,19 +248,48 @@ async def check_cert():
 
 # ---------- 簽名 ----------
 
+async def save_upload(upload: UploadFile, dest: Path):
+    with dest.open("wb") as f:
+        while chunk := await upload.read(1 << 20):
+            f.write(chunk)
+
+
+def download_ipa_url(url: str, dest: Path):
+    if not url.startswith(("https://", "http://")):
+        raise HTTPException(400, "IPA 網址要以 http:// 或 https:// 開頭")
+    req = urllib.request.Request(url, headers={"User-Agent": "ipa-signer"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp, dest.open("wb") as f:
+            shutil.copyfileobj(resp, f, 1 << 20)
+    except Exception as e:
+        raise HTTPException(400, f"下載 IPA 失敗：{e}")
+
+
+def finish_app(app_id: str, request: Request) -> dict:
+    out_dir = APPS_DIR / app_id
+    info = read_ipa_info(out_dir / "app.ipa")
+    info["signed"] = datetime.now(timezone.utc).isoformat()
+    info["size"] = (out_dir / "app.ipa").stat().st_size
+    (out_dir / "info.json").write_text(json.dumps(info, ensure_ascii=False))
+    return app_entry(app_id, request)
+
+
 @app.post("/api/sign", dependencies=[Depends(require_login)])
-async def sign(request: Request, ipa: UploadFile = File(...), bundle_id: str = Form(""),
-               display_name: str = Form(""), version: str = Form("")):
+async def sign(request: Request, ipa: UploadFile | None = File(None), ipa_url: str = Form(""),
+               bundle_id: str = Form(""), display_name: str = Form(""), version: str = Form("")):
     if not load_cert_meta():
         raise HTTPException(400, "請先上傳證書")
+    if not ipa and not ipa_url.strip():
+        raise HTTPException(400, "請選擇 IPA 文件，或者填寫 IPA 網址")
     app_id = secrets.token_urlsafe(18)
     out_dir = APPS_DIR / app_id
     out_dir.mkdir()
     src = out_dir / "source.ipa"
     try:
-        with src.open("wb") as f:
-            while chunk := await ipa.read(1 << 20):
-                f.write(chunk)
+        if ipa:
+            await save_upload(ipa, src)
+        else:
+            await asyncio.to_thread(download_ipa_url, ipa_url.strip(), src)
         if not zipfile.is_zipfile(src):
             raise HTTPException(400, "不是有效的 IPA 文件")
         cmd = [ZSIGN, "-k", str(CERT_DIR / "cert.p12"), "-p", (CERT_DIR / "password").read_text(),
@@ -280,16 +309,28 @@ async def sign(request: Request, ipa: UploadFile = File(...), bundle_id: str = F
         if proc.returncode != 0 or not (out_dir / "app.ipa").exists():
             tail = log.decode(errors="replace").strip().splitlines()[-8:]
             raise HTTPException(500, "簽名失敗：\n" + "\n".join(tail))
-        info = read_ipa_info(out_dir / "app.ipa")
-        info["signed"] = datetime.now(timezone.utc).isoformat()
-        info["size"] = (out_dir / "app.ipa").stat().st_size
-        (out_dir / "info.json").write_text(json.dumps(info, ensure_ascii=False))
-        return app_entry(app_id, request)
+        return finish_app(app_id, request)
     except BaseException:
         shutil.rmtree(out_dir, ignore_errors=True)
         raise
     finally:
         src.unlink(missing_ok=True)
+
+
+@app.post("/api/upload", dependencies=[Depends(require_login)])
+async def upload_signed(request: Request, ipa: UploadFile = File(...)):
+    """霓簽 App 在手機上簽好後上傳到這裡，只生成安裝鏈接，不再簽名。"""
+    app_id = secrets.token_urlsafe(18)
+    out_dir = APPS_DIR / app_id
+    out_dir.mkdir()
+    try:
+        await save_upload(ipa, out_dir / "app.ipa")
+        if not zipfile.is_zipfile(out_dir / "app.ipa"):
+            raise HTTPException(400, "不是有效的 IPA 文件")
+        return finish_app(app_id, request)
+    except BaseException:
+        shutil.rmtree(out_dir, ignore_errors=True)
+        raise
 
 
 @app.get("/api/apps", dependencies=[Depends(require_login)])
