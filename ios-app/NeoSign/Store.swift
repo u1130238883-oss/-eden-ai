@@ -128,7 +128,7 @@ final class Store: ObservableObject {
     func show(_ message: String) {
         toast = message
         Task {
-            try? await Task.sleep(nanoseconds: 2_600_000_000)
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
             if toast == message { toast = nil }
         }
     }
@@ -148,30 +148,53 @@ final class Store: ObservableObject {
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
 
         do {
-            switch url.pathExtension.lowercased() {
+            let ext = url.pathExtension.lowercased()
+            guard ["ipa", "zip", "p12", "pfx", "mobileprovision"].contains(ext) else {
+                throw AppError("不支持這個文件：\(url.lastPathComponent)")
+            }
+            busy = "讀取 \(url.lastPathComponent)"
+            let local: URL
+            do {
+                local = try await localCopy(of: url)
+            } catch {
+                busy = nil
+                throw AppError("讀取文件失敗：\(error.localizedDescription)")
+            }
+            busy = nil
+            switch ext {
             case "ipa":
-                try await importIPA(url)
+                try await importIPA(local)
             case "zip":
-                try await importCertZip(url)
+                try await importCertZip(local)
             case "p12", "pfx":
-                stagedP12 = try await copyToTemp(url)
-                try await importStaged()
-            case "mobileprovision":
-                stagedProfile = try await copyToTemp(url)
+                stagedP12 = local
                 try await importStaged()
             default:
-                throw AppError("不支持這個文件：\(url.lastPathComponent)")
+                stagedProfile = local
+                try await importStaged()
             }
         } catch {
             show(error.localizedDescription)
         }
     }
 
-    private func copyToTemp(_ url: URL) async throws -> URL {
+    /// 先把文件複製到 App 自己的臨時目錄。iCloud Drive 裡的文件可能還沒下載到手機，
+    /// 用 NSFileCoordinator 讀取會讓系統先下載好。
+    private func localCopy(of url: URL) async throws -> URL {
         try await offMain {
-            let dest = Storage.tempDir().appendingPathComponent(url.lastPathComponent)
-            try FileManager.default.copyItem(at: url, to: dest)
-            return dest
+            var coordinatorError: NSError?
+            var result: Result<URL, Error> = .failure(AppError("讀取文件失敗"))
+            NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &coordinatorError) { readable in
+                do {
+                    let dest = Storage.tempDir().appendingPathComponent(url.lastPathComponent)
+                    try FileManager.default.copyItem(at: readable, to: dest)
+                    result = .success(dest)
+                } catch {
+                    result = .failure(error)
+                }
+            }
+            if let coordinatorError { throw coordinatorError }
+            return try result.get()
         }
     }
 
@@ -201,7 +224,13 @@ final class Store: ObservableObject {
         }
         stagedP12 = nil
         stagedProfile = nil
-        passwordPrompt = PendingCert(p12: p12, profile: profile, triedPassword: false)
+        await askPassword(PendingCert(p12: p12, profile: profile, triedPassword: false))
+    }
+
+    /// 文件選擇器關閉的動畫還沒結束時彈窗會被系統吞掉，所以稍等一下再彈。
+    private func askPassword(_ pending: PendingCert) async {
+        try? await Task.sleep(nanoseconds: 800_000_000)
+        passwordPrompt = pending
     }
 
     func addCert(p12: URL, profile: URL, password: String) async {
@@ -211,7 +240,7 @@ final class Store: ObservableObject {
             selectedCertID = record.id
             show("證書已導入")
         } catch CertFailure.wrongPassword {
-            passwordPrompt = PendingCert(p12: p12, profile: profile, triedPassword: !password.isEmpty)
+            await askPassword(PendingCert(p12: p12, profile: profile, triedPassword: !password.isEmpty))
         } catch {
             show(error.localizedDescription)
         }
@@ -397,7 +426,7 @@ enum IPATools {
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let ipa = dir.appendingPathComponent("source.ipa")
         do {
-            try FileManager.default.copyItem(at: source, to: ipa)
+            try FileManager.default.moveItem(at: source, to: ipa)
             let info = try inspect(ipa: ipa, iconOut: dir.appendingPathComponent("icon.png"))
             let size = (try? FileManager.default.attributesOfItem(atPath: ipa.path)[.size] as? NSNumber)?.int64Value ?? 0
             let record = AppRecord(id: id, name: info.name, bundleID: info.bundleID, version: info.version,
