@@ -18,15 +18,12 @@ struct LibraryView: View {
                     EmptyHint(title: "還沒有應用",
                               detail: "點上面「導入 IPA」，或在「文件」App 裡長按 IPA → 分享 → 霓簽")
                 } else {
-                    SectionLabel(text: "共 \(store.apps.count) 個 · 點擊簽名 · 長按刪除")
                     ForEach(store.apps) { app in
-                        AppCard(app: app)
-                            .onTapGesture { signing = app }
-                            .contextMenu {
-                                Button(role: .destructive) { store.delete(app) } label: {
-                                    Label("刪除", systemImage: "trash")
-                                }
-                            }
+                        SwipeRow(onTap: { signing = app },
+                                 onDelete: { withAnimation(.spring(response: 0.35)) { store.delete(app) } },
+                                 onShare: store.signedURL(for: app).map { url -> () -> Void in { ShareSheet.present(url) } }) {
+                            AppCard(app: app)
+                        }
                     }
                 }
             }

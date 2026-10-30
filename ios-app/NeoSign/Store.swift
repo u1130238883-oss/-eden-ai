@@ -77,6 +77,15 @@ enum Storage {
         return url
     }
 
+    static func size(of dir: URL) -> Int64 {
+        let walker = FileManager.default.enumerator(at: dir, includingPropertiesForKeys: [.fileSizeKey])
+        var total: Int64 = 0
+        while let file = walker?.nextObject() as? URL {
+            total += Int64((try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
+        }
+        return total
+    }
+
     static func certDir(_ id: String) -> URL { certs.appendingPathComponent(id, isDirectory: true) }
     static func appDir(_ id: String) -> URL { apps.appendingPathComponent(id, isDirectory: true) }
 
@@ -257,6 +266,33 @@ final class Store: ObservableObject {
         try? FileManager.default.removeItem(at: Storage.certDir(cert.id))
         certs.removeAll { $0.id == cert.id }
         if selectedCertID == cert.id { selectedCertID = certs.first?.id ?? "" }
+    }
+
+    // MARK: 緩存
+
+    /// 所有安裝包（原始 IPA + 簽好的 IPA）和臨時文件佔用的空間。
+    func cacheSize() async -> Int64 {
+        (try? await offMain {
+            [Storage.apps, FileManager.default.temporaryDirectory].reduce(Int64(0)) { $0 + Storage.size(of: $1) }
+        }) ?? 0
+    }
+
+    func clearCache() async {
+        busy = "清除緩存"
+        let freed = await cacheSize()
+        _ = try? await offMain {
+            let fm = FileManager.default
+            for dir in [Storage.apps, fm.temporaryDirectory] {
+                for item in (try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? [] {
+                    try? fm.removeItem(at: item)
+                }
+            }
+        }
+        apps = []
+        stagedP12 = nil
+        stagedProfile = nil
+        busy = nil
+        show("已清除，釋放 \(freed.fileSize)")
     }
 
     // MARK: 簽名

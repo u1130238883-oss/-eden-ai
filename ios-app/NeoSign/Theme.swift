@@ -292,3 +292,89 @@ struct ScanBar: View {
         }
     }
 }
+
+// MARK: - 滑動操作
+
+/// 卡片左右滑出操作按鈕：往右滑出「刪除」，往左滑出「分享」。
+struct SwipeRow<Content: View>: View {
+    var onTap: () -> Void
+    var onDelete: () -> Void
+    var onShare: (() -> Void)?
+    @ViewBuilder var content: Content
+
+    @State private var offset: CGFloat = 0
+    @State private var startOffset: CGFloat = 0
+    @State private var dragging = false
+    private let reveal: CGFloat = 108
+
+    var body: some View {
+        content
+            .offset(x: offset)
+            .onTapGesture {
+                if offset != 0 { close() } else { onTap() }
+            }
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 18)
+                    .onChanged { value in
+                        // 只處理橫向滑動，豎向留給列表滾動
+                        guard dragging || abs(value.translation.width) > abs(value.translation.height) * 1.3 else { return }
+                        dragging = true
+                        let minX: CGFloat = onShare == nil ? 0 : -reveal * 1.2
+                        offset = min(max(startOffset + value.translation.width, minX), reveal * 1.2)
+                    }
+                    .onEnded { _ in
+                        guard dragging else { return }
+                        dragging = false
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.78)) {
+                            if offset > reveal / 2 {
+                                offset = reveal
+                            } else if offset < -reveal / 2, onShare != nil {
+                                offset = -reveal
+                            } else {
+                                offset = 0
+                            }
+                        }
+                        startOffset = offset
+                    }
+            )
+            // 按鈕放在卡片後面（不跟著卡片移動），高度和卡片一樣
+            .background {
+                HStack(spacing: 0) {
+                    if offset > 0 {
+                        actionButton(title: "刪除", icon: "trash.fill", color: Theme.pink, fg: .white) {
+                            close()
+                            onDelete()
+                        }
+                    }
+                    Spacer(minLength: 0)
+                    if offset < 0, let onShare {
+                        actionButton(title: "分享", icon: "square.and.arrow.up", color: Theme.neon, fg: .black) {
+                            close()
+                            onShare()
+                        }
+                    }
+                }
+            }
+    }
+
+    private func close() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { offset = 0 }
+        startOffset = 0
+    }
+
+    private func actionButton(title: String, icon: String, color: Color, fg: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: icon).font(.system(size: 20, weight: .heavy))
+                Text(title).font(.display(17))
+            }
+            .foregroundColor(fg)
+            .frame(width: reveal - 10)
+            .frame(maxHeight: .infinity)
+            .background(Slant(cut: 14).fill(color))
+            .background(Slant(cut: 14).fill(color == Theme.pink ? Theme.neon : Theme.pink).offset(x: 4, y: 4))
+        }
+        .buttonStyle(.plain)
+        .transition(.opacity)
+    }
+}

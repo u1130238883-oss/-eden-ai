@@ -14,6 +14,9 @@ struct SignView: View {
     @State private var showAdvanced = false
     @State private var phase: Phase = .idle
     @State private var log: LogText?
+    @State private var askPassword = false
+    @State private var passwordWasWrong = false
+    @State private var passwordInput = ""
 
     enum Phase: Equatable {
         case idle, signing, signed, installing, installed
@@ -50,6 +53,17 @@ struct SignView: View {
         .onAppear {
             certID = store.selectedCert?.id ?? ""
             if store.signedURL(for: app) != nil { phase = .signed }
+        }
+        .alert("輸入簽名網站密碼", isPresented: $askPassword) {
+            SecureField("網站密碼", text: $passwordInput)
+            Button("取消", role: .cancel) { passwordInput = "" }
+            Button("安裝") {
+                serverPassword = passwordInput
+                passwordInput = ""
+                Task { await install() }
+            }
+        } message: {
+            Text(passwordWasWrong ? "密碼不對，再試一次" : "就是你在 Render 設置的 ACCESS_PASSWORD，只需要輸入一次")
         }
         .sheet(item: $log) { item in
             LogSheet(text: item.text)
@@ -233,7 +247,8 @@ struct SignView: View {
     private func install() async {
         guard let ipa = store.signedURL(for: app) else { return }
         guard !serverPassword.isEmpty else {
-            phase = .failed("先到「設置」填寫安裝伺服器的網站密碼")
+            passwordWasWrong = false
+            askPassword = true
             return
         }
         phase = .installing
@@ -241,6 +256,11 @@ struct SignView: View {
             let url = try await InstallService.upload(ipa: ipa, server: server, password: serverPassword)
             _ = await UIApplication.shared.open(url)
             phase = .installed
+        } catch is InstallService.WrongPassword {
+            serverPassword = ""
+            phase = .signed
+            passwordWasWrong = true
+            askPassword = true
         } catch {
             phase = .failed("安裝失敗：\(error.localizedDescription)")
         }

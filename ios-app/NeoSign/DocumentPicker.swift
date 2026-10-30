@@ -13,7 +13,7 @@ final class DocumentPicker: NSObject, UIDocumentPickerDelegate {
         picker.allowsMultipleSelection = true
         picker.delegate = self
         self.completion = completion
-        topViewController()?.present(picker, animated: true)
+        UIApplication.shared.topViewController()?.present(picker, animated: true)
     }
 
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
@@ -25,14 +25,27 @@ final class DocumentPicker: NSObject, UIDocumentPickerDelegate {
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
         completion = nil
     }
+}
 
-    private func topViewController() -> UIViewController? {
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+extension UIApplication {
+    /// 當前最上層的 ViewController，用來彈出系統的選擇器和分享面板。
+    func topViewController() -> UIViewController? {
+        let scenes = connectedScenes.compactMap { $0 as? UIWindowScene }
         let window = scenes.flatMap(\.windows).first(where: \.isKeyWindow) ?? scenes.first?.windows.first
         var top = window?.rootViewController
         while let presented = top?.presentedViewController {
             top = presented
         }
         return top
+    }
+}
+
+enum ShareSheet {
+    /// 系統分享面板：可以「儲存到檔案」，也可以發給別人。
+    static func present(_ url: URL) {
+        let sheet = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        guard let top = UIApplication.shared.topViewController() else { return }
+        sheet.popoverPresentationController?.sourceView = top.view
+        top.present(sheet, animated: true)
     }
 }
