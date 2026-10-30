@@ -1,9 +1,7 @@
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct LibraryView: View {
     @EnvironmentObject private var store: Store
-    @State private var importing = false
     @State private var signing: AppRecord?
 
     var body: some View {
@@ -11,7 +9,7 @@ struct LibraryView: View {
             VStack(alignment: .leading, spacing: 18) {
                 ScreenHeader(code: "APP", title: "應用庫", subtitle: "LIBRARY")
 
-                Button { importing = true } label: {
+                Button { DocumentPicker.shared.present { store.importFiles($0) } } label: {
                     Label("導入 IPA", systemImage: "plus.square.fill")
                 }
                 .buttonStyle(NeonButtonStyle())
@@ -34,9 +32,6 @@ struct LibraryView: View {
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 110)
-        }
-        .fileImporter(isPresented: $importing, allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
-            if case .success(let urls) = result { store.importFiles(urls) }
         }
         .sheet(item: $signing) { app in
             SignView(app: app)

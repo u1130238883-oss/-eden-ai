@@ -1,16 +1,14 @@
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct CertsView: View {
     @EnvironmentObject private var store: Store
-    @State private var importing = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 ScreenHeader(code: "CERT", title: "證書", subtitle: "IDENTITY")
 
-                Button { importing = true } label: {
+                Button { DocumentPicker.shared.present { store.importFiles($0) } } label: {
                     Label("導入證書", systemImage: "key.fill")
                 }
                 .buttonStyle(NeonButtonStyle())
@@ -36,9 +34,6 @@ struct CertsView: View {
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 110)
-        }
-        .fileImporter(isPresented: $importing, allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
-            if case .success(let urls) = result { store.importFiles(urls) }
         }
     }
 }
