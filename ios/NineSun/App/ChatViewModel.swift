@@ -458,9 +458,12 @@ final class ChatViewModel: ObservableObject {
         guard let m = ModelStore.shared.readyModel else { brainTestResult = "還沒下載大腦。"; return }
         brainTesting = true
         brainTestResult = LocalBrain.shared.isLoaded ? "測試中…" : "讀進記憶體中（第一次要幾秒）…"
-        let system = LocalBrain.system(lang: "zh")
-        let user = LocalBrain.userMessage(question: "用兩句話介紹你自己，再說一個你覺得有趣的冷知識。")
-        LocalBrain.shared.ask(modelPath: ModelStore.shared.path(m).path, system: system, history: [], user: user, mode: .chat, lang: "zh",
+        // 成人模式打開：用使用者寫的角色設定測，看角色有沒有照設定演
+        let role = adultMode
+        let system = role ? LocalBrain.roleplaySystem(character: roleCharacter, lang: "zh") : LocalBrain.system(lang: "zh")
+        let user = role ? "跟我打個招呼，用兩三句話介紹你自己：你是誰、喜歡什麼樣的人。"
+                        : LocalBrain.userMessage(question: "用兩句話介紹你自己，再說一個你覺得有趣的冷知識。")
+        LocalBrain.shared.ask(modelPath: ModelStore.shared.path(m).path, system: system, history: [], user: user, mode: role ? .roleplay : .chat, lang: "zh",
                               onText: { t in DispatchQueue.main.async { self.brainTestResult = t } },
                               done: { result in
             DispatchQueue.main.async {

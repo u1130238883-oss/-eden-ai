@@ -1,4 +1,10 @@
 import SwiftUI
+import UIKit
+
+/// 把鍵盤收起來（多行的輸入框按 return 是換行，要另外收）
+func hideKeyboard() {
+    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+}
 
 /// 街頭潮流 × 霓虹 × 漫畫網點 的視覺語言。
 enum Theme {

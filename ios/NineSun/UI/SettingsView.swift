@@ -18,6 +18,7 @@ struct SettingsView: View {
     var body: some View {
         ZStack {
             HalftoneBackground()
+                .onTapGesture { hideKeyboard() }
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     HStack {
@@ -43,6 +44,7 @@ struct SettingsView: View {
                 }
                 .padding(16)
             }
+            .scrollDismissesKeyboard(.interactively)
         }
         .preferredColorScheme(.dark)
         .onAppear(perform: load)
@@ -244,10 +246,14 @@ struct SettingsView: View {
                     .foregroundColor(Theme.paper)
                     .padding(10)
                     .background(Theme.panelHi)
+                HStack {
+                    Spacer()
+                    button(T("完成", "Done", "Listo", "Fatto"), color: Theme.panelHi) { hideKeyboard() }
+                }
             }
             if store.readyModel != nil {
                 button(vm.brainTesting ? T("測試中…", "Testing…", "Probando…", "Test in corso…") : T("測試大腦", "Test the brain", "Probar el cerebro", "Prova il cervello"),
-                       color: Theme.hazard) { if !vm.brainTesting { vm.testBrain() } }
+                       color: Theme.hazard) { hideKeyboard(); if !vm.brainTesting { vm.testBrain() } }
                 if !vm.brainTestResult.isEmpty {
                     Text(vm.brainTestResult).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.paper).textSelection(.enabled)
                 }

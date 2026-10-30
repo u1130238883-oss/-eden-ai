@@ -25,6 +25,7 @@ struct PaintView: View {
     var body: some View {
         ZStack {
             HalftoneBackground()
+                .onTapGesture { hideKeyboard() }
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     HStack {
@@ -42,6 +43,7 @@ struct PaintView: View {
                 }
                 .padding(16)
             }
+            .scrollDismissesKeyboard(.interactively)
         }
         .onDisappear { if !busy { Painter.shared.unload() } }
     }
@@ -57,8 +59,12 @@ struct PaintView: View {
                 .foregroundColor(Theme.paper)
                 .padding(10)
                 .background(Theme.panelHi)
-            Text(T("只畫成年人，不畫真實存在的人。", "Adults only; no real people.", "Solo adultos; nada de personas reales.", "Solo adulti; niente persone reali."))
-                .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
+            HStack {
+                Text(T("只畫成年人，不畫真實存在的人。", "Adults only; no real people.", "Solo adultos; nada de personas reales.", "Solo adulti; niente persone reali."))
+                    .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
+                Spacer()
+                button(T("完成", "Done", "Listo", "Fatto"), color: Theme.panelHi) { hideKeyboard() }
+            }
             HStack {
                 if busy {
                     button(T("停止", "Stop", "Parar", "Stop"), color: Theme.neonPink) {
@@ -109,6 +115,7 @@ struct PaintView: View {
     }
 
     private func draw() {
+        hideKeyboard()
         guard let m = store.readyModel else { status = T("還沒有下載好的畫圖模型", "No image model yet", "Aún no hay modelo", "Nessun modello"); return }
         guard let url = store.resources(m) else {
             status = T("找不到「\(m.name)」的模型檔，請刪除後再下載一次", "Can't find the model files; delete and download again",
