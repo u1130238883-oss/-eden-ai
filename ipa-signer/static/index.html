@@ -60,9 +60,9 @@ details summary{padding:12px 16px;color:var(--accent);cursor:pointer;list-style:
     <details class="card" style="margin-top:12px" id="certUpload">
       <summary id="certUploadTitle">上傳證書</summary>
       <form id="certForm">
-        <label><span>證書文件 (.p12)</span><input type="file" name="p12" accept=".p12,.pfx" required></label>
+        <label><span>證書文件 (.p12)</span><input type="file" name="p12" required></label>
         <label><span>證書密碼</span><input type="text" name="password" autocomplete="off" autocapitalize="off"></label>
-        <label><span>描述文件 (.mobileprovision)</span><input type="file" name="profile" accept=".mobileprovision" required></label>
+        <label><span>描述文件 (.mobileprovision)</span><input type="file" name="profile" required></label>
       </form>
     </details>
     <button class="btn secondary" form="certForm" id="certBtn" hidden>保存證書</button>
@@ -70,7 +70,7 @@ details summary{padding:12px 16px;color:var(--accent);cursor:pointer;list-style:
 
     <h2>簽名 IPA</h2>
     <form id="signForm" class="card">
-      <label><span>IPA 文件</span><input type="file" name="ipa" accept=".ipa" required></label>
+      <label><span>IPA 文件</span><input type="file" name="ipa" required></label>
       <details>
         <summary>進階選項（可不填）</summary>
         <label><span>新 Bundle ID</span><input type="text" name="bundle_id" autocapitalize="off" placeholder="不改"></label>
