@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>IPA 簽名</title>
+<style>
+:root{--bg:#f2f2f7;--card:#fff;--text:#1c1c1e;--muted:#8e8e93;--line:#e5e5ea;--accent:#007aff;--ok:#34c759;--bad:#ff3b30;--warn:#ff9500}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--text:#f2f2f7;--muted:#8e8e93;--line:#38383a;--accent:#0a84ff;--ok:#30d158;--bad:#ff453a;--warn:#ff9f0a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:560px;margin:auto;padding:calc(16px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom))}
+h1{font-size:30px;margin:8px 4px 16px}
+h2{font-size:13px;font-weight:400;text-transform:uppercase;color:var(--muted);margin:24px 16px 8px}
+.card{background:var(--card);border-radius:12px;overflow:hidden}
+.row{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}
+.row:last-child{border-bottom:0}
+.row .k{color:var(--muted);flex-shrink:0}
+.row .v{text-align:right;word-break:break-all}
+label{display:block;padding:12px 16px;border-bottom:1px solid var(--line)}
+label:last-of-type{border-bottom:0}
+label span{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+input[type=text],input[type=password]{width:100%;border:0;background:transparent;color:var(--text);font-size:17px;outline:0;padding:0}
+input[type=file]{width:100%;font-size:15px;color:var(--text)}
+.btn{display:block;width:100%;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:17px;font-weight:600;padding:14px;margin-top:12px;text-align:center;text-decoration:none;cursor:pointer}
+.btn.secondary{background:var(--card);color:var(--accent)}
+.btn.small{display:inline-block;width:auto;padding:8px 14px;font-size:15px;margin:0;border-radius:18px}
+.btn:disabled{opacity:.5}
+.btn.danger{color:var(--bad)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.hint{font-size:13px;color:var(--muted);margin:8px 16px;line-height:1.5}
+.msg{white-space:pre-wrap;font-size:14px;margin:10px 4px 0}
+progress{width:100%;margin-top:12px;height:6px}
+.app{padding:12px 16px;border-bottom:1px solid var(--line)}
+.app:last-child{border-bottom:0}
+.app .t{font-weight:600}.app .s{font-size:13px;color:var(--muted);margin:2px 0 10px;word-break:break-all}
+.app .acts{display:flex;gap:8px;flex-wrap:wrap}
+details summary{padding:12px 16px;color:var(--accent);cursor:pointer;list-style:none}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>IPA 簽名</h1>
+
+  <section id="login" hidden>
+    <form id="loginForm" class="card">
+      <label><span>網站密碼</span><input type="password" name="password" autocomplete="current-password" required></label>
+    </form>
+    <button class="btn" form="loginForm">登錄</button>
+    <div class="msg bad" id="loginMsg"></div>
+  </section>
+
+  <section id="main" hidden>
+    <h2>證書</h2>
+    <div class="card" id="certCard"></div>
+    <div id="certActions"></div>
+    <details class="card" style="margin-top:12px" id="certUpload">
+      <summary id="certUploadTitle">上傳證書</summary>
+      <form id="certForm">
+        <label><span>證書文件 (.p12)</span><input type="file" name="p12" accept=".p12,.pfx" required></label>
+        <label><span>證書密碼</span><input type="text" name="password" autocomplete="off" autocapitalize="off"></label>
+        <label><span>描述文件 (.mobileprovision)</span><input type="file" name="profile" accept=".mobileprovision" required></label>
+      </form>
+    </details>
+    <button class="btn secondary" form="certForm" id="certBtn" hidden>保存證書</button>
+    <div class="msg" id="certMsg"></div>
+
+    <h2>簽名 IPA</h2>
+    <form id="signForm" class="card">
+      <label><span>IPA 文件</span><input type="file" name="ipa" accept=".ipa" required></label>
+      <details>
+        <summary>進階選項（可不填）</summary>
+        <label><span>新 Bundle ID</span><input type="text" name="bundle_id" autocapitalize="off" placeholder="不改"></label>
+        <label><span>新 App 名稱</span><input type="text" name="display_name" placeholder="不改"></label>
+        <label><span>新版本號</span><input type="text" name="version" autocapitalize="off" placeholder="不改"></label>
+      </details>
+    </form>
+    <button class="btn" form="signForm" id="signBtn">開始簽名</button>
+    <progress id="signProgress" max="100" value="0" hidden></progress>
+    <div class="msg" id="signMsg"></div>
+
+    <h2>已簽名的 App</h2>
+    <div class="card" id="apps"></div>
+    <p class="hint">「安裝」需要在 iPhone 的 Safari 裡打開。Ad Hoc 描述文件只能裝在「可安裝設備」列表裡的 iPhone 上，如果提示「無法安裝」，先對一下 UDID。</p>
+
+    <button class="btn secondary" id="logoutBtn" style="margin-top:24px">退出登錄</button>
+  </section>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const fmtDate = s => s ? new Date(s).toLocaleDateString('zh-TW') : '-';
+const fmtSize = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.ceil(n / 1024) + ' KB';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, {credentials: 'same-origin', ...opts});
+  if (r.status === 401 && path !== '/api/login') { show('login'); throw new Error('請先登錄'); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || ('錯誤 ' + r.status));
+  return data;
+}
+
+function show(which) {
+  $('#login').hidden = which !== 'login';
+  $('#main').hidden = which !== 'main';
+}
+
+function renderCert(meta) {
+  const card = $('#certCard');
+  $('#certActions').innerHTML = '';
+  if (!meta) {
+    card.innerHTML = '<div class="row"><span class="k">狀態</span><span class="v warn">未上傳</span></div>';
+    $('#certUpload').open = true;
+    $('#certUploadTitle').textContent = '上傳證書';
+    return;
+  }
+  const c = meta.cert, p = meta.profile;
+  const expired = new Date(c.expires) < new Date();
+  const ocsp = meta.ocsp;
+  const ocspText = !ocsp ? '<span class="k">未檢查</span>'
+    : ocsp.status === 'good' ? '<span class="ok">有效</span>'
+    : ocsp.status === 'revoked' ? '<span class="bad">已被吊銷（掉簽）</span>'
+    : '<span class="warn">未知</span>';
+  card.innerHTML = `
+    <div class="row"><span class="k">證書</span><span class="v">${esc(c.name)}</span></div>
+    <div class="row"><span class="k">證書到期</span><span class="v ${expired ? 'bad' : ''}">${fmtDate(c.expires)}</span></div>
+    <div class="row"><span class="k">吊銷狀態</span><span class="v">${ocspText}${ocsp ? `<br><small class="k">${fmtDate(ocsp.checked)}</small>` : ''}</span></div>
+    <div class="row"><span class="k">描述文件</span><span class="v">${esc(p.kind)}</span></div>
+    <div class="row"><span class="k">描述文件到期</span><span class="v">${fmtDate(p.expires)}</span></div>
+    <div class="row"><span class="k">App ID</span><span class="v mono">${esc(p.app_id)}</span></div>
+    ${p.devices.length ? `<details><summary>可安裝設備 (${p.devices.length} 台)</summary>
+      ${p.devices.map(d => `<div class="row"><span class="v mono" style="text-align:left">${esc(d)}</span></div>`).join('')}</details>` : ''}`;
+  const btn = document.createElement('button');
+  btn.className = 'btn secondary';
+  btn.textContent = '檢查證書是否被吊銷';
+  btn.onclick = async () => {
+    btn.disabled = true; btn.textContent = '檢查中…';
+    try { renderCert((await api('/api/cert/check', {method: 'POST'})).cert); }
+    catch (e) { $('#certMsg').className = 'msg bad'; $('#certMsg').textContent = e.message; btn.disabled = false; btn.textContent = '檢查證書是否被吊銷'; }
+  };
+  $('#certActions').appendChild(btn);
+  $('#certUpload').open = false;
+  $('#certUploadTitle').textContent = '更換證書';
+}
+
+$('#certUpload').ontoggle = () => { $('#certBtn').hidden = !$('#certUpload').open; };
+
+function renderApps(apps) {
+  $('#apps').innerHTML = apps.length ? apps.map(a => `
+    <div class="app">
+      <div class="t">${esc(a.title)} <span class="k" style="font-weight:400">${esc(a.version)}</span></div>
+      <div class="s">${esc(a.bundle_id)} · ${fmtSize(a.size)} · ${fmtDate(a.signed)}</div>
+      <div class="acts">
+        <a class="btn small" href="${esc(a.install_url)}">安裝</a>
+        <a class="btn small secondary" href="${esc(a.download_url)}" download>下載 IPA</a>
+        <button class="btn small secondary danger" data-del="${esc(a.id)}">刪除</button>
+      </div>
+    </div>`).join('') : '<div class="row"><span class="k">還沒有</span></div>';
+}
+
+async function refresh() {
+  const [{cert}, {apps}] = await Promise.all([api('/api/cert'), api('/api/apps')]);
+  show('main');
+  renderCert(cert);
+  renderApps(apps);
+}
+
+$('#loginForm').onsubmit = async e => {
+  e.preventDefault();
+  $('#loginMsg').textContent = '';
+  try {
+    await api('/api/login', {method: 'POST', body: new FormData(e.target)});
+    e.target.reset();
+    await refresh();
+  } catch (err) { $('#loginMsg').textContent = err.message; }
+};
+
+$('#logoutBtn').onclick = async () => { await api('/api/logout', {method: 'POST'}); show('login'); };
+
+$('#certForm').onsubmit = async e => {
+  e.preventDefault();
+  const msg = $('#certMsg');
+  msg.className = 'msg'; msg.textContent = '上傳中…';
+  try {
+    renderCert((await api('/api/cert', {method: 'POST', body: new FormData(e.target)})).cert);
+    e.target.reset();
+    msg.className = 'msg ok'; msg.textContent = '證書已保存';
+  } catch (err) { msg.className = 'msg bad'; msg.textContent = err.message; }
+};
+
+$('#signForm').onsubmit = e => {
+  e.preventDefault();
+  const msg = $('#signMsg'), bar = $('#signProgress'), btn = $('#signBtn');
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/sign');
+  xhr.upload.onprogress = ev => {
+    if (!ev.lengthComputable) return;
+    bar.value = ev.loaded / ev.total * 100;
+    msg.textContent = ev.loaded < ev.total ? `上傳中 ${Math.round(bar.value)}%` : '簽名中，請稍候…';
+  };
+  xhr.onload = async () => {
+    btn.disabled = false; bar.hidden = true;
+    let data = {};
+    try { data = JSON.parse(xhr.responseText); } catch {}
+    if (xhr.status === 401) return show('login');
+    if (xhr.status !== 200) { msg.className = 'msg bad'; msg.textContent = data.detail || ('錯誤 ' + xhr.status); return; }
+    msg.className = 'msg ok'; msg.textContent = `簽名完成：${data.title}，點下面的「安裝」`;
+    e.target.reset();
+    renderApps((await api('/api/apps')).apps);
+  };
+  xhr.onerror = () => { btn.disabled = false; bar.hidden = true; msg.className = 'msg bad'; msg.textContent = '網絡錯誤，請重試'; };
+  btn.disabled = true; bar.hidden = false; bar.value = 0; msg.className = 'msg'; msg.textContent = '上傳中 0%';
+  xhr.send(new FormData(e.target));
+};
+
+$('#apps').onclick = async e => {
+  const id = e.target.dataset.del;
+  if (!id || !confirm('刪除這個 App？')) return;
+  await api('/api/apps/' + id, {method: 'DELETE'});
+  renderApps((await api('/api/apps')).apps);
+};
+
+refresh().catch(() => show('login'));
+</script>
+</body>
+</html>

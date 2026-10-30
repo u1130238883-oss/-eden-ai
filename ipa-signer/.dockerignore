@@ -1,0 +1,6 @@
+data/
+__pycache__/
+*.ipa
+*.p12
+*.mobileprovision
+.env
