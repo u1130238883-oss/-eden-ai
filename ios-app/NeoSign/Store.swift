@@ -190,7 +190,12 @@ final class Store: ObservableObject {
     /// 先把文件複製到 App 自己的臨時目錄。iCloud Drive 裡的文件可能還沒下載到手機，
     /// 用 NSFileCoordinator 讀取會讓系統先下載好。
     private func localCopy(of url: URL) async throws -> URL {
-        try await offMain {
+        // 文件選擇器已經複製到 App 的臨時目錄了，直接用，省掉一次大文件複製
+        let tempRoot = FileManager.default.temporaryDirectory.resolvingSymlinksInPath().path
+        if url.resolvingSymlinksInPath().path.hasPrefix(tempRoot) {
+            return url
+        }
+        return try await offMain {
             var coordinatorError: NSError?
             var result: Result<URL, Error> = .failure(AppError("讀取文件失敗"))
             NSFileCoordinator().coordinate(readingItemAt: url, options: [], error: &coordinatorError) { readable in
@@ -478,8 +483,8 @@ enum IPATools {
     static func inspect(ipa: URL, iconOut: URL) throws -> (name: String, bundleID: String, version: String) {
         let temp = Storage.tempDir()
         defer { try? FileManager.default.removeItem(at: temp) }
-        guard zs_unzip(ipa.path, temp.path) == 0 else {
-            throw AppError("IPA 解壓失敗，文件可能損壞")
+        guard zs_unzip_app_meta(ipa.path, temp.path) == 0 else {
+            throw AppError("不是有效的 IPA 文件")
         }
         let payload = temp.appendingPathComponent("Payload")
         guard let appDir = (try? FileManager.default.contentsOfDirectory(at: payload, includingPropertiesForKeys: nil))?

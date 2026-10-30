@@ -74,6 +74,10 @@ struct AppCard: View {
                     .font(.mono(11, .medium))
                     .foregroundColor(Theme.muted)
                     .lineLimit(1)
+                Text("導入於 \(app.importedAt.formatted(.dateTime.year().month(.twoDigits).day(.twoDigits).hour().minute()))")
+                    .font(.mono(10, .medium))
+                    .foregroundColor(Theme.muted.opacity(0.8))
+                    .lineLimit(1)
                 HStack(spacing: 6) {
                     Tag(text: "v\(app.version)", color: Theme.cyan, filled: false)
                     Tag(text: app.size.fileSize, color: Theme.muted, filled: false)

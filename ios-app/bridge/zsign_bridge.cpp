@@ -12,6 +12,8 @@
 #include "bundle.h"
 #include "openssl.h"
 
+#include "third-party/minizip/unzip.h"
+
 #include <openssl/pkcs12.h>
 #include <openssl/provider.h>
 #include <openssl/x509.h>
@@ -43,6 +45,69 @@ int zs_unzip(const char *zipPath, const char *outDir)
 {
 	ZFile::CreateFolder(outDir);
 	return Zip::Extract(zipPath, outDir) ? 0 : -1;
+}
+
+// Payload/<名稱>.app/<文件>，只要頂層的 Info.plist 和 png
+static bool IsAppMetaFile(const std::string &path, bool &isInfoPlist)
+{
+	isInfoPlist = false;
+	if (0 != path.compare(0, 8, "Payload/") || std::string::npos != path.find("..")) {
+		return false;
+	}
+	size_t app = path.find(".app/", 8);
+	if (std::string::npos == app) {
+		return false;
+	}
+	std::string name = path.substr(app + 5);
+	if (name.empty() || std::string::npos != name.find('/')) {
+		return false;
+	}
+	if ("Info.plist" == name) {
+		isInfoPlist = true;
+		return true;
+	}
+	return name.size() > 4 && 0 == name.compare(name.size() - 4, 4, ".png");
+}
+
+int zs_unzip_app_meta(const char *zipPath, const char *outDir)
+{
+	unzFile uf = unzOpen64(zipPath);
+	if (NULL == uf) return -1;
+
+	bool foundInfo = false;
+	char name[4096];
+	std::vector<char> buffer(256 * 1024);
+	for (int r = unzGoToFirstFile(uf); UNZ_OK == r; r = unzGoToNextFile(uf)) {
+		unz_file_info64 fi;
+		if (UNZ_OK != unzGetCurrentFileInfo64(uf, &fi, name, sizeof(name), NULL, 0, NULL, 0)) {
+			continue;
+		}
+		std::string path = name;
+		bool isInfoPlist = false;
+		if (!IsAppMetaFile(path, isInfoPlist)) {
+			continue;
+		}
+
+		std::string dest = std::string(outDir) + "/" + path;
+		ZFile::CreateFolder(dest.substr(0, dest.rfind('/')).c_str());
+		if (UNZ_OK != unzOpenCurrentFile(uf)) {
+			continue;
+		}
+		FILE *fp = fopen(dest.c_str(), "wb");
+		bool ok = NULL != fp;
+		if (fp) {
+			int n;
+			while ((n = unzReadCurrentFile(uf, buffer.data(), (unsigned)buffer.size())) > 0) {
+				fwrite(buffer.data(), 1, (size_t)n, fp);
+			}
+			ok = (0 == n);
+			fclose(fp);
+		}
+		unzCloseCurrentFile(uf);
+		if (ok && isInfoPlist) foundInfo = true;
+	}
+	unzClose(uf);
+	return foundInfo ? 0 : -2;
 }
 
 int zs_cert_info(const char *p12Path, const char *password,
