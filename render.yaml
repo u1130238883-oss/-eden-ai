@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ipa-signer
+    runtime: docker
+    plan: free
+    dockerfilePath: ./ipa-signer/Dockerfile
+    dockerContext: ./ipa-signer
+    envVars:
+      - key: ACCESS_PASSWORD
+        sync: false
