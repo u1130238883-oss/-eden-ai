@@ -179,13 +179,41 @@ def get_cert():
     return {"cert": load_cert_meta()}
 
 
+def unpack_cert_zip(data: bytes, password: str):
+    """賣家給的證書通常是 zip：裡面有 .p12、.mobileprovision 和寫著密碼的 txt。"""
+    import io
+    p12 = prov = None
+    with zipfile.ZipFile(io.BytesIO(data)) as z:
+        for name in z.namelist():
+            base = name.rsplit("/", 1)[-1]
+            if base.startswith(".") or name.startswith("__MACOSX"):
+                continue
+            low = base.lower()
+            if low.endswith((".p12", ".pfx")):
+                p12 = z.read(name)
+            elif low.endswith(".mobileprovision"):
+                prov = z.read(name)
+            elif low.endswith(".txt") and not password:
+                text = z.read(name).decode("utf-8", errors="ignore").strip()
+                password = re.split(r"[:：]", text)[-1].strip()
+    if not p12 or not prov:
+        raise HTTPException(400, "zip 裡沒有找到 .p12 和 .mobileprovision")
+    return p12, prov, password
+
+
 @app.post("/api/cert", dependencies=[Depends(require_login)])
 async def upload_cert(p12: UploadFile = File(...), password: str = Form(""),
-                      profile: UploadFile = File(...)):
+                      profile: UploadFile | None = File(None)):
+    p12_data = await p12.read()
+    prov_data = await profile.read() if profile else b""
+    if p12_data[:2] == b"PK":
+        p12_data, prov_data, password = unpack_cert_zip(p12_data, password.strip())
+    elif not prov_data:
+        raise HTTPException(400, "請選擇描述文件 (.mobileprovision)，或者直接選證書 zip")
     staging = Path(tempfile.mkdtemp(dir=DATA_DIR))
     try:
-        (staging / "cert.p12").write_bytes(await p12.read())
-        (staging / "cert.mobileprovision").write_bytes(await profile.read())
+        (staging / "cert.p12").write_bytes(p12_data)
+        (staging / "cert.mobileprovision").write_bytes(prov_data)
         try:
             cinfo = cert_info(p12_cert_pem(staging / "cert.p12", password))
             pinfo = profile_info(staging / "cert.mobileprovision")
