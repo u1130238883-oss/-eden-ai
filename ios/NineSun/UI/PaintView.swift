@@ -102,7 +102,12 @@ struct PaintView: View {
     }
 
     private func draw() {
-        guard let m = store.readyModel, let url = store.resources(m) else { return }
+        guard let m = store.readyModel else { status = T("還沒有下載好的畫圖模型", "No image model yet", "Aún no hay modelo", "Nessun modello"); return }
+        guard let url = store.resources(m) else {
+            status = T("找不到「\(m.name)」的模型檔，請刪除後再下載一次", "Can't find the model files; delete and download again",
+                       "No encuentro el modelo; bórralo y descárgalo otra vez", "Modello non trovato; eliminalo e riscaricalo")
+            return
+        }
         let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         if Painter.crossesLine(text) { status = Painter.Failure.crossesLine.description; return }
         busy = true; saved = false; progress = 0

@@ -99,10 +99,33 @@ final class PaintStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
 
     /// 解開的模型資料夾（裡面有 TextEncoder.mlmodelc、Unet…）；還沒好就是 nil
     func resources(_ m: Model) -> URL? {
-        let marker = folder(m).appendingPathComponent(".resources")
-        guard let rel = try? String(contentsOf: marker, encoding: .utf8) else { return nil }
-        let u = folder(m).appendingPathComponent(rel)
-        return FileManager.default.fileExists(atPath: u.appendingPathComponent("TextEncoder.mlmodelc").path) ? u : nil
+        let root = folder(m)
+        let fm = FileManager.default
+        if let rel = try? String(contentsOf: root.appendingPathComponent(".resources"), encoding: .utf8) {
+            let u = rel.isEmpty ? root : root.appendingPathComponent(rel)
+            if fm.fileExists(atPath: u.appendingPathComponent("TextEncoder.mlmodelc").path) { return u }
+        }
+        // 記下的位置不對（舊版把 /private/var 和 /var 算錯了）：重新找一次、記下來，不用重新下載
+        guard let found = Self.findResources(in: root) else { return nil }
+        let rel = Array(found.pathComponents.dropFirst(root.pathComponents.count)).joined(separator: "/")
+        try? rel.write(to: root.appendingPathComponent(".resources"), atomically: true, encoding: .utf8)
+        return found
+    }
+
+    /// 在解開的資料夾裡找有 TextEncoder.mlmodelc 的那一層（zip 裡可能多包了幾層）。
+    /// 系統列出來的路徑可能多了 /private，所以只取模型資料夾後面的那幾層，接回 root
+    static func findResources(in root: URL) -> URL? {
+        let fm = FileManager.default
+        if fm.fileExists(atPath: root.appendingPathComponent("TextEncoder.mlmodelc").path) { return root }
+        guard let e = fm.enumerator(at: root, includingPropertiesForKeys: nil) else { return nil }
+        for case let u as URL in e where u.lastPathComponent == "TextEncoder.mlmodelc" {
+            let comps = u.deletingLastPathComponent().pathComponents
+            guard let i = comps.lastIndex(of: root.lastPathComponent) else { continue }
+            var r = root
+            for c in comps[(i + 1)...] { r.appendPathComponent(c) }
+            if fm.fileExists(atPath: r.appendingPathComponent("TextEncoder.mlmodelc").path) { return r }
+        }
+        return nil
     }
 
     var selected: Model { Self.models.first { $0.id == selectedID } ?? Self.models[0] }
@@ -190,21 +213,12 @@ final class PaintStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
             return
         }
         try? fm.removeItem(at: zip)
-        // 找出放模型的那一層資料夾（zip 裡面可能多包了幾層）
-        var found: String?
-        if fm.fileExists(atPath: dst.appendingPathComponent("TextEncoder.mlmodelc").path) { found = "" }
-        if found == nil, let e = fm.enumerator(at: dst, includingPropertiesForKeys: nil) {
-            for case let u as URL in e where u.lastPathComponent == "TextEncoder.mlmodelc" {
-                found = String(u.deletingLastPathComponent().path.dropFirst(dst.path.count)).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-                break
-            }
-        }
-        guard let rel = found else {
+        // 找出放模型的那一層資料夾（zip 裡面可能多包了幾層），記下來
+        guard resources(m) != nil else {
             try? fm.removeItem(at: dst)
             DispatchQueue.main.async { self.states[m.id] = .failed("下載的檔案裡沒有模型，請再下載一次") }
             return
         }
-        try? rel.write(to: dst.appendingPathComponent(".resources"), atomically: true, encoding: .utf8)
         DispatchQueue.main.async { self.states[m.id] = .ready }
     }
 
