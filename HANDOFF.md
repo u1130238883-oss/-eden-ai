@@ -558,3 +558,5 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
   AbyssOrangeMix 2 NSFW（original 版、512×768，只能用 GPU：`Model.gpu`）和寫實的 epiCRealism、CyberRealistic 9（6-bit）。
   底線不變：只畫成年人、不畫真實存在的人（只有文字畫圖）。ChilloutMix 沒放（專門做寫實真人臉）。
 - 使用者要頂部維持原本的排版：拿掉筆刷按鈕，原本「資料庫」（書本圖示）的按鈕改成打開畫室；資料庫裡的算命資料畫面（KnowledgeView）刪掉。
+- 畫圖測試版 NineSun Paint（`ios/PaintApp`、project.yml 的 NineSunPaint target、`build-paint-ipa.yml`，commit 有 [paint]）：
+  只有畫室，不含大腦（`PAINT_ONLY`：不翻譯、要用英文描述），bundle id com.ninesun.paint，可以和 NineSun 同時裝，讓使用者試手機畫不畫得動。

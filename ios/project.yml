@@ -53,3 +53,38 @@ targets:
         CODE_SIGNING_ALLOWED: NO
         CODE_SIGNING_REQUIRED: NO
         CODE_SIGN_IDENTITY: ""
+  # 畫圖測試版：只有畫室（不含大腦），試手機能不能畫圖；可以和 NineSun 同時裝
+  NineSunPaint:
+    type: application
+    platform: iOS
+    sources:
+      - path: PaintApp
+        excludes:
+          - "Info.plist"
+      - path: NineSun/Paint
+      - path: NineSun/UI/PaintView.swift
+      - path: NineSun/UI/Theme.swift
+      - path: NineSun/UI/UILang.swift
+    dependencies:
+      - package: EchoCore
+      - package: StableDiffusion
+      - package: ZIPFoundation
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ninesun.paint
+        PRODUCT_NAME: NineSunPaint
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_VERSION: "5.0"
+        SWIFT_OPTIMIZATION_LEVEL: "-O"
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: PAINT_ONLY
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: PaintApp/Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: "NineSun Paint"
+        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: "把畫好的圖存到你的相簿"
+        INFOPLIST_KEY_UIUserInterfaceStyle: Dark
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGN_IDENTITY: ""

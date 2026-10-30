@@ -118,10 +118,12 @@ final class PaintStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         return free > m.bytes * 2 + 500_000_000
     }
 
+    static func gb(_ b: Int64) -> String { String(format: "%.1f GB", Double(b) / 1_000_000_000) }
+
     func download(_ m: Model) {
         guard resources(m) == nil else { states[m.id] = .ready; return }
         guard hasRoom(m) else {
-            states[m.id] = .failed("手機空間不夠：需要大約 \(ModelStore.gb(m.bytes * 2 + 500_000_000)) 的空間")
+            states[m.id] = .failed("手機空間不夠：需要大約 \(PaintStore.gb(m.bytes * 2 + 500_000_000)) 的空間")
             return
         }
         let task: URLSessionDownloadTask

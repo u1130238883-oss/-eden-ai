@@ -4,6 +4,12 @@ import UIKit
 /// 畫室：用文字描述，在手機上畫圖（完全離線）。中文的描述先請大腦翻成畫圖模型看得懂的英文。
 struct PaintView: View {
     @EnvironmentObject var vm: ChatViewModel
+
+    #if PAINT_ONLY
+    static let placeholder = "用英文描述，例如：photo of an adult woman in a white dress on the beach at sunset, realistic"
+    #else
+    static var placeholder: String { T("想畫什麼？例如：海邊夕陽下穿白色洋裝的成年女生，寫實照片風", "What should I draw?", "¿Qué dibujo?", "Cosa disegno?") }
+    #endif
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var store = PaintStore.shared
     @State private var prompt = ""
@@ -42,7 +48,7 @@ struct PaintView: View {
 
     private var drawSection: some View {
         section(T("畫一張", "Draw", "Dibujar", "Disegna") + " · DRAW") {
-            TextField(T("想畫什麼？例如：海邊夕陽下穿白色洋裝的成年女生，寫實照片風", "What should I draw?", "¿Qué dibujo?", "Cosa disegno?"),
+            TextField(Self.placeholder,
                       text: $prompt, axis: .vertical)
                 .lineLimit(2...6)
                 .font(.system(size: 14, weight: .medium))
@@ -53,7 +59,12 @@ struct PaintView: View {
                 .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
             HStack {
                 if busy {
-                    button(T("停止", "Stop", "Parar", "Stop"), color: Theme.neonPink) { Painter.shared.cancel(); LocalBrain.shared.cancel() }
+                    button(T("停止", "Stop", "Parar", "Stop"), color: Theme.neonPink) {
+                        Painter.shared.cancel()
+                        #if !PAINT_ONLY
+                        LocalBrain.shared.cancel()
+                        #endif
+                    }
                 } else {
                     button(T("開始畫", "Draw", "Dibujar", "Disegna")) { draw() }
                         .disabled(prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -96,6 +107,10 @@ struct PaintView: View {
         if Painter.crossesLine(text) { status = Painter.Failure.crossesLine.description; return }
         busy = true; saved = false; progress = 0
         let adult = vm.adultMode
+        #if PAINT_ONLY
+        // 測試版沒有大腦：直接用輸入的描述（要用英文）
+        paint(text, url: url, gpu: m.gpu, adult: adult)
+        #else
         // 有中文：先請大腦翻成英文的畫圖描述（畫圖模型只看得懂英文）
         let needsEnglish = text.unicodeScalars.contains { $0.value >= 0x3400 && $0.value <= 0x9FFF }
         if needsEnglish, let brain = ModelStore.shared.readyModel {
@@ -114,6 +129,7 @@ struct PaintView: View {
         } else {
             paint(text, url: url, gpu: m.gpu, adult: adult)
         }
+        #endif
     }
 
     private func paint(_ english: String, url: URL, gpu: Bool, adult: Bool) {
@@ -154,7 +170,7 @@ struct PaintView: View {
             HStack {
                 Text((chosen ? "● " : "○ ") + m.name).font(.system(size: 14, weight: .bold)).foregroundColor(Theme.paper)
                 Spacer()
-                Text(ModelStore.gb(m.bytes)).font(Theme.hud(12)).foregroundColor(Theme.dim)
+                Text(PaintStore.gb(m.bytes)).font(Theme.hud(12)).foregroundColor(Theme.dim)
             }
             switch st {
             case .absent:
@@ -162,7 +178,7 @@ struct PaintView: View {
             case .downloading(let done, let total):
                 ProgressView(value: total > 0 ? Double(done) / Double(total) : 0).tint(Theme.hazard)
                 HStack {
-                    Text("\(ModelStore.gb(done)) / \(ModelStore.gb(total))").font(Theme.hud(11)).foregroundColor(Theme.paper)
+                    Text("\(PaintStore.gb(done)) / \(PaintStore.gb(total))").font(Theme.hud(11)).foregroundColor(Theme.paper)
                     Spacer()
                     button(T("取消", "Cancel", "Cancelar", "Annulla"), color: Theme.panelHi) { store.cancel(m) }
                 }

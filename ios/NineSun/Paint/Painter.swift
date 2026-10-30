@@ -64,7 +64,9 @@ final class Painter {
             guard !Self.crossesLine(prompt) else { done(.failure(Failure.crossesLine)); return }
             do {
                 // 先放掉大腦，記憶體才夠
+                #if !PAINT_ONLY
                 LocalBrain.shared.unloadNow()
+                #endif
                 if self.loadedPath != modelURL.path {
                     self.pipeline?.unloadResources()
                     self.pipeline = nil

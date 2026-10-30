@@ -1,0 +1,70 @@
+name: Build NineSun Paint IPA
+
+# 畫圖測試版（只有畫室）。commit 訊息有 [paint] 或手動執行；IPA 放到分支 builds/ninesun-paint-N
+on:
+  push:
+    paths:
+      - "ios/**"
+      - ".github/workflows/build-paint-ipa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[paint]')
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Xcode 26
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          sudo xcode-select -s "$X"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      # 正式版要的 llama.cpp 這裡用不到，放個空資料夾讓專案產生得出來
+      - name: Generate Xcode project
+        working-directory: ios
+        run: |
+          mkdir -p Frameworks/llama.xcframework
+          xcodegen generate
+
+      - name: Build app (unsigned)
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project NineSun.xcodeproj \
+            -scheme NineSunPaint \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tee xcodebuild.log | grep -E "error:|BUILD" || true
+          if grep -q "BUILD FAILED" xcodebuild.log || ! test -f build/Build/Products/Release-iphoneos/NineSunPaint.app/NineSunPaint; then
+            grep -B2 -A6 "error:" xcodebuild.log | head -150; tail -80 xcodebuild.log; exit 1
+          fi
+
+      - name: Package IPA
+        working-directory: ios
+        run: |
+          rm -rf Payload && mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/NineSunPaint.app Payload/
+          ls -la Payload/NineSunPaint.app | head -30
+          mkdir -p ../dist
+          zip -qry ../dist/NineSunPaint.ipa Payload
+          ls -la ../dist
+
+      - name: Save IPA to a branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          D="$RUNNER_TEMP/ipa" && mkdir -p "$D" && cp dist/NineSunPaint.ipa "$D/"
+          cd "$D" && git init -q && git add . && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "NineSun Paint build ${{ github.run_number }}"
+          git push -q "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/builds/ninesun-paint-${{ github.run_number }}
+          echo "下載：https://github.com/${GITHUB_REPOSITORY}/raw/builds/ninesun-paint-${{ github.run_number }}/NineSunPaint.ipa"
