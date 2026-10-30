@@ -19,6 +19,8 @@ struct PaintView: View {
     @State private var image: UIImage?
     @State private var used = ""
     @State private var saved = false
+    @State private var started = Date()
+    @State private var phase = ""
 
     var body: some View {
         ZStack {
@@ -76,6 +78,11 @@ struct PaintView: View {
             }
             if busy {
                 ProgressView(value: progress).tint(Theme.hazard)
+                // 每秒更新：已經過了幾秒、現在在做什麼（看得出來有沒有卡住）
+                TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                    Text("\(phase)　已經 \(Int(ctx.date.timeIntervalSince(started))) 秒")
+                        .font(Theme.hud(11)).foregroundColor(Theme.dim)
+                }
             }
             if !status.isEmpty {
                 Text(status).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.paper)
@@ -140,11 +147,18 @@ struct PaintView: View {
     private func paint(_ english: String, url: URL, gpu: Bool, adult: Bool) {
         used = english
         if Painter.crossesLine(english) { status = Painter.Failure.crossesLine.description; busy = false; return }
-        status = T("準備畫圖（第一次要讀模型，大約半分鐘）…", "Loading the model…", "Cargando el modelo…", "Carico il modello…")
-        Painter.shared.paint(modelURL: url, gpu: gpu, prompt: english, adult: adult, onStep: { step, total in
+        status = T("讀模型中（大模型要一兩分鐘）…", "Loading the model…", "Cargando el modelo…", "Carico il modello…")
+        started = Date(); phase = "準備"
+        Painter.shared.paint(modelURL: url, gpu: gpu, prompt: english, adult: adult, onPhase: { p in
+            DispatchQueue.main.async {
+                phase = p
+                if p == "開始畫" { status = T("模型讀好了，開始畫…", "Model loaded, drawing…", "Modelo cargado, dibujando…", "Modello caricato, disegno…") }
+            }
+        }, onStep: { step, total in
             DispatchQueue.main.async {
                 progress = Double(step) / Double(max(1, total))
                 status = T("畫圖中 \(step)/\(total)", "Drawing \(step)/\(total)", "Dibujando \(step)/\(total)", "Disegno \(step)/\(total)")
+                phase = "畫圖"
             }
         }, done: { result in
             DispatchQueue.main.async {
@@ -152,7 +166,8 @@ struct PaintView: View {
                 switch result {
                 case .success(let cg):
                     image = UIImage(cgImage: cg)
-                    status = ""
+                    status = T("畫好了，花了 \(Int(Date().timeIntervalSince(started))) 秒", "Done in \(Int(Date().timeIntervalSince(started))) s",
+                               "Hecho en \(Int(Date().timeIntervalSince(started))) s", "Fatto in \(Int(Date().timeIntervalSince(started))) s")
                 case .failure(let e):
                     status = "\(e)"
                 }

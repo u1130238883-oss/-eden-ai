@@ -58,6 +58,7 @@ final class Painter {
 
     /// 畫一張。adult：成人模式打開了才可以畫成人內容。onStep：第幾步／總共幾步（背景執行緒）
     func paint(modelURL: URL, gpu: Bool = false, prompt: String, adult: Bool, steps: Int = 25, seed: UInt32? = nil,
+               onPhase: @escaping (String) -> Void = { _ in },
                onStep: @escaping (Int, Int) -> Void, done: @escaping (Result<CGImage, Error>) -> Void) {
         queue.async {
             self.lock.lock(); self.cancelled = false; self.lock.unlock()
@@ -71,7 +72,9 @@ final class Painter {
                     self.pipeline?.unloadResources()
                     self.pipeline = nil
                     let cfg = MLModelConfiguration()
-                    cfg.computeUnits = gpu ? .cpuAndGPU : .cpuAndNeuralEngine
+                    // 用 GPU：神經網路引擎第一次要先把模型轉換一遍，大模型在 iPhone 上可能要好幾分鐘、甚至轉不過去
+                    cfg.computeUnits = .cpuAndGPU
+                    onPhase("讀模型")
                     let p = try StableDiffusionPipeline(resourcesAt: modelURL, controlNet: [], configuration: cfg,
                                                         disableSafety: true, reduceMemory: true)
                     try p.loadResources()
@@ -79,6 +82,7 @@ final class Painter {
                     self.loadedPath = modelURL.path
                 }
                 guard let p = self.pipeline else { throw Failure.noModel }
+                onPhase("開始畫")
                 var c = StableDiffusionPipeline.Configuration(prompt: "masterpiece, best quality, " + (adult ? "adult, mature, " : "") + prompt)
                 c.negativePrompt = [Self.qualityNegative, Self.minorNegative, adult ? "" : Self.nsfwNegative].filter { !$0.isEmpty }.joined(separator: ", ")
                 c.stepCount = steps
