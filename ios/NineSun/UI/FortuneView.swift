@@ -85,12 +85,13 @@ struct FortuneView: View {
         let natal = D.natal[0]
         return section(T("命主", "You", "Tú", "Tu") + " · PROFILE") {
             HStack(alignment: .firstTextBaseline) {
-                Text(D.birth.display).font(Theme.display(22)).foregroundColor(Theme.paper)
+                // 不顯示生日（使用者要求），大標題用九型的名字
+                Text(typeName(D.type)).font(Theme.display(22)).foregroundColor(Theme.paper)
                 Spacer()
                 Text(T("第\(D.type)型", "Type \(D.type)", "Tipo \(D.type)", "Tipo \(D.type)")).font(Theme.hud(13)).foregroundColor(Theme.ink)
                     .padding(.horizontal, 10).padding(.vertical, 4).background(Slanted(skew: 5).fill(Theme.hazard))
             }
-            Text(typeName(D.type) + "　" + tagline(D.type)).font(.system(size: 14, weight: .bold)).foregroundColor(Theme.hazard)
+            Text(tagline(D.type)).font(.system(size: 14, weight: .bold)).foregroundColor(Theme.hazard)
             Text(T("命宮", "Life palace", "Palacio de vida", "Palazzo della vita") + "：" + label(natal.palace) + "　" + keywords(natal.palace))
                 .font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.paper)
             verdictLine(natal.reading)
