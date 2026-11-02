@@ -577,3 +577,7 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
   有大腦時交給大腦詳細回答（每種語言的說法、念法、使用時機），用問的人的語言回答；一次性把「用大腦思考」打開。
 - 使用者說 Quidam 的合盤還有「按字母合盤」（二進位裡有 LetterRow），演算法在使用者另一個 repo（-1.-mkdir-my-project…），
   這個 session 加 repo 被權限擋了，還沒做。
+- 名字合盤：使用者給的 NineTwelve-4lang-free.ipa 是這個 repo 以前做的 Nine & Twelve（commit 95087d0 的 `nameRows`）。
+  規則：名字裡每個英文字母 a=1…z=26，加自己的靈數，十二進制得到第幾宮，依序列出本命那一宮（非英文字母略過）。
+  搬進 EchoCore 的 `Destiny.nameRows`（`NameSynastryTests` 用原作者的例子：2006-01-14 輸入 china 一致），
+  命盤的合盤分頁多了「名字合盤 ▶」，每個字母一列，點開看本命引動。

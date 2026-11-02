@@ -177,4 +177,14 @@ public struct Destiny {
 
     /// 合盤
     public func synastry(with o: Destiny) -> [NTRow] { NTChart.natalStyle(triple + o.triple) }
+
+    /// 名字合盤：名字裡每個英文字母依字母順序（a=1 … z=26）加上自己的靈數，十二進制得到第幾宮，
+    /// 依序列出本命盤的那一宮（不是英文字母的略過，大小寫一樣）。和 Nine & Twelve 原版的 nameRows 一樣
+    public func nameRows(_ name: String) -> [NTRow] {
+        name.lowercased().unicodeScalars.compactMap { u in
+            guard u.value >= 97, u.value <= 122 else { return nil }
+            let p = NT.r12(lifeNumber + Int(u.value) - 96)
+            return natal.first { $0.palace == p }
+        }
+    }
 }

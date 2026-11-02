@@ -17,6 +17,8 @@ struct FortuneView: View {
     @State private var otherName = ""
     @State private var otherBirth = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2000, month: 1, day: 1)) ?? Date()
     @State private var match: BirthDay?
+    /// 名字合盤：輸入的名字（英文字母）
+    @State private var nameMatch: String?
 
     private var L: Lang { vm.language }
 
@@ -234,7 +236,9 @@ struct FortuneView: View {
 
     private func matchTab(_ D: Destiny) -> some View {
         VStack(alignment: .leading, spacing: 18) {
-            if let o = match {
+            if let n = nameMatch {
+                nameSection(D, name: n)
+            } else if let o = match {
                 section(T("合盤", "Match", "Pareja", "Coppia") + " · \(otherName.isEmpty ? o.display : otherName)") {
                     Text(T("你（第\(D.type)型）× 對方（第\(Destiny(o).type)型「\(typeName(Destiny(o).type))」）",
                            "You (type \(D.type)) × them (type \(Destiny(o).type))", "Tú (tipo \(D.type)) × la otra persona (tipo \(Destiny(o).type))",
@@ -257,13 +261,64 @@ struct FortuneView: View {
                     DatePicker(T("對方生日", "Their birthday", "Su cumpleaños", "Il suo compleanno"), selection: $otherBirth, displayedComponents: .date)
                         .environment(\.locale, Locale(identifier: "zh_Hant_TW"))
                         .foregroundColor(Theme.paper)
-                    button(T("開始合盤 ▶", "Match ▶", "Comparar ▶", "Confronta ▶")) {
-                        hideKeyboard()
-                        let c = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: otherBirth)
-                        match = BirthDay(year: c.year ?? 2000, month: c.month ?? 1, day: c.day ?? 1)
+                    HStack(spacing: 10) {
+                        button(T("生日合盤 ▶", "By birthday ▶", "Por fecha ▶", "Per data ▶")) {
+                            hideKeyboard()
+                            let c = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: otherBirth)
+                            nameMatch = nil
+                            match = BirthDay(year: c.year ?? 2000, month: c.month ?? 1, day: c.day ?? 1)
+                        }
+                        button(T("名字合盤 ▶", "By name ▶", "Por nombre ▶", "Per nome ▶"), color: Theme.signal) {
+                            hideKeyboard()
+                            match = nil
+                            open = []
+                            nameMatch = otherName.trimmingCharacters(in: .whitespacesAndNewlines)
+                        }
                     }
+                    Text(T("名字合盤用英文字母（例如 china、Kevin），不用填生日；生日合盤不用填名字。",
+                           "Name match uses English letters and needs no birthday; birthday match needs no name.",
+                           "La de nombre usa letras inglesas y no necesita fecha; la de fecha no necesita nombre.",
+                           "Quella per nome usa lettere inglesi e non serve la data; quella per data non serve il nome."))
+                        .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
                 }
             }
+        }
+    }
+
+    /// 名字合盤：名字裡每個英文字母（a=1…z=26）加上自己的靈數，對到本命的一宮，依序列出；點開看它引動哪些宮
+    private func nameSection(_ D: Destiny, name: String) -> some View {
+        // 和 nameRows 用一樣的規則挑字母，才一一對得上
+        let letters = name.lowercased().unicodeScalars.filter { $0.value >= 97 && $0.value <= 122 }.map { String(Character($0)).uppercased() }
+        let rows = D.nameRows(name)
+        return section(T("名字合盤", "Name match", "Por nombre", "Per nome") + " · " + (name.isEmpty ? "—" : name)) {
+            if rows.isEmpty {
+                Text(T("請輸入英文字母。", "Please enter English letters.", "Introduce letras del alfabeto inglés.", "Inserisci lettere dell'alfabeto inglese."))
+                    .font(.system(size: 13, weight: .medium)).foregroundColor(Theme.paper)
+            } else {
+                Text(T("每個字母對到你本命的一宮，點一列看它引動哪些宮。", "Each letter lands on one of your natal palaces; tap to see what it sets off.",
+                       "Cada letra cae en uno de tus palacios; toca para ver qué activa.", "Ogni lettera cade su un tuo palazzo; tocca per vedere cosa attiva."))
+                    .font(.system(size: 11, weight: .medium)).foregroundColor(Theme.dim)
+                ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Button { toggle(100 + i) } label: {
+                            HStack(alignment: .top, spacing: 10) {
+                                Text(i < letters.count ? letters[i] : "").font(Theme.display(20)).foregroundColor(Theme.signal).frame(width: 24)
+                                rowView(r, title: nil, chevron: open.contains(100 + i) ? "▲" : "▼", compact: true)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        if open.contains(100 + i) {
+                            let hits = D.triggeredByNatal(r.palace)
+                            if hits.isEmpty {
+                                Text(T("沒有引動其他宮。", "None.", "Ninguno.", "Nessuno.")).font(.system(size: 12)).foregroundColor(Theme.dim)
+                            }
+                            ForEach(hits, id: \.self) { h in rowView(h, title: nil, compact: true) }
+                        }
+                    }
+                    if i < rows.count - 1 { Divider().background(Theme.panelHi) }
+                }
+            }
+            button(T("換一個名字", "Another name", "Otro nombre", "Un altro nome"), color: Theme.panelHi) { nameMatch = nil }
         }
     }
 
