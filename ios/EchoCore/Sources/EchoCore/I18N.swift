@@ -125,6 +125,11 @@ public final class I18N {
 
     public func typeName(_ t: Int, _ L: Lang) -> String { d.types[L.rawValue]!.names[t - 1] }
     public func tagline(_ t: Int, _ L: Lang) -> String { d.types[L.rawValue]!.taglines[t - 1] }
+    /// 九型的完整性格分析：一段總說，加上各段（形成性格的背景、外在表現、安定時、壓力時、健康／一般／不健康的特點）
+    public func typeProfile(_ t: Int, _ L: Lang) -> (summary: String, titles: [String], sections: [[String]]) {
+        let x = d.types[L.rawValue] ?? d.types["zh"]!
+        return (x.summaries?[t - 1] ?? "", x.sectionTitles ?? [], x.sections?[t - 1] ?? [])
+    }
 
     func starLabel(_ s: String, _ L: Lang) -> String {
         for (zh, tag) in zip(d.sihua["zh"]!, d.sihua[L.rawValue]!) where s.hasSuffix(zh) {

@@ -68,7 +68,7 @@ final class LocalBrain {
             self.lock.lock(); self.cancelled = false; self.lock.unlock()
             let messages = Self.messages(system: system, history: history, user: user)
             let temp: Float = mode == .roleplay ? 0.85 : mode == .chat ? 0.7 : 0.4
-            let most = mode == .roleplay ? 400 : mode == .chat ? 300 : 450
+            let most = mode == .roleplay ? 320 : mode == .chat ? 300 : 450
             var written = ""
             var tokens = 0
             var switches = 0

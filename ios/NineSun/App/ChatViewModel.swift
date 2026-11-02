@@ -65,6 +65,8 @@ final class ChatViewModel: ObservableObject {
     /// 目前介面語言的資料庫
     var knowledge: KnowledgeBase? { knowledgeBases[language] ?? knowledgeBases[.zh] }
     private var engine: EchoEngine?
+    /// 多語系的命盤資料（命盤畫面用）
+    var i18n: I18N? { engine?.i18n }
     private let queue = DispatchQueue(label: "ninesun.inference", qos: .userInitiated)
 
     private static let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -428,8 +430,12 @@ final class ChatViewModel: ObservableObject {
         streaming = LocalBrain.shared.isLoaded ? "…" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
         let past = turns.dropLast().suffix(12).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
         let system = LocalBrain.roleplaySystem(character: roleCharacter, lang: L.rawValue)
+        // 小模型聊久了會忘記角色：每一句都附上角色設定提醒它（只給模型看，對話裡不會出現）
+        let role = roleCharacter.trimmingCharacters(in: .whitespacesAndNewlines)
+        let user = role.isEmpty ? text : text + (L == .zh ? "\n\n（你是：\(role)。照這個設定、用這個角色的身分回我。）"
+                                                        : "\n\n(You are: \(role). Reply in character, exactly as set up.)")
         let work = BackgroundWork.start()
-        LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: text, mode: .roleplay, lang: L.rawValue,
+        LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: user, mode: .roleplay, lang: L.rawValue,
                               onText: { t in
             work.tick(t.count)
             // 大腦寫到未成年的內容：馬上停、不顯示

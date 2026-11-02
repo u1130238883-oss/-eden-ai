@@ -5,7 +5,7 @@ struct ChatView: View {
     @EnvironmentObject var vm: ChatViewModel
     @State private var input = ""
     @State private var showSettings = false
-    @State private var showPaint = false
+    @State private var showChart = false
     @State private var showLangPicker = false
     @FocusState private var focused: Bool
 
@@ -37,8 +37,8 @@ struct ChatView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView().environmentObject(vm)
         }
-        .sheet(isPresented: $showPaint) {
-            PaintView().environmentObject(vm)
+        .sheet(isPresented: $showChart) {
+            FortuneView().environmentObject(vm)
         }
     }
 
@@ -67,9 +67,9 @@ struct ChatView: View {
                 }
                 Spacer()
                 SignalBars(active: !vm.thinking)
-                // 原本資料庫的按鈕：現在打開畫室（算命資料拿掉了）
+                // 資料庫的按鈕：打開命盤（今日、本命、性格、大運、合盤）
                 Button {
-                    showPaint = true
+                    showChart = true
                 } label: {
                     Image(systemName: "books.vertical.fill")
                         .font(.system(size: 16, weight: .bold))
@@ -77,7 +77,7 @@ struct ChatView: View {
                         .frame(width: 38, height: 34)
                         .background(Slanted(skew: 7).fill(Theme.panelHi))
                 }
-                .accessibilityLabel(T("資料庫", "Library", "Biblioteca", "Biblioteca"))
+                .accessibilityLabel(T("命盤", "Chart", "Carta", "Tema"))
                 Button {
                     showSettings = true
                 } label: {
