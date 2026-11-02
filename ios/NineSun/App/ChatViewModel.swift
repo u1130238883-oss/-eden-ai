@@ -111,6 +111,10 @@ final class ChatViewModel: ObservableObject {
         translateOn = load("translateOn") ?? false
         translateTarget = load("translateTarget") ?? "en"
         useBrain = load("useBrain") ?? true
+        if !UserDefaults.standard.bool(forKey: "ninesun.brainOnV215") {
+            UserDefaults.standard.set(true, forKey: "ninesun.brainOnV215")
+            useBrain = true
+        }
         adultMode = load("adultMode") ?? false
         roleCharacter = load("roleCharacter") ?? ""
         UILang.current = language
@@ -372,6 +376,14 @@ final class ChatViewModel: ObservableObject {
     private func think(_ text: String, _ reply: EchoEngine.Reply, brain: String) -> Bool {
         let L = reply.lang
         let fallback: (String) -> Void = { _ in self.play(text: reply.turn.text, final: reply.turn) }
+        // 翻譯（「我喜歡你用西班牙語和義大利語怎麼說」）：引擎的逐字翻譯常常翻錯、翻一半，交給大腦詳細回答
+        // （翻譯、念法、用法、語氣）；用問的人說的語言回答，不是翻成的語言
+        if reply.turn.speak != nil {
+            let asked = Lang.detect(text, fallback: language)
+            brainAnswer(text + (asked == .zh ? "\n（請把每一種語言的說法都寫出來，附上念法和使用時機。）" : ""),
+                        mode: .grounded, lang: asked, brain: brain, onFail: fallback)
+            return true
+        }
         if let q = reply.webQuery {
             // 大腦寫不出來才用原本的上網查
             brainAnswer(text, mode: .chat, lang: L, brain: brain) { _ in self.lookupWeb(q, L) }

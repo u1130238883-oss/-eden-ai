@@ -1,5 +1,6 @@
-import UIKit
+import AVFoundation
 import BackgroundTasks
+import UIKit
 
 /// 大腦寫回答寫到一半，使用者切到別的 App、設定或鎖螢幕：跟系統要時間，讓回答在背景寫完。
 /// - 一般的背景時間（beginBackgroundTask，大約 30 秒）
@@ -7,6 +8,10 @@ import BackgroundTasks
 /// 背景不能用 GPU，LocalBrain 會自己改用 CPU 接著寫。
 final class BackgroundWork {
     static let identifier = "com.ninesun.app.brain-answer"
+
+    /// 寫回答時放一段無聲的音訊：系統會讓還在播音訊的 App 在背景繼續跑，大腦才寫得完
+    /// （只靠背景時間只有 30 秒，換成 CPU 重讀 5 GB 的模型都不夠）。和別的 App 的聲音混在一起，不會打斷音樂
+    private static let silence = SilentAudio()
 
     /// 正在寫的那一則（同時只有一則）
     private static var current: BackgroundWork?
@@ -37,6 +42,7 @@ final class BackgroundWork {
         current?.end()
         let w = BackgroundWork()
         w.taskID = UIApplication.shared.beginBackgroundTask(withName: "NineSun brain") { [weak w] in w?.endBackgroundTime() }
+        silence.start()
         current = w
         return w
     }
@@ -62,7 +68,7 @@ final class BackgroundWork {
             }
             self.continued = nil
             self.endBackgroundTime()
-            if BackgroundWork.current === self { BackgroundWork.current = nil }
+            if BackgroundWork.current === self { BackgroundWork.current = nil; BackgroundWork.silence.stop() }
         }
         if Thread.isMainThread { finish() } else { DispatchQueue.main.async(execute: finish) }
     }
@@ -93,5 +99,41 @@ final class BackgroundWork {
                                                        subtitle: "切到別的 App 也會繼續寫")
         request.strategy = .fail
         try? BGTaskScheduler.shared.submit(request)
+    }
+}
+
+/// 無聲的音訊（循環播一秒的靜音）
+final class SilentAudio {
+    private let engine = AVAudioEngine()
+    private let player = AVAudioPlayerNode()
+    private let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+    private var running = false
+
+    init() {
+        engine.attach(player)
+        engine.connect(player, to: engine.mainMixerNode, format: format)
+    }
+
+    /// 要在前景叫（背景不能開始播音訊）
+    func start() {
+        guard !running, let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44_100) else { return }
+        buffer.frameLength = buffer.frameCapacity   // 全是 0：沒有聲音
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try session.setActive(true)
+            try engine.start()
+        } catch { return }
+        player.scheduleBuffer(buffer, at: nil, options: .loops)
+        player.play()
+        running = true
+    }
+
+    func stop() {
+        guard running else { return }
+        player.stop()
+        engine.stop()
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        running = false
     }
 }
