@@ -47,6 +47,8 @@ final class LlamaRunner {
         _ = Self.backendOnce
         var mp = llama_model_default_params()
         mp.n_gpu_layers = gpu ? 999 : 0
+        // 用 CPU 時（切到背景）不要把權重另外複製一份重新排列：5 GB 的模型會多吃 5 GB 記憶體，背景的 App 很容易被系統關掉
+        if !gpu { mp.use_extra_bufts = false }
         guard let m = llama_model_load_from_file(path, mp) else { throw Failure.load((path as NSString).lastPathComponent) }
         var cp = llama_context_default_params()
         let n = threads ?? max(1, min(6, ProcessInfo.processInfo.activeProcessorCount - 2))

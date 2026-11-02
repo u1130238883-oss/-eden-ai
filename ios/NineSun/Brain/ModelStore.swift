@@ -58,6 +58,8 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         cfg.sessionSendsLaunchEvents = true
         cfg.allowsCellularAccess = true
         session = URLSession(configuration: cfg, delegate: self, delegateQueue: nil)
+        // 以前選的模型已經拿掉了：改選清單上的（不然下載好了還顯示「用這個」）
+        if !Self.models.contains(where: { $0.id == selectedID }) { selectedID = Self.models[0].id }
         for m in Self.models { states[m.id] = isReady(m) ? .ready : .absent }
         // 拿掉的舊模型還留在手機裡：刪掉，空出空間
         let keep = Set(Self.models.map(\.file))
