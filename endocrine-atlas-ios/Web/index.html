@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-text-size-adjust:100%}</style>
+</head><body>
+<title>人體內分泌圖譜</title>
+<style>
+/* Layout: anatomical plate (sticky) beside a tabbed reference card; stacks on phones */
+:root{
+  --bg:#EEF2F3; --paper:#FFFFFF; --ink:#13232C; --muted:#5A6B74; --line:#C9D3D8;
+  --body:#E3EAED; --body-edge:#9DAEB6; --organ:#D2DCE0; --organ-edge:#A6B6BD;
+  --accent:#C42F47; --accent-soft:rgba(196,47,71,.12);
+  --pep:#1F78A4; --ster:#B0700F; --amine:#7E3BA3; --stim:#1D8A5B; --inhib:#C42F47; --ok:#1D8A5B;
+  --f-display:"Noto Serif TC","Songti TC",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0C1418; --paper:#141F24; --ink:#E4ECEF; --muted:#93A3AB; --line:#26363D;
+  --body:#1B282F; --body-edge:#3F555F; --organ:#23333B; --organ-edge:#48616C;
+  --accent:#FF6B80; --accent-soft:rgba(255,107,128,.15);
+  --pep:#5BB6E0; --ster:#E3A646; --amine:#C08AE0; --stim:#4CC88E; --inhib:#FF6B80; --ok:#4CC88E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1418; --paper:#141F24; --ink:#E4ECEF; --muted:#93A3AB; --line:#26363D;
+  --body:#1B282F; --body-edge:#3F555F; --organ:#23333B; --organ-edge:#48616C;
+  --accent:#FF6B80; --accent-soft:rgba(255,107,128,.15);
+  --pep:#5BB6E0; --ster:#E3A646; --amine:#C08AE0; --stim:#4CC88E; --inhib:#FF6B80; --ok:#4CC88E; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65;-webkit-tap-highlight-color:transparent;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:1.5px solid var(--ink);padding-bottom:12px}
+h1{font-family:var(--f-display);font-weight:900;font-size:clamp(28px,4.4vw,42px);line-height:1.1;margin:0;letter-spacing:.02em;text-wrap:balance}
+h1 small{display:block;font-family:var(--f-mono);font-size:12px;font-weight:500;letter-spacing:.18em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+.stats{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.04em;margin-top:6px}
+.search{position:relative;flex:1 1 260px;min-width:0;max-width:440px}
+.search input{width:100%;font:inherit;font-size:16px;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.results{position:absolute;z-index:40;left:0;right:0;top:calc(100% + 6px);background:var(--paper);border:1px solid var(--line);border-radius:12px;max-height:360px;overflow:auto;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.results button{display:flex;width:100%;gap:10px;align-items:center;text-align:left;border:0;background:none;color:var(--ink);font:inherit;font-size:14px;padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--line)}
+.results button:hover,.results button:focus-visible{background:var(--accent-soft)}
+.results .r-g{margin-left:auto;color:var(--muted);font-size:12.5px;white-space:nowrap}
+.results .r-sec{font-size:11.5px;color:var(--muted);letter-spacing:.12em;padding:8px 14px 4px;font-family:var(--f-mono)}
+button:focus-visible,input:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.main{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:22px;align-items:start}
+.plate{position:sticky;top:12px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.plate-bar,.plate-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.cap{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;padding-left:4px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:var(--paper);padding:3px}
+.seg button{border:0;background:none;color:var(--muted);font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+svg#fig{width:100%;height:auto;max-height:76vh;display:block;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.ghost{border:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;cursor:pointer}
+.ghost[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+
+.panel{display:flex;flex-direction:column;gap:12px;min-width:0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border:0;background:none;color:var(--muted);font:inherit;font-size:14.5px;padding:8px 12px;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:13px;padding:4px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.eyebrow{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.16em;color:var(--accent);text-transform:uppercase}
+.card h2{font-family:var(--f-display);font-weight:900;font-size:28px;margin:0;line-height:1.2}
+.card h3{font-size:13.5px;margin:0;color:var(--muted);font-weight:700;letter-spacing:.06em}
+.card p{margin:0;max-width:68ch}
+.loc{font-size:13.5px;color:var(--muted)}
+.card ul{margin:0;padding-left:1.15em}
+.tip{border-left:3px solid var(--accent);padding:9px 12px;background:var(--accent-soft);border-radius:0 8px 8px 0;font-size:14px}
+.duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+
+details.h{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+details.h summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:11px 16px}
+details.h summary::-webkit-details-marker{display:none}
+.abbr{font-family:var(--f-mono);font-weight:700;font-size:12.5px;padding:3px 8px;border-radius:6px;color:#fff;min-width:56px;text-align:center;flex:none}
+.c-pep{background:var(--pep)} .c-ster{background:var(--ster)} .c-amine{background:var(--amine)}
+.hn{display:flex;flex-direction:column;line-height:1.3;min-width:0}
+.hn b{font-size:15.5px}
+.hn span{font-size:12.5px;color:var(--muted)}
+.cls{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+.chev{transition:transform .2s;color:var(--muted);flex:none}
+details[open]>summary .chev{transform:rotate(90deg)}
+dl.facts{margin:0;padding:12px 16px 16px;display:grid;grid-template-columns:5.5em minmax(0,1fr);gap:8px 14px;border-top:1px dashed var(--line)}
+dl.facts dt{font-size:12.5px;color:var(--muted);font-weight:500;letter-spacing:.05em;padding-top:1px}
+dl.facts dd{margin:0;max-width:66ch}
+dl.facts ul{margin:0;padding-left:1.1em}
+.tag-up{color:var(--inhib);font-weight:700}
+.tag-dn{color:var(--pep);font-weight:700}
+.mono{font-family:var(--f-mono);font-size:.92em}
+.red{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.08em;color:#fff;background:var(--inhib);border-radius:5px;padding:1px 7px;flex:none}
+:root[data-theme="dark"] .abbr,:root[data-theme="dark"] .red{color:#0C1418}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .abbr,:root:not([data-theme="light"]) .red{color:#0C1418}}
+.match{font-family:var(--f-mono);font-size:12px;color:var(--accent);white-space:nowrap;margin-left:auto}
+.sx{display:flex;flex-wrap:wrap;gap:5px}
+.sx span{font-size:12.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.sx span.hit{border-color:var(--accent);color:var(--accent);font-weight:700;background:var(--accent-soft)}
+.gl-links{display:flex;flex-wrap:wrap;gap:6px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+
+ol.steps{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:8px}
+ol.steps li::marker{font-family:var(--f-mono);color:var(--accent);font-weight:700}
+.quiz-q{font-size:18px;font-weight:700;line-height:1.5}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.opt{text-align:left;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:14.5px;padding:10px 14px;border-radius:10px;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent);font-weight:700}
+.opt.wrong{border-color:var(--inhib);background:var(--accent-soft)}
+.opt:disabled{cursor:default}
+.score{display:flex;gap:18px;font-family:var(--f-mono);font-size:13px;color:var(--muted);flex-wrap:wrap}
+.score b{color:var(--ink);font-size:18px}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--bg);font:inherit;font-size:14px;padding:8px 16px;border-radius:999px;cursor:pointer}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:.06em;background:var(--paper)}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--accent-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.note{font-size:12.5px;color:var(--muted);max-width:90ch;margin:0}
+
+/* SVG plate */
+.b-fill{fill:var(--body);stroke:var(--body-edge);stroke-width:1.2}
+.org{fill:var(--organ);stroke:var(--organ-edge);stroke-width:.9}
+.org-line{fill:none;stroke:var(--organ-edge);stroke-width:1}
+.gl{fill:var(--organ);stroke:var(--organ-edge);stroke-width:1;transition:fill .2s,stroke .2s}
+.gl.on{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.6}
+.mk{cursor:pointer}.mk .hit{fill:transparent}
+.mk .core{fill:var(--paper);stroke:var(--accent);stroke-width:2}
+.mk .pip{fill:var(--accent)}
+.mk.on .core{fill:var(--accent)}.mk.on .pip{fill:var(--paper)}
+.mk.dim{opacity:.28}.mk:focus{outline:none}.mk:focus-visible .core{stroke-width:3.5}
+.pulse{fill:none;stroke:var(--accent);stroke-width:1.5;animation:pulse 1.8s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{0%{transform:scale(1);opacity:.9}100%{transform:scale(2.6);opacity:0}}
+.lbl{font-family:var(--f-body);font-size:10.5px;font-weight:700;fill:var(--ink);paint-order:stroke;stroke:var(--paper);stroke-width:3px}
+.lbl-en{font-family:var(--f-mono);font-size:7px;fill:var(--muted);paint-order:stroke;stroke:var(--paper);stroke-width:3px}
+.leader{stroke:var(--ink);stroke-width:.7;fill:none}
+.ax{fill:none;stroke-width:1.8}.ax.stim{stroke:var(--stim)}.ax.inhib{stroke:var(--inhib);stroke-dasharray:4 3}
+.ax-t{font-family:var(--f-mono);font-size:8px;font-weight:700;paint-order:stroke;stroke:var(--paper);stroke-width:3px}
+.ax-t.stim{fill:var(--stim)}.ax-t.inhib{fill:var(--inhib)}
+
+@media (max-width:860px){
+  .main{grid-template-columns:minmax(0,1fr)}
+  .plate{position:relative;top:0}
+  svg#fig{max-height:60vh}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1><small>Endocrine Atlas · 人體內分泌系統</small>人體內分泌圖譜</h1>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="search">
+      <input id="q" type="search" placeholder="搜尋激素、疾病或症狀：胰島素、庫欣、心悸…" autocomplete="off" aria-label="搜尋激素、疾病或症狀">
+      <div class="results" id="results" hidden></div>
+    </div>
+  </header>
+
+  <div class="main">
+    <section class="plate" aria-label="人體圖">
+      <div class="plate-bar">
+        <span class="cap">前視圖 · Anterior view</span>
+        <div class="seg" role="group" aria-label="生理性別">
+          <button id="s-f" aria-pressed="true">女性</button>
+          <button id="s-p" aria-pressed="false">懷孕</button>
+          <button id="s-m" aria-pressed="false">男性</button>
+        </div>
+      </div>
+      <svg id="fig" viewBox="40 6 320 640" role="img" aria-label="人體前視圖與內分泌腺位置"></svg>
+      <div class="plate-foot">
+        <button class="ghost" id="zoom" aria-pressed="false">放大所選部位</button>
+        <span class="cap">點選紅色圓點查看器官</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tab-gland" aria-selected="true">腺體與激素</button>
+        <button role="tab" id="tab-dis" aria-selected="false">疾病與症狀</button>
+        <button role="tab" id="tab-axis" aria-selected="false">調節軸</button>
+        <button role="tab" id="tab-quiz" aria-selected="false">隨堂測驗</button>
+        <button role="tab" id="tab-table" aria-selected="false">激素總表</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div id="panel" style="display:flex;flex-direction:column;gap:12px" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <div class="legend" aria-label="激素化學分類">
+    <span><i class="dot" style="background:var(--pep)"></i>肽／蛋白質類：水溶性，作用於細胞膜受體</span>
+    <span><i class="dot" style="background:var(--ster)"></i>類固醇類：由膽固醇合成，作用於胞內受體</span>
+    <span><i class="dot" style="background:var(--amine)"></i>胺類：由酪胺酸或色胺酸衍生</span>
+  </div>
+  <p class="note">本圖譜供醫學學習與科普使用，不能取代醫師診斷。「疾病與症狀」用來認識疾病，不是自我診斷工具；標示「急症」的情況請立即就醫。圖中位置為前視投影示意，半衰期為常見近似值；診斷數值依台灣與國際常用標準，實際以各醫療院所為準。</p>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+/* ================= State ================= */
+let S={tab:"gland",sex:"f",preg:false,sel:"pit",axis:"hpa",dis:null,sym:[],zoom:false,tf:"all"};
+try{Object.assign(S,JSON.parse(localStorage.getItem("endo-atlas-v3")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("endo-atlas-v3",JSON.stringify(S))}catch(e){}};
+const gById=id=>G.find(g=>g.id===id);
+const dById=id=>DIS.find(d=>d.id===id);
+const gonad=()=>S.sex==="f"?"ova":"tes";
+const vis=g=>!g.sex||(g.sex===S.sex&&(!g.preg||S.preg));
+const visible=()=>G.filter(vis);
+const resolve=id=>id==="GON"?gonad():id;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const short=g=>g.zh.replace(/（.*）/,"");
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+document.getElementById("stats").textContent=`${G.length} 個器官 · ${G.reduce((s,g)=>s+g.h.length,0)} 種激素 · ${DIS.length} 種疾病 · ${AX.length} 條調節軸`;
+
+/* ================= Plate (SVG) ================= */
+const NS="http://www.w3.org/2000/svg",svg=document.getElementById("fig");
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function smooth(p,closed){const n=p.length;let d=`M${p[0][0]},${p[0][1]}`;const last=closed?n:n-1;
+  for(let i=0;i<last;i++){const p0=p[(i-1+n)%n],p1=p[i],p2=p[(i+1)%n],p3=p[(i+2)%n];const a=closed||i>0?p0:p1,b=closed||i<n-2?p3:p2;
+    const c1=[p1[0]+(p2[0]-a[0])/6,p1[1]+(p2[1]-a[1])/6],c2=[p2[0]-(b[0]-p1[0])/6,p2[1]-(b[1]-p1[1])/6];
+    d+=` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0]},${p2[1]}`}
+  return d+(closed?"Z":"")}
+const C=200;
+const torsoR=[[22,112],[23,150],[28,170],[54,180],[82,190],[98,204],[102,230],[96,262],[90,300],[84,340],[78,385],[76,420],[82,455],[92,495],[96,530],[94,575],[90,625],[86,680],[22,680],[14,630],[8,585],[0,566]];
+const torso=[...torsoR.map(([x,y])=>[C+x,y]),...torsoR.slice(0,-1).reverse().map(([x,y])=>[C-x,y])];
+const armR=[[96,200],[114,222],[122,262],[124,310],[128,360],[134,410],[140,460],[146,505],[152,540],[150,575],[138,592],[127,572],[124,540],[120,505],[113,460],[105,410],[99,360],[95,310],[93,268]];
+let SH={},L={};
+function draw(){
+  svg.innerHTML="";const defs=el("defs",{},svg);
+  const lg=el("linearGradient",{id:"fade",gradientUnits:"userSpaceOnUse",x1:0,x2:0,y1:600,y2:650},defs);
+  el("stop",{offset:0,"stop-color":"#fff"},lg);el("stop",{offset:1,"stop-color":"#000"},lg);
+  const mk=el("mask",{id:"mfade"},defs);el("rect",{x:0,y:0,width:400,height:700,fill:"url(#fade)"},mk);
+  [["arS","var(--stim)"],["arI","var(--inhib)"]].forEach(([id,c])=>{const m=el("marker",{id,viewBox:"0 0 10 10",refX:8,refY:5,markerWidth:6,markerHeight:6,orient:"auto-start-reverse"},defs);el("path",{d:"M0,0 L10,5 L0,10 z",fill:c},m)});
+  const body=el("g",{mask:"url(#mfade)"},svg);
+  el("path",{class:"b-fill",d:smooth(armR.map(([x,y])=>[C+x,y]),true)},body);
+  el("path",{class:"b-fill",d:smooth(armR.map(([x,y])=>[C-x,y]),true)},body);
+  el("path",{class:"b-fill",d:smooth(torso,true)},body);
+  el("ellipse",{class:"b-fill",cx:200,cy:68,rx:44,ry:56},body);
+  el("path",{class:"org-line",d:"M160,184 Q180,190 196,186 M240,184 Q220,190 204,186",opacity:.7},body);
+  const o=el("g",{},body);
+  el("path",{class:"org",d:"M200,30 C176,28 160,44 160,64 C160,80 170,92 186,96 L214,96 C230,92 240,80 240,64 C240,44 224,28 200,30 Z",opacity:.85},o);
+  el("path",{class:"org-line",d:"M200,32 L200,94 M172,50 Q182,58 176,70 M228,50 Q218,58 224,70",opacity:.5},o);
+  el("path",{class:"org-line",d:"M200,140 L200,232 M200,232 Q186,240 176,252 M200,232 Q214,240 224,252","stroke-width":3,opacity:.45},o);
+  el("path",{class:"org",d:smooth([[178,208],[190,240],[192,300],[170,318],[142,312],[132,270],[146,222],[164,206]],true),opacity:.55},o);
+  el("path",{class:"org",d:smooth([[222,208],[236,206],[254,222],[268,270],[258,312],[232,318],[228,290],[214,240]],true),opacity:.55},o);
+  const pregnant=S.sex==="f"&&S.preg;
+  if(!pregnant){
+    el("path",{class:"org-line",d:"M164,470 L164,410 Q164,400 174,400 L228,400 Q238,400 238,410 L238,470",opacity:.5,"stroke-width":7,"stroke-linecap":"round"},o);
+    el("path",{class:"org-line",d:"M178,414 q10,10 20,0 t20,0 t14,4 M176,432 q12,10 24,0 t24,0 M180,450 q10,10 20,0 t20,0 t10,4",opacity:.45,"stroke-width":3},o);
+  }
+  el("ellipse",{class:"org",cx:200,cy:505,rx:15,ry:10,opacity:.6},o);
+  el("path",{class:"org",d:"M168,505 L170,650 L180,650 L178,505 Z",opacity:.45},o);
+  const gl=el("g",{},svg);SH={};
+  SH.hypo=[el("ellipse",{class:"gl",cx:200,cy:87,rx:9,ry:5},gl)];
+  SH.pit=[el("path",{class:"gl",d:"M200,92 L200,96 M194,99 C194,96 206,96 206,99 C206,105 194,105 194,99 Z"},gl)];
+  SH.pin=[el("ellipse",{class:"gl",cx:213,cy:70,rx:3.5,ry:4.5},gl)];
+  SH.thy=[el("path",{class:"gl",d:"M196,154 C188,148 182,154 183,164 C184,172 192,174 196,168 L204,168 C208,174 216,172 217,164 C218,154 212,148 204,154 Z"},gl)];
+  SH.para=[[188,155],[212,155],[187,168],[213,168]].map(([x,y])=>el("circle",{class:"gl",cx:x,cy:y,r:2.4},gl));
+  SH.thym=[el("path",{class:"gl",d:"M199,196 C190,198 186,214 190,226 C193,232 198,230 200,224 C202,230 207,232 210,226 C214,214 210,198 201,196 Z"},gl)];
+  SH.heart=[el("path",{class:"gl",d:"M196,244 C206,234 230,236 232,256 C233,270 220,282 212,292 C200,284 186,270 188,256 C189,250 192,246 196,244 Z"},gl)];
+  SH.liver=[el("path",{class:"gl",d:"M138,298 C160,284 214,286 238,298 C242,306 230,316 212,322 C190,330 160,338 146,328 C136,318 134,306 138,298 Z"},gl)];
+  SH.stom=[el("path",{class:"gl",d:"M216,302 C234,294 256,304 256,324 C256,344 238,354 220,352 C206,351 200,344 204,336 C214,339 228,334 230,322 C230,312 222,308 216,302 Z"},gl)];
+  SH.panc=[el("path",{class:"gl",d:"M182,356 C190,346 208,350 224,348 C238,346 250,342 258,346 C258,353 244,357 226,359 C210,362 196,367 186,367 C180,365 178,360 182,356 Z"},gl)];
+  SH.duo=[el("path",{class:"gl",d:"M204,340 C186,338 172,348 172,364 C172,380 188,388 208,382 L208,376 C192,380 180,374 180,364 C180,352 190,346 204,347 Z"},gl)];
+  SH.adr=[el("path",{class:"gl",d:"M166,371 L174,358 L182,371 Z"},gl),el("path",{class:"gl",d:"M219,363 C222,354 230,352 236,360 C232,362 226,364 219,363 Z"},gl)];
+  SH.kid=[el("path",{class:"gl",d:smooth([[172,372],[184,378],[182,388],[186,396],[180,408],[166,404],[160,390],[163,377]],true)},gl),
+          el("path",{class:"gl",d:smooth([[228,364],[237,369],[240,382],[236,398],[222,400],[216,388],[220,380],[218,370]],true)},gl)];
+  SH.fat=[el("path",{class:"gl",d:"M258,420 C268,424 274,440 272,458 C266,462 260,456 258,446 Z"},gl),el("path",{class:"gl",d:"M142,420 C132,424 126,440 128,458 C134,462 140,456 142,446 Z"},gl)];
+  SH.bone=[el("path",{class:"gl",d:"M222,505 L230,650 L240,650 L232,505 Z"},gl),el("circle",{class:"gl",cx:225,cy:500,r:7},gl)];
+  SH.skin=[el("path",{class:"gl",d:smooth([[63,412],[72,408],[80,414],[82,440],[76,452],[66,450],[60,432]],true),opacity:.9},gl)];
+  SH.musc=[el("path",{class:"gl",d:smooth([[150,560],[162,548],[176,556],[180,600],[176,640],[160,646],[150,620]],true),opacity:.85},gl)];
+  if(S.sex==="f"){
+    if(pregnant){
+      el("ellipse",{class:"org",cx:200,cy:440,rx:40,ry:48,opacity:.7},o);
+      el("path",{class:"org-line",d:"M192,470 C178,462 176,440 186,428 C192,420 206,418 210,428 C216,438 212,452 204,456",opacity:.7,"stroke-width":2},o);
+      SH.plac=[el("path",{class:"gl",d:"M176,410 C186,396 214,396 224,410 C214,416 186,416 176,410 Z"},gl)];
+    }else el("path",{class:"org",d:"M190,470 C190,462 210,462 210,470 C210,482 204,492 200,494 C196,492 190,482 190,470 Z",opacity:.8},o);
+    el("path",{class:"org-line",d:"M191,468 Q184,460 178,470 M209,468 Q216,460 222,470",opacity:.7},o);
+    SH.ova=[el("ellipse",{class:"gl",cx:178,cy:476,rx:6,ry:4},gl),el("ellipse",{class:"gl",cx:222,cy:476,rx:6,ry:4},gl)];
+  }else{
+    el("path",{class:"org",d:"M184,552 C184,574 216,574 216,552 C210,546 190,546 184,552 Z",opacity:.75},o);
+    el("path",{class:"org-line",d:"M200,520 L200,548",opacity:.6},o);
+    SH.tes=[el("ellipse",{class:"gl",cx:193,cy:559,rx:5.5,ry:8},gl),el("ellipse",{class:"gl",cx:207,cy:559,rx:5.5,ry:8},gl)];
+  }
+  L.over=el("g",{},svg);L.marks=el("g",{},svg);L.labels=el("g",{},svg);L.hover=null;
+  visible().forEach(g=>{const [x,y]=g.pos;
+    const k=el("g",{class:"mk","data-id":g.id,tabindex:0,role:"button","aria-label":g.zh},L.marks);
+    el("circle",{class:"hit",cx:x,cy:y,r:11},k);el("circle",{class:"core",cx:x,cy:y,r:4.6},k);el("circle",{class:"pip",cx:x,cy:y,r:1.6},k);
+    k.addEventListener("click",()=>pick(g.id));
+    k.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(g.id)}});
+    k.addEventListener("mouseenter",()=>hover(g));k.addEventListener("mouseleave",()=>hover(null));
+  });
+}
+function label(g,layer,strong){
+  const [x,y]=g.pos,right=g.lab==="R";const tx=right?Math.max(x+34,286):Math.min(x-34,114);
+  el("path",{class:"leader",d:`M${x+(right?6:-6)},${y} L${tx+(right?-4:4)},${y}`},layer);
+  el("text",{class:"lbl",x:tx,y:y-1,"text-anchor":right?"start":"end"},layer).textContent=short(g);
+  el("text",{class:"lbl-en",x:tx,y:y+8,"text-anchor":right?"start":"end"},layer).textContent=g.en.split(" — ")[0].toUpperCase();
+  if(strong)layer.insertBefore(el("circle",{class:"pulse",cx:x,cy:y,r:5}),layer.firstChild);
+}
+function hover(g){if(L.hover)L.hover.remove();L.hover=null;if(!g||onList().includes(g.id))return;L.hover=el("g",{opacity:.75},svg);label(g,L.hover,false)}
+let vb=[40,6,320,640],vbRaf;
+function animVB(to){cancelAnimationFrame(vbRaf);const from=vb.slice(),t0=performance.now(),D=reduce?0:420;
+  const step=now=>{const k=D?Math.min(1,(now-t0)/D):1,e=1-Math.pow(1-k,3);vb=from.map((v,i)=>v+(to[i]-v)*e);svg.setAttribute("viewBox",vb.map(v=>v.toFixed(1)).join(" "));if(k<1)vbRaf=requestAnimationFrame(step)};
+  vbRaf=requestAnimationFrame(step)}
+function onList(){
+  if(S.tab==="axis")return AX.find(a=>a.id===S.axis).glands.map(resolve);
+  if(S.tab==="dis"&&S.dis)return dById(S.dis).g.filter(id=>vis(gById(id)));
+  return [S.sel];
+}
+function syncPlate(){
+  draw();const on=onList();const multi=S.tab==="axis"||(S.tab==="dis"&&S.dis);
+  Object.entries(SH).forEach(([id,arr])=>arr.forEach(s=>s.classList.toggle("on",on.includes(id))));
+  L.marks.querySelectorAll(".mk").forEach(m=>{const o=on.includes(m.dataset.id);m.classList.toggle("on",o);m.setAttribute("aria-pressed",o);m.classList.toggle("dim",!!multi&&!o)});
+  if(S.tab==="axis"){
+    const ax=AX.find(a=>a.id===S.axis);on.forEach(id=>label(gById(id),L.labels,false));
+    ax.links.forEach(([f,t,txt,type])=>{const a=gById(resolve(f)).pos,b=gById(resolve(t)).pos;
+      const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;
+      const off=type==="inhib"?Math.min(70,30+len*.15):Math.min(46,18+len*.1);
+      const sa=[a[0]+dx/len*9,a[1]+dy/len*9],sb=[b[0]-dx/len*9,b[1]-dy/len*9],cx=(a[0]+b[0])/2+nx*off,cy=(a[1]+b[1])/2+ny*off;
+      el("path",{class:"ax "+type,d:`M${sa[0]},${sa[1]} Q${cx},${cy} ${sb[0]},${sb[1]}`,"marker-end":`url(#${type==="inhib"?"arI":"arS"})`},L.over);
+      el("text",{class:"ax-t "+type,x:(sa[0]+2*cx+sb[0])/4,y:(sa[1]+2*cy+sb[1])/4+3,"text-anchor":"middle"},L.over).textContent=txt});
+  }else if(multi){on.forEach(id=>label(gById(id),L.labels,true))}
+  else label(gById(S.sel),L.labels,true);
+  let to=[40,6,320,640];
+  if(S.zoom&&on.length){const pts=on.map(id=>gById(id).pos);const x0=Math.min(...pts.map(p=>p[0])),x1=Math.max(...pts.map(p=>p[0])),y0=Math.min(...pts.map(p=>p[1])),y1=Math.max(...pts.map(p=>p[1]));
+    const h=Math.max(150,(y1-y0)+110),w=Math.max(220,h*.8),cx=(x0+x1)/2,cy=(y0+y1)/2;
+    to=[Math.max(20,Math.min(380-w,cx-w/2)),Math.max(0,Math.min(660-h,cy-h/2)),w,h]}
+  animVB(to);
+}
+
+/* ================= Panel ================= */
+const recept=h=>h.c==="pep"?"細胞膜受體（第二傳訊者）":h.c==="ster"?"胞內／核受體（調控基因轉錄）":/T4/.test(h.a)?"核受體（雖屬胺類，但具脂溶性）":"細胞膜受體（G 蛋白偶聯）";
+const chev='<svg class="chev" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+function hCard(h,open,id){
+  return `<details class="h" ${open?"open":""} id="${id}"><summary><span class="abbr c-${h.c}">${esc(h.a)}</span><span class="hn"><b>${esc(h.zh)}</b><span>${esc(h.en)}</span></span><span class="cls">${CLS[h.c]}</span>${chev}</summary>
+  <dl class="facts">
+   <dt>分泌來源</dt><dd>${esc(h.src)}</dd>
+   <dt>受體類型</dt><dd>${recept(h)}</dd>
+   <dt>標靶</dt><dd>${esc(h.tg)}</dd>
+   <dt>主要作用</dt><dd><ul>${h.fx.map(f=>`<li>${esc(f)}</li>`).join("")}</ul></dd>
+   <dt>分泌調控</dt><dd>${esc(h.reg)}</dd>
+   ${h.hl?`<dt>血中半衰期</dt><dd class="mono">${esc(h.hl)}</dd>`:""}
+   <dt><span class="tag-up">↑</span> 過多</dt><dd>${esc(h.ex)}</dd>
+   <dt><span class="tag-dn">↓</span> 不足</dt><dd>${esc(h.de)}</dd>
+  </dl></details>`;
+}
+function dCard(d,open,matches){
+  const hits=new Set(S.sym);const gl=d.g.map(gById);
+  return `<details class="h dis" ${open?"open":""} data-d="${d.id}" id="d-${d.id}"><summary>${d.red?'<span class="red">急症</span>':""}<span class="hn"><b>${esc(d.zh)}</b><span>${esc(d.en)}</span></span>${matches?`<span class="match">${matches} 項符合</span>`:`<span class="cls">${esc(gl.map(short).slice(0,2).join("、"))}</span>`}${chev}</summary>
+  <dl class="facts">
+   <dt>成因</dt><dd>${esc(d.cause)}</dd>
+   <dt>主要症狀</dt><dd><div class="sx">${d.sx.map(s=>`<span class="${hits.has(s)?"hit":""}">${esc(s)}</span>`).join("")}</div></dd>
+   <dt>臨床表現</dt><dd>${esc(d.more)}</dd>
+   <dt>診斷檢查</dt><dd>${esc(d.lab)}</dd>
+   <dt>治療</dt><dd>${esc(d.tx)}</dd>
+   <dt>相關器官</dt><dd><div class="gl-links">${gl.map(g=>`<button class="chip" data-go="${g.id}">${esc(short(g))}</button>`).join("")}</div></dd>
+  </dl></details>`;
+}
+const P=document.getElementById("panel"),CH=document.getElementById("chips");
+function renderChips(){
+  CH.hidden=false;
+  if(S.tab==="gland"){
+    CH.innerHTML=visible().map(g=>`<button class="chip" data-id="${g.id}" aria-pressed="${g.id===S.sel}">${esc(short(g))}</button>`).join("");
+    CH.querySelectorAll(".chip").forEach(b=>b.onclick=()=>pick(b.dataset.id));
+  }else if(S.tab==="axis"){
+    CH.innerHTML=AX.map(a=>`<button class="chip" data-id="${a.id}" aria-pressed="${a.id===S.axis}">${esc(a.zh.split(" · ")[0])}</button>`).join("");
+    CH.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{S.axis=b.dataset.id;update()});
+  }else if(S.tab==="table"){
+    CH.innerHTML=[["all","全部"],["pep","肽／蛋白質"],["ster","類固醇"],["amine","胺類"]].map(([k,v])=>`<button class="chip" data-k="${k}" aria-pressed="${S.tf===k}">${v}</button>`).join("");
+    CH.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{S.tf=b.dataset.k;update()});
+  }else CH.hidden=true;
+}
+function renderPanel(hi){
+  if(S.tab==="gland"){
+    const g=gById(S.sel);const rel=DIS.filter(d=>d.g.includes(g.id));
+    P.innerHTML=`<div class="card"><span class="eyebrow">${esc(g.en)} · ${g.h.length} 種激素</span><h2>${esc(g.zh)}</h2><p class="loc">位置｜${esc(g.loc)}</p><p>${esc(g.desc)}</p></div>`+
+      g.h.map((h,i)=>hCard(h,hi!=null?i===hi:i===0,`h-${g.id}-${i}`)).join("")+
+      `<div class="duo"><div class="card"><h3>常用檢查</h3><ul>${(g.test||[]).map(t=>`<li>${esc(t)}</li>`).join("")}</ul></div>
+       <div class="card"><h3>相關藥物</h3><ul>${(g.drug||[]).map(t=>`<li>${esc(t)}</li>`).join("")}</ul></div></div>`+
+      (rel.length?`<div class="card"><h3>相關疾病</h3><div class="gl-links">${rel.map(d=>`<button class="chip" data-dis="${d.id}">${esc(d.zh)}</button>`).join("")}</div></div>`:"")+
+      (g.tip?`<div class="tip"><b>學習重點</b>　${esc(g.tip)}</div>`:"");
+    P.querySelectorAll("[data-dis]").forEach(b=>b.onclick=()=>openDis(b.dataset.dis));
+    if(hi!=null){const d=document.getElementById(`h-${g.id}-${hi}`);d&&d.scrollIntoView({behavior:reduce?"auto":"smooth",block:"nearest"})}
+  }else if(S.tab==="dis")renderDis();
+  else if(S.tab==="axis"){
+    const ax=AX.find(a=>a.id===S.axis);
+    P.innerHTML=`<div class="card"><span class="eyebrow">Feedback axis · 回饋調節</span><h2>${esc(ax.zh)}</h2>
+      <p class="loc">參與器官｜${ax.glands.map(id=>esc(short(gById(resolve(id))))).join(" → ")}</p>
+      <p style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px"><span style="color:var(--stim)">━ 促進 ⊕</span><span style="color:var(--inhib)">╍ 抑制／負回饋 ⊖</span></p></div>
+      <div class="card"><ol class="steps">${ax.steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ol></div>
+      <div class="tip"><b>臨床重點</b>　${esc(ax.clin)}</div>`;
+  }else if(S.tab==="quiz")renderQuiz();
+  else{
+    const rows=[];G.forEach(g=>g.h.forEach((h,i)=>{if(S.tf==="all"||h.c===S.tf)rows.push({g,h,i})}));
+    P.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>激素</th><th>來源</th><th>主要作用</th><th>半衰期</th></tr></thead><tbody>${
+      rows.map(({g,h,i})=>`<tr data-g="${g.id}" data-i="${i}" tabindex="0"><td><span class="abbr c-${h.c}" style="font-size:11px;min-width:48px;display:inline-block">${esc(h.a)}</span> ${esc(h.zh)}</td><td>${esc(short(g))}${g.preg?"（懷孕）":g.sex?(g.sex==="f"?"（女）":"（男）"):""}</td><td>${esc(h.fx[0])}</td><td class="mono">${esc(h.hl||"—")}</td></tr>`).join("")}</tbody></table></div>
+      <p class="note">共 ${rows.length} 項。點選任一列查看完整資料。</p>`;
+    P.querySelectorAll("tbody tr").forEach(tr=>{const go=()=>pick(tr.dataset.g,+tr.dataset.i);tr.onclick=go;tr.onkeydown=e=>{if(e.key==="Enter")go()}});
+  }
+}
+
+/* ----- diseases & symptoms ----- */
+function renderDis(){
+  const sel=new Set(S.sym);
+  let list=DIS.map(d=>({d,m:d.sx.filter(s=>sel.has(s)).length}));
+  if(sel.size)list=list.filter(x=>x.m>0).sort((a,b)=>b.m-a.m||(b.m/b.d.sx.length)-(a.m/a.d.sx.length));
+  P.innerHTML=`<div class="card"><div class="toolbar"><h3>選擇症狀或檢驗異常（可複選）</h3>${sel.size?`<button class="ghost" id="sx-clear">清除 ${sel.size} 項</button>`:""}</div>
+    <div class="chips" id="sx-chips">${SYM.map(s=>`<button class="chip" data-s="${esc(s)}" aria-pressed="${sel.has(s)}">${esc(s)}</button>`).join("")}</div>
+    <p class="note">${sel.size?`依相符項目多寡排序，共 ${list.length} 種疾病。`:`共 ${DIS.length} 種內分泌疾病。點選症狀可篩選；打開疾病會在左圖標出相關器官。`}</p></div>`+
+    (list.length?list.map(({d,m})=>dCard(d,d.id===S.dis,sel.size?m:0)).join(""):`<div class="card"><p>沒有疾病同時符合這些症狀，請減少選取的項目。</p></div>`);
+  P.querySelectorAll("#sx-chips .chip").forEach(b=>b.onclick=()=>{const s=b.dataset.s;S.sym=sel.has(s)?S.sym.filter(x=>x!==s):[...S.sym,s];update()});
+  const c=document.getElementById("sx-clear");if(c)c.onclick=()=>{S.sym=[];update()};
+  P.querySelectorAll("details.dis").forEach(det=>det.addEventListener("toggle",()=>{
+    if(det.open){P.querySelectorAll("details.dis[open]").forEach(o=>{if(o!==det)o.open=false});S.dis=det.dataset.d}
+    else if(S.dis===det.dataset.d)S.dis=null;
+    syncPlate();save();
+  }));
+  P.querySelectorAll("[data-go]").forEach(b=>b.onclick=e=>{e.preventDefault();pick(b.dataset.go)});
+}
+function openDis(id){
+  const d=dById(id);if(d.g.includes("plac")){S.sex="f";S.preg=true}
+  S.tab="dis";S.dis=id;update();
+  const e=document.getElementById("d-"+id);e&&e.scrollIntoView({behavior:reduce?"auto":"smooth",block:"nearest"});
+}
+
+/* ----- quiz ----- */
+let Q=null,score={n:0,ok:0},streak=0,best=0;
+try{best=+localStorage.getItem("endo-best")||0}catch(e){}
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pickOne=a=>a[Math.floor(Math.random()*a.length)];
+function newQ(){
+  const all=[];G.forEach(g=>g.h.forEach(h=>all.push({g,h})));
+  const r=Math.random();
+  if(r<.3){const it=pickOne(all);const opts=shuffle([it.g,...shuffle(G.filter(x=>x.id!==it.g.id)).slice(0,3)]);
+    Q={q:`「${it.h.zh}（${it.h.a}）」主要由哪個器官分泌？`,opts:opts.map(short),ans:opts.indexOf(it.g),g:it.g,h:it.h,why:`${it.h.zh}由${short(it.g)}分泌，主要作用是${it.h.fx[0]}。`}}
+  else if(r<.5){const p=pickOne(all.filter(x=>x.h.ex&&x.h.ex.length>6&&!x.h.ex.startsWith("—")));const opts=shuffle([p,...shuffle(all.filter(x=>x.h.a!==p.h.a)).slice(0,3)]);
+    Q={q:`哪一種激素「分泌過多」會出現：${p.h.ex}`,opts:opts.map(o=>`${o.h.zh}（${o.h.a}）`),ans:opts.indexOf(p),g:p.g,h:p.h,why:`這是${p.h.zh}過多的表現，它由${short(p.g)}分泌。`}}
+  else if(r<.75){const d=pickOne(DIS);const sx=shuffle(d.sx.slice()).slice(0,Math.min(3,d.sx.length));
+    const opts=shuffle([d,...shuffle(DIS.filter(x=>x.id!==d.id&&!x.g.some(id=>d.g.includes(id)))).slice(0,3)]);
+    Q={q:`病人出現「${sx.join("、")}」，最可能是哪一種內分泌疾病？`,opts:opts.map(o=>o.zh),ans:opts.indexOf(d),dis:d,why:`${d.zh}：${d.more}`}}
+  else if(r<.88){const d=pickOne(DIS);const opts=shuffle([d,...shuffle(DIS.filter(x=>x.id!==d.id)).slice(0,3)]);
+    Q={q:`哪一種疾病的診斷檢查是：${d.lab}`,opts:opts.map(o=>o.zh),ans:opts.indexOf(d),dis:d,why:`${d.zh}的治療：${d.tx}`}}
+  else{const it=pickOne(all);const keys=["pep","ster","amine"];
+    Q={q:`「${it.h.zh}」在化學結構上屬於哪一類？`,opts:keys.map(k=>CLS[k]),ans:keys.indexOf(it.h.c),g:it.g,h:it.h,why:`${it.h.zh}屬於${CLS[it.h.c]}類，作用於${recept(it.h)}。`}}
+  Q.done=false;
+}
+const scoreHtml=()=>`<span>本次 <b>${score.ok}</b> / ${score.n}</span><span>連續答對 <b>${streak}</b></span><span>最佳紀錄 <b>${best}</b></span>`;
+function renderQuiz(){
+  if(!Q)newQ();
+  P.innerHTML=`<div class="card" style="gap:14px"><div class="score">${scoreHtml()}</div>
+   <div class="quiz-q">${esc(Q.q)}</div>
+   <div class="opts">${Q.opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o)}</button>`).join("")}</div>
+   <div id="qfb"></div></div>`;
+  P.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(+b.dataset.i));
+}
+function answer(i){
+  if(Q.done)return;Q.done=true;score.n++;const ok=i===Q.ans;
+  if(ok){score.ok++;streak++;if(streak>best){best=streak;try{localStorage.setItem("endo-best",best)}catch(e){}}}else streak=0;
+  P.querySelectorAll(".opt").forEach((b,k)=>{b.disabled=true;if(k===Q.ans)b.classList.add("right");else if(k===i)b.classList.add("wrong")});
+  P.querySelector(".score").innerHTML=scoreHtml();
+  if(Q.g){if(Q.g.sex&&Q.g.sex!==S.sex)S.sex=Q.g.sex;if(Q.g.preg)S.preg=true;S.sel=Q.g.id;syncPlate()}
+  else{S.dis=Q.dis.id;S.tab="dis";syncPlate();S.tab="quiz"}
+  document.getElementById("qfb").innerHTML=`<div class="tip"><b>${ok?"答對了。":"答錯了。"}</b>${esc(Q.why)}</div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" id="qnext">下一題</button><button class="chip" id="qsee">查看完整資料</button></div>`;
+  document.getElementById("qnext").onclick=()=>{newQ();renderQuiz();syncPlate()};
+  document.getElementById("qsee").onclick=()=>{if(Q.dis)openDis(Q.dis.id);else pick(Q.g.id,Q.g.h.indexOf(Q.h))};
+}
+
+/* ================= Actions ================= */
+function syncHud(){
+  const set=(id,v)=>document.getElementById(id).setAttribute("aria-pressed",v);
+  set("s-f",S.sex==="f"&&!S.preg);set("s-p",S.sex==="f"&&S.preg);set("s-m",S.sex==="m");set("zoom",S.zoom);
+  document.getElementById("zoom").textContent=S.zoom?"顯示全身":"放大所選部位";
+  ["gland","dis","axis","quiz","table"].forEach(t=>document.getElementById("tab-"+t).setAttribute("aria-selected",S.tab===t));
+}
+function update(hi){
+  if(!gById(S.sel)||!vis(gById(S.sel)))S.sel=gonad();
+  if(S.dis&&!dById(S.dis))S.dis=null;
+  if(!AX.find(a=>a.id===S.axis))S.axis="hpa";
+  S.sym=S.sym.filter(s=>SYM.includes(s));
+  syncHud();syncPlate();renderChips();renderPanel(hi);save();
+}
+function pick(id,hi){
+  const g=gById(id);if(g.sex&&g.sex!==S.sex)S.sex=g.sex;if(g.preg)S.preg=true;
+  S.sel=id;S.tab="gland";update(hi);
+  if(hi==null&&matchMedia("(max-width:860px)").matches)document.querySelector(".panel").scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});
+}
+["gland","dis","axis","quiz","table"].forEach(t=>document.getElementById("tab-"+t).onclick=()=>{S.tab=t;update()});
+document.getElementById("s-f").onclick=()=>{S.sex="f";S.preg=false;if(S.sel==="tes"||S.sel==="plac")S.sel="ova";update()};
+document.getElementById("s-p").onclick=()=>{S.sex="f";S.preg=true;if(S.tab==="gland")S.sel="plac";update()};
+document.getElementById("s-m").onclick=()=>{S.sex="m";S.preg=false;if(S.sel==="ova"||S.sel==="plac")S.sel="tes";update()};
+document.getElementById("zoom").onclick=()=>{S.zoom=!S.zoom;syncHud();syncPlate();save()};
+
+const q=document.getElementById("q"),R=document.getElementById("results");
+q.addEventListener("input",()=>{
+  const v=q.value.trim().toLowerCase();if(!v){R.hidden=true;return}
+  const hh=[];G.forEach(g=>g.h.forEach((h,i)=>{if([h.a,h.zh,h.en,g.zh,g.en].join(" ").toLowerCase().includes(v))hh.push({g,h,i})}));
+  const dd=DIS.filter(d=>[d.zh,d.en,d.sx.join(" "),d.more].join(" ").toLowerCase().includes(v));
+  let html="";
+  if(dd.length)html+=`<div class="r-sec">疾病</div>`+dd.slice(0,12).map(d=>`<button data-d="${d.id}">${d.red?'<span class="red">急症</span>':""}<span>${esc(d.zh)}</span><span class="r-g">${esc(d.g.map(id=>short(gById(id))).slice(0,2).join("、"))}</span></button>`).join("");
+  if(hh.length)html+=`<div class="r-sec">激素</div>`+hh.slice(0,20).map(({g,h,i})=>`<button data-g="${g.id}" data-i="${i}"><span class="abbr c-${h.c}" style="min-width:46px;font-size:11px">${esc(h.a)}</span><span>${esc(h.zh)}</span><span class="r-g">${esc(short(g))}</span></button>`).join("");
+  R.innerHTML=html||`<div style="padding:12px 14px;color:var(--muted);font-size:13.5px">找不到「${esc(q.value)}」。可以試試中文名稱、英文、縮寫或症狀。</div>`;
+  R.hidden=false;
+  R.querySelectorAll("button[data-g]").forEach(b=>b.onclick=()=>{R.hidden=true;q.value="";pick(b.dataset.g,+b.dataset.i)});
+  R.querySelectorAll("button[data-d]").forEach(b=>b.onclick=()=>{R.hidden=true;q.value="";openDis(b.dataset.d)});
+});
+document.addEventListener("click",e=>{if(!e.target.closest(".search"))R.hidden=true});
+q.addEventListener("keydown",e=>{if(e.key==="Escape"){R.hidden=true;q.blur()}});
+
+update();
+})();
+</script>
+
+</body></html>

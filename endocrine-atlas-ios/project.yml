@@ -1,0 +1,34 @@
+name: EndocrineAtlas
+options:
+  bundleIdPrefix: com.student
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+targets:
+  EndocrineAtlas:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Resources
+      - path: Web
+        type: folder
+        buildPhase: resources
+    scheme: {}
+    settings:
+      base:
+        PRODUCT_NAME: EndocrineAtlas
+        PRODUCT_BUNDLE_IDENTIFIER: com.student.endocrineatlas
+        MARKETING_VERSION: "3.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: 內分泌圖譜
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.medical
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_BITCODE: NO
