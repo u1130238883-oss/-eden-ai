@@ -19,12 +19,12 @@ targets:
       base:
         PRODUCT_NAME: EndocrineAtlas
         PRODUCT_BUNDLE_IDENTIFIER: com.student.endocrineatlas
-        MARKETING_VERSION: "3.0"
+        MARKETING_VERSION: "4.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: 內分泌圖譜
+        INFOPLIST_KEY_CFBundleDisplayName: 醫學百科
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"

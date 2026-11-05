@@ -2,10 +2,11 @@
 <html lang="zh-Hant"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="format-detection" content="telephone=no">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-text-size-adjust:100%}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;-webkit-text-size-adjust:100%}[hidden]{display:none!important}</style>
 </head><body>
-<title>人體內分泌圖譜</title>
+<title>掌上醫學百科</title>
 <style>
+
 /* Layout: anatomical plate (sticky) beside a tabbed reference card; stacks on phones */
 :root{
   --bg:#EEF2F3; --paper:#FFFFFF; --ink:#13232C; --muted:#5A6B74; --line:#C9D3D8;
@@ -151,20 +152,112 @@ tbody tr:hover{background:var(--accent-soft)}
   svg#fig{max-height:60vh}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+#v-endo .plate{top:calc(env(safe-area-inset-top,0px) + 60px)}
+#v-endo svg#fig{max-height:calc(100vh - 150px)}
+
+/* ===== Medical handbook shell: sticky nav over single-view sections ===== */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:50;background:var(--bg)}
+.topbar{display:flex;flex-direction:column;gap:10px;padding-block:6px 0;position:relative;z-index:45}
+.navbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--bg);border-bottom:1px solid var(--line);margin-top:-6px}
+.brand{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px}
+.brand h1{font-size:clamp(24px,3.6vw,34px)}
+.brand h1 small{margin-bottom:2px}
+.gsearch{position:relative;flex:1 1 260px;min-width:0;max-width:460px}
+.gsearch input{width:100%;font:inherit;font-size:16px;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.gres{position:absolute;z-index:60;left:0;right:0;top:calc(100% + 6px);background:var(--paper);border:1px solid var(--line);border-radius:12px;max-height:min(420px,60vh);overflow:auto;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.gres button{display:flex;width:100%;gap:10px;align-items:center;text-align:left;border:0;background:none;color:var(--ink);font:inherit;font-size:14px;padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--line)}
+.gres button:hover,.gres button:focus-visible{background:var(--accent-soft)}
+.gres .r-g{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.gres .r-sec{font-size:11.5px;color:var(--muted);letter-spacing:.12em;padding:8px 14px 4px;font-family:var(--f-mono)}
+.nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-bottom:-1px}
+.nav::-webkit-scrollbar{display:none}
+.nav button{border:0;background:none;color:var(--muted);font:inherit;font-size:15px;padding:9px 12px 10px;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap}
+.nav button[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
+.view{display:flex;flex-direction:column;gap:14px;padding-top:14px}
+.vh{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px}
+.vh h2{font-family:var(--f-display);font-weight:900;font-size:clamp(24px,3.4vw,30px);margin:0}
+.vh p{margin:0;color:var(--muted);font-size:14px;max-width:70ch}
+.filterbar{display:flex;flex-direction:column;gap:10px}
+.finput{width:100%;max-width:420px;font:inherit;font-size:16px;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.grp-h{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:10px 0 0;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.list{display:flex;flex-direction:column;gap:10px}
+.cnt{font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.empty{padding:18px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);text-align:center}
+dd.tipdd{border-left:3px solid var(--accent);padding-left:10px}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:13.5px;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* home */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;cursor:pointer;text-align:left;font:inherit;color:var(--ink)}
+.stat b{font-family:var(--f-mono);font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.sysgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.syscard{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.syscard:hover{border-color:var(--ink)}
+.syscard .t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.syscard b{font-size:16px}
+.syscard .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.syscard p{margin:0;font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.alert{background:var(--paper);border:1px solid var(--inhib);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.alert h3{margin:0;font-size:15px;color:var(--inhib)}
+.hots{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.hot{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.hot b{font-family:var(--f-mono);font-size:20px;color:var(--accent);user-select:all;-webkit-user-select:all}
+.hot span{font-size:13.5px;font-weight:700}
+.hot small{font-size:12px;color:var(--muted)}
+.fact{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+
+/* symptoms */
+.sxgroup{display:flex;flex-direction:column;gap:6px}
+.sxgroup h4{margin:0;font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:.06em}
+.selbar{position:sticky;bottom:max(10px,env(safe-area-inset-bottom,0px));z-index:20;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.selbar button{border:1px solid currentColor;background:none;color:inherit;font:inherit;font-size:13px;padding:4px 12px;border-radius:999px;cursor:pointer}
+.selbar .sp{flex:1 1 auto;font-size:13.5px;min-width:0}
+
+/* aid */
+ol.aidsteps{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px}
+ol.aidsteps li::marker{font-family:var(--f-mono);font-weight:700;color:var(--accent)}
+ul.dont{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+ul.dont li{padding-left:1.4em;position:relative}
+ul.dont li::before{content:"✕";position:absolute;left:0;color:var(--inhib);font-weight:700}
+.prev{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+
+/* quiz */
+.qcats{display:flex;flex-wrap:wrap;gap:6px}
+
+.footnote{font-size:12.5px;color:var(--muted);margin:18px 0 0;max-width:90ch}
+@media (max-width:640px){.nav button{font-size:14px;padding:8px 10px 9px}.stat b{font-size:22px}}
 </style>
 
 <div class="wrap">
-  <header class="top">
-    <div>
-      <h1><small>Endocrine Atlas · 人體內分泌系統</small>人體內分泌圖譜</h1>
-      <div class="stats" id="stats"></div>
-    </div>
-    <div class="search">
-      <input id="q" type="search" placeholder="搜尋激素、疾病或症狀：胰島素、庫欣、心悸…" autocomplete="off" aria-label="搜尋激素、疾病或症狀">
-      <div class="results" id="results" hidden></div>
+  <header class="topbar">
+    <div class="brand">
+      <h1><small>Pocket Medical Handbook · 繁體中文</small>掌上醫學百科</h1>
+      <div class="gsearch">
+        <input id="gq" type="search" placeholder="搜尋疾病、症狀、藥物、檢驗、激素…" autocomplete="off" aria-label="全站搜尋">
+        <div class="gres" id="gres" hidden></div>
+      </div>
     </div>
   </header>
+  <div class="navbar">
+    <nav class="nav" aria-label="主要分頁">
+      <button data-v="home">首頁</button>
+      <button data-v="dis">疾病百科</button>
+      <button data-v="sym">症狀查詢</button>
+      <button data-v="endo">內分泌圖譜</button>
+      <button data-v="drug">藥物手冊</button>
+      <button data-v="lab">檢驗數值</button>
+      <button data-v="aid">急救保健</button>
+      <button data-v="quiz">隨堂測驗</button>
+    </nav>
+  </div>
 
+  <section class="view" id="v-home" hidden></section>
+  <section class="view" id="v-dis" hidden></section>
+  <section class="view" id="v-sym" hidden></section>
+  <section class="view" id="v-endo" hidden>
+    <div class="vh"><h2>內分泌圖譜</h2><p class="stats" id="stats"></p></div>
   <div class="main">
     <section class="plate" aria-label="人體圖">
       <div class="plate-bar">
@@ -200,10 +293,25 @@ tbody tr:hover{background:var(--accent-soft)}
     <span><i class="dot" style="background:var(--ster)"></i>類固醇類：由膽固醇合成，作用於胞內受體</span>
     <span><i class="dot" style="background:var(--amine)"></i>胺類：由酪胺酸或色胺酸衍生</span>
   </div>
-  <p class="note">本圖譜供醫學學習與科普使用，不能取代醫師診斷。「疾病與症狀」用來認識疾病，不是自我診斷工具；標示「急症」的情況請立即就醫。圖中位置為前視投影示意，半衰期為常見近似值；診斷數值依台灣與國際常用標準，實際以各醫療院所為準。</p>
+
+  </section>
+  <section class="view" id="v-drug" hidden></section>
+  <section class="view" id="v-lab" hidden></section>
+  <section class="view" id="v-aid" hidden></section>
+  <section class="view" id="v-quiz" hidden></section>
+
+  <p class="footnote">本百科供醫學學習與健康教育使用，內容依常用教科書與國內外臨床指引整理，不能取代醫師的診斷與治療。用藥劑量請遵照醫師與藥師指示；診斷數值與公費服務以各醫療院所及衛生福利部最新公告為準。身體出現急症徵兆時請立即撥打 119。</p>
 </div>
 
 <script src="data.js"></script>
+<script src="med/med-1-core.js"></script>
+<script src="med/med-2-gi-renal.js"></script>
+<script src="med/med-3-neuro-heme-inf.js"></script>
+<script src="med/med-4-rheum-msk-derm.js"></script>
+<script src="med/med-5-psych-obgyn-peds-ent.js"></script>
+<script src="med/med-6-drug.js"></script>
+<script src="med/med-7-lab-aid.js"></script>
+<script src="med/med-8-bridge.js"></script>
 <script>
 (function(){
 /* ================= State ================= */
@@ -501,23 +609,276 @@ document.getElementById("s-p").onclick=()=>{S.sex="f";S.preg=true;if(S.tab==="gl
 document.getElementById("s-m").onclick=()=>{S.sex="m";S.preg=false;if(S.sel==="ova"||S.sel==="plac")S.sel="tes";update()};
 document.getElementById("zoom").onclick=()=>{S.zoom=!S.zoom;syncHud();syncPlate();save()};
 
-const q=document.getElementById("q"),R=document.getElementById("results");
-q.addEventListener("input",()=>{
-  const v=q.value.trim().toLowerCase();if(!v){R.hidden=true;return}
-  const hh=[];G.forEach(g=>g.h.forEach((h,i)=>{if([h.a,h.zh,h.en,g.zh,g.en].join(" ").toLowerCase().includes(v))hh.push({g,h,i})}));
-  const dd=DIS.filter(d=>[d.zh,d.en,d.sx.join(" "),d.more].join(" ").toLowerCase().includes(v));
-  let html="";
-  if(dd.length)html+=`<div class="r-sec">疾病</div>`+dd.slice(0,12).map(d=>`<button data-d="${d.id}">${d.red?'<span class="red">急症</span>':""}<span>${esc(d.zh)}</span><span class="r-g">${esc(d.g.map(id=>short(gById(id))).slice(0,2).join("、"))}</span></button>`).join("");
-  if(hh.length)html+=`<div class="r-sec">激素</div>`+hh.slice(0,20).map(({g,h,i})=>`<button data-g="${g.id}" data-i="${i}"><span class="abbr c-${h.c}" style="min-width:46px;font-size:11px">${esc(h.a)}</span><span>${esc(h.zh)}</span><span class="r-g">${esc(short(g))}</span></button>`).join("");
-  R.innerHTML=html||`<div style="padding:12px 14px;color:var(--muted);font-size:13.5px">找不到「${esc(q.value)}」。可以試試中文名稱、英文、縮寫或症狀。</div>`;
-  R.hidden=false;
-  R.querySelectorAll("button[data-g]").forEach(b=>b.onclick=()=>{R.hidden=true;q.value="";pick(b.dataset.g,+b.dataset.i)});
-  R.querySelectorAll("button[data-d]").forEach(b=>b.onclick=()=>{R.hidden=true;q.value="";openDis(b.dataset.d)});
-});
-document.addEventListener("click",e=>{if(!e.target.closest(".search"))R.hidden=true});
-q.addEventListener("keydown",e=>{if(e.key==="Escape"){R.hidden=true;q.blur()}});
 
+window.ENDO={pick:(id,hi)=>pick(id,hi),openDis:id=>openDis(id),refresh:()=>update()};
 update();
+})();
+
+</script>
+<script>
+(function(){
+const M=MED;
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const chev='<svg class="chev" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+const VIEWS=["home","dis","sym","endo","drug","lab","aid","quiz"];
+let A={view:"home",dsys:"all",dq:"",dopen:null,sym:[],sopen:null,ggrp:"all",gq:"",gopen:null,lgrp:"all",lopen:null,aopen:null,qcat:"all"};
+try{Object.assign(A,JSON.parse(localStorage.getItem("medbook-v1")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("medbook-v1",JSON.stringify(A))}catch(e){}};
+const sysById=id=>M.SYS.find(s=>s.id===id);
+const disById=id=>M.DIS.find(d=>d.id===id);
+const norm=s=>String(s).toLowerCase();
+const vocab=M.SXG.flatMap(g=>g.t);
+A.sym=(A.sym||[]).filter(s=>vocab.includes(s));
+const sysOrder=M.SYS.map(s=>s.id);
+const disSorted=M.DIS.slice().sort((a,b)=>sysOrder.indexOf(a.sys)-sysOrder.indexOf(b.sys));
+
+/* ---------- shared renderers ---------- */
+function disCard(d,open,hits){
+  const sys=sysById(d.sys),sel=new Set(A.sym);
+  const sx=d.sx.length?`<div class="sx">${d.sx.map(s=>`<span class="${sel.has(s)?"hit":""}">${esc(s)}</span>`).join("")}</div>`:"通常沒有明顯症狀，多在檢查時發現。";
+  const endo=d.sys==="endo"?`<dt>內分泌圖譜</dt><dd><button class="linkbtn" data-endodis="${d.id}">在人體圖上查看相關器官與激素</button></dd>`:"";
+  return `<details class="h dz" data-id="${d.id}" id="dz-${d.id}" ${open?"open":""}><summary>${d.red?'<span class="red">急症</span>':""}<span class="hn"><b>${esc(d.zh)}</b><span>${esc(d.en)}</span></span>${hits?`<span class="match">${hits} 項符合</span>`:`<span class="cls">${esc(sys.zh)}</span>`}${chev}</summary>
+  <dl class="facts"><dt>定義與成因</dt><dd>${esc(d.def)}</dd><dt>常見症狀</dt><dd>${sx}</dd><dt>臨床表現</dt><dd>${esc(d.more)}</dd><dt>診斷檢查</dt><dd>${esc(d.dx)}</dd><dt>治療</dt><dd>${esc(d.tx)}</dd>${d.tip?`<dt>重點提醒</dt><dd class="tipdd">${esc(d.tip)}</dd>`:""}${endo}</dl></details>`;
+}
+function wireAccordion(root,sel,key){
+  root.querySelectorAll(sel).forEach(det=>det.addEventListener("toggle",()=>{
+    if(det.open){A[key]=det.dataset.id}else if(A[key]===det.dataset.id)A[key]=null;save();
+  }));
+  root.querySelectorAll("[data-endodis]").forEach(b=>b.onclick=e=>{e.preventDefault();show("endo");window.ENDO&&ENDO.openDis(b.dataset.endodis)});
+}
+function scrollToEl(id){requestAnimationFrame(()=>{const e=document.getElementById(id);if(e){e.open=true;e.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"})}})}
+
+/* ---------- home ---------- */
+const TIPS=M.DIS.filter(d=>d.tip).map(d=>({t:d.zh,s:d.tip,id:d.id}));
+function renderHome(){
+  const el=document.getElementById("v-home");const nH=G.reduce((s,g)=>s+g.h.length,0);
+  const reds=M.DIS.filter(d=>d.red);
+  const tip=TIPS[Math.floor(Math.random()*TIPS.length)];
+  el.innerHTML=`<div class="vh"><h2>今天想查什麼？</h2><p>涵蓋 15 個身體系統的常見疾病、症狀反查、常用藥物、檢驗正常值、急救步驟與台灣公費保健資訊，全部可離線使用。</p></div>
+  <div class="stats-row">
+    <button class="stat" data-go="dis"><b>${M.DIS.length}</b><span>種疾病</span></button>
+    <button class="stat" data-go="sym"><b>${vocab.length}</b><span>項症狀可反查</span></button>
+    <button class="stat" data-go="endo"><b>${nH}</b><span>種激素</span></button>
+    <button class="stat" data-go="drug"><b>${M.DRUG.length}</b><span>類藥物</span></button>
+    <button class="stat" data-go="lab"><b>${M.LAB.length}</b><span>項檢驗數值</span></button>
+    <button class="stat" data-go="aid"><b>${M.AID.length}</b><span>項急救步驟</span></button>
+  </div>
+  <div class="alert"><h3>這些情況請立即撥打 119</h3>
+   <div class="gl-links">${["ami","istroke","hstroke","anaph","sepsis","aod","pe","mening"].map(id=>disById(id)).filter(Boolean).map(d=>`<button class="chip" data-dis="${d.id}">${esc(d.zh)}</button>`).join("")}<button class="chip" data-go="aid">急救步驟 →</button></div>
+   <p class="note">全書共 ${reds.length} 種標示「急症」的疾病。胸痛、突然單側無力或說話不清、呼吸困難、意識改變、嚴重過敏、大量出血都不要等待。</p></div>
+  <div class="fact"><span class="eyebrow">醫學小知識 · ${esc(tip.t)}</span><p style="margin:0">${esc(tip.s)}</p><div><button class="linkbtn" data-dis="${tip.id}">閱讀完整內容</button>　<button class="linkbtn" id="tipnext">換一則</button></div></div>
+  <h3 class="grp-h">依身體系統瀏覽</h3>
+  <div class="sysgrid">${M.SYS.map(s=>`<button class="syscard" data-sys="${s.id}"><span class="t"><b>${esc(s.zh)}</b><span class="n">${M.DIS.filter(d=>d.sys===s.id).length} 種</span></span><p>${esc(s.desc)}</p></button>`).join("")}</div>
+  <h3 class="grp-h">求助專線</h3>
+  <div class="hots">${M.HOT.slice(0,6).map(h=>`<div class="hot"><b>${esc(h.n)}</b><span>${esc(h.zh)}</span><small>${esc(h.d)}</small></div>`).join("")}</div>`;
+  el.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.go));
+  el.querySelectorAll("[data-sys]").forEach(b=>b.onclick=()=>{A.dsys=b.dataset.sys;A.dq="";show("dis");window.scrollTo(0,0)});
+  el.querySelectorAll("[data-dis]").forEach(b=>b.onclick=()=>openDis(b.dataset.dis));
+  document.getElementById("tipnext").onclick=renderHome;
+}
+
+/* ---------- diseases ---------- */
+function renderDis(){
+  const el=document.getElementById("v-dis");
+  el.innerHTML=`<div class="vh"><h2>疾病百科</h2><p>${M.DIS.length} 種常見疾病，依系統分類；每一種都有成因、症狀、診斷、治療與重點提醒。</p></div>
+  <div class="filterbar"><input class="finput" id="dq" type="search" placeholder="在疾病中搜尋：例如 胸痛、B 肝、偏頭痛" value="${esc(A.dq)}" aria-label="搜尋疾病">
+  <div class="chips" id="dsys"><button class="chip" data-s="all" aria-pressed="${A.dsys==="all"}">全部</button>${M.SYS.map(s=>`<button class="chip" data-s="${s.id}" aria-pressed="${A.dsys===s.id}">${esc(s.zh)}</button>`).join("")}</div></div>
+  <div id="dlist" class="list"></div>`;
+  const q=el.querySelector("#dq");
+  q.addEventListener("input",()=>{A.dq=q.value;save();fillDis()});
+  el.querySelectorAll("#dsys .chip").forEach(b=>b.onclick=()=>{A.dsys=b.dataset.s;save();el.querySelectorAll("#dsys .chip").forEach(c=>c.setAttribute("aria-pressed",c===b));fillDis()});
+  fillDis();
+}
+function fillDis(){
+  const box=document.getElementById("dlist");const q=norm(A.dq.trim());
+  let list=disSorted.filter(d=>(A.dsys==="all"||d.sys===A.dsys)&&(!q||norm([d.zh,d.en,d.def,d.sx.join(" "),d.more].join(" ")).includes(q)));
+  let html="";
+  if(A.dsys!=="all"){const s=sysById(A.dsys);html+=`<div class="card"><span class="eyebrow">${esc(s.en)}</span><p>${esc(s.desc)}</p></div>`}
+  html+=`<div class="cnt">${list.length} 種疾病</div>`;
+  if(!list.length)html+=`<div class="empty">找不到符合「${esc(A.dq)}」的疾病，試試其他關鍵字或切換到「全部」。</div>`;
+  let last="";
+  list.forEach(d=>{if(A.dsys==="all"&&d.sys!==last){html+=`<h3 class="grp-h">${esc(sysById(d.sys).zh)}</h3>`;last=d.sys}html+=disCard(d,d.id===A.dopen)});
+  box.innerHTML=html;wireAccordion(box,"details.dz","dopen");
+}
+function openDis(id){A.dsys="all";A.dq="";A.dopen=id;show("dis");scrollToEl("dz-"+id)}
+
+/* ---------- symptoms ---------- */
+function renderSym(){
+  const el=document.getElementById("v-sym");const sel=new Set(A.sym);
+  let res=M.DIS.map(d=>({d,m:d.sx.filter(s=>sel.has(s)).length})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m||(b.m/b.d.sx.length)-(a.m/a.d.sx.length)||b.d.red-a.d.red);
+  el.innerHTML=`<div class="vh"><h2>症狀查詢</h2><p>勾選身上的症狀或檢驗異常，系統會列出相關疾病，依符合項目多寡排序。這是學習工具，不能用來自我診斷。</p></div>
+  <div class="card">${M.SXG.map(g=>`<div class="sxgroup"><h4>${esc(g.g)}</h4><div class="chips">${g.t.map(t=>`<button class="chip" data-t="${esc(t)}" aria-pressed="${sel.has(t)}">${esc(t)}</button>`).join("")}</div></div>`).join("")}</div>
+  ${sel.size?`<div class="selbar"><span class="sp">已選 ${sel.size} 項：${esc(A.sym.join("、"))}</span><button id="sxclr">清除</button></div>`:""}
+  <div class="list" id="slist">${sel.size?(res.length?`<div class="cnt">${res.length} 種相關疾病</div>`+(res.some(x=>x.d.red&&x.m>=2)?`<div class="tip"><b>注意</b>　結果中包含標示「急症」的疾病。症狀突然發生、嚴重或快速惡化時，請立即就醫或撥打 119。</div>`:"")+res.slice(0,40).map(x=>disCard(x.d,x.d.id===A.sopen,x.m)).join(""):`<div class="empty">沒有疾病同時具有這些症狀，請減少勾選項目。</div>`):`<div class="empty">從上方點選症狀開始查詢。</div>`}</div>`;
+  el.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{const t=b.dataset.t;A.sym=sel.has(t)?A.sym.filter(x=>x!==t):[...A.sym,t];save();const y=window.scrollY;renderSym();window.scrollTo(0,y)});
+  const c=document.getElementById("sxclr");if(c)c.onclick=()=>{A.sym=[];save();renderSym()};
+  wireAccordion(el,"details.dz","sopen");
+}
+
+/* ---------- drugs ---------- */
+function drugCard(r,open){
+  return `<details class="h dr" data-id="${r.id}" id="dr-${r.id}" ${open?"open":""}><summary><span class="hn"><b>${esc(r.zh)}</b><span>${esc(r.en)}</span></span><span class="cls">${esc(r.grp)}</span>${chev}</summary>
+  <dl class="facts"><dt>常見藥名</dt><dd>${esc(r.ex)}</dd><dt>作用機轉</dt><dd>${esc(r.moa)}</dd><dt>主要用途</dt><dd>${esc(r.use)}</dd><dt>常見副作用</dt><dd>${esc(r.se)}</dd><dt>注意事項</dt><dd class="tipdd">${esc(r.warn)}</dd></dl></details>`;
+}
+function renderDrug(){
+  const el=document.getElementById("v-drug");
+  el.innerHTML=`<div class="vh"><h2>藥物手冊</h2><p>${M.DRUG.length} 類常用藥物的作用、用途、副作用與注意事項。不列劑量，請依醫師與藥師指示用藥；同時使用多種藥物時，先詢問藥師交互作用。</p></div>
+  <div class="filterbar"><input class="finput" id="drq" type="search" placeholder="搜尋藥名或用途：例如 metformin、高血壓、止痛" value="${esc(A.gq)}" aria-label="搜尋藥物">
+  <div class="chips" id="drg"><button class="chip" data-g="all" aria-pressed="${A.ggrp==="all"}">全部</button>${M.DRUGGRP.map(g=>`<button class="chip" data-g="${esc(g)}" aria-pressed="${A.ggrp===g}">${esc(g)}</button>`).join("")}</div></div><div class="list" id="drlist"></div>`;
+  const q=el.querySelector("#drq");q.addEventListener("input",()=>{A.gq=q.value;save();fillDrug()});
+  el.querySelectorAll("#drg .chip").forEach(b=>b.onclick=()=>{A.ggrp=b.dataset.g;save();el.querySelectorAll("#drg .chip").forEach(c=>c.setAttribute("aria-pressed",c===b));fillDrug()});
+  fillDrug();
+}
+function fillDrug(){
+  const box=document.getElementById("drlist");const q=norm(A.gq.trim());
+  const list=M.DRUG.filter(r=>(A.ggrp==="all"||r.grp===A.ggrp)&&(!q||norm([r.zh,r.en,r.ex,r.use,r.moa].join(" ")).includes(q)));
+  let html=`<div class="cnt">${list.length} 類藥物</div>`,last="";
+  if(!list.length)html+=`<div class="empty">找不到符合的藥物，可以試試英文學名或用途。</div>`;
+  list.forEach(r=>{if(A.ggrp==="all"&&r.grp!==last){html+=`<h3 class="grp-h">${esc(r.grp)}</h3>`;last=r.grp}html+=drugCard(r,r.id===A.gopen)});
+  box.innerHTML=html;wireAccordion(box,"details.dr","gopen");
+}
+
+/* ---------- labs ---------- */
+function labCard(r,open){
+  return `<details class="h lb" data-id="${r.id}" id="lb-${r.id}" ${open?"open":""}><summary><span class="hn"><b>${esc(r.zh)}</b><span>${esc(r.abbr)}</span></span><span class="cls mono" style="white-space:normal;text-align:right;max-width:45%">${esc(r.ref)}</span>${chev}</summary>
+  <dl class="facts"><dt>參考範圍</dt><dd class="mono">${esc(r.ref)}</dd><dt><span class="tag-up">↑</span> 偏高</dt><dd>${esc(r.hi)}</dd><dt><span class="tag-dn">↓</span> 偏低</dt><dd>${esc(r.lo)}</dd><dt>判讀重點</dt><dd class="tipdd">${esc(r.note)}</dd></dl></details>`;
+}
+function renderLab(){
+  const el=document.getElementById("v-lab");
+  el.innerHTML=`<div class="vh"><h2>檢驗數值</h2><p>${M.LAB.length} 項常見檢驗的成人參考範圍，以及偏高、偏低的常見原因。各醫院的參考值與單位可能不同，請以報告上的範圍為準，並與醫師討論結果。</p></div>
+  <div class="chips" id="lgrp"><button class="chip" data-g="all" aria-pressed="${A.lgrp==="all"}">全部</button>${M.LABGRP.map(g=>`<button class="chip" data-g="${esc(g)}" aria-pressed="${A.lgrp===g}">${esc(g)}</button>`).join("")}</div><div class="list" id="llist"></div>`;
+  el.querySelectorAll("#lgrp .chip").forEach(b=>b.onclick=()=>{A.lgrp=b.dataset.g;save();el.querySelectorAll("#lgrp .chip").forEach(c=>c.setAttribute("aria-pressed",c===b));fillLab()});
+  fillLab();
+}
+function fillLab(){
+  const box=document.getElementById("llist");const list=M.LAB.filter(r=>A.lgrp==="all"||r.grp===A.lgrp);
+  let html="",last="";list.forEach(r=>{if(r.grp!==last){html+=`<h3 class="grp-h">${esc(r.grp)}</h3>`;last=r.grp}html+=labCard(r,r.id===A.lopen)});
+  box.innerHTML=html;wireAccordion(box,"details.lb","lopen");
+}
+
+/* ---------- first aid & prevention ---------- */
+function renderAid(){
+  const el=document.getElementById("v-aid");
+  el.innerHTML=`<div class="vh"><h2>急救與預防保健</h2><p>遇到緊急狀況先撥 119，派遣員會在電話中指導你；下面的步驟幫助你事先學會怎麼做。</p></div>
+  <h3 class="grp-h">求助專線（台灣）</h3>
+  <div class="hots">${M.HOT.map(h=>`<div class="hot"><b>${esc(h.n)}</b><span>${esc(h.zh)}</span><small>${esc(h.d)}</small></div>`).join("")}</div>
+  <h3 class="grp-h">急救步驟</h3>
+  <div class="list">${M.AID.map(a=>`<details class="h ad" data-id="${a.id}" id="ad-${a.id}" ${a.id===A.aopen?"open":""}><summary>${a.red?'<span class="red">打 119</span>':""}<span class="hn"><b>${esc(a.zh)}</b><span>${esc(a.when)}</span></span>${chev}</summary>
+   <dl class="facts"><dt>步驟</dt><dd><ol class="aidsteps">${a.steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ol></dd><dt>不要做</dt><dd><ul class="dont">${a.dont.map(s=>`<li>${esc(s)}</li>`).join("")}</ul></dd><dt>補充</dt><dd class="tipdd">${esc(a.note)}</dd></dl></details>`).join("")}</div>
+  <h3 class="grp-h">預防保健與公費篩檢</h3>
+  <div class="prev">${M.PREV.map(p=>`<div class="card"><h3 style="color:var(--ink);font-size:15px">${esc(p.zh)}</h3><p style="font-size:14px">${esc(p.d)}</p></div>`).join("")}</div>
+  <p class="note">公費服務的年齡與條件會隨政策調整，請以衛生福利部國民健康署最新公告為準。</p>`;
+  wireAccordion(el,"details.ad","aopen");
+}
+
+/* ---------- quiz ---------- */
+let Q=null,score={n:0,ok:0},streak=0,best=0;
+try{best=+localStorage.getItem("medbook-best")||0}catch(e){}
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick1=a=>a[Math.floor(Math.random()*a.length)];
+const QCATS=[["all","全部"],["dis","疾病"],["drug","藥物"],["lab","檢驗"],["hormone","激素"],["aid","急救"]];
+const shortTxt=(s,n)=>{s=String(s);return s.length>n?s.slice(0,n)+"…":s};
+function makeQ(){
+  const cat=A.qcat==="all"?pick1(["dis","dis","dis","drug","drug","lab","hormone","aid"]):A.qcat;
+  if(cat==="dis"){
+    const pool=M.DIS.filter(d=>d.sx.length>=3);const d=pick1(pool);
+    if(Math.random()<.6){const sx=shuffle(d.sx.slice()).slice(0,3);const others=shuffle(M.DIS.filter(x=>x.id!==d.id&&x.sx.filter(s=>sx.includes(s)).length<2)).slice(0,3);const opts=shuffle([d,...others]);
+      return {q:`病人出現「${sx.join("、")}」，下列哪一種疾病最符合？`,opts:opts.map(o=>o.zh),ans:opts.indexOf(d),why:`${d.zh}：${d.more}`,go:()=>openDis(d.id)}}
+    const others=shuffle(M.DIS.filter(x=>x.id!==d.id&&x.sys===d.sys)).slice(0,3);const opts=shuffle([d,...(others.length===3?others:shuffle(M.DIS.filter(x=>x.id!==d.id)).slice(0,3))]);
+    return {q:`下列敘述是哪一種疾病的治療方式？\n「${shortTxt(d.tx,150)}」`,opts:opts.map(o=>o.zh),ans:opts.indexOf(d),why:`${d.zh}的診斷方式：${d.dx}`,go:()=>openDis(d.id)};
+  }
+  if(cat==="drug"){
+    const r=pick1(M.DRUG);
+    if(Math.random()<.5){const name=r.ex.split(/[、；：:（）()]/).map(x=>x.trim()).filter(x=>/^[a-z][a-z\- /]+$/i.test(x)&&x.length>3);
+      if(name.length){const n=pick1(name);const opts=shuffle([r,...shuffle(M.DRUG.filter(x=>x.id!==r.id&&!norm(x.ex).includes(norm(n)))).slice(0,3)]);
+        return {q:`「${n}」屬於哪一類藥物？`,opts:opts.map(o=>o.zh),ans:opts.indexOf(r),why:`${r.zh}：${r.moa}`,go:()=>openItem("drug",r.id)}}}
+    const opts=shuffle([r,...shuffle(M.DRUG.filter(x=>x.id!==r.id)).slice(0,3)]);
+    return {q:`下列哪一類藥物有這項注意事項？\n「${shortTxt(r.warn,140)}」`,opts:opts.map(o=>o.zh),ans:opts.indexOf(r),why:`${r.zh}常見副作用：${r.se}`,go:()=>openItem("drug",r.id)};
+  }
+  if(cat==="lab"){
+    const r=pick1(M.LAB.filter(x=>x.hi.length>4&&x.hi[0]!=="—"));
+    if(Math.random()<.5){const opts=shuffle([r,...shuffle(M.LAB.filter(x=>x.id!==r.id)).slice(0,3)]);
+      return {q:`哪一項檢驗的成人參考範圍是：「${r.ref}」？`,opts:opts.map(o=>`${o.zh}（${o.abbr}）`),ans:opts.indexOf(r),why:`${r.zh}：${r.note}`,go:()=>openItem("lab",r.id)}}
+    const opts=shuffle([r,...shuffle(M.LAB.filter(x=>x.id!==r.id&&x.grp!=="生命徵象與身體測量")).slice(0,3)]);
+    return {q:`下列原因會讓哪一項檢驗「偏高」？\n「${shortTxt(r.hi,130)}」`,opts:opts.map(o=>`${o.zh}（${o.abbr}）`),ans:opts.indexOf(r),why:`${r.zh} 參考範圍：${r.ref}`,go:()=>openItem("lab",r.id)};
+  }
+  if(cat==="hormone"){
+    const all=[];G.forEach(g=>g.h.forEach(h=>all.push({g,h})));const it=pick1(all);
+    const opts=shuffle([it.g,...shuffle(G.filter(x=>x.id!==it.g.id)).slice(0,3)]);
+    return {q:`「${it.h.zh}（${it.h.a}）」主要由哪個器官分泌？`,opts:opts.map(o=>o.zh.replace(/（.*）/,"")),ans:opts.indexOf(it.g),why:`${it.h.zh}的主要作用：${it.h.fx[0]}。`,go:()=>{show("endo");ENDO.pick(it.g.id,it.g.h.indexOf(it.h))}};
+  }
+  const a=pick1(M.AID);const wrong=pick1(a.dont);const rights=shuffle(a.steps.slice()).slice(0,3);
+  const opts=shuffle([wrong,...rights]);
+  return {q:`處理「${a.zh}」時，下列哪一項是「不應該」做的？`,opts:opts.map(o=>shortTxt(o,90)),ans:opts.indexOf(wrong),why:`${a.zh}的重點：${a.note}`,go:()=>openItem("aid",a.id)};
+}
+const scoreHtml=()=>`<span>本次 <b>${score.ok}</b> / ${score.n}</span><span>連續答對 <b>${streak}</b></span><span>最佳紀錄 <b>${best}</b></span>`;
+function renderQuiz(){
+  const el=document.getElementById("v-quiz");if(!Q)Q=makeQ();
+  el.innerHTML=`<div class="vh"><h2>隨堂測驗</h2><p>題目從全書內容隨機產生，答完會顯示解說，並可直接跳到完整資料。</p></div>
+  <div class="qcats">${QCATS.map(([k,v])=>`<button class="chip" data-c="${k}" aria-pressed="${A.qcat===k}">${v}</button>`).join("")}</div>
+  <div class="card" style="gap:14px"><div class="score">${scoreHtml()}</div>
+   <div class="quiz-q" style="white-space:pre-line">${esc(Q.q)}</div>
+   <div class="opts">${Q.opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o)}</button>`).join("")}</div><div id="qfb2"></div></div>`;
+  el.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{A.qcat=b.dataset.c;save();Q=makeQ();renderQuiz()});
+  el.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{
+    if(Q.done)return;Q.done=true;const i=+b.dataset.i,ok=i===Q.ans;score.n++;
+    if(ok){score.ok++;streak++;if(streak>best){best=streak;try{localStorage.setItem("medbook-best",best)}catch(e){}}}else streak=0;
+    el.querySelectorAll(".opt").forEach((x,k)=>{x.disabled=true;if(k===Q.ans)x.classList.add("right");else if(k===i)x.classList.add("wrong")});
+    el.querySelector(".score").innerHTML=scoreHtml();
+    document.getElementById("qfb2").innerHTML=`<div class="tip"><b>${ok?"答對了。":"答錯了。"}</b>${esc(Q.why)}</div><div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" id="qn2">下一題</button><button class="chip" id="qs2">查看完整資料</button></div>`;
+    document.getElementById("qn2").onclick=()=>{Q=makeQ();renderQuiz()};
+    document.getElementById("qs2").onclick=Q.go;
+  });
+}
+
+/* ---------- navigation ---------- */
+const R={home:renderHome,dis:renderDis,sym:renderSym,endo:()=>{},drug:renderDrug,lab:renderLab,aid:renderAid,quiz:renderQuiz};
+function show(v){
+  if(!VIEWS.includes(v))v="home";
+  const changed=A.view!==v;A.view=v;save();
+  VIEWS.forEach(x=>document.getElementById("v-"+x).hidden=x!==v);
+  document.querySelectorAll(".nav button").forEach(b=>{if(b.dataset.v===v)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  const nb=document.querySelector(`.nav button[data-v="${v}"]`);nb&&nb.scrollIntoView({block:"nearest",inline:"nearest"});
+  R[v]();
+  if(location.hash.slice(1)!==v){try{location.hash=v}catch(e){}}
+  if(changed)window.scrollTo(0,0);
+}
+function openItem(view,id){
+  if(view==="drug"){A.ggrp="all";A.gq="";A.gopen=id;show("drug");scrollToEl("dr-"+id)}
+  else if(view==="lab"){A.lgrp="all";A.lopen=id;show("lab");scrollToEl("lb-"+id)}
+  else if(view==="aid"){A.aopen=id;show("aid");scrollToEl("ad-"+id)}
+}
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+window.addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(h&&h!==A.view)show(h)});
+
+/* ---------- global search ---------- */
+const gq=document.getElementById("gq"),gres=document.getElementById("gres");
+gq.addEventListener("input",()=>{
+  const v=norm(gq.value.trim());if(!v){gres.hidden=true;return}
+  const dd=M.DIS.filter(d=>norm([d.zh,d.en,d.sx.join(" ")].join(" ")).includes(v)).slice(0,12);
+  const dd2=dd.length<12?M.DIS.filter(d=>!dd.includes(d)&&norm(d.def+d.more).includes(v)).slice(0,12-dd.length):[];
+  const dr=M.DRUG.filter(r=>norm([r.zh,r.en,r.ex].join(" ")).includes(v)).slice(0,8);
+  const lb=M.LAB.filter(r=>norm([r.zh,r.abbr].join(" ")).includes(v)).slice(0,6);
+  const ad=M.AID.filter(a=>norm(a.zh+a.when).includes(v)).slice(0,4);
+  const hh=[];G.forEach(g=>g.h.forEach((h,i)=>{if(norm([h.a,h.zh,h.en].join(" ")).includes(v))hh.push({g,h,i})}));
+  let html="";
+  const dAll=[...dd,...dd2];
+  if(dAll.length)html+=`<div class="r-sec">疾病</div>`+dAll.map(d=>`<button data-k="dis" data-id="${d.id}">${d.red?'<span class="red">急症</span>':""}<span>${esc(d.zh)}</span><span class="r-g">${esc(sysById(d.sys).zh)}</span></button>`).join("");
+  if(dr.length)html+=`<div class="r-sec">藥物</div>`+dr.map(r=>`<button data-k="drug" data-id="${r.id}"><span>${esc(r.zh)}</span><span class="r-g">${esc(r.grp)}</span></button>`).join("");
+  if(lb.length)html+=`<div class="r-sec">檢驗</div>`+lb.map(r=>`<button data-k="lab" data-id="${r.id}"><span>${esc(r.zh)}</span><span class="r-g">${esc(r.abbr)}</span></button>`).join("");
+  if(ad.length)html+=`<div class="r-sec">急救</div>`+ad.map(a=>`<button data-k="aid" data-id="${a.id}"><span>${esc(a.zh)}</span></button>`).join("");
+  if(hh.length)html+=`<div class="r-sec">激素</div>`+hh.slice(0,10).map(({g,h,i})=>`<button data-k="hor" data-g="${g.id}" data-i="${i}"><span class="abbr c-${h.c}" style="min-width:46px;font-size:11px">${esc(h.a)}</span><span>${esc(h.zh)}</span><span class="r-g">${esc(g.zh.replace(/（.*）/,""))}</span></button>`).join("");
+  gres.innerHTML=html||`<div style="padding:12px 14px;color:var(--muted);font-size:13.5px">找不到「${esc(gq.value)}」。可以試試中文名稱、英文、藥名或症狀。</div>`;
+  gres.hidden=false;
+  gres.querySelectorAll("button").forEach(b=>b.onclick=()=>{gres.hidden=true;gq.value="";gq.blur();const k=b.dataset.k;
+    if(k==="dis")openDis(b.dataset.id);else if(k==="hor"){show("endo");ENDO.pick(b.dataset.g,+b.dataset.i)}else openItem(k,b.dataset.id)});
+});
+document.addEventListener("click",e=>{if(!e.target.closest(".gsearch"))gres.hidden=true});
+gq.addEventListener("keydown",e=>{if(e.key==="Escape"){gres.hidden=true;gq.blur()}});
+
+const start=location.hash.slice(1);
+show(VIEWS.includes(start)?start:A.view);
 })();
 </script>
 

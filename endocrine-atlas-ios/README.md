@@ -1,10 +1,10 @@
-# 內分泌圖譜（iOS App）
+# 掌上醫學百科（iOS App）
 
-人體內分泌平面圖譜：20 個器官、71 種激素、37 種疾病（含症狀篩選）、9 條調節軸、隨堂測驗與激素總表。內容全部打包在 App 內，可離線使用。
+繁體中文醫學百科：15 個身體系統、176 種常見疾病（成因、症狀、診斷、治療、重點提醒）、119 項症狀反查、71 類常用藥物、59 項檢驗數值、15 項急救步驟、台灣公費預防保健與求助專線，以及內分泌人體圖譜（20 個器官、71 種激素、9 條調節軸）與隨堂測驗。內容全部打包在 App 內，可離線使用。
 
 ## 下載 .ipa
 
-每次推送到 `endocrine-atlas-ios` 分支，GitHub Actions 會在 macOS 上編譯，並把 `EndocrineAtlas.ipa` 附在 Releases 頁面（標籤 `endocrine-atlas-v3-buildN`）。
+每次推送到 `endocrine-atlas-ios` 分支，GitHub Actions 會在 macOS 上編譯，並把 `EndocrineAtlas.ipa` 附在 Releases 頁面（標籤 `medical-handbook-v4-buildN`）。
 
 ## 安裝到 iPhone
 
