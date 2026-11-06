@@ -421,7 +421,10 @@ final class ChatViewModel: ObservableObject {
     /// 查到的當成資料交給大腦照著回答；情緒類的當參考，還是用聊天的語氣
     private func brainChat(_ text: String, _ L: Lang, brain: String, onFail: @escaping (String) -> Void) {
         let found = L == .zh ? BrainRoute.lookup(text, in: engine?.knowledge[.zh]) : (facts: "", hint: "")
-        brainAnswer(text, hint: found.hint, notes: found.facts, mode: found.facts.isEmpty ? .chat : .grounded, lang: L, brain: brain, onFail: onFail)
+        // 算數的應用題：用比較穩的設定、一步一步算
+        let math = LocalBrain.isArithmetic(text)
+        brainAnswer(math ? LocalBrain.mathQuestion(text, lang: L.rawValue) : text, hint: found.hint, notes: found.facts,
+                    mode: found.facts.isEmpty && !math ? .chat : .grounded, lang: L, brain: brain, onFail: onFail)
     }
 
     /// 翻譯的問題交給大腦：用問的人說的語言回答，不是翻成的語言

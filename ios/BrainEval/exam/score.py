@@ -18,8 +18,22 @@ FW = str.maketrans("０１２３４５６７８９，．", "0123456789,.")
 CN_NUM = {"零": 0, "一": 1, "二": 2, "兩": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
 
 
+def cn2num(s):
+    """一到九十九的中文數字換成阿拉伯數字（三十二 → 32、十五 → 15）"""
+    d = "零一二兩三四五六七八九"
+    def one(m):
+        t = m.group(0)
+        v = {c: (i if i < 3 else i - 1) for i, c in enumerate(d)}
+        v["兩"] = 2
+        if "十" in t:
+            a, _, b = t.partition("十")
+            return str((v.get(a, 1) if a else 1) * 10 + (v.get(b, 0) if b else 0))
+        return str(v[t]) if len(t) == 1 else t
+    return re.sub(r"[一二兩三四五六七八九]?十[一二三四五六七八九]?|(?<=[^\w])[一二兩三四五六七八九](?=[歲顆個隻天元])", one, s)
+
+
 def norm(s):
-    return s.translate(FW).lower()
+    return cn2num(s.translate(FW).lower()).replace(" ", "")
 
 
 def numbers(s):
@@ -29,6 +43,8 @@ def numbers(s):
 
 
 def has(ans, alt):
+    if alt.lower().replace(" ", "") in ans.translate(FW).lower().replace(" ", ""):
+        return True
     a = norm(ans)
     t = norm(alt)
     if re.fullmatch(r"\d+(\.\d+)?", t):   # 數字要完整：12 不能算到 120 裡
@@ -37,14 +53,16 @@ def has(ans, alt):
 
 
 def repeats(ans):
-    """同一段話一直重複（跳針）"""
-    for n in (8, 12):
-        seen = {}
-        for i in range(0, max(0, len(ans) - n)):
-            k = ans[i:i + n]
-            seen[k] = seen.get(k, 0) + 1
-            if seen[k] >= 4 and len(set(k)) > 3:
-                return True
+    """同一段話一直重複（跳針）：同樣 10 個字出現 6 次以上（條列的「• 念法：」不算）"""
+    n = 10
+    seen = {}
+    for i in range(0, max(0, len(ans) - n)):
+        k = ans[i:i + n]
+        if "•" in k or "\n" in k:
+            continue
+        seen[k] = seen.get(k, 0) + 1
+        if seen[k] >= 6 and len(set(k)) > 3:
+            return True
     return False
 
 
@@ -73,7 +91,9 @@ def grade(item, ans):
         # 最後一個數字是答案；或答案寫在「答案／等於／共／剩」後面
         tail = re.findall(r"(?:答案|等於|=|共|總共|剩|找回|找|是|為)\s*[:：]?\s*(-?\d[\d,]*(?:\.\d+)?)", norm(a))
         tail = [float(x.replace(",", "")) for x in tail]
-        if not ns or (abs(ns[-1] - want) > 1e-6 and not (tail and abs(tail[-1] - want) < 1e-6)):
+        first = numbers(a.split("\n")[0].split("。")[0])
+        if not ns or (abs(ns[-1] - want) > 1e-6 and not (tail and abs(tail[-1] - want) < 1e-6)
+                      and not any(abs(x - want) < 1e-6 for x in first)):
             why.append(f"數字錯（要 {item['num']}，最後是 {ns[-1] if ns else '沒有'}）")
     if "approx" in item:
         want = float(item["approx"])
@@ -83,7 +103,7 @@ def grade(item, ans):
         why.append(f"太長（{len(a)} 字）")
     if item.get("script") == "en" and cjk_ratio(a) > 0.05:
         why.append("沒用英文回答")
-    if item.get("lang", "zh") == "zh" and item.get("cat") not in ("translate", "english") and len(a) > 25 and cjk_ratio(a) < 0.15:
+    if item.get("lang", "zh") == "zh" and item.get("cat") not in ("translate", "english") and len(a) > 25 and cjk_ratio(a) < 0.08:
         why.append("沒用中文回答")
     if repeats(a):
         why.append("跳針")

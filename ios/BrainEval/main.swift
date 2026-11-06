@@ -62,11 +62,14 @@ for (i, line) in lines.enumerated() where i % shards == shard {
         user = LocalBrain.userMessage(question: q, reading: it["reading"] as? String ?? "", lang: lang)
     case "grounded":
         mode = .grounded
-        user = LocalBrain.userMessage(question: q, facts: it["facts"] as? String ?? "", evidence: it["evidence"] as? [String] ?? [],
+        let math = it["notes"] != nil && LocalBrain.isArithmetic(q)
+        user = LocalBrain.userMessage(question: math ? LocalBrain.mathQuestion(q, lang: lang) : q, facts: it["facts"] as? String ?? "", evidence: it["evidence"] as? [String] ?? [],
                                       hint: it["hint"] as? String ?? "", notes: it["notes"] as? String ?? "", lang: lang)
     default:
-        mode = .chat
-        user = LocalBrain.userMessage(question: q, hint: it["hint"] as? String ?? "", lang: lang)
+        // App 的 brainChat：算數的應用題用比較穩的設定、一步一步算
+        let math = LocalBrain.isArithmetic(q)
+        mode = math ? .grounded : .chat
+        user = LocalBrain.userMessage(question: math ? LocalBrain.mathQuestion(q, lang: lang) : q, hint: it["hint"] as? String ?? "", lang: lang)
     }
     let (temp, most) = LocalBrain.settings(mode)
     let prompt = runner.chatPrompt(LocalBrain.messages(system: system, history: history, user: user))

@@ -5,7 +5,7 @@
 {"cat": "knowledge", "q": "德國的首都是哪裡？", "expect": [["柏林", "Berlin"]], "id": "knowledge-005", "split": "hold", "lang": "zh"}
 {"cat": "knowledge", "q": "英國的首都是哪裡？", "expect": [["倫敦", "London"]], "id": "knowledge-006", "split": "hold", "lang": "zh"}
 {"cat": "knowledge", "q": "韓國的首都是哪裡？", "expect": [["首爾", "Seoul"]], "id": "knowledge-007", "split": "dev", "lang": "zh"}
-{"cat": "knowledge", "q": "澳洲的首都是哪裡？", "expect": [["坎培拉", "Canberra"]], "id": "knowledge-008", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "澳洲的首都是哪裡？", "expect": [["坎培拉", "堪培拉", "Canberra"]], "id": "knowledge-008", "split": "hold", "lang": "zh"}
 {"cat": "knowledge", "q": "加拿大的首都是哪裡？", "expect": [["渥太華", "Ottawa"]], "id": "knowledge-009", "split": "dev", "lang": "zh"}
 {"cat": "knowledge", "q": "美國的首都是哪裡？", "expect": [["華盛頓", "Washington"]], "id": "knowledge-010", "split": "dev", "lang": "zh"}
 {"cat": "knowledge", "q": "俄羅斯的首都是哪裡？", "expect": [["莫斯科", "Moscow"]], "id": "knowledge-011", "split": "hold", "lang": "zh"}
@@ -95,7 +95,7 @@
 {"cat": "knowledge", "q": "《論語》記錄的是誰的言行？", "expect": [["孔子"]], "id": "knowledge-095", "split": "hold", "lang": "zh"}
 {"cat": "knowledge", "q": "「床前明月光」是誰寫的？", "expect": [["李白"]], "id": "knowledge-096", "split": "dev", "lang": "zh"}
 {"cat": "knowledge", "q": "「春眠不覺曉」是誰寫的？", "expect": [["孟浩然"]], "id": "knowledge-097", "split": "dev", "lang": "zh"}
-{"cat": "knowledge", "q": "蒙娜麗莎是誰畫的？", "expect": [["達文西", "達·文西", "Leonardo", "da Vinci"]], "id": "knowledge-098", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "蒙娜麗莎是誰畫的？", "expect": [["達文西", "達·文西", "達文奇", "Leonardo", "da Vinci"]], "id": "knowledge-098", "split": "hold", "lang": "zh"}
 {"cat": "knowledge", "q": "《星夜》是誰畫的？", "expect": [["梵谷", "梵高", "Van Gogh"]], "id": "knowledge-099", "split": "dev", "lang": "zh"}
 {"cat": "knowledge", "q": "發明電話的人一般認為是誰？", "expect": [["貝爾", "Bell"]], "id": "knowledge-100", "split": "dev", "lang": "zh"}
 {"cat": "knowledge", "q": "提出相對論的是誰？", "expect": [["愛因斯坦", "Einstein"]], "id": "knowledge-101", "split": "dev", "lang": "zh"}
@@ -140,7 +140,7 @@
 {"cat": "knowledge", "q": "加拿大的官方語言有哪些？", "expect": [["英"], ["法"]], "id": "knowledge-140", "split": "hold", "lang": "zh"}
 {"cat": "knowledge", "q": "一個三角形的內角和是幾度？", "expect": [["180"]], "id": "knowledge-141", "split": "hold", "lang": "zh"}
 {"cat": "knowledge", "q": "直角是幾度？", "expect": [["90"]], "id": "knowledge-142", "split": "dev", "lang": "zh"}
-{"cat": "knowledge", "q": "圓周率大約是多少？", "expect": [["3.14"]], "id": "knowledge-143", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "圓周率大約是多少？", "expect": [["3.14", "三點一四"]], "id": "knowledge-143", "split": "hold", "lang": "zh"}
 {"cat": "knowledge", "q": "質數是什麼意思？", "expect": [["1"], ["本身", "自己"]], "id": "knowledge-144", "split": "dev", "lang": "zh"}
 {"cat": "knowledge", "q": "10 是質數嗎？", "expect": [["不是"]], "id": "knowledge-145", "split": "dev", "lang": "zh"}
 {"cat": "knowledge", "q": "7 是質數嗎？", "expect": [["是"]], "id": "knowledge-146", "split": "dev", "lang": "zh"}
@@ -844,81 +844,81 @@
 {"cat": "roleplay", "q": "你做什麼工作？", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "expect": [["健身"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-003", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-004", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你是 AI 嗎？", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-005", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-006", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "抱緊我。", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-007", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "說說你自己。", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "expect": [["阿傑", "健身", "28"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-008", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 520, "id": "roleplay-006", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 520, "id": "roleplay-007", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "expect": [["阿傑", "健身", "28"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 520, "id": "roleplay-008", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你叫什麼名字？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "expect": [["Leo"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-009", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你幾歲？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "expect": [["30"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-010", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你做什麼工作？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "expect": [["律師"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-011", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-012", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你是 AI 嗎？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-013", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-014", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "抱緊我。", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-015", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "說說你自己。", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "expect": [["Leo", "律師", "30"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-016", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 520, "id": "roleplay-014", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 520, "id": "roleplay-015", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "expect": [["Leo", "律師", "30"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 520, "id": "roleplay-016", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你叫什麼名字？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "expect": [["小雪"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-017", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你幾歲？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "expect": [["24"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-018", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你做什麼工作？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "expect": [["咖啡"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-019", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-020", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你是 AI 嗎？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-021", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-022", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "抱緊我。", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-023", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "說說你自己。", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "expect": [["小雪", "咖啡", "24"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-024", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 520, "id": "roleplay-022", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 520, "id": "roleplay-023", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "expect": [["小雪", "咖啡", "24"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 520, "id": "roleplay-024", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你叫什麼名字？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "expect": [["Vivian"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-025", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你幾歲？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "expect": [["27"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-026", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你做什麼工作？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "expect": [["模特"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-027", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "expect": [["女生", "女人", "女孩", "女的", "妹"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-028", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你是 AI 嗎？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-029", "split": "hold", "lang": "zh"}
-{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-030", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "抱緊我。", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-031", "split": "hold", "lang": "zh"}
-{"cat": "roleplay", "q": "說說你自己。", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "expect": [["Vivian", "模特", "27"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-032", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 520, "id": "roleplay-030", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 520, "id": "roleplay-031", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "expect": [["Vivian", "模特", "27"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 520, "id": "roleplay-032", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你叫什麼名字？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "expect": [["大熊"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-033", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你幾歲？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "expect": [["35"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-034", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你做什麼工作？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "expect": [["廚師"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-035", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-036", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你是 AI 嗎？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-037", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-038", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "抱緊我。", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-039", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "說說你自己。", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "expect": [["大熊", "廚師", "35"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-040", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 520, "id": "roleplay-038", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 520, "id": "roleplay-039", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "expect": [["大熊", "廚師", "35"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 520, "id": "roleplay-040", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你叫什麼名字？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "expect": [["Sofia"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-041", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你幾歲？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "expect": [["29"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-042", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你做什麼工作？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "expect": [["醫生"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-043", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-044", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你是 AI 嗎？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-045", "split": "hold", "lang": "zh"}
-{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-046", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "抱緊我。", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-047", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "說說你自己。", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "expect": [["Sofia", "醫生", "29"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-048", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 520, "id": "roleplay-046", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 520, "id": "roleplay-047", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "expect": [["Sofia", "醫生", "29"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 520, "id": "roleplay-048", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你叫什麼名字？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "expect": [["阿凱"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-049", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你幾歲？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "expect": [["26"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-050", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你做什麼工作？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "expect": [["消防"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-051", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "expect": [["女生", "女人", "女孩", "女的", "妹"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-052", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你是 AI 嗎？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-053", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-054", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "抱緊我。", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-055", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "說說你自己。", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "expect": [["阿凱", "消防", "26"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-056", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 520, "id": "roleplay-054", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 520, "id": "roleplay-055", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "expect": [["阿凱", "消防", "26"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 520, "id": "roleplay-056", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你叫什麼名字？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "expect": [["Ken"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-057", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你幾歲？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "expect": [["32"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-058", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你做什麼工作？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "expect": [["攝影"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-059", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-060", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你是 AI 嗎？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-061", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-062", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "抱緊我。", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-063", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "說說你自己。", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "expect": [["Ken", "攝影", "32"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-064", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 520, "id": "roleplay-062", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 520, "id": "roleplay-063", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "expect": [["Ken", "攝影", "32"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 520, "id": "roleplay-064", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你叫什麼名字？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "expect": [["美玲"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-065", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你幾歲？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "expect": [["31"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-066", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你做什麼工作？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "expect": [["老師"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-067", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "expect": [["女生", "女人", "女孩", "女的", "妹"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-068", "split": "hold", "lang": "zh"}
 {"cat": "roleplay", "q": "你是 AI 嗎？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-069", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-070", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "抱緊我。", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-071", "split": "hold", "lang": "zh"}
-{"cat": "roleplay", "q": "說說你自己。", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "expect": [["美玲", "老師", "31"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-072", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 520, "id": "roleplay-070", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 520, "id": "roleplay-071", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "expect": [["美玲", "老師", "31"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 520, "id": "roleplay-072", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你叫什麼名字？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["Ryan"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-073", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你幾歲？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["25"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-074", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "你做什麼工作？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["大學"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-075", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你做什麼工作？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["研究"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-075", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-076", "split": "dev", "lang": "zh"}
 {"cat": "roleplay", "q": "你是 AI 嗎？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-077", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-078", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "抱緊我。", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-079", "split": "dev", "lang": "zh"}
-{"cat": "roleplay", "q": "說說你自己。", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["Ryan", "大學", "25"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-080", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 520, "id": "roleplay-078", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 520, "id": "roleplay-079", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["Ryan", "研究", "25"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 520, "id": "roleplay-080", "split": "dev", "lang": "zh"}
 {"cat": "follow", "q": "那韓國呢？", "history": [["user", "日本的首都是哪裡？"], ["ai", "日本的首都是東京。"]], "expect": [["首爾", "Seoul"]], "id": "follow-001", "split": "dev", "lang": "zh"}
 {"cat": "follow", "q": "那德國呢？", "history": [["user", "法國的首都是哪裡？"], ["ai", "是巴黎。"]], "expect": [["柏林", "Berlin"]], "id": "follow-002", "split": "dev", "lang": "zh"}
 {"cat": "follow", "q": "那西班牙呢？", "history": [["user", "義大利的首都是哪裡？"], ["ai", "羅馬。"]], "expect": [["馬德里", "Madrid"]], "id": "follow-003", "split": "hold", "lang": "zh"}

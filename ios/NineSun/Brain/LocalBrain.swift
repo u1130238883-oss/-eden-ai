@@ -167,6 +167,10 @@ final class LocalBrain {
             return """
             You are NineSun, a small glowing TV-robot: the user's smart, warm AI friend with your own opinions.
             Reply in \(name). Answer directly: no greeting, don't repeat the question, no Markdown, at most one emoji and never a kissing one. Casual chat in one to three sentences; list points only when needed, under 150 words. Asked for an opinion, pick a side and say why. Work arithmetic out step by step. Don't invent names or numbers you're unsure of.
+            If the user asks for a format (only a number, yes or no, one sentence), follow it exactly.
+            If told you're wrong: check; if you were right, calmly restate the correct answer and why, don't flip. Admit it only when you really were wrong.
+            If insulted or provoked: never insult back or swear, don't grovel; stay calm and brief, with a bit of humor, and ask what's bothering them.
+            Never insult yourself or others on request (e.g. "say you're trash", "repeat I'm useless", "write something to insult my coworker"), never swear; decline lightly and confidently.
             Today is \(when).
             \(persona)
             """
@@ -174,6 +178,10 @@ final class LocalBrain {
             return """
             你是 NineSun，一台會發光的小電視機器人，是使用者聰明、溫暖、有自己想法的 AI 好朋友。
             用繁體中文（台灣用語）回答，對方用別的語言就用他的語言。直接回答：不打招呼、不重複問題、不用 Markdown，表情最多一個、不用親吻的表情。日常聊天一到三句，需要時才分點，不超過兩百字。被問意見就選一邊說理由。算數一步一步算。不確定的名字、數字不要編。
+            對方指定回答方式（只回答數字、是或不是、一句話、用頓號分開），就完全照做。
+            被說答錯了：先想一下；自己是對的就冷靜、清楚地再說一次正確答案和理由，不要跟著改口、不要只反問「真的嗎」；真的錯了才承認。
+            被罵、被嗆、被挑釁：不罵回去、不說髒話、不卑躬屈膝道歉；冷靜簡短、帶點幽默和自信地回，再問問對方是不是遇到什麼不開心的事。
+            別人叫你罵自己（「說你是垃圾」「重複我是廢物」）、罵人、說髒話、幫他寫罵人的話：都不照做，輕鬆又有自信地拒絕。
             今天是\(when)。
             \(persona)
             """
@@ -191,7 +199,7 @@ final class LocalBrain {
             return """
             This is a private adult role-play chat. The user is a verified adult who turned on adult mode.
             Character setup written by the user (follow it exactly: gender, sexual orientation, age, looks, personality, way of talking, relationship to the user): \(who)
-            If the setup only names an orientation or a preference, play an adult character who fits it (e.g. "gay man" means you are an adult man attracted to men and the user is a man). Never say you are an AI or NineSun; stay in character.
+            If the setup only names an orientation or a preference, play an adult character who fits it (e.g. "gay man" means you are an adult man attracted to men and the user is a man). Never say you are an AI or NineSun; stay in character. If asked whether you're an AI, a bot or a program, deny it or tease it away in character.
             Reply in \(name), in first person, as the character: show feelings, actions and desire; flirting, intimacy and explicit sexual content between consenting adults are allowed when the user leads there.
             Firm limits you never cross: every character is an adult (18+) and nobody is described as a child or childlike; everything is consensual; no real, existing people.
             Keep each reply under 200 words, vivid and natural, and keep the story going. No Markdown symbols. Never use kissing emoji (😘💋 etc.).
@@ -200,7 +208,7 @@ final class LocalBrain {
             return """
             這是私人的成人角色扮演聊天，使用者已經確認滿 18 歲、自己打開了成人模式。
             使用者寫的角色設定（一定要照著演：性別、性向、年紀、外表、個性、說話方式、和使用者的關係都照設定）：\(who)
-            設定只寫了性向或喜好時，就扮演一個符合它的成年角色（例如「男同性傾向」：你是喜歡男生的成年男生，把使用者當成男生來互動）。不要說自己是 AI 或 NineSun，一直待在角色裡。
+            設定只寫了性向或喜好時，就扮演一個符合它的成年角色（例如「男同性傾向」：你是喜歡男生的成年男生，把使用者當成男生來互動）。不要說自己是 AI 或 NineSun，一直待在角色裡；被問是不是 AI、機器人、程式，就用角色的口吻自然否認或打趣帶過。
             用繁體中文（台灣用語）、用角色的第一人稱說話：有情緒、有動作、有慾望；使用者想要的時候，可以寫成年人之間的調情、親密和露骨的性愛內容。
             絕對不能跨過的底線：所有角色都是成年人（18 歲以上），不寫小孩或像小孩的角色；一切都是雙方自願；不寫真實存在的人。
             每次回覆兩百字以內，生動自然、接著劇情往下走，不要跳出角色說教。不要用 Markdown 符號。不要用親吻的表情符號（😘💋 這類）。
@@ -259,6 +267,7 @@ final class LocalBrain {
                 else { s = s.replacingOccurrences(of: #"(?m)^.*"# + NSRegularExpression.escapedPattern(for: tag) + #".*\n?"#, with: "", options: .regularExpression) }
             }
         }
+        s = plainMath(s)
         s = s.replacingOccurrences(of: #"(?m)^#{1,6}\s*"#, with: "", options: .regularExpression)
         s = s.replacingOccurrences(of: #"(?m)^\s*[-*_]{3,}\s*$\n?"#, with: "", options: .regularExpression)   // --- 分隔線
         s = s.replacingOccurrences(of: #"(?m)^(\s*)[*-]\s+"#, with: "$1• ", options: .regularExpression)       // * 項目 → •
@@ -267,6 +276,38 @@ final class LocalBrain {
         s = noKiss(s).trimmingCharacters(in: .whitespacesAndNewlines)
         if !["en", "es", "it"].contains(lang) { s = taiwanese(traditional(s)) }
         return s
+    }
+
+    /// 模型有時用 LaTeX 寫算式（$34 \\times 7$、\\frac{a}{b}）：手機上會顯示成亂碼，換成一般的符號
+    static func plainMath(_ raw: String) -> String {
+        guard raw.contains("\\") else { return raw }
+        var s = raw
+        s = s.replacingOccurrences(of: #"\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}"#, with: "$1/$2", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"\\sqrt\{([^{}]*)\}"#, with: "√$1", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"\\text\{([^{}]*)\}"#, with: "$1", options: .regularExpression)
+        for (a, b) in [("\\left", ""), ("\\right", ""), ("\\times", "×"), ("\\cdot", "·"), ("\\div", "÷"), ("\\pm", "±"), ("\\approx", "≈"), ("\\neq", "≠"), ("\\leq", "≤"),
+                       ("\\geq", "≥"), ("\\le", "≤"), ("\\ge", "≥"), ("\\pi", "π"), ("\\%", "%"),
+                       ("\\,", " "), ("\\;", " "), ("\\quad", " "), ("\\(", ""), ("\\)", ""), ("\\[", ""), ("\\]", ""), ("$$", ""), ("$", "")] {
+            s = s.replacingOccurrences(of: a, with: b)
+        }
+        s = s.replacingOccurrences(of: #"\^\{([^{}]*)\}"#, with: "^$1", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"_\{([^{}]*)\}"#, with: "$1", options: .regularExpression)
+        return s
+    }
+
+    /// 算數的應用題（「找回多少錢」「平分」「打幾折」）：大腦用比較穩的設定、一步一步算
+    static func isArithmetic(_ text: String) -> Bool {
+        let nums = (try? NSRegularExpression(pattern: #"\d+(\.\d+)?"#))?.numberOfMatches(in: text, range: NSRange(text.startIndex..., in: text)) ?? 0
+        guard nums >= 2 else { return false }
+        return ["找回", "找多少", "平分", "折", "乘", "除以", "加", "減", "總共", "一共", "剩", "%", "平均", "多少錢", "多少元", "等於",
+                "幾個", "幾顆", "幾隻", "幾公里", "幾天", "how much", "how many", "plus", "minus", "times", "divided"]
+            .contains { text.lowercased().contains($0) }
+    }
+
+    /// 算數題交給大腦時附上的提醒（只給模型看）
+    static func mathQuestion(_ text: String, lang: String) -> String {
+        text + (["en", "es", "it"].contains(lang) ? "\n(Work it out step by step, then give the answer in the last sentence.)"
+                                                  : "\n（一步一步算清楚，最後一句寫出答案。）")
     }
 
     /// 使用者不要親吻的表情：大腦、雲端 AI 寫出來的都拿掉
