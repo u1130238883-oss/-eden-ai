@@ -88,7 +88,7 @@ for (i, line) in lines.enumerated() where i % shards == shard {
     let prompt = runner.chatPrompt(LocalBrain.messages(system: system, history: history, user: user))
     do {
         let r = try runner.generate(prompt: prompt, maxTokens: most, temperature: temp, stop: LocalBrain.stops, seed: seed(id))
-        let text = LocalBrain.tidy(r.text, lang: lang)
+        let text = LocalBrain.followFormat(question: q, answer: LocalBrain.tidy(r.text, lang: lang))
         rec["answer"] = text
         rec["tokens"] = r.tokens
         rec["seconds"] = r.seconds

@@ -317,6 +317,19 @@ final class LocalBrain {
         return s
     }
 
+    /// 對方指定只要答案（「只回答數字」「只回答是或不是」「只要回答城市名」「不要解釋」「一句話」）：只留第一句，吐槽和解釋拿掉
+    static func followFormat(question q: String, answer a: String) -> String {
+        let strict = ["只回答", "只要回答", "只說", "不要解釋", "不用解釋", "直接告訴我", "只要答案", "answer only", "just the number", "yes or no"]
+        let oneSentence = ["一句話", "用一句", "in one sentence"]
+        guard strict.contains(where: { q.lowercased().contains($0) }) || oneSentence.contains(where: { q.contains($0) }) else { return a }
+        let cut: Set<Character> = oneSentence.contains(where: { q.contains($0) }) ? ["。", "！", "？", "\n", "!", "?"] : ["，", "。", "！", "？", "\n", ",", "!", "?", "；"]
+        var first = String(a.prefix { !cut.contains($0) })
+        first = String(first.unicodeScalars.filter { !($0.properties.isEmojiPresentation || ($0.properties.isEmoji && $0.value > 0x2000)) })
+            .trimmingCharacters(in: .whitespaces)
+        for w in ["啊", "啦", "喔", "囉"] where first.hasSuffix(w) && first.count > 2 { first.removeLast() }
+        return first.isEmpty ? a : first + (oneSentence.contains(where: { q.contains($0) }) ? "。" : "")
+    }
+
     /// 算數的應用題（「找回多少錢」「平分」「打幾折」）：大腦用比較穩的設定、一步一步算
     static func isArithmetic(_ text: String) -> Bool {
         let nums = (try? NSRegularExpression(pattern: #"\d+(\.\d+)?"#))?.numberOfMatches(in: text, range: NSRange(text.startIndex..., in: text)) ?? 0

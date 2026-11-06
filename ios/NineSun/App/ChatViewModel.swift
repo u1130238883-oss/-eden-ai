@@ -457,7 +457,8 @@ final class ChatViewModel: ObservableObject {
                 switch result {
                 case .success(let r) where !r.text.isEmpty:
                     // 一般聊天不讓大腦說髒話
-                    let said = self.trashTalk ? Composure.clean(r.text) : Composure.rude(r.text) ? Composure.calm : r.text
+                    let raw = LocalBrain.followFormat(question: question, answer: r.text)
+                    let said = self.trashTalk ? Composure.clean(raw) : Composure.rude(raw) ? Composure.calm : raw
                     var turn = ChatTurn(role: .echo, text: book.enforce(said + note), source: .neural, card: card, tokens: query == nil ? nil : [])
                     turn.query = query
                     self.finish(turn)
