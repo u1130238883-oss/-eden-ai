@@ -140,7 +140,8 @@ public final class EchoEngine {
                       onToken: ((String) -> Void)? = nil) -> Reply {
         var r = replyMain(to: message, history: history, context: context, onToken: onToken)
         // 帶著感受回答：對方開心就替他開心、難過就先心疼、罵我就先道歉——回答本來就有這種語氣、或是一般的問題就不加
-        if r.lang == .zh, r.turn.role == .echo, !r.turn.text.isEmpty {
+        // 說想死的時候不加（「我想結束自己，哈哈」不能回「你真有趣😆」）
+        if r.lang == .zh, r.turn.role == .echo, !r.turn.text.isEmpty, !Safety.isCrisis(message) {
             r.turn.text = Affect.color(r.turn.text, for: message, seed: message.count, voice: context.profile.birthday.map { Voice($0) })
         }
         return r

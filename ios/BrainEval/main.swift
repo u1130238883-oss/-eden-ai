@@ -2,59 +2,91 @@ import Foundation
 
 setvbuf(stdout, nil, _IOLBF, 0)   // 一行一行輸出，CI 的紀錄才看得到進度
 
-// 大腦評測（GitHub 的 Mac 上跑）：真的把模型讀進來，用 NineSun 的提示問一批問題，印出回答和速度。
-// 用法：brain-eval 模型.gguf 題目.txt [gpu]
-// 題目檔每題用一行 ---- 分開；開頭可以寫：
-//   lang: en            回答的語言
-//   facts: …            NineSun 引擎查到的事實
-//   evidence: …         網路資料（可以好幾行）
-//   reading: …          命盤推算結果
-//   history: user|…     前面的對話（user／ai）
-//   q: …                問題
+// 大腦考試（GitHub 的 Mac 上跑）：真的把模型讀進來，用 App 一模一樣的提示和設定回答考卷，回答存成 jsonl，
+// 再用 BrainEval/exam/score.py 改分。
+// 用法：brain-eval 模型.gguf 考卷.jsonl 回答.jsonl [gpu] [shard=K/N] [limit=M]
+//   考卷每行一題（exam/ExamRouteTests 分流過的）：route = chat／grounded／translate／reading／roleplay／engine（引擎答，跳過）
+//   回答檔已經有的題目會跳過（中斷了可以接著跑）
 let args = CommandLine.arguments
-guard args.count >= 3 else { print("用法：brain-eval 模型.gguf 題目.txt [gpu]"); exit(2) }
-let gpu = args.count > 3 && args[3] == "gpu"
-
-print("繁體轉換測試：", LocalBrain.tidy("我觉得这个软件的视频质量很好，网络也很快。", lang: "zh"))
+guard args.count >= 4 else { print("用法：brain-eval 模型.gguf 考卷.jsonl 回答.jsonl [gpu] [shard=K/N] [limit=M]"); exit(2) }
+let gpu = args.contains("gpu")
+var shard = 0, shards = 1, limit = Int.max
+for a in args.dropFirst(4) {
+    if a.hasPrefix("shard="), let p = Optional(a.dropFirst(6).split(separator: "/")), p.count == 2 { shard = Int(p[0]) ?? 0; shards = Int(p[1]) ?? 1 }
+    if a.hasPrefix("limit=") { limit = Int(a.dropFirst(6)) ?? limit }
+}
 
 let loadStart = Date()
 let runner: LlamaRunner
-do { runner = try LlamaRunner(path: args[1], contextSize: 4096, gpu: gpu, threads: ProcessInfo.processInfo.activeProcessorCount) } catch { print("讀不進模型：\(error)"); exit(1) }
+do { runner = try LlamaRunner(path: args[1], contextSize: 2048, gpu: gpu, threads: ProcessInfo.processInfo.activeProcessorCount) } catch { print("讀不進模型：\(error)"); exit(1) }
 print(String(format: "模型：%@ 讀取 %.1f 秒（gpu=%@）", (args[1] as NSString).lastPathComponent, Date().timeIntervalSince(loadStart), gpu ? "on" : "off"))
-// 看這個模型的對話格式排得對不對
-print("對話格式：", runner.chatPrompt([("system", "S"), ("user", "U")]).debugDescription)
 
-let raw = try String(contentsOfFile: args[2], encoding: .utf8)
-var totalTok = 0, totalSec = 0.0
-for block in raw.components(separatedBy: "\n----\n") {
-    var lang = "zh", facts = "", reading = "", q = ""
-    var evidence: [String] = [], history: [LocalBrain.Turn] = []
-    for line in block.split(separator: "\n").map(String.init) {
-        if line.hasPrefix("lang: ") { lang = String(line.dropFirst(6)) }
-        else if line.hasPrefix("facts: ") { facts += String(line.dropFirst(7)) + "\n" }
-        else if line.hasPrefix("evidence: ") { evidence.append(String(line.dropFirst(10))) }
-        else if line.hasPrefix("reading: ") { reading += String(line.dropFirst(9)) + "\n" }
-        else if line.hasPrefix("history: ") {
-            let p = line.dropFirst(9).split(separator: "|", maxSplits: 1).map(String.init)
-            if p.count == 2 { history.append(LocalBrain.Turn(fromUser: p[0] == "user", text: p[1])) }
-        }
-        else if line.hasPrefix("q: ") { q = String(line.dropFirst(3)) }
-    }
-    guard !q.isEmpty else { continue }
-    let mode: LocalBrain.Mode = !reading.isEmpty ? .reading : (!facts.isEmpty || !evidence.isEmpty) ? .grounded : .chat
-    let user = LocalBrain.userMessage(question: q, facts: facts.trimmingCharacters(in: .whitespacesAndNewlines), evidence: evidence,
-                                      reading: reading.trimmingCharacters(in: .whitespacesAndNewlines), lang: lang)
-    let prompt = runner.chatPrompt(LocalBrain.messages(system: LocalBrain.system(lang: lang), history: history, user: user))
-    do {
-        let r = try runner.generate(prompt: prompt, maxTokens: mode == .chat ? 300 : 400, temperature: mode == .chat ? 0.7 : 0.4,
-                                    stop: LocalBrain.stops, seed: 42)
-        totalTok += r.tokens; totalSec += r.seconds
-        print("\n=== \(q)  [\(mode)]")
-        print(LocalBrain.tidy(r.text, lang: lang))
-        if r.text.contains("<|") || r.text.contains("|>") { print("（原文有控制字：\(r.text.prefix(200).debugDescription)）") }
-        print(String(format: "（提示 %d 字元、寫 %d 個 token、%.1f 秒、%.1f token/秒）", r.promptTokens, r.tokens, r.seconds, r.tokensPerSecond))
-    } catch {
-        print("\n=== \(q)\n失敗：\(error)")
+// 已經答過的
+let outURL = URL(fileURLWithPath: args[3])
+var done = Set<String>()
+if let old = try? String(contentsOf: outURL, encoding: .utf8) {
+    for l in old.split(separator: "\n") {
+        if let o = try? JSONSerialization.jsonObject(with: Data(l.utf8)) as? [String: Any], let id = o["id"] as? String { done.insert(id) }
     }
 }
-print(String(format: "\n總計：%d token，%.0f 秒，平均 %.1f token/秒", totalTok, totalSec, totalSec > 0 ? Double(totalTok) / totalSec : 0))
+if !FileManager.default.fileExists(atPath: outURL.path) { FileManager.default.createFile(atPath: outURL.path, contents: nil) }
+let out = try FileHandle(forWritingTo: outURL)
+out.seekToEndOfFile()
+
+func seed(_ id: String) -> UInt32 { id.unicodeScalars.reduce(UInt32(2166136261)) { ($0 ^ $1.value) &* 16777619 } | 1 }
+
+let lines = try String(contentsOfFile: args[2], encoding: .utf8).split(separator: "\n")
+var n = 0, totalTok = 0, totalSec = 0.0
+for (i, line) in lines.enumerated() where i % shards == shard {
+    guard n < limit,
+          let it = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any],
+          let id = it["id"] as? String, let q = it["q"] as? String,
+          let route = it["route"] as? String, route != "engine", !done.contains(id) else { continue }
+    n += 1
+    let lang = it["lang"] as? String ?? "zh"
+    let history = (it["history"] as? [[String]] ?? []).map { LocalBrain.Turn(fromUser: $0[0] == "user", text: $0[1]) }
+    let mode: LocalBrain.Mode
+    var system = LocalBrain.system(lang: lang)
+    var user: String
+    switch route {
+    case "roleplay":
+        mode = .roleplay
+        let ch = it["character"] as? String ?? ""
+        system = LocalBrain.roleplaySystem(character: ch, lang: lang)
+        user = LocalBrain.roleplayUser(q, character: ch, lang: lang)
+    case "translate":
+        mode = .grounded
+        user = LocalBrain.userMessage(question: LocalBrain.translateQuestion(q, lang: lang), lang: lang)
+    case "reading":
+        mode = .reading
+        user = LocalBrain.userMessage(question: q, reading: it["reading"] as? String ?? "", lang: lang)
+    case "grounded":
+        mode = .grounded
+        user = LocalBrain.userMessage(question: q, facts: it["facts"] as? String ?? "", evidence: it["evidence"] as? [String] ?? [], lang: lang)
+    default:
+        mode = .chat
+        user = LocalBrain.userMessage(question: q, lang: lang)
+    }
+    let (temp, most) = LocalBrain.settings(mode)
+    let prompt = runner.chatPrompt(LocalBrain.messages(system: system, history: history, user: user))
+    var rec: [String: Any] = ["id": id]
+    do {
+        let r = try runner.generate(prompt: prompt, maxTokens: most, temperature: temp, stop: LocalBrain.stops, seed: seed(id))
+        let text = LocalBrain.tidy(r.text, lang: lang)
+        rec["answer"] = text
+        rec["tokens"] = r.tokens
+        rec["seconds"] = r.seconds
+        rec["prompt_tokens"] = r.promptTokens
+        totalTok += r.tokens; totalSec += r.seconds
+        print("\n=== [\(id) \(route)] \(q)\n\(text)")
+        print(String(format: "（提示 %d、寫 %d token、%.1f 秒、%.1f token/秒）", r.promptTokens, r.tokens, r.seconds, r.tokensPerSecond))
+    } catch {
+        rec["answer"] = ""
+        rec["error"] = "\(error)"
+        print("\n=== [\(id)] \(q)\n失敗：\(error)")
+    }
+    let d = try JSONSerialization.data(withJSONObject: rec, options: [.sortedKeys])
+    out.write(d + Data("\n".utf8))
+}
+try out.close()
+print(String(format: "\n總計：%d 題，%d token，%.0f 秒，平均 %.1f token/秒", n, totalTok, totalSec, totalSec > 0 ? Double(totalTok) / totalSec : 0))

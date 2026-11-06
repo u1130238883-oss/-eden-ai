@@ -273,8 +273,13 @@ final class ChatViewModel: ObservableObject {
         }
 
         // 翻譯：「蘋果用西班牙文怎麼說」「把這句翻成英文：…」「gracias 是什麼意思」
+        // 大腦下載好了：讓大腦詳細回答（每種語言的說法、念法、什麼時候用）；大腦答不出來才用翻譯
         if let req = Translate.parse(text) {
-            translate(req)
+            if !apiOn, let brain = brainPath {
+                brainTranslate(text, brain: brain) { _ in self.translate(req) }
+            } else {
+                translate(req)
+            }
             return
         }
         // 剛翻完接著問「那義大利文呢？」：同一句換一種語言
@@ -379,9 +384,7 @@ final class ChatViewModel: ObservableObject {
         // 翻譯（「我喜歡你用西班牙語和義大利語怎麼說」）：引擎的逐字翻譯常常翻錯、翻一半，交給大腦詳細回答
         // （翻譯、念法、用法、語氣）；用問的人說的語言回答，不是翻成的語言
         if reply.turn.speak != nil {
-            let asked = Lang.detect(text, fallback: language)
-            brainAnswer(text + (asked == .zh ? "\n（請把每一種語言的說法都寫出來，附上念法和使用時機。）" : ""),
-                        mode: .grounded, lang: asked, brain: brain, onFail: fallback)
+            brainTranslate(text, brain: brain, onFail: fallback)
             return true
         }
         if let q = reply.webQuery {
@@ -389,10 +392,21 @@ final class ChatViewModel: ObservableObject {
             brainAnswer(text, mode: .chat, lang: L, brain: brain) { _ in self.lookupWeb(q, L) }
             return true
         }
+        // 引擎把「媽媽的媽媽叫什麼」「我在哪個城市讀書」當成在問命盤的某一宮（或跟你要生日）：
+        // 這句話根本沒提到命理，就讓大腦直接回答
+        let fortune = BrainRoute.asksFortune(text)
         switch reply.turn.source {
         case .tool, .rule:
+            if !fortune, BrainRoute.needsBirthday(reply.turn.text) {
+                brainAnswer(text, mode: .chat, lang: L, brain: brain, onFail: fallback)
+                return true
+            }
             return false
         case .reader, .grounded, .corrected:
+            if !fortune {
+                brainAnswer(text, mode: .chat, lang: L, brain: brain, onFail: fallback)
+                return true
+            }
             // 命盤推算的結果：只有引擎算得出你的盤，大腦用白話回答
             if reply.turn.card == nil && reply.turn.text.count < 60 { return false }
             let reading = reply.turn.text + (reply.augmentFacts.isEmpty ? "" : "\n" + reply.augmentFacts)
@@ -401,6 +415,12 @@ final class ChatViewModel: ObservableObject {
             brainAnswer(text, mode: .chat, lang: L, brain: brain, onFail: fallback)
         }
         return true
+    }
+
+    /// 翻譯的問題交給大腦：用問的人說的語言回答，不是翻成的語言
+    private func brainTranslate(_ text: String, brain: String, onFail: @escaping (String) -> Void) {
+        let asked = Lang.detect(text, fallback: language)
+        brainAnswer(LocalBrain.translateQuestion(text, lang: asked.rawValue), mode: .grounded, lang: asked, brain: brain, onFail: onFail)
     }
 
     /// 問大腦，一邊寫一邊顯示；寫不出來（模型讀不進來、記憶體不夠）就用 onFail（引擎原本的回答）
@@ -443,9 +463,7 @@ final class ChatViewModel: ObservableObject {
         let past = turns.dropLast().suffix(12).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
         let system = LocalBrain.roleplaySystem(character: roleCharacter, lang: L.rawValue)
         // 小模型聊久了會忘記角色：每一句都附上角色設定提醒它（只給模型看，對話裡不會出現）
-        let role = roleCharacter.trimmingCharacters(in: .whitespacesAndNewlines)
-        let user = role.isEmpty ? text : text + (L == .zh ? "\n\n（你是：\(role)。照這個設定、用這個角色的身分回我。）"
-                                                        : "\n\n(You are: \(role). Reply in character, exactly as set up.)")
+        let user = LocalBrain.roleplayUser(text, character: roleCharacter, lang: L.rawValue)
         let work = BackgroundWork.start()
         LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: user, mode: .roleplay, lang: L.rawValue,
                               onText: { t in
@@ -503,17 +521,10 @@ final class ChatViewModel: ObservableObject {
     }
 
     /// 明確在問運勢的字（「今天」「如何」這種一般字不算）
-    static func fortuneWords(_ text: String) -> Bool {
-        ["運", "命", "宮", "流年", "大運", "流月", "八字", "紫微", "卦", "九型", "第幾型"].contains { text.contains($0) }
-    }
+    static func fortuneWords(_ text: String) -> Bool { BrainRoute.fortuneWords(text) }
 
     /// 要 NineSun 自己的命理引擎算的（運勢、命盤、八字、紫微、九型、生日…）
-    static func isReading(_ text: String) -> Bool {
-        ["運勢", "運氣", "命盤", "命宮", "本命", "八字", "紫微", "流年", "大運", "流月", "九型", "第幾型", "十二宮", "卦", "生日",
-         "宮位", "算命", "占卜", "日宮", "夜宮", "fortune", "horoscope"].contains { text.lowercased().contains($0) }
-            // 說心情的話也由 NineSun 自己用命盤來接（AI 看不到你的大運、流年、流月）
-            || Solace.isFeeling(text)
-    }
+    static func isReading(_ text: String) -> Bool { BrainRoute.isReading(text) }
 
     /// 日常問題交給 AI：用 NineSun 的個性回答、照你的九型調整說話方式（Gemini 要最新資料時會自己用 Google 搜尋）；好幾家 AI 時融合成一個答案
     /// chart：NineSun 的九型十二宮引擎算出來的結果（AI 只能用它，不能改）

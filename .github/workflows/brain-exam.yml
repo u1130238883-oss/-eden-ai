@@ -1,0 +1,92 @@
+name: Brain exam
+
+# NineSun 的大腦考試：在 Mac 上真的讀進 Gemma 4 E4B Mahou，用 App 一模一樣的提示回答 ios/BrainEval/exam/run.jsonl
+# （常識、算數、推理、語文、閱讀、翻譯、英文、記性、角色扮演、壓力測試……），分 5 台機器同時跑。
+# 回答存到分支 evals/exam-<次數>-<機器>（ios/BrainEval/exam/score.py 改分）。commit 訊息有 [exam] 或手動執行。
+on:
+  push:
+    paths:
+      - ".github/workflows/brain-exam.yml"
+      - "ios/BrainEval/**"
+      - "ios/NineSun/Brain/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  exam:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[exam]')
+    runs-on: macos-15
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Xcode 26
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          sudo xcode-select -s "$X"
+
+      - name: Cache llama.cpp
+        id: llama
+        uses: actions/cache@v4
+        with:
+          path: ~/llama-build
+          key: llama-macos-${{ hashFiles('ios/llama-version.txt') }}
+
+      - name: Build llama.cpp (macOS framework)
+        if: steps.llama.outputs.cache-hit != 'true'
+        run: |
+          LLAMA_TAG=$(cat ios/llama-version.txt)
+          git clone --depth 1 --branch "$LLAMA_TAG" https://github.com/ggml-org/llama.cpp "$RUNNER_TEMP/llama.cpp"
+          cd "$RUNNER_TEMP/llama.cpp" && ./build-xcframework.sh macos 2>&1 | tail -5
+          mkdir -p ~/llama-build && cp -R build-apple/llama.xcframework ~/llama-build/
+
+      - name: Compile exam
+        run: |
+          F=$(dirname "$(find ~/llama-build/llama.xcframework -maxdepth 2 -name llama.framework -path '*macos*' | head -1)")
+          swiftc -O -F "$F" -framework llama -Xlinker -rpath -Xlinker "$F" \
+            ios/NineSun/Brain/LlamaRunner.swift ios/NineSun/Brain/LocalBrain.swift ios/BrainEval/main.swift -o brain-eval
+
+      - name: Download model
+        run: |
+          curl -fsSL --retry 3 -o model.gguf "https://huggingface.co/mradermacher/gemma4-e4b-mahou-nsfw-GGUF/resolve/main/gemma4-e4b-mahou-nsfw.Q4_K_M.gguf"
+          ls -la model.gguf
+
+      # GPU（Metal）在這台虛擬機上不一定能用、也不一定比較快：各試 3 題，用快的那個
+      - name: Pick GPU or CPU
+        id: pick
+        run: |
+          head -40 ios/BrainEval/exam/run.jsonl | grep -v '"route": "engine"' | grep -v '"route":"engine"' | head -3 > probe.jsonl
+          rate() { python3 -c "import json,sys;r=[json.loads(l) for l in open(sys.argv[1]) if l.strip()];t=sum(x.get('tokens',0) for x in r);s=sum(x.get('seconds',0) for x in r);print(round(t/s,2) if s and t else 0)" "$1"; }
+          G=0
+          if timeout 600 ./brain-eval model.gguf probe.jsonl probe-gpu.jsonl gpu > probe-gpu.log 2>&1; then G=$(rate probe-gpu.jsonl); fi
+          timeout 600 ./brain-eval model.gguf probe.jsonl probe-cpu.jsonl > probe-cpu.log 2>&1 || true
+          C=$(rate probe-cpu.jsonl)
+          echo "GPU $G token/秒，CPU $C token/秒"; tail -12 probe-gpu.log; tail -12 probe-cpu.log
+          if python3 -c "import sys;sys.exit(0 if float('$G')>float('$C') else 1)"; then echo "dev=gpu" >> "$GITHUB_OUTPUT"; else echo "dev=cpu" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Exam
+        env:
+          NSUnbufferedIO: "YES"
+        run: |
+          D=${{ steps.pick.outputs.dev }}
+          timeout 280m ./brain-eval model.gguf ios/BrainEval/exam/run.jsonl answers-${{ matrix.shard }}.jsonl $([ "$D" = gpu ] && echo gpu) shard=${{ matrix.shard }}/5 \
+            || ./brain-eval model.gguf ios/BrainEval/exam/run.jsonl answers-${{ matrix.shard }}.jsonl shard=${{ matrix.shard }}/5 || true
+
+      - name: Score this shard
+        if: always()
+        run: python3 ios/BrainEval/exam/score.py ios/BrainEval/exam/run.jsonl answers-${{ matrix.shard }}.jsonl --fails 40 || true
+
+      - name: Save answers to a branch
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          D="$RUNNER_TEMP/out" && mkdir -p "$D" && cp answers-${{ matrix.shard }}.jsonl "$D/" 2>/dev/null || exit 0
+          cd "$D" && git init -q && git add . && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Exam ${{ github.run_number }} shard ${{ matrix.shard }} (${{ github.sha }})"
+          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/evals/exam-${{ github.run_number }}-${{ matrix.shard }}

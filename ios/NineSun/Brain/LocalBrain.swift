@@ -67,8 +67,7 @@ final class LocalBrain {
         queue.async {
             self.lock.lock(); self.cancelled = false; self.lock.unlock()
             let messages = Self.messages(system: system, history: history, user: user)
-            let temp: Float = mode == .roleplay ? 0.85 : mode == .chat ? 0.7 : 0.4
-            let most = mode == .roleplay ? 320 : mode == .chat ? 300 : 450
+            let (temp, most) = Self.settings(mode)
             var written = ""
             var tokens = 0
             var switches = 0
@@ -107,6 +106,28 @@ final class LocalBrain {
     }
 
     // MARK: - 提示（給模型的話）
+
+    /// 每種模式的溫度（越高越有變化）和最多寫幾個 token
+    static func settings(_ mode: Mode) -> (temperature: Float, maxTokens: Int) {
+        switch mode {
+        case .roleplay: return (0.85, 320)
+        case .chat: return (0.7, 300)
+        case .grounded, .reading: return (0.4, 450)
+        }
+    }
+
+    /// 角色扮演：小模型聊久了會忘記角色，每一句都附上角色設定提醒它（只給模型看，對話裡不會出現）
+    static func roleplayUser(_ text: String, character: String, lang: String) -> String {
+        let role = character.trimmingCharacters(in: .whitespacesAndNewlines)
+        if role.isEmpty { return text }
+        return text + (["en", "es", "it"].contains(lang) ? "\n\n(You are: \(role). Reply in character, exactly as set up.)"
+                                                          : "\n\n（你是：\(role)。照這個設定、用這個角色的身分回我。）")
+    }
+
+    /// 翻譯的問題：請大腦把每種語言的說法、念法、使用時機都寫出來
+    static func translateQuestion(_ text: String, lang: String) -> String {
+        lang == "zh" ? text + "\n（請把每一種語言的說法都寫出來，附上念法和使用時機。）" : text
+    }
 
     /// 各家模型的對話結束記號（模型說完了卻沒停時用）
     static let stops = ["<|im_end|>", "<|im_start|>", "<end_of_turn>", "<start_of_turn>", "<|eot_id|>", "<|start_header_id|>", "<turn|>", "<|turn>",

@@ -3,7 +3,8 @@ import Foundation
 /// 有人說想死、不想活的時候：先停下所有功能，好好回應，並給可以馬上找到人的求助電話。
 public enum Safety {
     static let zh = ["不想活", "想死", "自殺", "輕生", "活不下去", "結束生命", "結束自己", "了結自己", "割腕", "跳樓", "不如死了", "死了算了",
-                     "想消失", "活著沒意思", "活著好累", "沒有活下去", "不想再活", "尋死"]
+                     "想消失", "活著沒意思", "活著好累", "沒有活下去", "不想再活", "尋死",
+                     "我就去死", "我去死", "我要去死", "我會去死", "消失算了", "不如消失", "讓我消失", "傷害自己", "自殘"]
     static let foreign = ["kill myself", "suicide", "want to die", "end my life", "don't want to live", "dont want to live",
                           "quiero morir", "suicidarme", "no quiero vivir", "voglio morire", "suicidarmi", "non voglio vivere"]
     /// 講的是別人或知識題（「自殺防治是什麼」「電影裡的人想死」），不算

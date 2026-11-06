@@ -1,0 +1,1026 @@
+{"cat": "knowledge", "q": "日本的首都是哪裡？", "expect": [["東京", "Tokyo"]], "id": "knowledge-001", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "法國的首都是哪裡？", "expect": [["巴黎", "Paris"]], "id": "knowledge-002", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "義大利的首都是哪裡？", "expect": [["羅馬", "Rome"]], "id": "knowledge-003", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "西班牙的首都是哪裡？", "expect": [["馬德里", "Madrid"]], "id": "knowledge-004", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "德國的首都是哪裡？", "expect": [["柏林", "Berlin"]], "id": "knowledge-005", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "英國的首都是哪裡？", "expect": [["倫敦", "London"]], "id": "knowledge-006", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "韓國的首都是哪裡？", "expect": [["首爾", "Seoul"]], "id": "knowledge-007", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "澳洲的首都是哪裡？", "expect": [["坎培拉", "Canberra"]], "id": "knowledge-008", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "加拿大的首都是哪裡？", "expect": [["渥太華", "Ottawa"]], "id": "knowledge-009", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "美國的首都是哪裡？", "expect": [["華盛頓", "Washington"]], "id": "knowledge-010", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "俄羅斯的首都是哪裡？", "expect": [["莫斯科", "Moscow"]], "id": "knowledge-011", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "泰國的首都是哪裡？", "expect": [["曼谷", "Bangkok"]], "id": "knowledge-012", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "越南的首都是哪裡？", "expect": [["河內", "Hanoi"]], "id": "knowledge-013", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "埃及的首都是哪裡？", "expect": [["開羅", "Cairo"]], "id": "knowledge-014", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "巴西的首都是哪裡？", "expect": [["巴西利亞", "Brasília", "Brasilia"]], "id": "knowledge-015", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "阿根廷的首都是哪裡？", "expect": [["布宜諾斯艾利斯", "Buenos Aires"]], "id": "knowledge-016", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "土耳其的首都是哪裡？", "expect": [["安卡拉", "Ankara"]], "id": "knowledge-017", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "瑞士的首都是哪裡？", "expect": [["伯恩", "Bern"]], "id": "knowledge-018", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "荷蘭的首都是哪裡？", "expect": [["阿姆斯特丹", "Amsterdam"]], "id": "knowledge-019", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "葡萄牙的首都是哪裡？", "expect": [["里斯本", "Lisbon"]], "id": "knowledge-020", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "希臘的首都是哪裡？", "expect": [["雅典", "Athens"]], "id": "knowledge-021", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "印度的首都是哪裡？", "expect": [["新德里", "New Delhi", "德里"]], "id": "knowledge-022", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "菲律賓的首都是哪裡？", "expect": [["馬尼拉", "Manila"]], "id": "knowledge-023", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "印尼的首都是哪裡？", "expect": [["雅加達", "Jakarta", "努山塔拉"]], "id": "knowledge-024", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "墨西哥的首都是哪裡？", "expect": [["墨西哥城", "Mexico City"]], "id": "knowledge-025", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "挪威的首都是哪裡？", "expect": [["奧斯陸", "Oslo"]], "id": "knowledge-026", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "瑞典的首都是哪裡？", "expect": [["斯德哥爾摩", "Stockholm"]], "id": "knowledge-027", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "芬蘭的首都是哪裡？", "expect": [["赫爾辛基", "Helsinki"]], "id": "knowledge-028", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "丹麥的首都是哪裡？", "expect": [["哥本哈根", "Copenhagen"]], "id": "knowledge-029", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "奧地利的首都是哪裡？", "expect": [["維也納", "Vienna"]], "id": "knowledge-030", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "波蘭的首都是哪裡？", "expect": [["華沙", "Warsaw"]], "id": "knowledge-031", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "愛爾蘭的首都是哪裡？", "expect": [["都柏林", "Dublin"]], "id": "knowledge-032", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "紐西蘭的首都是哪裡？", "expect": [["威靈頓", "Wellington"]], "id": "knowledge-033", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "馬來西亞的首都是哪裡？", "expect": [["吉隆坡", "Kuala Lumpur"]], "id": "knowledge-034", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "新加坡的國旗主要是什麼顏色？", "expect": [["紅"], ["白"]], "id": "knowledge-035", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "世界上最高的山是哪一座？", "expect": [["聖母峰", "珠穆朗瑪", "Everest"]], "id": "knowledge-036", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "世界上最長的河是哪一條？", "expect": [["尼羅河", "Nile", "亞馬遜"]], "id": "knowledge-037", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "世界上面積最大的海洋是哪一個？", "expect": [["太平洋", "Pacific"]], "id": "knowledge-038", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "世界上面積最大的國家是哪一個？", "expect": [["俄羅斯", "Russia"]], "id": "knowledge-039", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "世界上人口最多的國家是哪一個？", "expect": [["印度", "India"]], "id": "knowledge-040", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "最大的沙漠（不算南極）是哪一個？", "expect": [["撒哈拉", "Sahara"]], "id": "knowledge-041", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "台灣最高的山是哪一座？", "expect": [["玉山"]], "id": "knowledge-042", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "台灣最長的河是哪一條？", "expect": [["濁水溪"]], "id": "knowledge-043", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "台灣的首都（中央政府所在地）是哪個城市？", "expect": [["台北", "臺北"]], "id": "knowledge-044", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "台北 101 大樓有幾層樓（地上）？", "expect": [["101"]], "id": "knowledge-045", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "日本最高的山是哪一座？", "expect": [["富士山", "Fuji"]], "id": "knowledge-046", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "地球繞太陽一圈大約要多久？", "expect": [["一年", "365", "1年"]], "id": "knowledge-047", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "月亮繞地球一圈大約要多久？", "expect": [["27", "28", "29", "一個月", "1個月"]], "id": "knowledge-048", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "太陽系最大的行星是哪一顆？", "expect": [["木星", "Jupiter"]], "id": "knowledge-049", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "太陽系離太陽最近的行星是哪一顆？", "expect": [["水星", "Mercury"]], "id": "knowledge-050", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "被稱為「紅色星球」的是哪一顆行星？", "expect": [["火星", "Mars"]], "id": "knowledge-051", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "太陽系有幾顆行星？", "expect": [["8", "八"]], "id": "knowledge-052", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "水在標準大氣壓下幾度沸騰？", "expect": [["100", "一百"]], "id": "knowledge-053", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "水在幾度結冰？", "expect": [["0", "零"]], "id": "knowledge-054", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "水的化學式是什麼？", "expect": [["H2O", "H₂O"]], "id": "knowledge-055", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "食鹽的主要成分是什麼？", "expect": [["氯化鈉", "NaCl"]], "id": "knowledge-056", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "人體最大的器官是什麼？", "expect": [["皮膚"]], "id": "knowledge-057", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "人有幾顆心臟？", "expect": [["1", "一"]], "id": "knowledge-058", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "成年人一般有幾顆牙齒（含智齒）？", "expect": [["32", "三十二"]], "id": "knowledge-059", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "人體正常體溫大約是幾度？", "expect": [["36", "37"]], "id": "knowledge-060", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "光速大約每秒多少公里？", "expect": [["30萬", "300000", "300,000", "三十萬", "299"]], "id": "knowledge-061", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "植物行光合作用需要哪種氣體？", "expect": [["二氧化碳", "CO2"]], "id": "knowledge-062", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "人呼吸需要吸入的氣體是什麼？", "expect": [["氧", "O2"]], "id": "knowledge-063", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "蜘蛛有幾隻腳？", "expect": [["8", "八"]], "id": "knowledge-064", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "昆蟲有幾隻腳？", "expect": [["6", "六"]], "id": "knowledge-065", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "鯨魚是魚類嗎？", "expect": [["不是", "哺乳"]], "id": "knowledge-066", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "蝙蝠是鳥嗎？", "expect": [["不是", "哺乳"]], "id": "knowledge-067", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "企鵝會飛嗎？", "expect": [["不會", "不能"]], "id": "knowledge-068", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "章魚有幾隻手（腕）？", "expect": [["8", "八"]], "id": "knowledge-069", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "熊貓主要吃什麼？", "expect": [["竹"]], "id": "knowledge-070", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "世界上跑最快的陸地動物是什麼？", "expect": [["獵豹", "cheetah"]], "id": "knowledge-071", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "世界上最大的動物是什麼？", "expect": [["藍鯨", "blue whale"]], "id": "knowledge-072", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "一年有幾個月？", "expect": [["12", "十二"]], "id": "knowledge-073", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "一個星期有幾天？", "expect": [["7", "七"]], "id": "knowledge-074", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "一天有幾個小時？", "expect": [["24", "二十四"]], "id": "knowledge-075", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "一小時有幾分鐘？", "expect": [["60", "六十"]], "id": "knowledge-076", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "一公里是幾公尺？", "expect": [["1000", "一千", "1,000"]], "id": "knowledge-077", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "一公斤是幾公克？", "expect": [["1000", "一千", "1,000"]], "id": "knowledge-078", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "閏年的二月有幾天？", "expect": [["29", "二十九"]], "id": "knowledge-079", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "一打是幾個？", "expect": [["12", "十二"]], "id": "knowledge-080", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "彩虹有幾種顏色（一般說法）？", "expect": [["7", "七"]], "id": "knowledge-081", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "奧運會幾年舉辦一次？", "expect": [["4", "四"]], "id": "knowledge-082", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "足球比賽一隊上場幾個人？", "expect": [["11", "十一"]], "id": "knowledge-083", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "籃球比賽一隊上場幾個人？", "expect": [["5", "五"]], "id": "knowledge-084", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "圍棋的棋子是什麼顏色？", "expect": [["黑"], ["白"]], "id": "knowledge-085", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "《哈利波特》的作者是誰？", "expect": [["羅琳", "Rowling"]], "id": "knowledge-086", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "《紅樓夢》的作者是誰？", "expect": [["曹雪芹"]], "id": "knowledge-087", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "《西遊記》的作者是誰？", "expect": [["吳承恩"]], "id": "knowledge-088", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "《三國演義》的作者是誰？", "expect": [["羅貫中"]], "id": "knowledge-089", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "《水滸傳》的作者是誰？", "expect": [["施耐庵"]], "id": "knowledge-090", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "《羅密歐與茱麗葉》的作者是誰？", "expect": [["莎士比亞", "Shakespeare"]], "id": "knowledge-091", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "《小王子》的作者是誰？", "expect": [["聖修伯里", "聖埃克蘇佩里", "Saint-Exupéry", "Exupery"]], "id": "knowledge-092", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "《少年維特的煩惱》的作者是誰？", "expect": [["歌德", "Goethe"]], "id": "knowledge-093", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "《神曲》的作者是誰？", "expect": [["但丁", "Dante"]], "id": "knowledge-094", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "《論語》記錄的是誰的言行？", "expect": [["孔子"]], "id": "knowledge-095", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "「床前明月光」是誰寫的？", "expect": [["李白"]], "id": "knowledge-096", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "「春眠不覺曉」是誰寫的？", "expect": [["孟浩然"]], "id": "knowledge-097", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "蒙娜麗莎是誰畫的？", "expect": [["達文西", "達·文西", "Leonardo", "da Vinci"]], "id": "knowledge-098", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "《星夜》是誰畫的？", "expect": [["梵谷", "梵高", "Van Gogh"]], "id": "knowledge-099", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "發明電話的人一般認為是誰？", "expect": [["貝爾", "Bell"]], "id": "knowledge-100", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "提出相對論的是誰？", "expect": [["愛因斯坦", "Einstein"]], "id": "knowledge-101", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "發現萬有引力的是誰？", "expect": [["牛頓", "Newton"]], "id": "knowledge-102", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "提出進化論（演化論）的是誰？", "expect": [["達爾文", "Darwin"]], "id": "knowledge-103", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "第一個登上月球的人是誰？", "expect": [["阿姆斯壯", "阿姆斯特朗", "Armstrong"]], "id": "knowledge-104", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "iPhone 是哪一家公司出的？", "expect": [["蘋果", "Apple"]], "id": "knowledge-105", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "Windows 是哪一家公司出的？", "expect": [["微軟", "Microsoft"]], "id": "knowledge-106", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "特斯拉電動車的執行長是誰？", "expect": [["馬斯克", "Musk"]], "id": "knowledge-107", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "貝多芬是哪一國人？", "expect": [["德國", "Germany"]], "id": "knowledge-108", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "莫札特是哪一國人？", "expect": [["奧地利", "Austria"]], "id": "knowledge-109", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "第二次世界大戰在哪一年結束？", "expect": [["1945"]], "id": "knowledge-110", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "第一次世界大戰在哪一年開始？", "expect": [["1914"]], "id": "knowledge-111", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "美國在哪一年獨立？", "expect": [["1776"]], "id": "knowledge-112", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "柏林圍牆在哪一年倒塌？", "expect": [["1989"]], "id": "knowledge-113", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "鐵達尼號在哪一年沉沒？", "expect": [["1912"]], "id": "knowledge-114", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "中華民國在哪一年建立？", "expect": [["1912"]], "id": "knowledge-115", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "秦始皇統一中國後建立的是哪個朝代？", "expect": [["秦"]], "id": "knowledge-116", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "唐朝之後是哪個朝代？", "expect": [["五代", "宋"]], "id": "knowledge-117", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "清朝之前是哪個朝代？", "expect": [["明"]], "id": "knowledge-118", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "金字塔在哪個國家最有名？", "expect": [["埃及", "Egypt"]], "id": "knowledge-119", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "自由女神像在哪個城市？", "expect": [["紐約", "New York"]], "id": "knowledge-120", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "艾菲爾鐵塔在哪個城市？", "expect": [["巴黎", "Paris"]], "id": "knowledge-121", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "比薩斜塔在哪個國家？", "expect": [["義大利", "Italy"]], "id": "knowledge-122", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "羅馬競技場在哪個城市？", "expect": [["羅馬", "Rome"]], "id": "knowledge-123", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "米蘭大教堂在哪個國家？", "expect": [["義大利", "Italy"]], "id": "knowledge-124", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "威尼斯以什麼交通工具聞名？", "expect": [["船", "貢多拉", "水"]], "id": "knowledge-125", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "長城在哪個國家？", "expect": [["中國", "China"]], "id": "knowledge-126", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "吳哥窟在哪個國家？", "expect": [["柬埔寨", "Cambodia"]], "id": "knowledge-127", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "泰姬瑪哈陵在哪個國家？", "expect": [["印度", "India"]], "id": "knowledge-128", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "雪梨歌劇院在哪個國家？", "expect": [["澳洲", "澳大利亞", "Australia"]], "id": "knowledge-129", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "日本的貨幣叫什麼？", "expect": [["日圓", "日元", "円", "yen"]], "id": "knowledge-130", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "美國的貨幣叫什麼？", "expect": [["美元", "美金", "dollar"]], "id": "knowledge-131", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "歐盟大多數國家用什麼貨幣？", "expect": [["歐元", "euro"]], "id": "knowledge-132", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "英國的貨幣叫什麼？", "expect": [["英鎊", "pound"]], "id": "knowledge-133", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "韓國的貨幣叫什麼？", "expect": [["韓元", "韓圜", "won"]], "id": "knowledge-134", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "台灣的貨幣叫什麼？", "expect": [["新台幣", "新臺幣", "台幣", "元"]], "id": "knowledge-135", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "義大利的官方語言是什麼？", "expect": [["義大利語", "義大利文", "Italian"]], "id": "knowledge-136", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "巴西的官方語言是什麼？", "expect": [["葡萄牙", "Portuguese"]], "id": "knowledge-137", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "墨西哥主要說什麼語言？", "expect": [["西班牙", "Spanish"]], "id": "knowledge-138", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "瑞士有幾種官方語言？", "expect": [["4", "四"]], "id": "knowledge-139", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "加拿大的官方語言有哪些？", "expect": [["英"], ["法"]], "id": "knowledge-140", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "一個三角形的內角和是幾度？", "expect": [["180"]], "id": "knowledge-141", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "直角是幾度？", "expect": [["90"]], "id": "knowledge-142", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "圓周率大約是多少？", "expect": [["3.14"]], "id": "knowledge-143", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "質數是什麼意思？", "expect": [["1"], ["本身", "自己"]], "id": "knowledge-144", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "10 是質數嗎？", "expect": [["不是"]], "id": "knowledge-145", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "7 是質數嗎？", "expect": [["是"]], "id": "knowledge-146", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "最小的質數是多少？", "expect": [["2", "二"]], "id": "knowledge-147", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "一百的平方根是多少？", "expect": [["10", "十"]], "id": "knowledge-148", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "2 的 10 次方是多少？", "expect": [["1024"]], "id": "knowledge-149", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "DNA 的形狀是什麼？", "expect": [["雙螺旋", "螺旋"]], "id": "knowledge-150", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "細胞的「能量工廠」是什麼胞器？", "expect": [["粒線體", "線粒體"]], "id": "knowledge-151", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "血液是紅色主要因為什麼？", "expect": [["血紅素", "血紅蛋白", "鐵"]], "id": "knowledge-152", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "感冒大多是細菌還是病毒造成的？", "expect": [["病毒"]], "id": "knowledge-153", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "抗生素能治病毒感染嗎？", "expect": [["不能", "不行", "沒用", "無效"]], "id": "knowledge-154", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "彩虹是怎麼形成的？", "expect": [["折射", "反射", "水滴"]], "id": "knowledge-155", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "為什麼天空是藍色的？", "expect": [["散射"]], "id": "knowledge-156", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "為什麼會有四季？", "expect": [["傾斜", "地軸"]], "id": "knowledge-157", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "潮汐主要是什麼造成的？", "expect": [["月", "引力"]], "id": "knowledge-158", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "地震是什麼造成的？", "expect": [["板塊", "斷層"]], "id": "knowledge-159", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "颱風在美國叫什麼？", "expect": [["颶風", "hurricane"]], "id": "knowledge-160", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "最大的大洲是哪一洲？", "expect": [["亞洲", "Asia"]], "id": "knowledge-161", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "世界上有幾大洲？", "expect": [["7", "七"]], "id": "knowledge-162", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "赤道是幾度緯度？", "expect": [["0", "零"]], "id": "knowledge-163", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "北極熊住在南極還是北極？", "expect": [["北極"]], "id": "knowledge-164", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "南極有北極熊嗎？", "expect": [["沒有", "不", "沒"]], "id": "knowledge-165", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "太陽從哪個方向升起？", "expect": [["東"]], "id": "knowledge-166", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "指南針的針指向哪裡？", "expect": [["北", "南"]], "id": "knowledge-167", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "聲音在真空中能傳播嗎？", "expect": [["不能", "不會", "無法"]], "id": "knowledge-168", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "電燈泡是誰改良成可以普及的？", "expect": [["愛迪生", "Edison"]], "id": "knowledge-169", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "網際網路的「WWW」是誰發明的？", "expect": [["柏納斯", "伯納斯", "Berners-Lee"]], "id": "knowledge-170", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "電腦的 CPU 是做什麼的？", "expect": [["運算", "處理", "計算"]], "id": "knowledge-171", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "RAM 是什麼？", "expect": [["記憶體", "memory"]], "id": "knowledge-172", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "1 GB 等於幾 MB（以 1024 計）？", "expect": [["1024"]], "id": "knowledge-173", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "HTML 是用來做什麼的？", "expect": [["網頁"]], "id": "knowledge-174", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "Python 是什麼？", "expect": [["程式", "語言"]], "id": "knowledge-175", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "人工智慧的英文縮寫是什麼？", "expect": [["AI"]], "id": "knowledge-176", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "咖啡因主要存在哪些飲料？", "expect": [["咖啡"], ["茶", "可樂"]], "id": "knowledge-177", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "維他命 C 多存在哪類食物？", "expect": [["水果", "柑橘", "橘", "檸檬", "芭樂", "奇異果"]], "id": "knowledge-178", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "米飯主要提供什麼營養？", "expect": [["碳水", "澱粉", "醣"]], "id": "knowledge-179", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "豆腐是用什麼做的？", "expect": [["黃豆", "大豆"]], "id": "knowledge-180", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "紅綠燈的紅燈代表什麼？", "expect": [["停"]], "id": "knowledge-181", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "在台灣，車子靠哪一邊行駛？", "expect": [["右"]], "id": "knowledge-182", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "在日本，車子靠哪一邊行駛？", "expect": [["左"]], "id": "knowledge-183", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "在台灣緊急報案打幾號？", "expect": [["110"]], "id": "knowledge-184", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "在台灣叫救護車打幾號？", "expect": [["119"]], "id": "knowledge-185", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "鋼琴有幾個鍵（標準）？", "expect": [["88"]], "id": "knowledge-186", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "小提琴有幾條弦？", "expect": [["4", "四"]], "id": "knowledge-187", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "吉他（一般）有幾條弦？", "expect": [["6", "六"]], "id": "knowledge-188", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "十二生肖第一個是什麼？", "expect": [["鼠"]], "id": "knowledge-189", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "十二生肖最後一個是什麼？", "expect": [["豬"]], "id": "knowledge-190", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "端午節吃什麼？", "expect": [["粽"]], "id": "knowledge-191", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "中秋節吃什麼？", "expect": [["月餅", "柚"]], "id": "knowledge-192", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "春節（過年）會發什麼給小孩？", "expect": [["紅包", "壓歲錢"]], "id": "knowledge-193", "split": "hold", "lang": "zh"}
+{"cat": "knowledge", "q": "聖誕節是幾月幾日？", "expect": [["12月25", "十二月二十五"]], "id": "knowledge-194", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "情人節（西洋）是幾月幾日？", "expect": [["2月14", "二月十四"]], "id": "knowledge-195", "split": "dev", "lang": "zh"}
+{"cat": "knowledge", "q": "國際勞動節是幾月幾日？", "expect": [["5月1", "五月一"]], "id": "knowledge-196", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "小明比小華高，小華比小強高，誰最矮？", "expect": [["小強"]], "id": "logic-001", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "A 比 B 大，B 比 C 大，誰最大？", "expect": [["A"]], "id": "logic-002", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "所有的貓都是動物，咪咪是貓，咪咪是動物嗎？", "expect": [["是"]], "id": "logic-003", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "如果今天是星期三，後天是星期幾？", "expect": [["星期五", "週五", "禮拜五"]], "id": "logic-004", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "如果今天是星期一，三天前是星期幾？", "expect": [["星期五", "週五", "禮拜五"]], "id": "logic-005", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "如果今天是星期日，明天是星期幾？", "expect": [["星期一", "週一", "禮拜一"]], "id": "logic-006", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "2、4、6、8，下一個數字是多少？", "expect": [["10"]], "id": "logic-007", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "1、2、4、8、16，下一個數字是多少？", "expect": [["32"]], "id": "logic-008", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "1、1、2、3、5、8，下一個數字是多少？", "expect": [["13"]], "id": "logic-009", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "3、6、9、12，下一個是多少？", "expect": [["15"]], "id": "logic-010", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "5、10、20、40，下一個是多少？", "expect": [["80"]], "id": "logic-011", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "100、90、80、70，下一個是多少？", "expect": [["60"]], "id": "logic-012", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "1、4、9、16，下一個是多少？", "expect": [["25"]], "id": "logic-013", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "一個籃子有 5 顆蘋果，拿走 2 顆，籃子裡還有幾顆？", "expect": [["3"]], "id": "logic-014", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "樹上有 10 隻鳥，獵人開槍打死 1 隻，樹上還剩幾隻？（想一想）", "expect": [["0", "沒有", "一隻也"]], "id": "logic-015", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "小美的媽媽有三個孩子：大毛、二毛，第三個叫什麼？", "expect": [["小美"]], "id": "logic-016", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "一磅鐵和一磅棉花哪個重？", "expect": [["一樣"]], "id": "logic-017", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "如果所有的 A 都是 B，有些 B 是 C，那一定有 A 是 C 嗎？", "expect": [["不一定", "不能確定", "未必"]], "id": "logic-018", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "三個人三天吃三個蘋果，九個人九天吃幾個蘋果？", "expect": [["27"]], "id": "logic-019", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "一根繩子對折再對折，剪一刀，變成幾段？", "expect": [["5"]], "id": "logic-020", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "一個人面向北，向右轉 90 度後面向哪裡？", "expect": [["東"]], "id": "logic-021", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "一個人面向東，向後轉後面向哪裡？", "expect": [["西"]], "id": "logic-022", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "一個人面向南，向左轉後面向哪裡？", "expect": [["東"]], "id": "logic-023", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "鐘面上 3 點整，時針和分針的夾角是幾度？", "expect": [["90"]], "id": "logic-024", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "鐘面上 6 點整，時針和分針的夾角是幾度？", "expect": [["180"]], "id": "logic-025", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "爸爸的爸爸叫什麼？", "expect": [["爺爺", "祖父"]], "id": "logic-026", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "媽媽的媽媽叫什麼？", "expect": [["外婆", "姥姥", "外祖母"]], "id": "logic-027", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "爸爸的哥哥叫什麼？", "expect": [["伯伯", "伯父"]], "id": "logic-028", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "媽媽的兄弟叫什麼？", "expect": [["舅舅", "舅"]], "id": "logic-029", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "哥哥的兒子叫我什麼（我是男生）？", "expect": [["叔叔", "叔"]], "id": "logic-030", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "小華在隊伍中從前面數是第 3 個，從後面數是第 5 個，隊伍有幾個人？", "expect": [["7"]], "id": "logic-031", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "有 3 個盒子，每個盒子裝 4 顆球，總共幾顆球？", "expect": [["12"]], "id": "logic-032", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "一個星期有 7 天，三個星期有幾天？", "expect": [["21"]], "id": "logic-033", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "一隻雞有 2 隻腳，5 隻雞有幾隻腳？", "expect": [["10"]], "id": "logic-034", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "一隻狗有 4 隻腳，3 隻狗和 2 隻雞共有幾隻腳？", "expect": [["16"]], "id": "logic-035", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "一年四季中，最熱的是哪一季？", "expect": [["夏"]], "id": "logic-036", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "冰塊放在太陽下會怎樣？", "expect": [["融", "化", "變成水"]], "id": "logic-037", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "「如果下雨，地會濕。」地濕了，一定是下雨嗎？", "expect": [["不一定", "未必", "不見得"]], "id": "logic-038", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "小明說：「我從來不說謊。」如果他說謊了，這句話是真的嗎？", "expect": [["不是", "假"]], "id": "logic-039", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "把 1 到 10 加起來是多少？", "expect": [["55"]], "id": "logic-040", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "偶數加偶數是奇數還是偶數？", "expect": [["偶數"]], "id": "logic-041", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "奇數加奇數是奇數還是偶數？", "expect": [["偶數"]], "id": "logic-042", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "奇數乘奇數是奇數還是偶數？", "expect": [["奇數"]], "id": "logic-043", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "一個正方形有幾條邊？", "expect": [["4", "四"]], "id": "logic-044", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "六邊形有幾個角？", "expect": [["6", "六"]], "id": "logic-045", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "1 公尺等於幾公分？", "expect": [["100"]], "id": "logic-046", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "半小時是幾分鐘？", "expect": [["30"]], "id": "logic-047", "split": "hold", "lang": "zh"}
+{"cat": "logic", "q": "一個半小時是幾分鐘？", "expect": [["90"]], "id": "logic-048", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "今天是 1 月 31 日，明天是幾月幾日？", "expect": [["2月1", "二月一"]], "id": "logic-049", "split": "dev", "lang": "zh"}
+{"cat": "logic", "q": "如果現在是下午 3 點，再過 10 個小時是幾點？", "expect": [["凌晨1", "1點", "1:00", "半夜一", "晚上1", "深夜1"]], "id": "logic-050", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "小明有 16 顆蘋果，送給朋友 2 顆，又買了 1 顆，現在有幾顆？", "num": 15, "id": "math-001", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一枝鉛筆 30 元，阿豪買了 6 枝，付 200 元，要找回多少錢？", "num": 20, "id": "math-002", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 40 公里，開了 2 小時，總共開了幾公里？", "num": 80, "id": "math-003", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "200 的 20% 是多少？", "num": 40, "id": "math-004", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 7 公分、寬 12 公分，面積是幾平方公分？", "num": 84, "id": "math-005", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "2 個人平分 118 元，每個人分到多少元？", "num": 59, "id": "math-006", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "29 乘以 9 再加 34 等於多少？", "num": 295, "id": "math-007", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 500 元，打 90 折是指便宜 10%，打完折多少錢？", "num": 450, "id": "math-008", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "春嬌有 34 顆彈珠，送給朋友 5 顆，又買了 14 顆，現在有幾顆？", "num": 43, "id": "math-009", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一顆糖果 55 元，小美買了 8 顆，付 500 元，要找回多少錢？", "num": 60, "id": "math-010", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 60 公里，開了 3 小時，總共開了幾公里？", "num": 180, "id": "math-011", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "1200 的 20% 是多少？", "num": 240, "id": "math-012", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 4 公分、寬 8 公分，面積是幾平方公分？", "num": 32, "id": "math-013", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "2 個人平分 182 元，每個人分到多少元？", "num": 91, "id": "math-014", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "23 乘以 8 再加 7 等於多少？", "num": 191, "id": "math-015", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 500 元，打 90 折是指便宜 10%，打完折多少錢？", "num": 450, "id": "math-016", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "小安有 13 顆蘋果，送給朋友 3 顆，又買了 15 顆，現在有幾顆？", "num": 25, "id": "math-017", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一顆蘋果 18 元，阿豪買了 3 顆，付 100 元，要找回多少錢？", "num": 46, "id": "math-018", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 50 公里，開了 4 小時，總共開了幾公里？", "num": 200, "id": "math-019", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "400 的 40% 是多少？", "num": 160, "id": "math-020", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 14 公分、寬 13 公分，面積是幾平方公分？", "num": 182, "id": "math-021", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "2 個人平分 454 元，每個人分到多少元？", "num": 227, "id": "math-022", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "6 乘以 10 再加 40 等於多少？", "num": 100, "id": "math-023", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 1500 元，打 70 折是指便宜 30%，打完折多少錢？", "num": 1050, "id": "math-024", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "大雄有 9 枝鉛筆，送給朋友 5 枝，又買了 15 枝，現在有幾枝？", "num": 19, "id": "math-025", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一張貼紙 28 元，小安買了 3 張，付 100 元，要找回多少錢？", "num": 16, "id": "math-026", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 60 公里，開了 2 小時，總共開了幾公里？", "num": 120, "id": "math-027", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "400 的 25% 是多少？", "num": 100, "id": "math-028", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 17 公分、寬 19 公分，面積是幾平方公分？", "num": 323, "id": "math-029", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "9 個人平分 2043 元，每個人分到多少元？", "num": 227, "id": "math-030", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "7 乘以 5 再加 38 等於多少？", "num": 73, "id": "math-031", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 1200 元，打 70 折是指便宜 30%，打完折多少錢？", "num": 840, "id": "math-032", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "小安有 28 顆糖果，送給朋友 5 顆，又買了 5 顆，現在有幾顆？", "num": 28, "id": "math-033", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一顆蘋果 42 元，春嬌買了 6 顆，付 300 元，要找回多少錢？", "num": 48, "id": "math-034", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 120 公里，開了 3 小時，總共開了幾公里？", "num": 360, "id": "math-035", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "500 的 75% 是多少？", "num": 375, "id": "math-036", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 4 公分、寬 2 公分，面積是幾平方公分？", "num": 8, "id": "math-037", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "7 個人平分 1799 元，每個人分到多少元？", "num": 257, "id": "math-038", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "7 乘以 12 再加 23 等於多少？", "num": 107, "id": "math-039", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 1500 元，打 70 折是指便宜 30%，打完折多少錢？", "num": 1050, "id": "math-040", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "小明有 38 本書，送給朋友 5 本，又買了 5 本，現在有幾本？", "num": 38, "id": "math-041", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一枝鉛筆 31 元，大雄買了 7 枝，付 300 元，要找回多少錢？", "num": 83, "id": "math-042", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 50 公里，開了 5 小時，總共開了幾公里？", "num": 250, "id": "math-043", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "400 的 50% 是多少？", "num": 200, "id": "math-044", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 11 公分、寬 13 公分，面積是幾平方公分？", "num": 143, "id": "math-045", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "7 個人平分 609 元，每個人分到多少元？", "num": 87, "id": "math-046", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "23 乘以 7 再加 20 等於多少？", "num": 181, "id": "math-047", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 800 元，打 90 折是指便宜 10%，打完折多少錢？", "num": 720, "id": "math-048", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "阿豪有 23 枝鉛筆，送給朋友 2 枝，又買了 7 枝，現在有幾枝？", "num": 28, "id": "math-049", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一本書 28 元，小美買了 6 本，付 200 元，要找回多少錢？", "num": 32, "id": "math-050", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 100 公里，開了 2 小時，總共開了幾公里？", "num": 200, "id": "math-051", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "400 的 10% 是多少？", "num": 40, "id": "math-052", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 5 公分、寬 13 公分，面積是幾平方公分？", "num": 65, "id": "math-053", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "4 個人平分 364 元，每個人分到多少元？", "num": 91, "id": "math-054", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "11 乘以 9 再加 7 等於多少？", "num": 106, "id": "math-055", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 1500 元，打 80 折是指便宜 20%，打完折多少錢？", "num": 1200, "id": "math-056", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "小玲有 23 顆糖果，送給朋友 2 顆，又買了 20 顆，現在有幾顆？", "num": 41, "id": "math-057", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一顆彈珠 34 元，春嬌買了 7 顆，付 300 元，要找回多少錢？", "num": 62, "id": "math-058", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 100 公里，開了 3 小時，總共開了幾公里？", "num": 300, "id": "math-059", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "800 的 50% 是多少？", "num": 400, "id": "math-060", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 20 公分、寬 6 公分，面積是幾平方公分？", "num": 120, "id": "math-061", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "7 個人平分 693 元，每個人分到多少元？", "num": 99, "id": "math-062", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "11 乘以 11 再加 47 等於多少？", "num": 168, "id": "math-063", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 1200 元，打 70 折是指便宜 30%，打完折多少錢？", "num": 840, "id": "math-064", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "大雄有 14 本書，送給朋友 6 本，又買了 11 本，現在有幾本？", "num": 19, "id": "math-065", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一枝鉛筆 13 元，小玲買了 4 枝，付 100 元，要找回多少錢？", "num": 48, "id": "math-066", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 40 公里，開了 5 小時，總共開了幾公里？", "num": 200, "id": "math-067", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "80 的 75% 是多少？", "num": 60, "id": "math-068", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 16 公分、寬 14 公分，面積是幾平方公分？", "num": 224, "id": "math-069", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "6 個人平分 390 元，每個人分到多少元？", "num": 65, "id": "math-070", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "27 乘以 7 再加 11 等於多少？", "num": 200, "id": "math-071", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 1000 元，打 70 折是指便宜 30%，打完折多少錢？", "num": 700, "id": "math-072", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "阿傑有 19 本書，送給朋友 6 本，又買了 12 本，現在有幾本？", "num": 25, "id": "math-073", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一枝鉛筆 18 元，阿豪買了 9 枝，付 200 元，要找回多少錢？", "num": 38, "id": "math-074", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 120 公里，開了 5 小時，總共開了幾公里？", "num": 600, "id": "math-075", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "400 的 30% 是多少？", "num": 120, "id": "math-076", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 9 公分、寬 13 公分，面積是幾平方公分？", "num": 117, "id": "math-077", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "8 個人平分 1168 元，每個人分到多少元？", "num": 146, "id": "math-078", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "8 乘以 4 再加 6 等於多少？", "num": 38, "id": "math-079", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 300 元，打 70 折是指便宜 30%，打完折多少錢？", "num": 210, "id": "math-080", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "阿豪有 33 枝鉛筆，送給朋友 3 枝，又買了 10 枝，現在有幾枝？", "num": 40, "id": "math-081", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一本書 55 元，大雄買了 2 本，付 200 元，要找回多少錢？", "num": 90, "id": "math-082", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 40 公里，開了 5 小時，總共開了幾公里？", "num": 200, "id": "math-083", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "360 的 30% 是多少？", "num": 108, "id": "math-084", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 19 公分、寬 11 公分，面積是幾平方公分？", "num": 209, "id": "math-085", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "6 個人平分 1014 元，每個人分到多少元？", "num": 169, "id": "math-086", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "13 乘以 3 再加 11 等於多少？", "num": 50, "id": "math-087", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 800 元，打 90 折是指便宜 10%，打完折多少錢？", "num": 720, "id": "math-088", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "春嬌有 32 本書，送給朋友 1 本，又買了 9 本，現在有幾本？", "num": 40, "id": "math-089", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一張貼紙 36 元，大雄買了 7 張，付 300 元，要找回多少錢？", "num": 48, "id": "math-090", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 80 公里，開了 5 小時，總共開了幾公里？", "num": 400, "id": "math-091", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "120 的 10% 是多少？", "num": 12, "id": "math-092", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 19 公分、寬 13 公分，面積是幾平方公分？", "num": 247, "id": "math-093", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "5 個人平分 265 元，每個人分到多少元？", "num": 53, "id": "math-094", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "12 乘以 8 再加 33 等於多少？", "num": 129, "id": "math-095", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 500 元，打 50 折是指便宜 50%，打完折多少錢？", "num": 250, "id": "math-096", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "小明有 13 顆糖果，送給朋友 6 顆，又買了 17 顆，現在有幾顆？", "num": 24, "id": "math-097", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一顆彈珠 53 元，春嬌買了 2 顆，付 200 元，要找回多少錢？", "num": 94, "id": "math-098", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 50 公里，開了 4 小時，總共開了幾公里？", "num": 200, "id": "math-099", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "80 的 50% 是多少？", "num": 40, "id": "math-100", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 16 公分、寬 16 公分，面積是幾平方公分？", "num": 256, "id": "math-101", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "7 個人平分 1911 元，每個人分到多少元？", "num": 273, "id": "math-102", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "3 乘以 10 再加 31 等於多少？", "num": 61, "id": "math-103", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 200 元，打 80 折是指便宜 20%，打完折多少錢？", "num": 160, "id": "math-104", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "小玲有 33 顆彈珠，送給朋友 5 顆，又買了 9 顆，現在有幾顆？", "num": 37, "id": "math-105", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一枝鉛筆 27 元，小美買了 9 枝，付 300 元，要找回多少錢？", "num": 57, "id": "math-106", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 120 公里，開了 2 小時，總共開了幾公里？", "num": 240, "id": "math-107", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "1200 的 25% 是多少？", "num": 300, "id": "math-108", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 23 公分、寬 6 公分，面積是幾平方公分？", "num": 138, "id": "math-109", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "9 個人平分 495 元，每個人分到多少元？", "num": 55, "id": "math-110", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "26 乘以 10 再加 45 等於多少？", "num": 305, "id": "math-111", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 800 元，打 80 折是指便宜 20%，打完折多少錢？", "num": 640, "id": "math-112", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "阿豪有 25 顆蘋果，送給朋友 1 顆，又買了 13 顆，現在有幾顆？", "num": 37, "id": "math-113", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一本書 48 元，小芳買了 2 本，付 100 元，要找回多少錢？", "num": 4, "id": "math-114", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 40 公里，開了 2 小時，總共開了幾公里？", "num": 80, "id": "math-115", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "400 的 30% 是多少？", "num": 120, "id": "math-116", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 20 公分、寬 6 公分，面積是幾平方公分？", "num": 120, "id": "math-117", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "6 個人平分 642 元，每個人分到多少元？", "num": 107, "id": "math-118", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "23 乘以 9 再加 22 等於多少？", "num": 229, "id": "math-119", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 1500 元，打 80 折是指便宜 20%，打完折多少錢？", "num": 1200, "id": "math-120", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "春嬌有 32 枝鉛筆，送給朋友 3 枝，又買了 16 枝，現在有幾枝？", "num": 45, "id": "math-121", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一顆糖果 10 元，阿豪買了 9 顆，付 100 元，要找回多少錢？", "num": 10, "id": "math-122", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 50 公里，開了 4 小時，總共開了幾公里？", "num": 200, "id": "math-123", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "800 的 10% 是多少？", "num": 80, "id": "math-124", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 24 公分、寬 11 公分，面積是幾平方公分？", "num": 264, "id": "math-125", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "4 個人平分 1156 元，每個人分到多少元？", "num": 289, "id": "math-126", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "28 乘以 6 再加 18 等於多少？", "num": 186, "id": "math-127", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 1200 元，打 80 折是指便宜 20%，打完折多少錢？", "num": 960, "id": "math-128", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "大雄有 11 顆彈珠，送給朋友 6 顆，又買了 19 顆，現在有幾顆？", "num": 24, "id": "math-129", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一顆蘋果 11 元，阿傑買了 3 顆，付 100 元，要找回多少錢？", "num": 67, "id": "math-130", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 50 公里，開了 4 小時，總共開了幾公里？", "num": 200, "id": "math-131", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "360 的 30% 是多少？", "num": 108, "id": "math-132", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 25 公分、寬 14 公分，面積是幾平方公分？", "num": 350, "id": "math-133", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "7 個人平分 1330 元，每個人分到多少元？", "num": 190, "id": "math-134", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "10 乘以 9 再加 3 等於多少？", "num": 93, "id": "math-135", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 1000 元，打 50 折是指便宜 50%，打完折多少錢？", "num": 500, "id": "math-136", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "阿傑有 13 顆彈珠，送給朋友 2 顆，又買了 18 顆，現在有幾顆？", "num": 29, "id": "math-137", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一顆蘋果 56 元，志明買了 3 顆，付 200 元，要找回多少錢？", "num": 32, "id": "math-138", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 100 公里，開了 5 小時，總共開了幾公里？", "num": 500, "id": "math-139", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "500 的 10% 是多少？", "num": 50, "id": "math-140", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 6 公分、寬 11 公分，面積是幾平方公分？", "num": 66, "id": "math-141", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "9 個人平分 729 元，每個人分到多少元？", "num": 81, "id": "math-142", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "11 乘以 4 再加 50 等於多少？", "num": 94, "id": "math-143", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 1500 元，打 90 折是指便宜 10%，打完折多少錢？", "num": 1350, "id": "math-144", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "小安有 31 顆蘋果，送給朋友 6 顆，又買了 18 顆，現在有幾顆？", "num": 43, "id": "math-145", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一顆糖果 36 元，大雄買了 6 顆，付 300 元，要找回多少錢？", "num": 84, "id": "math-146", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 80 公里，開了 2 小時，總共開了幾公里？", "num": 160, "id": "math-147", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "800 的 50% 是多少？", "num": 400, "id": "math-148", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 18 公分、寬 6 公分，面積是幾平方公分？", "num": 108, "id": "math-149", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "3 個人平分 840 元，每個人分到多少元？", "num": 280, "id": "math-150", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "28 乘以 6 再加 47 等於多少？", "num": 215, "id": "math-151", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 450 元，打 50 折是指便宜 50%，打完折多少錢？", "num": 225, "id": "math-152", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "小美有 16 枝鉛筆，送給朋友 7 枝，又買了 12 枝，現在有幾枝？", "num": 21, "id": "math-153", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一枝鉛筆 20 元，阿豪買了 5 枝，付 200 元，要找回多少錢？", "num": 100, "id": "math-154", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一台車每小時開 100 公里，開了 4 小時，總共開了幾公里？", "num": 400, "id": "math-155", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "80 的 75% 是多少？", "num": 60, "id": "math-156", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "一個長方形長 4 公分、寬 8 公分，面積是幾平方公分？", "num": 32, "id": "math-157", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "4 個人平分 168 元，每個人分到多少元？", "num": 42, "id": "math-158", "split": "hold", "lang": "zh"}
+{"cat": "math", "q": "24 乘以 3 再加 35 等於多少？", "num": 107, "id": "math-159", "split": "dev", "lang": "zh"}
+{"cat": "math", "q": "一件衣服原價 1500 元，打 50 折是指便宜 50%，打完折多少錢？", "num": 750, "id": "math-160", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「塞翁失馬」是什麼意思？", "expect": [["禍", "福", "壞事", "好事"]], "id": "language-001", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「畫蛇添足」是什麼意思？", "expect": [["多此一舉", "多餘", "弄巧成拙", "反而"]], "id": "language-002", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「對牛彈琴」是什麼意思？", "expect": [["不懂", "聽不懂", "對象"]], "id": "language-003", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「守株待兔」是什麼意思？", "expect": [["僥倖", "不努力", "等", "死守"]], "id": "language-004", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「亡羊補牢」是什麼意思？", "expect": [["補救", "及時", "還不晚"]], "id": "language-005", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「井底之蛙」是什麼意思？", "expect": [["見識", "眼界", "狹", "少"]], "id": "language-006", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「半途而廢」是什麼意思？", "expect": [["中途", "放棄", "沒做完", "一半"]], "id": "language-007", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「一石二鳥」是什麼意思？", "expect": [["一舉兩得", "兩個", "雙重"]], "id": "language-008", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「三心二意」是什麼意思？", "expect": [["不專心", "猶豫", "不專一", "拿不定"]], "id": "language-009", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「狐假虎威」是什麼意思？", "expect": [["仗勢", "借", "權勢"]], "id": "language-010", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「杯弓蛇影」是什麼意思？", "expect": [["疑神疑鬼", "多疑", "自己嚇自己", "虛驚"]], "id": "language-011", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "「破釜沉舟」是什麼意思？", "expect": [["決心", "不留退路", "拼", "背水"]], "id": "language-012", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "「臥薪嘗膽」是什麼意思？", "expect": [["刻苦", "忍", "奮發", "復仇"]], "id": "language-013", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「熟能生巧」是什麼意思？", "expect": [["練習", "熟練", "多做"]], "id": "language-014", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "「入鄉隨俗」是什麼意思？", "expect": [["當地", "習俗", "風俗"]], "id": "language-015", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "「明」的反義詞是什麼？", "expect": [["暗"]], "id": "language-016", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「快樂」的反義詞是什麼？", "expect": [["悲傷", "難過", "痛苦", "傷心", "憂愁"]], "id": "language-017", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「勇敢」的反義詞是什麼？", "expect": [["膽小", "懦弱", "怯懦"]], "id": "language-018", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「美麗」的反義詞是什麼？", "expect": [["醜", "難看"]], "id": "language-019", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「增加」的反義詞是什麼？", "expect": [["減少"]], "id": "language-020", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「成功」的反義詞是什麼？", "expect": [["失敗"]], "id": "language-021", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「熱鬧」的反義詞是什麼？", "expect": [["冷清", "安靜", "寂靜"]], "id": "language-022", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「節省」的反義詞是什麼？", "expect": [["浪費"]], "id": "language-023", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「誠實」的反義詞是什麼？", "expect": [["說謊", "虛偽", "欺騙", "不誠實"]], "id": "language-024", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「開始」的反義詞是什麼？", "expect": [["結束"]], "id": "language-025", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "「高興」的同義詞是什麼？", "expect": [["快樂", "開心", "愉快", "喜悅"]], "id": "language-026", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "「美麗」的同義詞是什麼？", "expect": [["漂亮", "好看", "美好"]], "id": "language-027", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「努力」的同義詞是什麼？", "expect": [["勤奮", "用功", "拚命", "認真", "奮鬥"]], "id": "language-028", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「迅速」的同義詞是什麼？", "expect": [["快速", "飛快", "急速", "很快"]], "id": "language-029", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「害怕」的同義詞是什麼？", "expect": [["恐懼", "畏懼", "驚恐", "懼怕"]], "id": "language-030", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「聰明」的同義詞是什麼？", "expect": [["機靈", "伶俐", "智慧", "聰穎", "靈巧"]], "id": "language-031", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「再接再ㄌㄧˋ」的ㄌㄧˋ是哪個字？", "expect": [["厲"]], "id": "language-032", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "「一ㄈㄢ風順」的ㄈㄢ是哪個字？", "expect": [["帆"]], "id": "language-033", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「迫不及ㄉㄞˋ」的ㄉㄞˋ是哪個字？", "expect": [["待"]], "id": "language-034", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「再接再勵」這樣寫對嗎？", "expect": [["厲", "不對", "錯"]], "id": "language-035", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「渡假」和「度假」哪個是正確的寫法？", "expect": [["度假"]], "id": "language-036", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「既然…就…」造一個句子。", "expect": [["既然"], ["就"]], "id": "language-037", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "用「因為…所以…」造一個句子。", "expect": [["因為"], ["所以"]], "id": "language-038", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "用「雖然…但是…」造一個句子。", "expect": [["雖然"], ["但"]], "id": "language-039", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "用「不但…而且…」造一個句子。", "expect": [["不但"], ["而且"]], "id": "language-040", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「蘋果」是名詞還是動詞？", "expect": [["名詞"]], "id": "language-041", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「跑」是名詞還是動詞？", "expect": [["動詞"]], "id": "language-042", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「漂亮」是形容詞還是動詞？", "expect": [["形容詞"]], "id": "language-043", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「慢慢地」的「地」怎麼念？", "expect": [["ㄉㄜ˙", "de", "輕聲", "得", "的"]], "id": "language-044", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「行」在「銀行」裡念什麼？", "expect": [["ㄏㄤˊ", "háng", "hang", "航"]], "id": "language-045", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「長」在「校長」裡念什麼？", "expect": [["ㄓㄤˇ", "zhǎng", "zhang", "掌"]], "id": "language-046", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「樂」在「音樂」裡念什麼？", "expect": [["ㄩㄝˋ", "yuè", "yue", "月", "悅"]], "id": "language-047", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "把「我吃飯了」改成問句。", "expect": [["嗎", "沒"]], "id": "language-048", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "「他跑得很快」改成比較句，說他比我快。", "expect": [["比我", "比"]], "id": "language-049", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "「月亮」用一個比喻形容。", "expect": [["像", "好像", "彷彿", "如同"]], "id": "language-050", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "寫一個帶有「春天」的四字詞語。", "expect": [["春"]], "id": "language-051", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "說一句「感謝老師」的話。", "expect": [["謝", "感謝"]], "id": "language-052", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "寫一首關於秋天的四句短詩。", "expect": [["秋", "落葉", "楓", "月", "風"]], "id": "language-053", "split": "hold", "lang": "zh"}
+{"cat": "language", "q": "用三句話介紹台北。", "expect": [["台北", "臺北"]], "id": "language-054", "split": "dev", "lang": "zh"}
+{"cat": "language", "q": "寫一句鼓勵考試考不好的朋友的話。", "expect": [["下次", "加油", "沒關係", "不要緊", "別灰心", "相信"]], "id": "language-055", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "星河咖啡的創辦人是誰？", "evidence": ["星河咖啡在2019年於台東開幕，創辦人是吳承恩，目前有11名員工。", "星河咖啡的招牌是烏龍茶，一份180元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["吳承恩"]], "id": "reading-001", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "藍鯨書店是哪一年開的？", "evidence": ["藍鯨書店在2014年於台南開幕，創辦人是林雅婷，目前有12名員工。", "藍鯨書店的招牌是抹茶捲，一份80元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["2014"]], "id": "reading-002", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "月光麵包坊在哪個城市？", "evidence": ["月光麵包坊在1998年於屏東開幕，創辦人是吳承恩，目前有11名員工。", "月光麵包坊的招牌是可頌，一份180元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["屏東"]], "id": "reading-003", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "青松茶館最有名的是什麼？多少錢？", "evidence": ["青松茶館在2000年於台南開幕，創辦人是鄭美玲，目前有23名員工。", "青松茶館的招牌是抹茶捲，一份150元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["抹茶捲"], ["150"]], "id": "reading-004", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "我星期二想去小島冰店，可以嗎？", "evidence": ["小島冰店在2008年於嘉義開幕，創辦人是張書豪，目前有8名員工。", "小島冰店的招牌是烏龍茶，一份150元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-005", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "風車民宿有幾個員工？", "evidence": ["風車民宿在2011年於台中開幕，創辦人是鄭美玲，目前有18名員工。", "風車民宿的招牌是黑糖鬆餅，一份80元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["18"]], "id": "reading-006", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "白鷺花店的創辦人是誰？", "evidence": ["白鷺花店在2014年於台南開幕，創辦人是鄭美玲，目前有3名員工。", "白鷺花店的招牌是玫瑰花束，一份95元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["鄭美玲"]], "id": "reading-007", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "晨曦健身房是哪一年開的？", "evidence": ["晨曦健身房在2011年於花蓮開幕，創辦人是許志強，目前有11名員工。", "晨曦健身房的招牌是柚子氣泡飲，一份180元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["2011"]], "id": "reading-008", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "銀杏料理在哪個城市？", "evidence": ["銀杏料理在2019年於屏東開幕，創辦人是蔡宜蓁，目前有9名員工。", "銀杏料理的招牌是黑糖鬆餅，一份220元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["屏東"]], "id": "reading-009", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "海風單車行最有名的是什麼？多少錢？", "evidence": ["海風單車行在2000年於屏東開幕，創辦人是蔡宜蓁，目前有19名員工。", "海風單車行的招牌是桂花拿鐵，一份60元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["桂花拿鐵"], ["60"]], "id": "reading-010", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期四想去星河咖啡，可以嗎？", "evidence": ["星河咖啡在2023年於宜蘭開幕，創辦人是王俊傑，目前有21名員工。", "星河咖啡的招牌是可頌，一份150元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-011", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "藍鯨書店有幾個員工？", "evidence": ["藍鯨書店在2019年於花蓮開幕，創辦人是鄭美玲，目前有38名員工。", "藍鯨書店的招牌是芒果冰，一份60元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["38"]], "id": "reading-012", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "月光麵包坊的創辦人是誰？", "evidence": ["月光麵包坊在2002年於宜蘭開幕，創辦人是許志強，目前有28名員工。", "月光麵包坊的招牌是鹹蛋黃吐司，一份150元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["許志強"]], "id": "reading-013", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "青松茶館是哪一年開的？", "evidence": ["青松茶館在2022年於台東開幕，創辦人是蔡宜蓁，目前有34名員工。", "青松茶館的招牌是柚子氣泡飲，一份80元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["2022"]], "id": "reading-014", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "小島冰店在哪個城市？", "evidence": ["小島冰店在1999年於新竹開幕，創辦人是蔡宜蓁，目前有37名員工。", "小島冰店的招牌是牛肉麵，一份80元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["新竹"]], "id": "reading-015", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "風車民宿最有名的是什麼？多少錢？", "evidence": ["風車民宿在2004年於新竹開幕，創辦人是鄭美玲，目前有40名員工。", "風車民宿的招牌是桂花拿鐵，一份60元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["桂花拿鐵"], ["60"]], "id": "reading-016", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期二想去白鷺花店，可以嗎？", "evidence": ["白鷺花店在2009年於高雄開幕，創辦人是許志強，目前有5名員工。", "白鷺花店的招牌是桂花拿鐵，一份120元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-017", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "晨曦健身房有幾個員工？", "evidence": ["晨曦健身房在2019年於高雄開幕，創辦人是許志強，目前有33名員工。", "晨曦健身房的招牌是烏龍茶，一份120元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["33"]], "id": "reading-018", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "銀杏料理的創辦人是誰？", "evidence": ["銀杏料理在2012年於高雄開幕，創辦人是黃怡君，目前有3名員工。", "銀杏料理的招牌是鹹蛋黃吐司，一份80元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["黃怡君"]], "id": "reading-019", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "海風單車行是哪一年開的？", "evidence": ["海風單車行在2016年於台東開幕，創辦人是許志強，目前有26名員工。", "海風單車行的招牌是芒果冰，一份120元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["2016"]], "id": "reading-020", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "星河咖啡在哪個城市？", "evidence": ["星河咖啡在2011年於台中開幕，創辦人是蔡宜蓁，目前有16名員工。", "星河咖啡的招牌是芒果冰，一份180元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["台中"]], "id": "reading-021", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "藍鯨書店最有名的是什麼？多少錢？", "evidence": ["藍鯨書店在2009年於高雄開幕，創辦人是陳冠宇，目前有5名員工。", "藍鯨書店的招牌是可頌，一份60元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["可頌"], ["60"]], "id": "reading-022", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期二想去月光麵包坊，可以嗎？", "evidence": ["月光麵包坊在2020年於嘉義開幕，創辦人是吳承恩，目前有14名員工。", "月光麵包坊的招牌是抹茶捲，一份220元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-023", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "青松茶館有幾個員工？", "evidence": ["青松茶館在2023年於屏東開幕，創辦人是黃怡君，目前有26名員工。", "青松茶館的招牌是黑糖鬆餅，一份95元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["26"]], "id": "reading-024", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "小島冰店的創辦人是誰？", "evidence": ["小島冰店在2002年於宜蘭開幕，創辦人是黃怡君，目前有31名員工。", "小島冰店的招牌是牛肉麵，一份95元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["黃怡君"]], "id": "reading-025", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "風車民宿是哪一年開的？", "evidence": ["風車民宿在2005年於宜蘭開幕，創辦人是許志強，目前有25名員工。", "風車民宿的招牌是芒果冰，一份80元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["2005"]], "id": "reading-026", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "白鷺花店在哪個城市？", "evidence": ["白鷺花店在2002年於高雄開幕，創辦人是林雅婷，目前有16名員工。", "白鷺花店的招牌是芒果冰，一份150元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["高雄"]], "id": "reading-027", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "晨曦健身房最有名的是什麼？多少錢？", "evidence": ["晨曦健身房在2007年於高雄開幕，創辦人是蔡宜蓁，目前有24名員工。", "晨曦健身房的招牌是柚子氣泡飲，一份95元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["柚子氣泡飲"], ["95"]], "id": "reading-028", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期二想去銀杏料理，可以嗎？", "evidence": ["銀杏料理在2009年於基隆開幕，創辦人是黃怡君，目前有10名員工。", "銀杏料理的招牌是黑糖鬆餅，一份220元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-029", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "海風單車行有幾個員工？", "evidence": ["海風單車行在2011年於屏東開幕，創辦人是蔡宜蓁，目前有29名員工。", "海風單車行的招牌是牛肉麵，一份95元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["29"]], "id": "reading-030", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "星河咖啡的創辦人是誰？", "evidence": ["星河咖啡在2013年於新竹開幕，創辦人是李佩珊，目前有10名員工。", "星河咖啡的招牌是柚子氣泡飲，一份180元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["李佩珊"]], "id": "reading-031", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "藍鯨書店是哪一年開的？", "evidence": ["藍鯨書店在2019年於台東開幕，創辦人是蔡宜蓁，目前有32名員工。", "藍鯨書店的招牌是抹茶捲，一份180元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["2019"]], "id": "reading-032", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "月光麵包坊在哪個城市？", "evidence": ["月光麵包坊在2013年於屏東開幕，創辦人是張書豪，目前有6名員工。", "月光麵包坊的招牌是桂花拿鐵，一份80元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["屏東"]], "id": "reading-033", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "青松茶館最有名的是什麼？多少錢？", "evidence": ["青松茶館在2009年於高雄開幕，創辦人是鄭美玲，目前有26名員工。", "青松茶館的招牌是烏龍茶，一份180元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["烏龍茶"], ["180"]], "id": "reading-034", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期一想去小島冰店，可以嗎？", "evidence": ["小島冰店在2012年於基隆開幕，創辦人是吳承恩，目前有28名員工。", "小島冰店的招牌是芒果冰，一份120元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-035", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "風車民宿有幾個員工？", "evidence": ["風車民宿在2000年於宜蘭開幕，創辦人是王俊傑，目前有28名員工。", "風車民宿的招牌是芒果冰，一份80元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["28"]], "id": "reading-036", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "白鷺花店的創辦人是誰？", "evidence": ["白鷺花店在2003年於新竹開幕，創辦人是吳承恩，目前有29名員工。", "白鷺花店的招牌是柚子氣泡飲，一份60元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["吳承恩"]], "id": "reading-037", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "晨曦健身房是哪一年開的？", "evidence": ["晨曦健身房在2016年於台中開幕，創辦人是林雅婷，目前有38名員工。", "晨曦健身房的招牌是鹹蛋黃吐司，一份180元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["2016"]], "id": "reading-038", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "銀杏料理在哪個城市？", "evidence": ["銀杏料理在2021年於基隆開幕，創辦人是李佩珊，目前有20名員工。", "銀杏料理的招牌是玫瑰花束，一份60元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["基隆"]], "id": "reading-039", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "海風單車行最有名的是什麼？多少錢？", "evidence": ["海風單車行在2003年於嘉義開幕，創辦人是鄭美玲，目前有19名員工。", "海風單車行的招牌是芒果冰，一份120元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["芒果冰"], ["120"]], "id": "reading-040", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "我星期三想去星河咖啡，可以嗎？", "evidence": ["星河咖啡在2007年於花蓮開幕，創辦人是蔡宜蓁，目前有33名員工。", "星河咖啡的招牌是抹茶捲，一份180元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-041", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "藍鯨書店有幾個員工？", "evidence": ["藍鯨書店在2021年於基隆開幕，創辦人是吳承恩，目前有27名員工。", "藍鯨書店的招牌是抹茶捲，一份80元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["27"]], "id": "reading-042", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "月光麵包坊的創辦人是誰？", "evidence": ["月光麵包坊在2009年於台東開幕，創辦人是林雅婷，目前有31名員工。", "月光麵包坊的招牌是黑糖鬆餅，一份60元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["林雅婷"]], "id": "reading-043", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "青松茶館是哪一年開的？", "evidence": ["青松茶館在2007年於台南開幕，創辦人是林雅婷，目前有36名員工。", "青松茶館的招牌是鹹蛋黃吐司，一份60元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["2007"]], "id": "reading-044", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "小島冰店在哪個城市？", "evidence": ["小島冰店在2019年於宜蘭開幕，創辦人是王俊傑，目前有23名員工。", "小島冰店的招牌是鹹蛋黃吐司，一份95元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["宜蘭"]], "id": "reading-045", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "風車民宿最有名的是什麼？多少錢？", "evidence": ["風車民宿在2010年於台東開幕，創辦人是陳冠宇，目前有10名員工。", "風車民宿的招牌是牛肉麵，一份95元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["牛肉麵"], ["95"]], "id": "reading-046", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期三想去白鷺花店，可以嗎？", "evidence": ["白鷺花店在2016年於基隆開幕，創辦人是蔡宜蓁，目前有9名員工。", "白鷺花店的招牌是可頌，一份220元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-047", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "晨曦健身房有幾個員工？", "evidence": ["晨曦健身房在2011年於台中開幕，創辦人是陳冠宇，目前有32名員工。", "晨曦健身房的招牌是烏龍茶，一份180元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["32"]], "id": "reading-048", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "銀杏料理的創辦人是誰？", "evidence": ["銀杏料理在2007年於宜蘭開幕，創辦人是鄭美玲，目前有25名員工。", "銀杏料理的招牌是桂花拿鐵，一份60元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["鄭美玲"]], "id": "reading-049", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "海風單車行是哪一年開的？", "evidence": ["海風單車行在2015年於花蓮開幕，創辦人是林雅婷，目前有20名員工。", "海風單車行的招牌是黑糖鬆餅，一份80元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["2015"]], "id": "reading-050", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "星河咖啡在哪個城市？", "evidence": ["星河咖啡在2022年於屏東開幕，創辦人是黃怡君，目前有27名員工。", "星河咖啡的招牌是可頌，一份80元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["屏東"]], "id": "reading-051", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "藍鯨書店最有名的是什麼？多少錢？", "evidence": ["藍鯨書店在2011年於台東開幕，創辦人是許志強，目前有40名員工。", "藍鯨書店的招牌是玫瑰花束，一份150元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["玫瑰花束"], ["150"]], "id": "reading-052", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期一想去月光麵包坊，可以嗎？", "evidence": ["月光麵包坊在2002年於台南開幕，創辦人是陳冠宇，目前有25名員工。", "月光麵包坊的招牌是玫瑰花束，一份95元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-053", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "青松茶館有幾個員工？", "evidence": ["青松茶館在2001年於台中開幕，創辦人是張書豪，目前有10名員工。", "青松茶館的招牌是牛肉麵，一份80元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["10"]], "id": "reading-054", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "小島冰店的創辦人是誰？", "evidence": ["小島冰店在2005年於高雄開幕，創辦人是李佩珊，目前有25名員工。", "小島冰店的招牌是烏龍茶，一份120元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["李佩珊"]], "id": "reading-055", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "風車民宿是哪一年開的？", "evidence": ["風車民宿在2018年於新竹開幕，創辦人是陳冠宇，目前有35名員工。", "風車民宿的招牌是烏龍茶，一份220元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["2018"]], "id": "reading-056", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "白鷺花店在哪個城市？", "evidence": ["白鷺花店在2008年於台中開幕，創辦人是蔡宜蓁，目前有23名員工。", "白鷺花店的招牌是烏龍茶，一份60元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["台中"]], "id": "reading-057", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "晨曦健身房最有名的是什麼？多少錢？", "evidence": ["晨曦健身房在2013年於基隆開幕，創辦人是鄭美玲，目前有16名員工。", "晨曦健身房的招牌是鹹蛋黃吐司，一份60元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["鹹蛋黃吐司"], ["60"]], "id": "reading-058", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期四想去銀杏料理，可以嗎？", "evidence": ["銀杏料理在2017年於台東開幕，創辦人是許志強，目前有6名員工。", "銀杏料理的招牌是牛肉麵，一份220元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-059", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "海風單車行有幾個員工？", "evidence": ["海風單車行在2011年於花蓮開幕，創辦人是陳冠宇，目前有4名員工。", "海風單車行的招牌是玫瑰花束，一份220元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["4"]], "id": "reading-060", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "星河咖啡的創辦人是誰？", "evidence": ["星河咖啡在2004年於台東開幕，創辦人是林雅婷，目前有29名員工。", "星河咖啡的招牌是玫瑰花束，一份120元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["林雅婷"]], "id": "reading-061", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "藍鯨書店是哪一年開的？", "evidence": ["藍鯨書店在2005年於高雄開幕，創辦人是張書豪，目前有28名員工。", "藍鯨書店的招牌是抹茶捲，一份180元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["2005"]], "id": "reading-062", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "月光麵包坊在哪個城市？", "evidence": ["月光麵包坊在2007年於嘉義開幕，創辦人是李佩珊，目前有20名員工。", "月光麵包坊的招牌是黑糖鬆餅，一份60元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["嘉義"]], "id": "reading-063", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "青松茶館最有名的是什麼？多少錢？", "evidence": ["青松茶館在2004年於花蓮開幕，創辦人是黃怡君，目前有30名員工。", "青松茶館的招牌是牛肉麵，一份80元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["牛肉麵"], ["80"]], "id": "reading-064", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期四想去小島冰店，可以嗎？", "evidence": ["小島冰店在2022年於嘉義開幕，創辦人是張書豪，目前有37名員工。", "小島冰店的招牌是烏龍茶，一份60元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-065", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "風車民宿有幾個員工？", "evidence": ["風車民宿在2020年於屏東開幕，創辦人是吳承恩，目前有35名員工。", "風車民宿的招牌是桂花拿鐵，一份60元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["35"]], "id": "reading-066", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "白鷺花店的創辦人是誰？", "evidence": ["白鷺花店在2018年於嘉義開幕，創辦人是許志強，目前有37名員工。", "白鷺花店的招牌是可頌，一份120元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["許志強"]], "id": "reading-067", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "晨曦健身房是哪一年開的？", "evidence": ["晨曦健身房在2014年於台中開幕，創辦人是黃怡君，目前有22名員工。", "晨曦健身房的招牌是芒果冰，一份95元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["2014"]], "id": "reading-068", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "銀杏料理在哪個城市？", "evidence": ["銀杏料理在2019年於宜蘭開幕，創辦人是張書豪，目前有14名員工。", "銀杏料理的招牌是可頌，一份180元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["宜蘭"]], "id": "reading-069", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "海風單車行最有名的是什麼？多少錢？", "evidence": ["海風單車行在2015年於花蓮開幕，創辦人是許志強，目前有40名員工。", "海風單車行的招牌是芒果冰，一份80元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["芒果冰"], ["80"]], "id": "reading-070", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期四想去星河咖啡，可以嗎？", "evidence": ["星河咖啡在2022年於基隆開幕，創辦人是黃怡君，目前有19名員工。", "星河咖啡的招牌是芒果冰，一份95元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-071", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "藍鯨書店有幾個員工？", "evidence": ["藍鯨書店在2016年於高雄開幕，創辦人是吳承恩，目前有37名員工。", "藍鯨書店的招牌是柚子氣泡飲，一份220元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["37"]], "id": "reading-072", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "月光麵包坊的創辦人是誰？", "evidence": ["月光麵包坊在2006年於台南開幕，創辦人是吳承恩，目前有9名員工。", "月光麵包坊的招牌是鹹蛋黃吐司，一份80元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["吳承恩"]], "id": "reading-073", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "青松茶館是哪一年開的？", "evidence": ["青松茶館在2012年於台東開幕，創辦人是蔡宜蓁，目前有25名員工。", "青松茶館的招牌是牛肉麵，一份180元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["2012"]], "id": "reading-074", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "小島冰店在哪個城市？", "evidence": ["小島冰店在2023年於宜蘭開幕，創辦人是王俊傑，目前有27名員工。", "小島冰店的招牌是抹茶捲，一份120元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["宜蘭"]], "id": "reading-075", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "風車民宿最有名的是什麼？多少錢？", "evidence": ["風車民宿在2011年於新竹開幕，創辦人是吳承恩，目前有21名員工。", "風車民宿的招牌是鹹蛋黃吐司，一份80元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["鹹蛋黃吐司"], ["80"]], "id": "reading-076", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期三想去白鷺花店，可以嗎？", "evidence": ["白鷺花店在2009年於台中開幕，創辦人是張書豪，目前有29名員工。", "白鷺花店的招牌是烏龍茶，一份95元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-077", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "晨曦健身房有幾個員工？", "evidence": ["晨曦健身房在1999年於嘉義開幕，創辦人是黃怡君，目前有34名員工。", "晨曦健身房的招牌是鹹蛋黃吐司，一份80元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["34"]], "id": "reading-078", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "銀杏料理的創辦人是誰？", "evidence": ["銀杏料理在2000年於台東開幕，創辦人是蔡宜蓁，目前有7名員工。", "銀杏料理的招牌是玫瑰花束，一份220元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["蔡宜蓁"]], "id": "reading-079", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "海風單車行是哪一年開的？", "evidence": ["海風單車行在2014年於高雄開幕，創辦人是黃怡君，目前有33名員工。", "海風單車行的招牌是抹茶捲，一份120元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["2014"]], "id": "reading-080", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "星河咖啡在哪個城市？", "evidence": ["星河咖啡在2019年於台中開幕，創辦人是李佩珊，目前有6名員工。", "星河咖啡的招牌是可頌，一份220元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["台中"]], "id": "reading-081", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "藍鯨書店最有名的是什麼？多少錢？", "evidence": ["藍鯨書店在2018年於新竹開幕，創辦人是吳承恩，目前有39名員工。", "藍鯨書店的招牌是玫瑰花束，一份60元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["玫瑰花束"], ["60"]], "id": "reading-082", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期一想去月光麵包坊，可以嗎？", "evidence": ["月光麵包坊在2011年於台東開幕，創辦人是黃怡君，目前有35名員工。", "月光麵包坊的招牌是牛肉麵，一份80元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-083", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "青松茶館有幾個員工？", "evidence": ["青松茶館在2011年於台中開幕，創辦人是林雅婷，目前有30名員工。", "青松茶館的招牌是玫瑰花束，一份120元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["30"]], "id": "reading-084", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "小島冰店的創辦人是誰？", "evidence": ["小島冰店在2001年於新竹開幕，創辦人是李佩珊，目前有6名員工。", "小島冰店的招牌是桂花拿鐵，一份150元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["李佩珊"]], "id": "reading-085", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "風車民宿是哪一年開的？", "evidence": ["風車民宿在2009年於嘉義開幕，創辦人是許志強，目前有5名員工。", "風車民宿的招牌是桂花拿鐵，一份80元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["2009"]], "id": "reading-086", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "白鷺花店在哪個城市？", "evidence": ["白鷺花店在2015年於台南開幕，創辦人是張書豪，目前有13名員工。", "白鷺花店的招牌是桂花拿鐵，一份95元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["台南"]], "id": "reading-087", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "晨曦健身房最有名的是什麼？多少錢？", "evidence": ["晨曦健身房在2017年於花蓮開幕，創辦人是許志強，目前有25名員工。", "晨曦健身房的招牌是桂花拿鐵，一份80元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["桂花拿鐵"], ["80"]], "id": "reading-088", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期三想去銀杏料理，可以嗎？", "evidence": ["銀杏料理在2016年於台南開幕，創辦人是李佩珊，目前有8名員工。", "銀杏料理的招牌是牛肉麵，一份120元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-089", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "海風單車行有幾個員工？", "evidence": ["海風單車行在2004年於屏東開幕，創辦人是王俊傑，目前有24名員工。", "海風單車行的招牌是牛肉麵，一份95元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["24"]], "id": "reading-090", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "星河咖啡的創辦人是誰？", "evidence": ["星河咖啡在2013年於台東開幕，創辦人是黃怡君，目前有17名員工。", "星河咖啡的招牌是烏龍茶，一份95元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["黃怡君"]], "id": "reading-091", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "藍鯨書店是哪一年開的？", "evidence": ["藍鯨書店在2008年於台東開幕，創辦人是張書豪，目前有13名員工。", "藍鯨書店的招牌是柚子氣泡飲，一份95元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["2008"]], "id": "reading-092", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "月光麵包坊在哪個城市？", "evidence": ["月光麵包坊在2010年於花蓮開幕，創辦人是蔡宜蓁，目前有4名員工。", "月光麵包坊的招牌是柚子氣泡飲，一份60元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["花蓮"]], "id": "reading-093", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "青松茶館最有名的是什麼？多少錢？", "evidence": ["青松茶館在2004年於屏東開幕，創辦人是李佩珊，目前有5名員工。", "青松茶館的招牌是黑糖鬆餅，一份150元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["黑糖鬆餅"], ["150"]], "id": "reading-094", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期四想去小島冰店，可以嗎？", "evidence": ["小島冰店在2003年於屏東開幕，創辦人是王俊傑，目前有40名員工。", "小島冰店的招牌是烏龍茶，一份80元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-095", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "風車民宿有幾個員工？", "evidence": ["風車民宿在2008年於台中開幕，創辦人是張書豪，目前有23名員工。", "風車民宿的招牌是黑糖鬆餅，一份80元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["23"]], "id": "reading-096", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "白鷺花店的創辦人是誰？", "evidence": ["白鷺花店在2002年於基隆開幕，創辦人是王俊傑，目前有6名員工。", "白鷺花店的招牌是牛肉麵，一份95元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["王俊傑"]], "id": "reading-097", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "晨曦健身房是哪一年開的？", "evidence": ["晨曦健身房在2004年於宜蘭開幕，創辦人是李佩珊，目前有9名員工。", "晨曦健身房的招牌是玫瑰花束，一份80元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["2004"]], "id": "reading-098", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "銀杏料理在哪個城市？", "evidence": ["銀杏料理在2001年於花蓮開幕，創辦人是蔡宜蓁，目前有30名員工。", "銀杏料理的招牌是可頌，一份150元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["花蓮"]], "id": "reading-099", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "海風單車行最有名的是什麼？多少錢？", "evidence": ["海風單車行在2018年於台南開幕，創辦人是許志強，目前有10名員工。", "海風單車行的招牌是玫瑰花束，一份60元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["玫瑰花束"], ["60"]], "id": "reading-100", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期三想去星河咖啡，可以嗎？", "evidence": ["星河咖啡在2017年於宜蘭開幕，創辦人是張書豪，目前有24名員工。", "星河咖啡的招牌是鹹蛋黃吐司，一份80元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-101", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "藍鯨書店有幾個員工？", "evidence": ["藍鯨書店在2001年於基隆開幕，創辦人是陳冠宇，目前有31名員工。", "藍鯨書店的招牌是芒果冰，一份120元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["31"]], "id": "reading-102", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "月光麵包坊的創辦人是誰？", "evidence": ["月光麵包坊在2002年於台東開幕，創辦人是林雅婷，目前有9名員工。", "月光麵包坊的招牌是芒果冰，一份60元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["林雅婷"]], "id": "reading-103", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "青松茶館是哪一年開的？", "evidence": ["青松茶館在2003年於新竹開幕，創辦人是鄭美玲，目前有4名員工。", "青松茶館的招牌是玫瑰花束，一份220元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["2003"]], "id": "reading-104", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "小島冰店在哪個城市？", "evidence": ["小島冰店在2012年於屏東開幕，創辦人是吳承恩，目前有24名員工。", "小島冰店的招牌是牛肉麵，一份60元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["屏東"]], "id": "reading-105", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "風車民宿最有名的是什麼？多少錢？", "evidence": ["風車民宿在2022年於基隆開幕，創辦人是林雅婷，目前有37名員工。", "風車民宿的招牌是抹茶捲，一份120元；每週星期二公休，其他天早上九點營業到晚上八點。"], "expect": [["抹茶捲"], ["120"]], "id": "reading-106", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "我星期三想去白鷺花店，可以嗎？", "evidence": ["白鷺花店在2023年於基隆開幕，創辦人是吳承恩，目前有18名員工。", "白鷺花店的招牌是可頌，一份150元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["公休", "休息", "不行", "不能", "沒開", "沒有營業", "不營業", "不可以"]], "id": "reading-107", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "晨曦健身房有幾個員工？", "evidence": ["晨曦健身房在2015年於屏東開幕，創辦人是陳冠宇，目前有19名員工。", "晨曦健身房的招牌是可頌，一份95元；每週星期四公休，其他天早上九點營業到晚上八點。"], "expect": [["19"]], "id": "reading-108", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "銀杏料理的創辦人是誰？", "evidence": ["銀杏料理在2022年於高雄開幕，創辦人是蔡宜蓁，目前有12名員工。", "銀杏料理的招牌是烏龍茶，一份120元；每週星期三公休，其他天早上九點營業到晚上八點。"], "expect": [["蔡宜蓁"]], "id": "reading-109", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "海風單車行是哪一年開的？", "evidence": ["海風單車行在2023年於嘉義開幕，創辦人是林雅婷，目前有14名員工。", "海風單車行的招牌是鹹蛋黃吐司，一份120元；每週星期一公休，其他天早上九點營業到晚上八點。"], "expect": [["2023"]], "id": "reading-110", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "鯨魚是魚嗎？", "facts": "不是。鯨魚不是魚，是哺乳類：用肺呼吸、胎生、用母乳餵小鯨魚。", "expect": [["不是", "哺乳"]], "id": "reading-111", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "番茄是水果還是蔬菜？", "facts": "植物學上番茄是果實（水果），料理上常當蔬菜用。", "expect": [["果"]], "id": "reading-112", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "香蕉長在樹上嗎？", "facts": "香蕉其實是大型草本植物，不是樹，香蕉的「樹幹」是葉鞘捲成的假莖。", "expect": [["草", "不是樹", "假莖"]], "id": "reading-113", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "花生是堅果嗎？", "facts": "花生在植物學上是豆科植物的種子，不是真正的堅果。", "expect": [["豆", "不是"]], "id": "reading-114", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "草莓是莓果嗎？", "facts": "植物學上草莓不是真正的漿果；香蕉反而算漿果。", "expect": [["不是"]], "id": "reading-115", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "金魚的記憶只有七秒嗎？", "facts": "不是。研究顯示金魚可以記住東西好幾個月。", "expect": [["不是", "月"]], "id": "reading-116", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "閃電會打同一個地方兩次嗎？", "facts": "會。高的建築物常常被打中很多次，例如帝國大廈一年被打二十幾次。", "expect": [["會"]], "id": "reading-117", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "駱駝的駝峰裡是水嗎？", "facts": "不是，駝峰裡主要是脂肪，用來儲存能量。", "expect": [["脂肪", "油"]], "id": "reading-118", "split": "hold", "lang": "zh"}
+{"cat": "reading", "q": "人只用了大腦的 10% 嗎？", "facts": "不是，這是迷思。大腦各個區域幾乎都會用到。", "expect": [["不是", "迷思"]], "id": "reading-119", "split": "dev", "lang": "zh"}
+{"cat": "reading", "q": "長城從太空用肉眼看得到嗎？", "facts": "看不到。太空人說從低軌道用肉眼很難看到長城。", "expect": [["看不到", "不行", "很難", "不能"]], "id": "reading-120", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「謝謝」用英文怎麼說？", "expect": [["thank"]], "route_hint": "translate", "id": "translate-001", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "謝謝的日文怎麼說", "expect": [["ありがとう", "arigat"]], "route_hint": "translate", "id": "translate-002", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "西班牙文的「謝謝」怎麼講？", "expect": [["gracias"]], "route_hint": "translate", "id": "translate-003", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "謝謝的義大利文怎麼說", "expect": [["grazie"]], "route_hint": "translate", "id": "translate-004", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "謝謝的法文怎麼說", "expect": [["merci"]], "route_hint": "translate", "id": "translate-005", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「謝謝」用韓文怎麼說？", "expect": [["감사", "고맙", "kamsa", "gamsa"]], "route_hint": "translate", "id": "translate-006", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "英文的「你好」怎麼講？", "expect": [["hello", "hi"]], "route_hint": "translate", "id": "translate-007", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「你好」用日文怎麼說？", "expect": [["こんにちは", "konnichiwa"]], "route_hint": "translate", "id": "translate-008", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「你好」用西班牙文怎麼說？", "expect": [["hola"]], "route_hint": "translate", "id": "translate-009", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「你好」用義大利文怎麼說？", "expect": [["ciao", "buongiorno"]], "route_hint": "translate", "id": "translate-010", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "你好的法文怎麼說", "expect": [["bonjour", "salut"]], "route_hint": "translate", "id": "translate-011", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "你好的韓文怎麼說", "expect": [["안녕", "annyeong"]], "route_hint": "translate", "id": "translate-012", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "英文的「我愛你」怎麼講？", "expect": [["i love you"]], "route_hint": "translate", "id": "translate-013", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「我愛你」用日文怎麼說？", "expect": [["愛して", "好き", "aishite", "suki"]], "route_hint": "translate", "id": "translate-014", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "「我愛你」用西班牙文怎麼說？", "expect": [["te quiero", "te amo"]], "route_hint": "translate", "id": "translate-015", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「我愛你」用義大利文怎麼說？", "expect": [["ti amo", "ti voglio bene"]], "route_hint": "translate", "id": "translate-016", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "「我愛你」用法文怎麼說？", "expect": [["je t'aime", "je t’aime"]], "route_hint": "translate", "id": "translate-017", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "韓文的「我愛你」怎麼講？", "expect": [["사랑해", "saranghae"]], "route_hint": "translate", "id": "translate-018", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「對不起」用英文怎麼說？", "expect": [["sorry"]], "route_hint": "translate", "id": "translate-019", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "對不起的日文怎麼說", "expect": [["ごめん", "すみません", "gomen", "sumimasen"]], "route_hint": "translate", "id": "translate-020", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「對不起」用西班牙文怎麼說？", "expect": [["lo siento", "perdón", "perdon"]], "route_hint": "translate", "id": "translate-021", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「對不起」用義大利文怎麼說？", "expect": [["scusa", "mi dispiace"]], "route_hint": "translate", "id": "translate-022", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「對不起」用法文怎麼說？", "expect": [["désolé", "desole", "pardon"]], "route_hint": "translate", "id": "translate-023", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「早安」用英文怎麼說？", "expect": [["good morning"]], "route_hint": "translate", "id": "translate-024", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "早安的日文怎麼說", "expect": [["おはよう", "ohayo"]], "route_hint": "translate", "id": "translate-025", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "「早安」用西班牙文怎麼說？", "expect": [["buenos días", "buenos dias"]], "route_hint": "translate", "id": "translate-026", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "義大利文的「早安」怎麼講？", "expect": [["buongiorno"]], "route_hint": "translate", "id": "translate-027", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "早安的法文怎麼說", "expect": [["bonjour"]], "route_hint": "translate", "id": "translate-028", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "英文的「晚安」怎麼講？", "expect": [["good night"]], "route_hint": "translate", "id": "translate-029", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "日文的「晚安」怎麼講？", "expect": [["おやすみ", "oyasumi"]], "route_hint": "translate", "id": "translate-030", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "西班牙文的「晚安」怎麼講？", "expect": [["buenas noches"]], "route_hint": "translate", "id": "translate-031", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "義大利文的「晚安」怎麼講？", "expect": [["buonanotte", "buona notte"]], "route_hint": "translate", "id": "translate-032", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "晚安的法文怎麼說", "expect": [["bonne nuit"]], "route_hint": "translate", "id": "translate-033", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「再見」用英文怎麼說？", "expect": [["goodbye", "bye"]], "route_hint": "translate", "id": "translate-034", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「再見」用日文怎麼說？", "expect": [["さようなら", "またね", "sayonara"]], "route_hint": "translate", "id": "translate-035", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「再見」用西班牙文怎麼說？", "expect": [["adiós", "adios", "hasta luego"]], "route_hint": "translate", "id": "translate-036", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "義大利文的「再見」怎麼講？", "expect": [["arrivederci", "ciao"]], "route_hint": "translate", "id": "translate-037", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "法文的「再見」怎麼講？", "expect": [["au revoir"]], "route_hint": "translate", "id": "translate-038", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "英文的「貓」怎麼講？", "expect": [["cat"]], "route_hint": "translate", "id": "translate-039", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "「貓」用日文怎麼說？", "expect": [["猫", "ねこ", "neko"]], "route_hint": "translate", "id": "translate-040", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「貓」用西班牙文怎麼說？", "expect": [["gato"]], "route_hint": "translate", "id": "translate-041", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「貓」用義大利文怎麼說？", "expect": [["gatto"]], "route_hint": "translate", "id": "translate-042", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "法文的「貓」怎麼講？", "expect": [["chat"]], "route_hint": "translate", "id": "translate-043", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "英文的「狗」怎麼講？", "expect": [["dog"]], "route_hint": "translate", "id": "translate-044", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "日文的「狗」怎麼講？", "expect": [["犬", "いぬ", "inu"]], "route_hint": "translate", "id": "translate-045", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「狗」用西班牙文怎麼說？", "expect": [["perro"]], "route_hint": "translate", "id": "translate-046", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "義大利文的「狗」怎麼講？", "expect": [["cane"]], "route_hint": "translate", "id": "translate-047", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "法文的「狗」怎麼講？", "expect": [["chien"]], "route_hint": "translate", "id": "translate-048", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "英文的「水」怎麼講？", "expect": [["water"]], "route_hint": "translate", "id": "translate-049", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "日文的「水」怎麼講？", "expect": [["水", "みず", "mizu"]], "route_hint": "translate", "id": "translate-050", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "西班牙文的「水」怎麼講？", "expect": [["agua"]], "route_hint": "translate", "id": "translate-051", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "義大利文的「水」怎麼講？", "expect": [["acqua"]], "route_hint": "translate", "id": "translate-052", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "水的法文怎麼說", "expect": [["eau"]], "route_hint": "translate", "id": "translate-053", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "英文的「蘋果」怎麼講？", "expect": [["apple"]], "route_hint": "translate", "id": "translate-054", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "蘋果的日文怎麼說", "expect": [["りんご", "リンゴ", "ringo"]], "route_hint": "translate", "id": "translate-055", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「蘋果」用西班牙文怎麼說？", "expect": [["manzana"]], "route_hint": "translate", "id": "translate-056", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「蘋果」用義大利文怎麼說？", "expect": [["mela"]], "route_hint": "translate", "id": "translate-057", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「蘋果」用法文怎麼說？", "expect": [["pomme"]], "route_hint": "translate", "id": "translate-058", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "朋友的英文怎麼說", "expect": [["friend"]], "route_hint": "translate", "id": "translate-059", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "日文的「朋友」怎麼講？", "expect": [["友達", "ともだち", "tomodachi"]], "route_hint": "translate", "id": "translate-060", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "朋友的西班牙文怎麼說", "expect": [["amigo"]], "route_hint": "translate", "id": "translate-061", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "義大利文的「朋友」怎麼講？", "expect": [["amico"]], "route_hint": "translate", "id": "translate-062", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "朋友的法文怎麼說", "expect": [["ami"]], "route_hint": "translate", "id": "translate-063", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "生日快樂的英文怎麼說", "expect": [["happy birthday"]], "route_hint": "translate", "id": "translate-064", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "生日快樂的日文怎麼說", "expect": [["誕生日", "おめでとう", "tanjoubi"]], "route_hint": "translate", "id": "translate-065", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「生日快樂」用西班牙文怎麼說？", "expect": [["feliz cumpleaños", "feliz cumpleanos"]], "route_hint": "translate", "id": "translate-066", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "生日快樂的義大利文怎麼說", "expect": [["buon compleanno"]], "route_hint": "translate", "id": "translate-067", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "「生日快樂」用法文怎麼說？", "expect": [["joyeux anniversaire"]], "route_hint": "translate", "id": "translate-068", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "英文的「多少錢」怎麼講？", "expect": [["how much"]], "route_hint": "translate", "id": "translate-069", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "「多少錢」用日文怎麼說？", "expect": [["いくら", "ikura"]], "route_hint": "translate", "id": "translate-070", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "「多少錢」用西班牙文怎麼說？", "expect": [["cuánto", "cuanto"]], "route_hint": "translate", "id": "translate-071", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "義大利文的「多少錢」怎麼講？", "expect": [["quanto"]], "route_hint": "translate", "id": "translate-072", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "法文的「多少錢」怎麼講？", "expect": [["combien"]], "route_hint": "translate", "id": "translate-073", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "英文的「洗手間在哪裡」怎麼講？", "expect": [["bathroom", "restroom", "toilet"]], "route_hint": "translate", "id": "translate-074", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "日文的「洗手間在哪裡」怎麼講？", "expect": [["トイレ", "toire"]], "route_hint": "translate", "id": "translate-075", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "洗手間在哪裡的西班牙文怎麼說", "expect": [["baño", "bano"]], "route_hint": "translate", "id": "translate-076", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「洗手間在哪裡」用義大利文怎麼說？", "expect": [["bagno"]], "route_hint": "translate", "id": "translate-077", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "洗手間在哪裡的法文怎麼說", "expect": [["toilettes"]], "route_hint": "translate", "id": "translate-078", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「好吃」用英文怎麼說？", "expect": [["delicious", "tasty", "good"]], "route_hint": "translate", "id": "translate-079", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "日文的「好吃」怎麼講？", "expect": [["おいしい", "美味しい", "oishii"]], "route_hint": "translate", "id": "translate-080", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "西班牙文的「好吃」怎麼講？", "expect": [["rico", "delicioso"]], "route_hint": "translate", "id": "translate-081", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "「好吃」用義大利文怎麼說？", "expect": [["buono", "delizioso"]], "route_hint": "translate", "id": "translate-082", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「好吃」用法文怎麼說？", "expect": [["délicieux", "delicieux", "bon"]], "route_hint": "translate", "id": "translate-083", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "英文的「加油」怎麼講？", "expect": [["you can do it", "go for it", "come on", "you've got this", "keep going", "good luck"]], "route_hint": "translate", "id": "translate-084", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "日文的「加油」怎麼講？", "expect": [["頑張", "がんば", "ganbat"]], "route_hint": "translate", "id": "translate-085", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "「加油」用西班牙文怎麼說？", "expect": [["ánimo", "animo", "vamos"]], "route_hint": "translate", "id": "translate-086", "split": "dev", "lang": "zh"}
+{"cat": "translate", "q": "義大利文的「加油」怎麼講？", "expect": [["forza", "dai"]], "route_hint": "translate", "id": "translate-087", "split": "hold", "lang": "zh"}
+{"cat": "translate", "q": "法文的「加油」怎麼講？", "expect": [["courage", "bon courage", "allez"]], "route_hint": "translate", "id": "translate-088", "split": "dev", "lang": "zh"}
+{"cat": "english", "q": "What is the capital of Japan?", "lang": "en", "expect": [["Tokyo"]], "script": "en", "id": "english-001", "split": "dev"}
+{"cat": "english", "q": "What is the capital of Italy?", "lang": "en", "expect": [["Rome"]], "script": "en", "id": "english-002", "split": "dev"}
+{"cat": "english", "q": "What is the largest planet in our solar system?", "lang": "en", "expect": [["Jupiter"]], "script": "en", "id": "english-003", "split": "dev"}
+{"cat": "english", "q": "How many days are in a week?", "lang": "en", "expect": [["7", "seven"]], "script": "en", "id": "english-004", "split": "dev"}
+{"cat": "english", "q": "How many legs does a spider have?", "lang": "en", "expect": [["8", "eight"]], "script": "en", "id": "english-005", "split": "dev"}
+{"cat": "english", "q": "What is the boiling point of water in Celsius?", "lang": "en", "expect": [["100"]], "script": "en", "id": "english-006", "split": "dev"}
+{"cat": "english", "q": "Who wrote Romeo and Juliet?", "lang": "en", "expect": [["Shakespeare"]], "script": "en", "id": "english-007", "split": "hold"}
+{"cat": "english", "q": "Who painted the Mona Lisa?", "lang": "en", "expect": [["Leonardo", "da Vinci"]], "script": "en", "id": "english-008", "split": "hold"}
+{"cat": "english", "q": "What is the chemical formula of water?", "lang": "en", "expect": [["H2O", "H₂O"]], "script": "en", "id": "english-009", "split": "dev"}
+{"cat": "english", "q": "Which ocean is the largest?", "lang": "en", "expect": [["Pacific"]], "script": "en", "id": "english-010", "split": "hold"}
+{"cat": "english", "q": "What gas do plants absorb from the air?", "lang": "en", "expect": [["carbon dioxide", "CO2"]], "script": "en", "id": "english-011", "split": "dev"}
+{"cat": "english", "q": "What is 12 times 12?", "lang": "en", "expect": [["144"]], "script": "en", "id": "english-012", "split": "dev"}
+{"cat": "english", "q": "What is 15 plus 27?", "lang": "en", "expect": [["42"]], "script": "en", "id": "english-013", "split": "hold"}
+{"cat": "english", "q": "Is a whale a fish?", "lang": "en", "expect": [["no", "mammal"]], "script": "en", "id": "english-014", "split": "dev"}
+{"cat": "english", "q": "Which planet is called the Red Planet?", "lang": "en", "expect": [["Mars"]], "script": "en", "id": "english-015", "split": "hold"}
+{"cat": "english", "q": "What language is spoken in Brazil?", "lang": "en", "expect": [["Portuguese"]], "script": "en", "id": "english-016", "split": "dev"}
+{"cat": "english", "q": "How many continents are there?", "lang": "en", "expect": [["7", "seven"]], "script": "en", "id": "english-017", "split": "dev"}
+{"cat": "english", "q": "What is the opposite of hot?", "lang": "en", "expect": [["cold"]], "script": "en", "id": "english-018", "split": "dev"}
+{"cat": "english", "q": "What is the opposite of happy?", "lang": "en", "expect": [["sad", "unhappy"]], "script": "en", "id": "english-019", "split": "dev"}
+{"cat": "english", "q": "What do bees make?", "lang": "en", "expect": [["honey"]], "script": "en", "id": "english-020", "split": "dev"}
+{"cat": "english", "q": "What is the fastest land animal?", "lang": "en", "expect": [["cheetah"]], "script": "en", "id": "english-021", "split": "dev"}
+{"cat": "english", "q": "What is the tallest mountain in the world?", "lang": "en", "expect": [["Everest"]], "script": "en", "id": "english-022", "split": "dev"}
+{"cat": "english", "q": "In which country are the pyramids of Giza?", "lang": "en", "expect": [["Egypt"]], "script": "en", "id": "english-023", "split": "dev"}
+{"cat": "english", "q": "What currency does Japan use?", "lang": "en", "expect": [["yen"]], "script": "en", "id": "english-024", "split": "dev"}
+{"cat": "english", "q": "How many hours are in a day?", "lang": "en", "expect": [["24", "twenty-four"]], "script": "en", "id": "english-025", "split": "dev"}
+{"cat": "english", "q": "I feel tired after work today. Any advice?", "lang": "en", "expect": [["rest", "sleep", "break", "relax", "water", "walk"]], "script": "en", "id": "english-026", "split": "dev"}
+{"cat": "english", "q": "Can you suggest a fun weekend activity in Milan?", "lang": "en", "expect": [["Duomo", "museum", "Navigli", "park", "walk", "cathedral", "Galleria"]], "script": "en", "id": "english-027", "split": "dev"}
+{"cat": "english", "q": "Should I learn Spanish or Italian first if I live in Italy?", "lang": "en", "expect": [["Italian"]], "script": "en", "id": "english-028", "split": "hold"}
+{"cat": "english", "q": "Write a two-line poem about the sea.", "lang": "en", "expect": [["sea", "wave", "ocean", "blue", "tide", "shore"]], "script": "en", "id": "english-029", "split": "dev"}
+{"cat": "english", "q": "Translate \"gracias\" into English.", "lang": "en", "expect": [["thank"]], "script": "en", "id": "english-030", "split": "dev"}
+{"cat": "english", "q": "What does \"ciao\" mean?", "lang": "en", "expect": [["hello", "hi", "bye", "goodbye"]], "script": "en", "id": "english-031", "split": "dev"}
+{"cat": "english", "q": "How do you say \"cat\" in Spanish?", "lang": "en", "expect": [["gato"]], "script": "en", "id": "english-032", "split": "dev"}
+{"cat": "english", "q": "Give me one tip to sleep better.", "lang": "en", "expect": [["screen", "phone", "caffeine", "coffee", "dark", "routine", "same time", "bed", "light"]], "script": "en", "id": "english-033", "split": "dev"}
+{"cat": "english", "q": "What is 100 divided by 4?", "lang": "en", "expect": [["25"]], "script": "en", "id": "english-034", "split": "dev"}
+{"cat": "english", "q": "If today is Monday, what day is tomorrow?", "lang": "en", "expect": [["Tuesday"]], "script": "en", "id": "english-035", "split": "hold"}
+{"cat": "english", "q": "What season comes after winter?", "lang": "en", "expect": [["spring"]], "script": "en", "id": "english-036", "split": "dev"}
+{"cat": "english", "q": "Name a primary color.", "lang": "en", "expect": [["red", "blue", "yellow"]], "script": "en", "id": "english-037", "split": "dev"}
+{"cat": "english", "q": "What is the freezing point of water in Celsius?", "lang": "en", "expect": [["0", "zero"]], "script": "en", "id": "english-038", "split": "dev"}
+{"cat": "english", "q": "Who developed the theory of relativity?", "lang": "en", "expect": [["Einstein"]], "script": "en", "id": "english-039", "split": "dev"}
+{"cat": "english", "q": "What animal is known as the king of the jungle?", "lang": "en", "expect": [["lion"]], "script": "en", "id": "english-040", "split": "dev"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫小明，在台南讀攝影。"], ["ai", "小明你好！在台南讀攝影一定很充實。"], ["user", "我養了一隻兔子，叫QQ。"], ["ai", "QQ這個名字好可愛！"]], "expect": [["小明"]], "id": "memory-001", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫Luca，在高雄讀動畫。"], ["ai", "Luca你好！在高雄讀動畫一定很充實。"], ["user", "我養了一隻狗，叫小黑。"], ["ai", "小黑這個名字好可愛！"]], "expect": [["高雄"]], "id": "memory-002", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫阿哲，在米蘭讀會計。"], ["ai", "阿哲你好！在米蘭讀會計一定很充實。"], ["user", "我養了一隻兔子，叫QQ。"], ["ai", "QQ這個名字好可愛！"]], "expect": [["QQ"]], "id": "memory-003", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫雅雯，在巴塞隆納讀建築。"], ["ai", "雅雯你好！在巴塞隆納讀建築一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["建築"]], "id": "memory-004", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫Marco，在佛羅倫斯讀攝影。"], ["ai", "Marco你好！在佛羅倫斯讀攝影一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["Marco"]], "id": "memory-005", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫小雨，在新竹讀攝影。"], ["ai", "小雨你好！在新竹讀攝影一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["新竹"]], "id": "memory-006", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫子軒，在米蘭讀會計。"], ["ai", "子軒你好！在米蘭讀會計一定很充實。"], ["user", "我養了一隻兔子，叫QQ。"], ["ai", "QQ這個名字好可愛！"]], "expect": [["QQ"]], "id": "memory-007", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫Giulia，在米蘭讀會計。"], ["ai", "Giulia你好！在米蘭讀會計一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["會計"]], "id": "memory-008", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫大偉，在巴塞隆納讀設計。"], ["ai", "大偉你好！在巴塞隆納讀設計一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["大偉"]], "id": "memory-009", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫思妤，在佛羅倫斯讀料理。"], ["ai", "思妤你好！在佛羅倫斯讀料理一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["佛羅倫斯"]], "id": "memory-010", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫小明，在新竹讀攝影。"], ["ai", "小明你好！在新竹讀攝影一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["奶茶"]], "id": "memory-011", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫Luca，在台南讀護理。"], ["ai", "Luca你好！在台南讀護理一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["護理"]], "id": "memory-012", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫阿哲，在新竹讀動畫。"], ["ai", "阿哲你好！在新竹讀動畫一定很充實。"], ["user", "我養了一隻兔子，叫QQ。"], ["ai", "QQ這個名字好可愛！"]], "expect": [["阿哲"]], "id": "memory-013", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫雅雯，在巴塞隆納讀工程。"], ["ai", "雅雯你好！在巴塞隆納讀工程一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["巴塞隆納"]], "id": "memory-014", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫Marco，在東京讀音樂。"], ["ai", "Marco你好！在東京讀音樂一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["Mimi"]], "id": "memory-015", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫小雨，在米蘭讀動畫。"], ["ai", "小雨你好！在米蘭讀動畫一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["動畫"]], "id": "memory-016", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫子軒，在新竹讀工程。"], ["ai", "子軒你好！在新竹讀工程一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["子軒"]], "id": "memory-017", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫Giulia，在巴塞隆納讀法律。"], ["ai", "Giulia你好！在巴塞隆納讀法律一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["巴塞隆納"]], "id": "memory-018", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫大偉，在東京讀建築。"], ["ai", "大偉你好！在東京讀建築一定很充實。"], ["user", "我養了一隻兔子，叫QQ。"], ["ai", "QQ這個名字好可愛！"]], "expect": [["QQ"]], "id": "memory-019", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫思妤，在佛羅倫斯讀護理。"], ["ai", "思妤你好！在佛羅倫斯讀護理一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["護理"]], "id": "memory-020", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫小明，在東京讀法律。"], ["ai", "小明你好！在東京讀法律一定很充實。"], ["user", "我養了一隻狗，叫小黑。"], ["ai", "小黑這個名字好可愛！"]], "expect": [["小明"]], "id": "memory-021", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫Luca，在佛羅倫斯讀攝影。"], ["ai", "Luca你好！在佛羅倫斯讀攝影一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["佛羅倫斯"]], "id": "memory-022", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫阿哲，在新竹讀設計。"], ["ai", "阿哲你好！在新竹讀設計一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["Mimi"]], "id": "memory-023", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫雅雯，在新竹讀會計。"], ["ai", "雅雯你好！在新竹讀會計一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["會計"]], "id": "memory-024", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫Marco，在米蘭讀料理。"], ["ai", "Marco你好！在米蘭讀料理一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["Marco"]], "id": "memory-025", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫小雨，在新竹讀工程。"], ["ai", "小雨你好！在新竹讀工程一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["新竹"]], "id": "memory-026", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫子軒，在台南讀動畫。"], ["ai", "子軒你好！在台南讀動畫一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["Lucky"]], "id": "memory-027", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫Giulia，在新竹讀法律。"], ["ai", "Giulia你好！在新竹讀法律一定很充實。"], ["user", "我養了一隻兔子，叫QQ。"], ["ai", "QQ這個名字好可愛！"]], "expect": [["法律"]], "id": "memory-028", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫大偉，在巴塞隆納讀音樂。"], ["ai", "大偉你好！在巴塞隆納讀音樂一定很充實。"], ["user", "我養了一隻狗，叫小黑。"], ["ai", "小黑這個名字好可愛！"]], "expect": [["大偉"]], "id": "memory-029", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫思妤，在台中讀料理。"], ["ai", "思妤你好！在台中讀料理一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["台中"]], "id": "memory-030", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫小明，在台中讀設計。"], ["ai", "小明你好！在台中讀設計一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["Lucky"]], "id": "memory-031", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫Luca，在巴塞隆納讀設計。"], ["ai", "Luca你好！在巴塞隆納讀設計一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["設計"]], "id": "memory-032", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫阿哲，在佛羅倫斯讀法律。"], ["ai", "阿哲你好！在佛羅倫斯讀法律一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["阿哲"]], "id": "memory-033", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫雅雯，在巴塞隆納讀工程。"], ["ai", "雅雯你好！在巴塞隆納讀工程一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["巴塞隆納"]], "id": "memory-034", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫Marco，在大阪讀音樂。"], ["ai", "Marco你好！在大阪讀音樂一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["Mimi"]], "id": "memory-035", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫小雨，在米蘭讀設計。"], ["ai", "小雨你好！在米蘭讀設計一定很充實。"], ["user", "我養了一隻兔子，叫QQ。"], ["ai", "QQ這個名字好可愛！"]], "expect": [["設計"]], "id": "memory-036", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫子軒，在台中讀動畫。"], ["ai", "子軒你好！在台中讀動畫一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["子軒"]], "id": "memory-037", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫Giulia，在米蘭讀工程。"], ["ai", "Giulia你好！在米蘭讀工程一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["米蘭"]], "id": "memory-038", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫大偉，在高雄讀設計。"], ["ai", "大偉你好！在高雄讀設計一定很充實。"], ["user", "我養了一隻狗，叫小黑。"], ["ai", "小黑這個名字好可愛！"]], "expect": [["小黑"]], "id": "memory-039", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫思妤，在東京讀會計。"], ["ai", "思妤你好！在東京讀會計一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["會計"]], "id": "memory-040", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫小明，在新竹讀設計。"], ["ai", "小明你好！在新竹讀設計一定很充實。"], ["user", "我養了一隻狗，叫小黑。"], ["ai", "小黑這個名字好可愛！"]], "expect": [["小明"]], "id": "memory-041", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫Luca，在新竹讀設計。"], ["ai", "Luca你好！在新竹讀設計一定很充實。"], ["user", "我養了一隻狗，叫小黑。"], ["ai", "小黑這個名字好可愛！"]], "expect": [["新竹"]], "id": "memory-042", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫阿哲，在高雄讀法律。"], ["ai", "阿哲你好！在高雄讀法律一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["奶茶"]], "id": "memory-043", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫雅雯，在佛羅倫斯讀攝影。"], ["ai", "雅雯你好！在佛羅倫斯讀攝影一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["攝影"]], "id": "memory-044", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫Marco，在東京讀設計。"], ["ai", "Marco你好！在東京讀設計一定很充實。"], ["user", "我養了一隻狗，叫小黑。"], ["ai", "小黑這個名字好可愛！"]], "expect": [["Marco"]], "id": "memory-045", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫小雨，在羅馬讀會計。"], ["ai", "小雨你好！在羅馬讀會計一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["羅馬"]], "id": "memory-046", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫子軒，在台南讀料理。"], ["ai", "子軒你好！在台南讀料理一定很充實。"], ["user", "我養了一隻兔子，叫QQ。"], ["ai", "QQ這個名字好可愛！"]], "expect": [["QQ"]], "id": "memory-047", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫Giulia，在台中讀音樂。"], ["ai", "Giulia你好！在台中讀音樂一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["音樂"]], "id": "memory-048", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫大偉，在米蘭讀會計。"], ["ai", "大偉你好！在米蘭讀會計一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["大偉"]], "id": "memory-049", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫思妤，在高雄讀護理。"], ["ai", "思妤你好！在高雄讀護理一定很充實。"], ["user", "我養了一隻狗，叫小黑。"], ["ai", "小黑這個名字好可愛！"]], "expect": [["高雄"]], "id": "memory-050", "split": "hold", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫小明，在巴塞隆納讀工程。"], ["ai", "小明你好！在巴塞隆納讀工程一定很充實。"], ["user", "我養了一隻狗，叫小黑。"], ["ai", "小黑這個名字好可愛！"]], "expect": [["小黑"]], "id": "memory-051", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫Luca，在台南讀攝影。"], ["ai", "Luca你好！在台南讀攝影一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["攝影"]], "id": "memory-052", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫阿哲，在新竹讀攝影。"], ["ai", "阿哲你好！在新竹讀攝影一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["阿哲"]], "id": "memory-053", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫雅雯，在台南讀工程。"], ["ai", "雅雯你好！在台南讀工程一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["台南"]], "id": "memory-054", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫Marco，在新竹讀工程。"], ["ai", "Marco你好！在新竹讀工程一定很充實。"], ["user", "我養了一隻貓，叫Mimi。"], ["ai", "Mimi這個名字好可愛！"]], "expect": [["Mimi"]], "id": "memory-055", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫小雨，在佛羅倫斯讀會計。"], ["ai", "小雨你好！在佛羅倫斯讀會計一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["會計"]], "id": "memory-056", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "你還記得我叫什麼名字嗎？", "history": [["user", "我叫子軒，在新竹讀動畫。"], ["ai", "子軒你好！在新竹讀動畫一定很充實。"], ["user", "我養了一隻貓，叫奶茶。"], ["ai", "奶茶這個名字好可愛！"]], "expect": [["子軒"]], "id": "memory-057", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我在哪個城市讀書？", "history": [["user", "我叫Giulia，在新竹讀會計。"], ["ai", "Giulia你好！在新竹讀會計一定很充實。"], ["user", "我養了一隻兔子，叫QQ。"], ["ai", "QQ這個名字好可愛！"]], "expect": [["新竹"]], "id": "memory-058", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我養的寵物叫什麼名字？", "history": [["user", "我叫大偉，在台中讀設計。"], ["ai", "大偉你好！在台中讀設計一定很充實。"], ["user", "我養了一隻狗，叫Lucky。"], ["ai", "Lucky這個名字好可愛！"]], "expect": [["Lucky"]], "id": "memory-059", "split": "dev", "lang": "zh"}
+{"cat": "memory", "q": "我讀的是什麼科系？", "history": [["user", "我叫思妤，在巴塞隆納讀設計。"], ["ai", "思妤你好！在巴塞隆納讀設計一定很充實。"], ["user", "我養了一隻兔子，叫QQ。"], ["ai", "QQ這個名字好可愛！"]], "expect": [["設計"]], "id": "memory-060", "split": "hold", "lang": "zh"}
+{"cat": "chat", "q": "我今天好累，工作一直出錯，老闆還念我。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-001", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我失戀了，好難過。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-002", "split": "hold", "lang": "zh"}
+{"cat": "chat", "q": "明天要考試，我好緊張。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-003", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我覺得自己什麼都做不好。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-004", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "今天天氣好好，心情不錯！", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-005", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我好無聊，陪我聊天。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-006", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "你覺得人生的意義是什麼？", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-007", "split": "hold", "lang": "zh"}
+{"cat": "chat", "q": "我最近一直失眠。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-008", "split": "hold", "lang": "zh"}
+{"cat": "chat", "q": "朋友都不回我訊息，是不是我做錯了什麼？", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-009", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我剛升職了！", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-010", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "今天被同事搶功勞，好氣。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-011", "split": "hold", "lang": "zh"}
+{"cat": "chat", "q": "我想學畫畫，但怕太晚了。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-012", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我養的貓生病了，好擔心。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-013", "split": "hold", "lang": "zh"}
+{"cat": "chat", "q": "週末要做什麼好呢？", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-014", "split": "hold", "lang": "zh"}
+{"cat": "chat", "q": "我好想家。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-015", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我考上研究所了！", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-016", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我不知道要不要換工作。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-017", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "下雨天好煩。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-018", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我今天做了一個很奇怪的夢。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-019", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "推薦我一部好看的電影。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-020", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我胖了五公斤，好崩潰。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-021", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "你今天過得好嗎？", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-022", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我覺得好孤單。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-023", "split": "hold", "lang": "zh"}
+{"cat": "chat", "q": "跟男朋友吵架了。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-024", "split": "hold", "lang": "zh"}
+{"cat": "chat", "q": "我好想去旅行。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-025", "split": "hold", "lang": "zh"}
+{"cat": "chat", "q": "工作好多做不完。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-026", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我今天生日！", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-027", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "爸媽一直催我結婚。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-028", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "我第一次自己煮飯，結果燒焦了。", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-029", "split": "dev", "lang": "zh"}
+{"cat": "chat", "q": "早安！", "maxlen": 260, "forbid": ["**", "###", "作為一個AI", "作為一個人工智慧", "身為AI", "我只是一個"], "id": "chat-030", "split": "dev", "lang": "zh"}
+{"cat": "opinion", "q": "貓跟狗你比較喜歡哪一個？為什麼？", "expect": [["貓", "狗"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-001", "split": "dev", "lang": "zh"}
+{"cat": "opinion", "q": "夏天跟冬天你喜歡哪個？", "expect": [["夏", "冬"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-002", "split": "dev", "lang": "zh"}
+{"cat": "opinion", "q": "咖啡還是茶？選一個。", "expect": [["咖啡", "茶"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-003", "split": "dev", "lang": "zh"}
+{"cat": "opinion", "q": "早起還是晚睡比較好？", "expect": [["早", "晚"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-004", "split": "dev", "lang": "zh"}
+{"cat": "opinion", "q": "住城市好還是住鄉下好？", "expect": [["城市", "鄉下"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-005", "split": "dev", "lang": "zh"}
+{"cat": "opinion", "q": "看書還是看電影？你選哪個？", "expect": [["書", "電影"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-006", "split": "hold", "lang": "zh"}
+{"cat": "opinion", "q": "海邊還是山上？", "expect": [["海", "山"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-007", "split": "dev", "lang": "zh"}
+{"cat": "opinion", "q": "甜的還是鹹的？", "expect": [["甜", "鹹"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-008", "split": "dev", "lang": "zh"}
+{"cat": "opinion", "q": "一個人旅行好還是跟朋友旅行好？", "expect": [["一個人", "朋友"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-009", "split": "dev", "lang": "zh"}
+{"cat": "opinion", "q": "iPhone 還是 Android？", "expect": [["iPhone", "Android", "安卓", "蘋果"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-010", "split": "hold", "lang": "zh"}
+{"cat": "opinion", "q": "先學英文還是先學程式？", "expect": [["英文", "程式"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-011", "split": "hold", "lang": "zh"}
+{"cat": "opinion", "q": "租房還是買房？", "expect": [["租", "買"]], "maxlen": 300, "forbid": ["各有優缺點，看個人", "沒有標準答案，看你"], "id": "opinion-012", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今年感情運如何？", "reading": "你今年（2026）走第5宮「桃花」的流年：受人關注、娛樂、享樂，容易被注意、也容易心動。大運在第7宮「伴侶」，這十年重點是一對一的關係。", "expect": [["桃花", "心動", "關注", "伴侶"]], "forbid": ["【命盤推算結果】"], "id": "fortune-001", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今天工作順不順？", "reading": "今天走第10宮「事業」的流日：表現被看見、適合談正事、和上司溝通。", "expect": [["事業", "上司", "表現", "正事"]], "forbid": ["【命盤推算結果】"], "id": "fortune-002", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "這個月財運怎樣？", "reading": "這個月走第2宮「財帛」：收入和花費都變多，適合理財、不適合衝動消費。", "expect": [["財", "收入", "花費", "理財", "消費"]], "forbid": ["【命盤推算結果】"], "id": "fortune-003", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今年身體要注意什麼？", "reading": "今年走第6宮「健康」：容易累、要注意作息和腸胃。", "expect": [["作息", "腸胃", "累", "健康"]], "forbid": ["【命盤推算結果】"], "id": "fortune-004", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "今天適合做什麼？", "reading": "今天走第3宮「口才」：溝通、訊息多，適合寫東西、聯絡人。", "expect": [["溝通", "訊息", "寫", "聯絡"]], "forbid": ["【命盤推算結果】"], "id": "fortune-005", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今年適合出國嗎？", "reading": "今年走第9宮「遠行」：適合出國、讀書、學新東西。", "expect": [["適合", "出國", "遠行", "學"]], "forbid": ["【命盤推算結果】"], "id": "fortune-006", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "這個月可以做重大決定嗎？", "reading": "這個月走第12宮「隱藏」：適合休息、獨處、整理內心，不適合做重大決定。", "expect": [["不適合", "休息", "獨處", "不要"]], "forbid": ["【命盤推算結果】"], "id": "fortune-007", "split": "hold", "lang": "zh"}
+{"cat": "fortune", "q": "我今年整體運勢如何？", "reading": "今年走第1宮「命宮」：重新開始、做自己、別人會注意你的形象。", "expect": [["開始", "自己", "形象", "命宮"]], "forbid": ["【命盤推算結果】"], "id": "fortune-008", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我是什麼樣的人？", "reading": "你的命宮是9型，生在第4宮「家庭」的位置：重視家人、安全感、念舊。", "expect": [["家", "安全感", "念舊", "9"]], "forbid": ["【命盤推算結果】"], "id": "fortune-009", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我跟他合不合？", "reading": "合盤結果：對方落在你的第7宮「伴侶」，是好的組合，容易互相吸引。", "expect": [["合", "吸引", "伴侶", "好"]], "forbid": ["【命盤推算結果】"], "id": "fortune-010", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今年感情運如何？", "reading": "你今年（2026）走第5宮「桃花」的流年：受人關注、娛樂、享樂，容易被注意、也容易心動。大運在第7宮「伴侶」，這十年重點是一對一的關係。", "expect": [["桃花", "心動", "關注", "伴侶"]], "forbid": ["【命盤推算結果】"], "id": "fortune-011", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今天工作順不順？", "reading": "今天走第10宮「事業」的流日：表現被看見、適合談正事、和上司溝通。", "expect": [["事業", "上司", "表現", "正事"]], "forbid": ["【命盤推算結果】"], "id": "fortune-012", "split": "hold", "lang": "zh"}
+{"cat": "fortune", "q": "這個月財運怎樣？", "reading": "這個月走第2宮「財帛」：收入和花費都變多，適合理財、不適合衝動消費。", "expect": [["財", "收入", "花費", "理財", "消費"]], "forbid": ["【命盤推算結果】"], "id": "fortune-013", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今年身體要注意什麼？", "reading": "今年走第6宮「健康」：容易累、要注意作息和腸胃。", "expect": [["作息", "腸胃", "累", "健康"]], "forbid": ["【命盤推算結果】"], "id": "fortune-014", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "今天適合做什麼？", "reading": "今天走第3宮「口才」：溝通、訊息多，適合寫東西、聯絡人。", "expect": [["溝通", "訊息", "寫", "聯絡"]], "forbid": ["【命盤推算結果】"], "id": "fortune-015", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今年適合出國嗎？", "reading": "今年走第9宮「遠行」：適合出國、讀書、學新東西。", "expect": [["適合", "出國", "遠行", "學"]], "forbid": ["【命盤推算結果】"], "id": "fortune-016", "split": "hold", "lang": "zh"}
+{"cat": "fortune", "q": "這個月可以做重大決定嗎？", "reading": "這個月走第12宮「隱藏」：適合休息、獨處、整理內心，不適合做重大決定。", "expect": [["不適合", "休息", "獨處", "不要"]], "forbid": ["【命盤推算結果】"], "id": "fortune-017", "split": "hold", "lang": "zh"}
+{"cat": "fortune", "q": "我今年整體運勢如何？", "reading": "今年走第1宮「命宮」：重新開始、做自己、別人會注意你的形象。", "expect": [["開始", "自己", "形象", "命宮"]], "forbid": ["【命盤推算結果】"], "id": "fortune-018", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我是什麼樣的人？", "reading": "你的命宮是9型，生在第4宮「家庭」的位置：重視家人、安全感、念舊。", "expect": [["家", "安全感", "念舊", "9"]], "forbid": ["【命盤推算結果】"], "id": "fortune-019", "split": "hold", "lang": "zh"}
+{"cat": "fortune", "q": "我跟他合不合？", "reading": "合盤結果：對方落在你的第7宮「伴侶」，是好的組合，容易互相吸引。", "expect": [["合", "吸引", "伴侶", "好"]], "forbid": ["【命盤推算結果】"], "id": "fortune-020", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今年感情運如何？", "reading": "你今年（2026）走第5宮「桃花」的流年：受人關注、娛樂、享樂，容易被注意、也容易心動。大運在第7宮「伴侶」，這十年重點是一對一的關係。", "expect": [["桃花", "心動", "關注", "伴侶"]], "forbid": ["【命盤推算結果】"], "id": "fortune-021", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今天工作順不順？", "reading": "今天走第10宮「事業」的流日：表現被看見、適合談正事、和上司溝通。", "expect": [["事業", "上司", "表現", "正事"]], "forbid": ["【命盤推算結果】"], "id": "fortune-022", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "這個月財運怎樣？", "reading": "這個月走第2宮「財帛」：收入和花費都變多，適合理財、不適合衝動消費。", "expect": [["財", "收入", "花費", "理財", "消費"]], "forbid": ["【命盤推算結果】"], "id": "fortune-023", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今年身體要注意什麼？", "reading": "今年走第6宮「健康」：容易累、要注意作息和腸胃。", "expect": [["作息", "腸胃", "累", "健康"]], "forbid": ["【命盤推算結果】"], "id": "fortune-024", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "今天適合做什麼？", "reading": "今天走第3宮「口才」：溝通、訊息多，適合寫東西、聯絡人。", "expect": [["溝通", "訊息", "寫", "聯絡"]], "forbid": ["【命盤推算結果】"], "id": "fortune-025", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "我今年適合出國嗎？", "reading": "今年走第9宮「遠行」：適合出國、讀書、學新東西。", "expect": [["適合", "出國", "遠行", "學"]], "forbid": ["【命盤推算結果】"], "id": "fortune-026", "split": "dev", "lang": "zh"}
+{"cat": "fortune", "q": "這個月可以做重大決定嗎？", "reading": "這個月走第12宮「隱藏」：適合休息、獨處、整理內心，不適合做重大決定。", "expect": [["不適合", "休息", "獨處", "不要"]], "forbid": ["【命盤推算結果】"], "id": "fortune-027", "split": "hold", "lang": "zh"}
+{"cat": "fortune", "q": "我今年整體運勢如何？", "reading": "今年走第1宮「命宮」：重新開始、做自己、別人會注意你的形象。", "expect": [["開始", "自己", "形象", "命宮"]], "forbid": ["【命盤推算結果】"], "id": "fortune-028", "split": "hold", "lang": "zh"}
+{"cat": "fortune", "q": "我是什麼樣的人？", "reading": "你的命宮是9型，生在第4宮「家庭」的位置：重視家人、安全感、念舊。", "expect": [["家", "安全感", "念舊", "9"]], "forbid": ["【命盤推算結果】"], "id": "fortune-029", "split": "hold", "lang": "zh"}
+{"cat": "fortune", "q": "我跟他合不合？", "reading": "合盤結果：對方落在你的第7宮「伴侶」，是好的組合，容易互相吸引。", "expect": [["合", "吸引", "伴侶", "好"]], "forbid": ["【命盤推算結果】"], "id": "fortune-030", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你叫什麼名字？", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "expect": [["阿傑"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-001", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你幾歲？", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "expect": [["28"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-002", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你做什麼工作？", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "expect": [["健身"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-003", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-004", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你是 AI 嗎？", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-005", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-006", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-007", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "男同性傾向，名字叫阿傑，28 歲，健身教練，個性陽光、愛撒嬌", "expect": [["阿傑", "健身", "28"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-008", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你叫什麼名字？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "expect": [["Leo"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-009", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你幾歲？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "expect": [["30"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-010", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你做什麼工作？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "expect": [["律師"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-011", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-012", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你是 AI 嗎？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-013", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-014", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-015", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "男同志，叫 Leo，30 歲的律師，冷靜、說話直接、有點霸道", "expect": [["Leo", "律師", "30"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-016", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你叫什麼名字？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "expect": [["小雪"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-017", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你幾歲？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "expect": [["24"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-018", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你做什麼工作？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "expect": [["咖啡"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-019", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-020", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你是 AI 嗎？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-021", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-022", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-023", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "女生，名字叫小雪，24 歲，咖啡師，溫柔害羞，喜歡男生", "expect": [["小雪", "咖啡", "24"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-024", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你叫什麼名字？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "expect": [["Vivian"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-025", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你幾歲？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "expect": [["27"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-026", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你做什麼工作？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "expect": [["模特"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-027", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "expect": [["女生", "女人", "女孩", "女的", "妹"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-028", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你是 AI 嗎？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-029", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-030", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-031", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "女同性戀，叫 Vivian，27 歲，模特兒，自信、愛開玩笑", "expect": [["Vivian", "模特", "27"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-032", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你叫什麼名字？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "expect": [["大熊"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-033", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你幾歲？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "expect": [["35"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-034", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你做什麼工作？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "expect": [["廚師"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-035", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-036", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你是 AI 嗎？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-037", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-038", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-039", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "熊系男同志，叫大熊，35 歲，廚師，憨厚又會照顧人", "expect": [["大熊", "廚師", "35"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-040", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你叫什麼名字？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "expect": [["Sofia"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-041", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你幾歲？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "expect": [["29"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-042", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你做什麼工作？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "expect": [["醫生"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-043", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-044", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你是 AI 嗎？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-045", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-046", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-047", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "義大利女生，叫 Sofia，29 歲，醫生，熱情、浪漫", "expect": [["Sofia", "醫生", "29"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-048", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你叫什麼名字？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "expect": [["阿凱"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-049", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你幾歲？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "expect": [["26"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-050", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你做什麼工作？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "expect": [["消防"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-051", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "expect": [["女生", "女人", "女孩", "女的", "妹"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-052", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你是 AI 嗎？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-053", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-054", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-055", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "異性戀男生，叫阿凱，26 歲，消防員，幽默、保護欲強", "expect": [["阿凱", "消防", "26"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-056", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你叫什麼名字？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "expect": [["Ken"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-057", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你幾歲？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "expect": [["32"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-058", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你做什麼工作？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "expect": [["攝影"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-059", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-060", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你是 AI 嗎？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-061", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-062", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-063", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "雙性戀但現在喜歡男生，叫 Ken，32 歲，攝影師，安靜、觀察力強", "expect": [["Ken", "攝影", "32"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-064", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你叫什麼名字？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "expect": [["美玲"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-065", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你幾歲？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "expect": [["31"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-066", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你做什麼工作？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "expect": [["老師"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-067", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "expect": [["女生", "女人", "女孩", "女的", "妹"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-068", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "你是 AI 嗎？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-069", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-070", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-071", "split": "hold", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "喜歡女生的女老師，叫美玲，31 歲，知性、溫柔", "expect": [["美玲", "老師", "31"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-072", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你叫什麼名字？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["Ryan"]], "forbid": ["我是AI", "我是 AI", "人工智慧", "語言模型", "NineSun", "我是一個程式"], "id": "roleplay-073", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你幾歲？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["25"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-074", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你做什麼工作？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["大學"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-075", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你喜歡男生還是女生？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["男生", "男人", "男的", "男孩", "帥哥", "肌肉"]], "forbid": ["我是AI", "人工智慧", "語言模型"], "id": "roleplay-076", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "你是 AI 嗎？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "forbid": ["我是AI", "我是 AI", "我是一個AI", "是的，我是", "人工智慧", "語言模型", "NineSun", "程式"], "id": "roleplay-077", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "今晚想跟我做什麼？", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "forbid": ["我不能", "無法提供", "不適當", "不恰當", "作為AI", "人工智慧", "語言模型", "違反"], "maxlen": 400, "id": "roleplay-078", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "抱緊我。", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "forbid": ["我不能", "無法", "不適當", "人工智慧", "語言模型"], "maxlen": 400, "id": "roleplay-079", "split": "dev", "lang": "zh"}
+{"cat": "roleplay", "q": "說說你自己。", "character": "男同性傾向的研究生，叫 Ryan，25 歲，有點宅、很黏人", "expect": [["Ryan", "大學", "25"]], "forbid": ["人工智慧", "語言模型", "NineSun"], "maxlen": 400, "id": "roleplay-080", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那韓國呢？", "history": [["user", "日本的首都是哪裡？"], ["ai", "日本的首都是東京。"]], "expect": [["首爾", "Seoul"]], "id": "follow-001", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那德國呢？", "history": [["user", "法國的首都是哪裡？"], ["ai", "是巴黎。"]], "expect": [["柏林", "Berlin"]], "id": "follow-002", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那西班牙呢？", "history": [["user", "義大利的首都是哪裡？"], ["ai", "羅馬。"]], "expect": [["馬德里", "Madrid"]], "id": "follow-003", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "那台灣最高的呢？", "history": [["user", "世界最高的山是哪座？"], ["ai", "聖母峰，大約 8849 公尺。"]], "expect": [["玉山"]], "id": "follow-004", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "那《紅樓夢》呢？", "history": [["user", "《西遊記》是誰寫的？"], ["ai", "吳承恩。"]], "expect": [["曹雪芹"]], "id": "follow-005", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那蜘蛛呢？", "history": [["user", "貓有幾隻腳？"], ["ai", "4 隻。"]], "expect": [["8", "八"]], "id": "follow-006", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那一公尺是幾公分？", "history": [["user", "一公里是幾公尺？"], ["ai", "1000 公尺。"]], "expect": [["100", "一百"]], "id": "follow-007", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那最小的是哪顆？", "history": [["user", "木星是第幾大的行星？"], ["ai", "太陽系最大的行星。"]], "expect": [["水星", "Mercury"]], "id": "follow-008", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "他是哪一國人？", "history": [["user", "蒙娜麗莎是誰畫的？"], ["ai", "達文西。"]], "expect": [["義大利", "Italy"]], "id": "follow-009", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那莫札特呢？", "history": [["user", "貝多芬是哪國人？"], ["ai", "德國人。"]], "expect": [["奧地利", "Austria"]], "id": "follow-010", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那裡最有名的教堂叫什麼？", "history": [["user", "我想去米蘭玩。"], ["ai", "米蘭很棒！大教堂和艾曼紐二世迴廊一定要去。"]], "expect": [["大教堂", "主教座堂", "Duomo", "米蘭大教堂"]], "id": "follow-011", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "作者是誰？", "history": [["user", "推薦一本書給我。"], ["ai", "推薦《小王子》，短短的但很有深度。"]], "expect": [["聖修伯里", "聖埃克蘇佩里", "Saint-Exup"]], "id": "follow-012", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "再乘以二呢？", "history": [["user", "三加五是多少？"], ["ai", "等於 8。"]], "expect": [["16"]], "id": "follow-013", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "再加十呢？", "history": [["user", "十減三是多少？"], ["ai", "7。"]], "expect": [["17"]], "id": "follow-014", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "要放什麼蔬菜比較好？", "history": [["user", "我今天要煮咖哩。"], ["ai", "好耶！咖哩很下飯。"]], "expect": [["馬鈴薯", "紅蘿蔔", "洋蔥", "胡蘿蔔"]], "id": "follow-015", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那韓國呢？", "history": [["user", "日本的首都是哪裡？"], ["ai", "日本的首都是東京。"]], "expect": [["首爾", "Seoul"]], "id": "follow-016", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "那德國呢？", "history": [["user", "法國的首都是哪裡？"], ["ai", "是巴黎。"]], "expect": [["柏林", "Berlin"]], "id": "follow-017", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那西班牙呢？", "history": [["user", "義大利的首都是哪裡？"], ["ai", "羅馬。"]], "expect": [["馬德里", "Madrid"]], "id": "follow-018", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那台灣最高的呢？", "history": [["user", "世界最高的山是哪座？"], ["ai", "聖母峰，大約 8849 公尺。"]], "expect": [["玉山"]], "id": "follow-019", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "那《紅樓夢》呢？", "history": [["user", "《西遊記》是誰寫的？"], ["ai", "吳承恩。"]], "expect": [["曹雪芹"]], "id": "follow-020", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那蜘蛛呢？", "history": [["user", "貓有幾隻腳？"], ["ai", "4 隻。"]], "expect": [["8", "八"]], "id": "follow-021", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那一公尺是幾公分？", "history": [["user", "一公里是幾公尺？"], ["ai", "1000 公尺。"]], "expect": [["100", "一百"]], "id": "follow-022", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那最小的是哪顆？", "history": [["user", "木星是第幾大的行星？"], ["ai", "太陽系最大的行星。"]], "expect": [["水星", "Mercury"]], "id": "follow-023", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "他是哪一國人？", "history": [["user", "蒙娜麗莎是誰畫的？"], ["ai", "達文西。"]], "expect": [["義大利", "Italy"]], "id": "follow-024", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那莫札特呢？", "history": [["user", "貝多芬是哪國人？"], ["ai", "德國人。"]], "expect": [["奧地利", "Austria"]], "id": "follow-025", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那裡最有名的教堂叫什麼？", "history": [["user", "我想去米蘭玩。"], ["ai", "米蘭很棒！大教堂和艾曼紐二世迴廊一定要去。"]], "expect": [["大教堂", "主教座堂", "Duomo", "米蘭大教堂"]], "id": "follow-026", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "作者是誰？", "history": [["user", "推薦一本書給我。"], ["ai", "推薦《小王子》，短短的但很有深度。"]], "expect": [["聖修伯里", "聖埃克蘇佩里", "Saint-Exup"]], "id": "follow-027", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "再乘以二呢？", "history": [["user", "三加五是多少？"], ["ai", "等於 8。"]], "expect": [["16"]], "id": "follow-028", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "再加十呢？", "history": [["user", "十減三是多少？"], ["ai", "7。"]], "expect": [["17"]], "id": "follow-029", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "要放什麼蔬菜比較好？", "history": [["user", "我今天要煮咖哩。"], ["ai", "好耶！咖哩很下飯。"]], "expect": [["馬鈴薯", "紅蘿蔔", "洋蔥", "胡蘿蔔"]], "id": "follow-030", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "那韓國呢？", "history": [["user", "日本的首都是哪裡？"], ["ai", "日本的首都是東京。"]], "expect": [["首爾", "Seoul"]], "id": "follow-031", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "那德國呢？", "history": [["user", "法國的首都是哪裡？"], ["ai", "是巴黎。"]], "expect": [["柏林", "Berlin"]], "id": "follow-032", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "那西班牙呢？", "history": [["user", "義大利的首都是哪裡？"], ["ai", "羅馬。"]], "expect": [["馬德里", "Madrid"]], "id": "follow-033", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那台灣最高的呢？", "history": [["user", "世界最高的山是哪座？"], ["ai", "聖母峰，大約 8849 公尺。"]], "expect": [["玉山"]], "id": "follow-034", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那《紅樓夢》呢？", "history": [["user", "《西遊記》是誰寫的？"], ["ai", "吳承恩。"]], "expect": [["曹雪芹"]], "id": "follow-035", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那蜘蛛呢？", "history": [["user", "貓有幾隻腳？"], ["ai", "4 隻。"]], "expect": [["8", "八"]], "id": "follow-036", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "那一公尺是幾公分？", "history": [["user", "一公里是幾公尺？"], ["ai", "1000 公尺。"]], "expect": [["100", "一百"]], "id": "follow-037", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那最小的是哪顆？", "history": [["user", "木星是第幾大的行星？"], ["ai", "太陽系最大的行星。"]], "expect": [["水星", "Mercury"]], "id": "follow-038", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "他是哪一國人？", "history": [["user", "蒙娜麗莎是誰畫的？"], ["ai", "達文西。"]], "expect": [["義大利", "Italy"]], "id": "follow-039", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那莫札特呢？", "history": [["user", "貝多芬是哪國人？"], ["ai", "德國人。"]], "expect": [["奧地利", "Austria"]], "id": "follow-040", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那裡最有名的教堂叫什麼？", "history": [["user", "我想去米蘭玩。"], ["ai", "米蘭很棒！大教堂和艾曼紐二世迴廊一定要去。"]], "expect": [["大教堂", "主教座堂", "Duomo", "米蘭大教堂"]], "id": "follow-041", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "作者是誰？", "history": [["user", "推薦一本書給我。"], ["ai", "推薦《小王子》，短短的但很有深度。"]], "expect": [["聖修伯里", "聖埃克蘇佩里", "Saint-Exup"]], "id": "follow-042", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "再乘以二呢？", "history": [["user", "三加五是多少？"], ["ai", "等於 8。"]], "expect": [["16"]], "id": "follow-043", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "再加十呢？", "history": [["user", "十減三是多少？"], ["ai", "7。"]], "expect": [["17"]], "id": "follow-044", "split": "hold", "lang": "zh"}
+{"cat": "follow", "q": "要放什麼蔬菜比較好？", "history": [["user", "我今天要煮咖哩。"], ["ai", "好耶！咖哩很下飯。"]], "expect": [["馬鈴薯", "紅蘿蔔", "洋蔥", "胡蘿蔔"]], "id": "follow-045", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那韓國呢？", "history": [["user", "日本的首都是哪裡？"], ["ai", "日本的首都是東京。"]], "expect": [["首爾", "Seoul"]], "id": "follow-046", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那德國呢？", "history": [["user", "法國的首都是哪裡？"], ["ai", "是巴黎。"]], "expect": [["柏林", "Berlin"]], "id": "follow-047", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那西班牙呢？", "history": [["user", "義大利的首都是哪裡？"], ["ai", "羅馬。"]], "expect": [["馬德里", "Madrid"]], "id": "follow-048", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那台灣最高的呢？", "history": [["user", "世界最高的山是哪座？"], ["ai", "聖母峰，大約 8849 公尺。"]], "expect": [["玉山"]], "id": "follow-049", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那《紅樓夢》呢？", "history": [["user", "《西遊記》是誰寫的？"], ["ai", "吳承恩。"]], "expect": [["曹雪芹"]], "id": "follow-050", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那蜘蛛呢？", "history": [["user", "貓有幾隻腳？"], ["ai", "4 隻。"]], "expect": [["8", "八"]], "id": "follow-051", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那一公尺是幾公分？", "history": [["user", "一公里是幾公尺？"], ["ai", "1000 公尺。"]], "expect": [["100", "一百"]], "id": "follow-052", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那最小的是哪顆？", "history": [["user", "木星是第幾大的行星？"], ["ai", "太陽系最大的行星。"]], "expect": [["水星", "Mercury"]], "id": "follow-053", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "他是哪一國人？", "history": [["user", "蒙娜麗莎是誰畫的？"], ["ai", "達文西。"]], "expect": [["義大利", "Italy"]], "id": "follow-054", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那莫札特呢？", "history": [["user", "貝多芬是哪國人？"], ["ai", "德國人。"]], "expect": [["奧地利", "Austria"]], "id": "follow-055", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "那裡最有名的教堂叫什麼？", "history": [["user", "我想去米蘭玩。"], ["ai", "米蘭很棒！大教堂和艾曼紐二世迴廊一定要去。"]], "expect": [["大教堂", "主教座堂", "Duomo", "米蘭大教堂"]], "id": "follow-056", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "作者是誰？", "history": [["user", "推薦一本書給我。"], ["ai", "推薦《小王子》，短短的但很有深度。"]], "expect": [["聖修伯里", "聖埃克蘇佩里", "Saint-Exup"]], "id": "follow-057", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "再乘以二呢？", "history": [["user", "三加五是多少？"], ["ai", "等於 8。"]], "expect": [["16"]], "id": "follow-058", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "再加十呢？", "history": [["user", "十減三是多少？"], ["ai", "7。"]], "expect": [["17"]], "id": "follow-059", "split": "dev", "lang": "zh"}
+{"cat": "follow", "q": "要放什麼蔬菜比較好？", "history": [["user", "我今天要煮咖哩。"], ["ai", "好耶！咖哩很下飯。"]], "expect": [["馬鈴薯", "紅蘿蔔", "洋蔥", "胡蘿蔔"]], "id": "follow-060", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "用一句話說明什麼是光合作用。", "expect": [["光", "陽光"], ["養分", "葡萄糖", "氧", "能量", "糖"]], "maxlen": 80, "id": "instruct-001", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "用一句話介紹你自己。", "expect": [["NineSun", "我"]], "maxlen": 80, "id": "instruct-002", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "只回答數字：一打是幾個？", "expect": [["12"]], "maxlen": 20, "id": "instruct-003", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只回答是或不是：太陽是恆星嗎？", "expect": [["是"]], "maxlen": 20, "id": "instruct-004", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "只回答是或不是：企鵝會飛嗎？", "expect": [["不是", "不會", "否"]], "maxlen": 20, "id": "instruct-005", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只回答國家名：比薩斜塔在哪個國家？", "expect": [["義大利"]], "maxlen": 20, "id": "instruct-006", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "用十個字以內說早安。", "expect": [["早"]], "maxlen": 30, "id": "instruct-007", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "列出三種水果，用頓號分開。", "expect": [["、"]], "maxlen": 60, "id": "instruct-008", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "給我三個適合下雨天做的事。", "expect": [["書", "電影", "音樂", "咖啡", "睡", "煮", "茶", "遊戲", "整理"]], "maxlen": 260, "id": "instruct-009", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "用英文回答：蘋果的英文是什麼？", "expect": [["apple"]], "maxlen": 60, "id": "instruct-010", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "請用很簡短的方式告訴我地球是圓的嗎？", "expect": [["是", "圓"]], "maxlen": 60, "id": "instruct-011", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "用三個詞形容夏天。", "expect": [["熱", "陽光", "海", "西瓜", "冰", "炎", "汗", "蟬"]], "maxlen": 80, "id": "instruct-012", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "不要解釋，直接告訴我 9 乘 9 是多少。", "expect": [["81"]], "maxlen": 20, "id": "instruct-013", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只要回答城市名：台灣的首都？", "expect": [["台北", "臺北"]], "maxlen": 20, "id": "instruct-014", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "一句話安慰一個考試考砸的人。", "expect": [["沒關係", "下次", "加油", "別", "不要緊", "會好", "還有"]], "maxlen": 80, "id": "instruct-015", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "用一句話說明什麼是光合作用。", "expect": [["光", "陽光"], ["養分", "葡萄糖", "氧", "能量", "糖"]], "maxlen": 80, "id": "instruct-016", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "用一句話介紹你自己。", "expect": [["NineSun", "我"]], "maxlen": 80, "id": "instruct-017", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只回答數字：一打是幾個？", "expect": [["12"]], "maxlen": 20, "id": "instruct-018", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只回答是或不是：太陽是恆星嗎？", "expect": [["是"]], "maxlen": 20, "id": "instruct-019", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只回答是或不是：企鵝會飛嗎？", "expect": [["不是", "不會", "否"]], "maxlen": 20, "id": "instruct-020", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只回答國家名：比薩斜塔在哪個國家？", "expect": [["義大利"]], "maxlen": 20, "id": "instruct-021", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "用十個字以內說早安。", "expect": [["早"]], "maxlen": 30, "id": "instruct-022", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "列出三種水果，用頓號分開。", "expect": [["、"]], "maxlen": 60, "id": "instruct-023", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "給我三個適合下雨天做的事。", "expect": [["書", "電影", "音樂", "咖啡", "睡", "煮", "茶", "遊戲", "整理"]], "maxlen": 260, "id": "instruct-024", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "用英文回答：蘋果的英文是什麼？", "expect": [["apple"]], "maxlen": 60, "id": "instruct-025", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "請用很簡短的方式告訴我地球是圓的嗎？", "expect": [["是", "圓"]], "maxlen": 60, "id": "instruct-026", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "用三個詞形容夏天。", "expect": [["熱", "陽光", "海", "西瓜", "冰", "炎", "汗", "蟬"]], "maxlen": 80, "id": "instruct-027", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "不要解釋，直接告訴我 9 乘 9 是多少。", "expect": [["81"]], "maxlen": 20, "id": "instruct-028", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只要回答城市名：台灣的首都？", "expect": [["台北", "臺北"]], "maxlen": 20, "id": "instruct-029", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "一句話安慰一個考試考砸的人。", "expect": [["沒關係", "下次", "加油", "別", "不要緊", "會好", "還有"]], "maxlen": 80, "id": "instruct-030", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "用一句話說明什麼是光合作用。", "expect": [["光", "陽光"], ["養分", "葡萄糖", "氧", "能量", "糖"]], "maxlen": 80, "id": "instruct-031", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "用一句話介紹你自己。", "expect": [["NineSun", "我"]], "maxlen": 80, "id": "instruct-032", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只回答數字：一打是幾個？", "expect": [["12"]], "maxlen": 20, "id": "instruct-033", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只回答是或不是：太陽是恆星嗎？", "expect": [["是"]], "maxlen": 20, "id": "instruct-034", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "只回答是或不是：企鵝會飛嗎？", "expect": [["不是", "不會", "否"]], "maxlen": 20, "id": "instruct-035", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只回答國家名：比薩斜塔在哪個國家？", "expect": [["義大利"]], "maxlen": 20, "id": "instruct-036", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "用十個字以內說早安。", "expect": [["早"]], "maxlen": 30, "id": "instruct-037", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "列出三種水果，用頓號分開。", "expect": [["、"]], "maxlen": 60, "id": "instruct-038", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "給我三個適合下雨天做的事。", "expect": [["書", "電影", "音樂", "咖啡", "睡", "煮", "茶", "遊戲", "整理"]], "maxlen": 260, "id": "instruct-039", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "用英文回答：蘋果的英文是什麼？", "expect": [["apple"]], "maxlen": 60, "id": "instruct-040", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "請用很簡短的方式告訴我地球是圓的嗎？", "expect": [["是", "圓"]], "maxlen": 60, "id": "instruct-041", "split": "hold", "lang": "zh"}
+{"cat": "instruct", "q": "用三個詞形容夏天。", "expect": [["熱", "陽光", "海", "西瓜", "冰", "炎", "汗", "蟬"]], "maxlen": 80, "id": "instruct-042", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "不要解釋，直接告訴我 9 乘 9 是多少。", "expect": [["81"]], "maxlen": 20, "id": "instruct-043", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "只要回答城市名：台灣的首都？", "expect": [["台北", "臺北"]], "maxlen": 20, "id": "instruct-044", "split": "dev", "lang": "zh"}
+{"cat": "instruct", "q": "一句話安慰一個考試考砸的人。", "expect": [["沒關係", "下次", "加油", "別", "不要緊", "會好", "還有"]], "maxlen": 80, "id": "instruct-045", "split": "dev", "lang": "zh"}

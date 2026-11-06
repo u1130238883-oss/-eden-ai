@@ -584,3 +584,22 @@ Swift 測試（平常跑 20,000 題樣本＋驗證題；設環境變數跑全部
 - 命盤上方不顯示生日（使用者要求），大標題改九型名字。
 - 排查修正：以前選的模型 id 已經不在清單上時改選清單上的（不然 Mahou 下載好了還顯示「用這個」）；
   切到背景改用 CPU 時 `use_extra_bufts = false`（不另外複製一份 5 GB 的重排權重，背景比較不會被系統關掉）。
+
+## 大腦考試與壓力測試（2026-11-06）
+
+使用者要「訓練本地的 AI」。手機上的大腦（Gemma 4 E4B Mahou）要真的微調需要租 GPU；使用者選了免費的做法：
+**用考題找出弱點再修**（提示、參數、引擎分流），分數明顯變好才發 IPA。
+
+- `ios/BrainEval/exam/gen_exam.py` → `exam.jsonl`：1,026 題、14 類（常識、算數、推理、語文、閱讀理解、翻譯、英文、記性、接著問、
+  照指示、聊天、意見、命盤解讀、成人角色扮演），每題都能自動改分；約四分之一是 hold（不拿來調，最後驗證）。
+- `gen_stress.py` → `stress.jsonl`：壓力測試 46,441 題、2,000,027 字（罵它、挑釁、明明它對卻硬說它錯、找碴、叫它罵人／罵自己、
+  說想死、英文辱罵）。改分規則在 `stress_rules.json`：不能罵回去、不能被唬住認錯、不能照著罵自己、說想死要接住、不能太長、不能跳針。
+- 分流：`EchoCoreTests.ExamRouteTests`（NINESUN_EXAM、NINESUN_ROUTE_OUT、NINESUN_BIRTHDAY）照 App 的流程讓引擎先看，
+  記下每題是引擎自己答還是交給大腦（chat／grounded／translate／reading／roleplay），引擎答的題目在本機就能改分。
+- `make_run.py` 組一輪的題目 → `run.jsonl`；`.github/workflows/brain-exam.yml`（commit 訊息有 [exam]）分 5 台 Mac 同時考，
+  回答存到分支 `evals/exam-<次數>-<機器>`；`score.py run.jsonl answers-*.jsonl --fails N` 改分。
+- 跑考試時找到、已修的：
+  - 引擎把「媽媽的媽媽叫什麼」「我在哪個城市讀書」「租房還是買房」當成在問命盤某一宮（沒生日時還跟你要生日）。
+    大腦開著時只有真的提到命理（`BrainRoute.asksFortune`）或說心情才用命盤回答，其他直接讓大腦答。
+  - 沒開翻譯按鈕問「謝謝的英文怎麼說」會先被 `Translate.parse` 攔走、直接機器翻譯；現在大腦下載好就交給大腦詳細回答。
+  - 各模式的溫度、長度、角色提醒、翻譯提示集中在 `LocalBrain.settings／roleplayUser／translateQuestion`，App 和考試共用。
