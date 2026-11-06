@@ -303,7 +303,11 @@ final class ChatViewModel: ObservableObject {
                 finish(ChatTurn(role: .echo, text: AdultGuard.refusal(L), source: .tool))
                 return
             }
-            // 用選的那個模型（全部都是開放模型）；「用大腦思考」關著也一樣用
+            // 模型關著：先請使用者打開
+            if !useBrain, ModelStore.shared.readyModel != nil {
+                finish(ChatTurn(role: .echo, text: "大腦現在是關著的：到「調頻台」→「NineSun 的大腦」把模型的開關打開，再回來聊。", source: .tool))
+                return
+            }
             guard let brain = ModelStore.shared.readyModel.map({ ModelStore.shared.path($0).path }) else {
                 finish(ChatTurn(role: .echo, text: "成人模式要用 NineSun 的大腦：先到「調頻台」→「NineSun 的大腦」挑一個模型下載，再回來聊。", source: .tool))
                 return

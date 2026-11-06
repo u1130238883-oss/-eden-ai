@@ -223,10 +223,7 @@ struct SettingsView: View {
 
     private var brainSection: some View {
         section(T("NineSun 的大腦", "NineSun's brain", "Cerebro de NineSun", "Cervello di NineSun") + " · BRAIN") {
-            Toggle(isOn: $vm.useBrain) {
-                label(T("用大腦思考（手機上的 AI）", "Think with the on-phone brain", "Pensar con el cerebro local", "Pensa con il cervello locale"), "")
-            }
-            .tint(Theme.hazard)
+            // 模型自己有開關（開著＝用大腦思考；關掉＝不用它，也從記憶體放掉）
             ForEach(ModelStore.models) { m in modelRow(m) }
             // 成人模式：要確認滿 18 歲才打開
             Toggle(isOn: Binding(get: { vm.adultMode }, set: { on in if on { confirmAdult = true } else { vm.adultMode = false } })) {
@@ -281,14 +278,28 @@ struct SettingsView: View {
                     button(T("取消", "Cancel", "Cancelar", "Annulla"), color: Theme.panelHi) { store.cancel(m) }
                 }
             case .ready:
-                HStack {
-                    if chosen {
-                        Text(T("✓ 使用中", "✓ In use", "✓ En uso", "✓ In uso")).font(.system(size: 13, weight: .black)).foregroundColor(Theme.hazard)
+                let on = chosen && vm.useBrain
+                Toggle(isOn: Binding(get: { on }, set: { v in
+                    if v {
+                        store.selectedID = m.id
+                        vm.useBrain = true
+                        LocalBrain.shared.preload(modelPath: store.path(m).path)
                     } else {
-                        button(T("用這個", "Use this", "Usar este", "Usa questo")) { store.selectedID = m.id }
+                        vm.useBrain = false
+                        LocalBrain.shared.unload()
                     }
+                })) {
+                    Text(on ? T("✓ 開啟中（手機上的 AI 在思考）", "✓ On", "✓ Activado", "✓ Attivo")
+                            : T("已關閉", "Off", "Desactivado", "Disattivato"))
+                        .font(.system(size: 13, weight: .black)).foregroundColor(on ? Theme.hazard : Theme.dim)
+                }
+                .tint(Theme.hazard)
+                HStack {
                     Spacer()
-                    button(T("刪除", "Delete", "Borrar", "Elimina"), color: Theme.neonPink) { store.delete(m) }
+                    button(T("刪除", "Delete", "Borrar", "Elimina"), color: Theme.neonPink) {
+                        if chosen { LocalBrain.shared.unload() }
+                        store.delete(m)
+                    }
                 }
             case .failed(let why):
                 Text(why).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.neonPink)
