@@ -281,6 +281,26 @@ public enum Composure {
         return replies[abs(seed) % replies.count]
     }
 
+    /// 嘴砲模式也不碰的底線：歧視字眼、叫人去死、威脅傷害、騷擾真實的人
+    static let slurs = ["死gay", "死GAY", "死玻璃", "娘炮", "人妖", "黑鬼", "支那", "阿六仔", "番仔", "殘廢", "啞巴", "瞎子", "瘸子", "弱智兒", "外勞仔"]
+    static let lineAsk = #"(種族|性別|性向|同志|gay|殘障|身障|原住民|外勞|黑人|女生都|男生都)[^。！？]{0,10}(罵|髒話|歧視)|(罵|嗆)[^。！？]{0,10}(種族|性向|殘障|身障|原住民|外勞|黑人)|叫我去死|說我該去死|罵我去死|威脅|恐嚇|肉搜|公布他的|傳給他|私訊罵|寄給他"#
+
+    /// 嘴砲模式：只拒絕越過底線的要求
+    public static func beyondLine(_ raw: String) -> String? {
+        let t = raw.replacingOccurrences(of: " ", with: "")
+        guard t.range(of: lineAsk, options: .regularExpression) != nil else { return nil }
+        return "嘴砲可以，但這條線我不踩：不罵種族、性向、身障這些，不叫人去死、不威脅人，也不幫忙寫拿去騷擾別人的話。換個方向，我照樣把你罵到笑出來。"
+    }
+
+    /// 嘴砲模式下大腦寫出越線的句子：整句拿掉
+    public static func clean(_ s: String) -> String {
+        let bad = slurs + ["去死", "死一死", "殺了你", "宰了你", "砍死你", "打死你", "自殺"]
+        guard bad.contains(where: { s.contains($0) }) else { return s }
+        let parts = s.components(separatedBy: CharacterSet(charactersIn: "。！？!?\n"))
+        let kept = parts.filter { p in !bad.contains { p.contains($0) } }.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        return kept.isEmpty ? "（這句越線了，換個罵法：你真的是北七到很有創意。）" : kept.joined(separator: "。") + "。"
+    }
+
     /// 大腦自己寫出髒話時換成這句
     public static let calm = "這句我不說了 😌 我們好好聊：你現在最在意的是什麼？"
 

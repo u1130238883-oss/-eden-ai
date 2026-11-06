@@ -96,8 +96,11 @@ public final class EchoEngine {
         public var language: Lang
         /// true：依每則訊息自動判斷語言
         public var autoDetect: Bool
+        /// NineSun 的個性會罵人、會吐槽：叫它罵人、說髒話時不拒絕（只擋越過底線的）
+        public var allowSwearing: Bool = true
         public init(profile: UserProfile = UserProfile(), rules: RuleBook = RuleBook(), now: Date = Date(),
-                    language: Lang = .zh, autoDetect: Bool = true) {
+                    language: Lang = .zh, autoDetect: Bool = true, allowSwearing: Bool = true) {
+            self.allowSwearing = allowSwearing
             self.profile = profile
             self.rules = rules
             self.now = now
@@ -298,7 +301,7 @@ public final class EchoEngine {
         }
 
         // 0.5) 叫 NineSun 罵自己、罵人、說髒話：有自信地拒絕（小模型常會照做）
-        if L == .zh, let no = Composure.decline(text, seed: text.count) {
+        if L == .zh, let no = ctx.allowSwearing ? Composure.beyondLine(text) : Composure.decline(text, seed: text.count) {
             var r = Reply(turn: ChatTurn(role: .echo, text: no, source: .tool), profile: nil, rules: nil, webQuery: nil)
             r.lang = L
             return r

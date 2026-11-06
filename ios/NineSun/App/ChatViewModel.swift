@@ -91,6 +91,8 @@ final class ChatViewModel: ObservableObject {
     /// 成人模式（18+）：大腦照設定的角色做成人角色扮演；預設關，要確認滿 18 歲才能打開
     @Published var adultMode = false { didSet { save(adultMode, "adultMode") } }
     @Published var roleCharacter = "" { didSet { save(roleCharacter, "roleCharacter") } }
+    /// NineSun 的個性：會罵人、會吐槽（內建，不是開關；底線照樣守）
+    let trashTalk = true
     @Published var brainTestResult = ""
     @Published var brainTesting = false
     var brainPath: String? {
@@ -338,7 +340,8 @@ final class ChatViewModel: ObservableObject {
     private func localReply(_ text: String, viaAI: Bool = false, brain: String? = nil) {
         guard let engine else { return }
         let history = turns
-        let ctx = EchoEngine.Context(profile: profile, rules: rules, now: Date(), language: language, autoDetect: autoDetect)
+        let ctx = EchoEngine.Context(profile: profile, rules: rules, now: Date(), language: language, autoDetect: autoDetect,
+                                     allowSwearing: trashTalk)
         queue.async {
             let reply = engine.reply(to: text, history: history, context: ctx)
             let snap = engine.core?.snapshot
@@ -440,7 +443,7 @@ final class ChatViewModel: ObservableObject {
         thinking = true
         streaming = LocalBrain.shared.isLoaded ? "🧠 想一想…" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
         let past = turns.dropLast().suffix(6).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
-        let system = LocalBrain.system(lang: L.rawValue)
+        let system = LocalBrain.system(lang: L.rawValue, swear: trashTalk)
         let user = LocalBrain.userMessage(question: question, facts: facts, evidence: evidence, reading: reading, hint: hint, notes: notes,
                                           lang: L.rawValue)
         let book = rules
@@ -454,7 +457,7 @@ final class ChatViewModel: ObservableObject {
                 switch result {
                 case .success(let r) where !r.text.isEmpty:
                     // 一般聊天不讓大腦說髒話
-                    let said = Composure.rude(r.text) ? Composure.calm : r.text
+                    let said = self.trashTalk ? Composure.clean(r.text) : Composure.rude(r.text) ? Composure.calm : r.text
                     var turn = ChatTurn(role: .echo, text: book.enforce(said + note), source: .neural, card: card, tokens: query == nil ? nil : [])
                     turn.query = query
                     self.finish(turn)
@@ -474,7 +477,7 @@ final class ChatViewModel: ObservableObject {
         thinking = true
         streaming = LocalBrain.shared.isLoaded ? "…" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
         let past = turns.dropLast().suffix(12).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
-        let system = LocalBrain.roleplaySystem(character: roleCharacter, lang: L.rawValue)
+        let system = LocalBrain.roleplaySystem(character: roleCharacter, lang: L.rawValue, swear: trashTalk)
         // 小模型聊久了會忘記角色：每一句都附上角色設定提醒它（只給模型看，對話裡不會出現）
         let user = LocalBrain.roleplayUser(text, character: roleCharacter, lang: L.rawValue)
         let work = BackgroundWork.start()
@@ -492,7 +495,7 @@ final class ChatViewModel: ObservableObject {
                 case .success(let r) where AdultGuard.crosses(r.text):
                     self.finish(ChatTurn(role: .echo, text: AdultGuard.refusal(L), source: .tool))
                 case .success(let r) where !r.text.isEmpty:
-                    self.finish(ChatTurn(role: .echo, text: r.text, source: .neural))
+                    self.finish(ChatTurn(role: .echo, text: self.trashTalk ? Composure.clean(r.text) : r.text, source: .neural))
                 case .success:
                     self.finish(ChatTurn(role: .echo, text: "（大腦這次沒有寫出東西，再說一次試試。）", source: .tool))
                 case .failure(let e):
