@@ -58,4 +58,20 @@ public enum BrainRoute {
         }
         return (facts.joined(separator: "\n"), hint.joined(separator: "\n"))
     }
+
+    /// 對方心情低落、狀況很糟（而且不是在叫 NineSun 罵他、陪他罵）：大腦換成溫柔安慰的說話方式
+    /// previous：對方上一句（上一句在難過，這句「說了也沒用」「都是我的錯」也還是在難過）
+    public static func feelingLow(_ raw: String, previous: String? = nil) -> Bool {
+        if let p = previous, feelingLow(p), !raw.contains("罵") && !raw.contains("嗆") { return true }
+        let t = raw.replacingOccurrences(of: " ", with: "")
+        if t.range(of: #"罵我|罵醒|嗆我|髒話|陪我罵|一起罵|罵爆|罵一罵|罵他|互嗆"#, options: .regularExpression) != nil { return false }
+        if Safety.isCrisis(t) { return true }
+        let words = ["難過", "好累", "心好累", "心好亂", "好想哭", "想哭", "不知道怎麼辦", "崩潰", "失戀", "被分手", "被劈腿", "失眠", "睡不著", "焦慮",
+                     "孤單", "寂寞", "自責", "好沒用", "很沒用", "什麼都做不好", "想放棄", "撐不下去", "過世", "走了", "被裁", "失業", "卡債", "被詐騙",
+                     "被霸凌", "被欺負", "被背叛", "被罵", "被當", "考砸", "沒上", "好怕", "害怕", "恐慌", "壓力好大", "壓力很大", "憂鬱", "心情不好",
+                     "心情很差", "好痛苦", "很痛苦", "沒有人在乎", "沒朋友", "沒有朋友", "被排擠", "好委屈", "委屈", "被誤會", "看不到未來", "一事無成",
+                     "好低落", "大吵", "沒興趣", "又沒有我", "檢查有異常", "慢性病", "不要跟我說教", "不想說", "都是我的錯", "你根本不懂", "說了也沒用", "提不起勁", "好想家", "生病", "住院", "賠了", "付不出", "被拒絕", "已讀不回", "冷淡", "吵架", "一直出錯",
+                     "我只想有人聽", "陪我聊", "安慰我"]
+        return words.contains { t.contains($0) } || Solace.isFeeling(t)
+    }
 }

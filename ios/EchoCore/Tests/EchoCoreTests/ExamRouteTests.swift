@@ -25,6 +25,8 @@ final class ExamRouteTests: XCTestCase {
                 if !found.facts.isEmpty { route.route = "grounded"; item["notes"] = found.facts }
                 if !found.hint.isEmpty { item["hint"] = found.hint }
             }
+            let prevUser = (item["history"] as? [[String]] ?? []).last(where: { $0[0] == "user" })?[1]
+            if BrainRoute.feelingLow(q, previous: prevUser) { item["low"] = true }
             item["route"] = route.route
             if let t = route.text { item["engine_text"] = t }
             if let r = route.reading { item["reading"] = r }

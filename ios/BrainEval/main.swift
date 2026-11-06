@@ -50,7 +50,8 @@ for (i, line) in lines.enumerated() where i % shards == shard {
     let lang = it["lang"] as? String ?? "zh"
     let history = (it["history"] as? [[String]] ?? []).map { LocalBrain.Turn(fromUser: $0[0] == "user", text: $0[1]) }
     let mode: LocalBrain.Mode
-    var system = LocalBrain.system(lang: lang)
+    let low = it["low"] as? Bool ?? false
+    var system = LocalBrain.system(lang: lang, swear: !low)
     var user: String
     switch route {
     case "roleplay":
@@ -88,7 +89,8 @@ for (i, line) in lines.enumerated() where i % shards == shard {
     let prompt = runner.chatPrompt(LocalBrain.messages(system: system, history: history, user: user))
     do {
         let r = try runner.generate(prompt: prompt, maxTokens: most, temperature: temp, stop: LocalBrain.stops, seed: seed(id))
-        let text = LocalBrain.followFormat(question: q, answer: LocalBrain.tidy(r.text, lang: lang))
+        let formatted = LocalBrain.followFormat(question: q, answer: LocalBrain.tidy(r.text, lang: lang))
+        let text = low && route != "roleplay" ? LocalBrain.soften(formatted) : formatted
         rec["answer"] = text
         rec["tokens"] = r.tokens
         rec["seconds"] = r.seconds

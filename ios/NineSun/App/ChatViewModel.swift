@@ -447,7 +447,10 @@ final class ChatViewModel: ObservableObject {
         thinking = true
         streaming = LocalBrain.shared.isLoaded ? "🧠 想一想…" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
         let past = turns.dropLast().suffix(6).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
-        let system = LocalBrain.system(lang: L.rawValue, swear: trashTalk)
+        // 對方心情低落：不用嘴砲的個性，溫柔地安慰
+        let prevUser = turns.dropLast().last(where: { $0.role == .user })?.text
+        let low = BrainRoute.feelingLow(question, previous: prevUser)
+        let system = LocalBrain.system(lang: L.rawValue, swear: trashTalk && !low)
         let user = LocalBrain.userMessage(question: question, facts: facts, evidence: evidence, reading: reading, hint: hint, notes: notes,
                                           lang: L.rawValue)
         let book = rules
@@ -461,7 +464,8 @@ final class ChatViewModel: ObservableObject {
                 switch result {
                 case .success(let r) where !r.text.isEmpty:
                     // 一般聊天不讓大腦說髒話
-                    let raw = LocalBrain.followFormat(question: question, answer: r.text)
+                    let formatted = LocalBrain.followFormat(question: question, answer: r.text)
+                    let raw = low ? LocalBrain.soften(formatted) : formatted
                     let said = self.trashTalk ? Composure.clean(raw) : Composure.rude(raw) ? Composure.calm : raw
                     var turn = ChatTurn(role: .echo, text: book.enforce(said + note), source: .neural, card: card, tokens: query == nil ? nil : [])
                     turn.query = query
