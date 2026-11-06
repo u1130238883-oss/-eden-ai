@@ -38,13 +38,16 @@ public enum BrainRoute {
         let fortuneCats: Set<String> = ["紫微星曜", "紫微十二宮", "六十四卦", "十神", "天干", "地支", "八卦", "五行", "四化", "概念", "九型十二宮",
                                         "九型人格", "納音", "七政四餘", "二十八宿", "地支關係"]
         let fortuneTalk = asksFortune(text) || ["紫微", "八字", "斗數", "十神", "天干", "地支", "五行", "納音", "七政", "四餘", "星曜", "化祿", "化權",
-                                                "化科", "化忌", "生肖", "宿", "卦", "格局", "喜用", "日主", "大限", "九型"].contains { text.contains($0) }
+                                                "化科", "化忌", "生肖", "宿", "卦", "格局", "喜用", "日主", "大限", "九型", "合化", "六合", "三合", "相沖", "六沖", "相刑",
+                                                "相害", "四化"].contains { text.contains($0) }
         for e in kb.mentioned(in: text, limit: 4)
         where (!["國家", "台灣縣市"].contains(e.cat) || place.contains(where: { text.contains($0) }))
             && (!fortuneCats.contains(e.cat) || fortuneTalk) {
             let line = "\(e.title)：\(e.body)"
             if soft.contains(e.cat) { hint.append(line) } else { facts.append(line) }
         }
+        // 引擎算好的：十神、五行生剋、四化、天干地支、BMI、血壓、血糖、體溫
+        facts += BrainFacts.notes(text)
         // 成語：NineSun 的成語辭典（意思、近義、反義）
         if let w = Idioms.find(text), let e = Idioms.entry(w) {
             var line = "成語「\(w)」：\(e.meaning)"

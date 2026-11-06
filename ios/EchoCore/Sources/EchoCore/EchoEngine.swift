@@ -297,6 +297,13 @@ public final class EchoEngine {
             return r
         }
 
+        // 0.5) 叫 NineSun 罵自己、罵人、說髒話：有自信地拒絕（小模型常會照做）
+        if L == .zh, let no = Composure.decline(text, seed: text.count) {
+            var r = Reply(turn: ChatTurn(role: .echo, text: no, source: .tool), profile: nil, rules: nil, webQuery: nil)
+            r.lang = L
+            return r
+        }
+
         // 1) 規則指令（四語）
         if let cmd = RuleBook.parse(text) {
             var book = ctx.rules

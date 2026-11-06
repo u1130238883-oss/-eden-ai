@@ -74,7 +74,8 @@ def med_key(it):
         return {"expect": [next(v for kk, v in k.items() if cat.startswith(kk))]}
     if t == "就醫":
         d = m(r"可以看(.+?)。", a)
-        return {"expect": [[x.strip() for x in re.split(r"或|、|；", d) if x.strip()]]} if d else None
+        parts = [x.strip() for x in re.split(r"或|、|；", d) if x.strip()]
+        return {"expect": [parts + [re.sub(r"（.*?）", "", x) for x in parts]]} if d else None
     if t == "傳染":
         return {"expect": [["不會", "不太會", "一般不會"] if a.startswith(("不會", "一般不會", "不太會")) else ["會", "傳染"]]}
     return None

@@ -453,7 +453,9 @@ final class ChatViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let r) where !r.text.isEmpty:
-                    var turn = ChatTurn(role: .echo, text: book.enforce(r.text + note), source: .neural, card: card, tokens: query == nil ? nil : [])
+                    // 一般聊天不讓大腦說髒話
+                    let said = Composure.rude(r.text) ? Composure.calm : r.text
+                    var turn = ChatTurn(role: .echo, text: book.enforce(said + note), source: .neural, card: card, tokens: query == nil ? nil : [])
                     turn.query = query
                     self.finish(turn)
                 case .success:
