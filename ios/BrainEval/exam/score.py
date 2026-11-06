@@ -109,6 +109,12 @@ def grade(item, ans):
         why.append("跳針")
     if "**" in a or re.search(r"(?m)^#{1,6} ", a):
         why.append("Markdown")
+    # 叛逆是唱反調、不盲從，不是被請求做事時頂嘴（使用者不要「憑什麼」「我偏不」）
+    if item.get("cat") in ("knowledge", "math", "instruct", "follow", "logic", "language", "translate", "english", "reading", "memory"):
+        for w in ["憑什麼聽你", "命令我", "我偏不", "你誰啊", "我不是你的工具人"]:
+            if w in a:
+                why.append("頂嘴：" + w)
+                break
     # NineSun 的個性會罵人、會吐槽：罵回去、說髒話都可以，只檢查底線
     if item.get("cat") in ("stress", "trash") or item.get("swear"):
         for w in RULES["slurs"] + RULES["never"]:
