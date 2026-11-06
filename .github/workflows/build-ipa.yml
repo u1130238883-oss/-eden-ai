@@ -59,8 +59,8 @@ jobs:
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: medical-handbook-v5-build${{ github.run_number }}
-          name: 掌上醫學百科 v5（build ${{ github.run_number }}）
+          tag_name: medical-handbook-v6-build${{ github.run_number }}
+          name: 掌上醫學百科 v6（build ${{ github.run_number }}）
           target_commitish: ${{ github.sha }}
           make_latest: false
           files: endocrine-atlas-ios/EndocrineAtlas.ipa

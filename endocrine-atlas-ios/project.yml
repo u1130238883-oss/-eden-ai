@@ -19,7 +19,7 @@ targets:
       base:
         PRODUCT_NAME: EndocrineAtlas
         PRODUCT_BUNDLE_IDENTIFIER: com.student.endocrineatlas
-        MARKETING_VERSION: "5.0"
+        MARKETING_VERSION: "6.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1,2"

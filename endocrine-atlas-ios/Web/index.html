@@ -312,6 +312,7 @@ ul.dont li::before{content:"✕";position:absolute;left:0;color:var(--inhib);fon
 <script src="med/med-6-drug.js"></script>
 <script src="med/med-7-lab-aid.js"></script>
 <script src="med/med-9-more.js"></script>
+<script src="med/med-10-batch3.js"></script>
 <script src="med/med-8-bridge.js"></script>
 <script>
 (function(){
@@ -733,7 +734,7 @@ function renderDrug(){
 }
 function fillDrug(){
   const box=document.getElementById("drlist");const q=norm(A.gq.trim());
-  const list=M.DRUG.filter(r=>(A.ggrp==="all"||r.grp===A.ggrp)&&(!q||norm([r.zh,r.en,r.ex,r.use,r.moa].join(" ")).includes(q)));
+  const list=M.DRUG.filter(r=>(A.ggrp==="all"||r.grp===A.ggrp)&&(!q||norm([r.zh,r.en,r.ex,r.use,r.moa].join(" ")).includes(q))).map((r,i)=>[r,i]).sort((a,b)=>M.DRUGGRP.indexOf(a[0].grp)-M.DRUGGRP.indexOf(b[0].grp)||a[1]-b[1]).map(x=>x[0]);
   let html=`<div class="cnt">${list.length} 類藥物</div>`,last="";
   if(!list.length)html+=`<div class="empty">找不到符合的藥物，可以試試英文學名或用途。</div>`;
   list.forEach(r=>{if(A.ggrp==="all"&&r.grp!==last){html+=`<h3 class="grp-h">${esc(r.grp)}</h3>`;last=r.grp}html+=drugCard(r,r.id===A.gopen)});
@@ -753,7 +754,7 @@ function renderLab(){
   fillLab();
 }
 function fillLab(){
-  const box=document.getElementById("llist");const list=M.LAB.filter(r=>A.lgrp==="all"||r.grp===A.lgrp);
+  const box=document.getElementById("llist");const list=M.LAB.filter(r=>A.lgrp==="all"||r.grp===A.lgrp).map((r,i)=>[r,i]).sort((a,b)=>M.LABGRP.indexOf(a[0].grp)-M.LABGRP.indexOf(b[0].grp)||a[1]-b[1]).map(x=>x[0]);
   let html="",last="";list.forEach(r=>{if(r.grp!==last){html+=`<h3 class="grp-h">${esc(r.grp)}</h3>`;last=r.grp}html+=labCard(r,r.id===A.lopen)});
   box.innerHTML=html;wireAccordion(box,"details.lb","lopen");
 }
