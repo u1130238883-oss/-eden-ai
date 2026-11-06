@@ -2,7 +2,7 @@ name: Brain exam
 
 # NineSun 的大腦考試：在 Mac 上真的讀進 Gemma 4 E4B Mahou，用 App 一模一樣的提示回答 ios/BrainEval/exam/run.jsonl
 # （常識、算數、推理、語文、閱讀、翻譯、英文、記性、角色扮演、壓力測試……），分 5 台機器同時跑。
-# 回答存到分支 evals/exam-<次數>-<機器>（ios/BrainEval/exam/score.py 改分）。commit 訊息有 [exam] 或手動執行。
+# 回答存到分支 evals/exam-<題目雜湊>-<機器>（同一份題目再跑會接著考；ios/BrainEval/exam/score.py 改分）。commit 訊息有 [exam] 或手動執行。
 on:
   push:
     paths:
@@ -61,7 +61,7 @@ jobs:
       - name: Pick GPU or CPU
         id: pick
         run: |
-          head -40 ios/BrainEval/exam/run.jsonl | grep -v '"route": "engine"' | grep -v '"route":"engine"' | head -3 > probe.jsonl
+          python3 -c "import json;r=[l for l in open('ios/BrainEval/exam/run.jsonl') if json.loads(l)['route']!='engine'][:3];open('probe.jsonl','w').write(''.join(r))"
           rate() { python3 -c "import json,sys;r=[json.loads(l) for l in open(sys.argv[1]) if l.strip()];t=sum(x.get('tokens',0) for x in r);s=sum(x.get('seconds',0) for x in r);print(round(t/s,2) if s and t else 0)" "$1"; }
           G=0
           if timeout 600 ./brain-eval model.gguf probe.jsonl probe-gpu.jsonl gpu > probe-gpu.log 2>&1; then G=$(rate probe-gpu.jsonl); fi
@@ -69,6 +69,15 @@ jobs:
           C=$(rate probe-cpu.jsonl)
           echo "GPU $G token/秒，CPU $C token/秒"; tail -12 probe-gpu.log; tail -12 probe-cpu.log
           if python3 -c "import sys;sys.exit(0 if float('$G')>float('$C') else 1)"; then echo "dev=gpu" >> "$GITHUB_OUTPUT"; else echo "dev=cpu" >> "$GITHUB_OUTPUT"; fi
+
+      # 同一份題目之前考到一半（機器不夠被取消、超時）：接著考，不重考已經答過的
+      - name: Resume earlier answers
+        run: |
+          H=$(shasum ios/BrainEval/exam/run.jsonl | cut -c1-10)
+          echo "H=$H" >> "$GITHUB_ENV"
+          if git fetch -q origin "evals/exam-$H-${{ matrix.shard }}" 2>/dev/null; then
+            git show FETCH_HEAD:answers-${{ matrix.shard }}.jsonl > answers-${{ matrix.shard }}.jsonl && wc -l answers-${{ matrix.shard }}.jsonl
+          fi
 
       - name: Exam
         env:
@@ -89,4 +98,4 @@ jobs:
         run: |
           D="$RUNNER_TEMP/out" && mkdir -p "$D" && cp answers-${{ matrix.shard }}.jsonl "$D/" 2>/dev/null || exit 0
           cd "$D" && git init -q && git add . && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Exam ${{ github.run_number }} shard ${{ matrix.shard }} (${{ github.sha }})"
-          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/evals/exam-${{ github.run_number }}-${{ matrix.shard }}
+          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/evals/exam-$H-${{ matrix.shard }}
