@@ -389,7 +389,7 @@ final class ChatViewModel: ObservableObject {
         }
         if let q = reply.webQuery {
             // 大腦寫不出來才用原本的上網查
-            brainAnswer(text, mode: .chat, lang: L, brain: brain) { _ in self.lookupWeb(q, L) }
+            brainChat(text, L, brain: brain) { _ in self.lookupWeb(q, L) }
             return true
         }
         // 引擎把「媽媽的媽媽叫什麼」「我在哪個城市讀書」當成在問命盤的某一宮（或跟你要生日）：
@@ -398,13 +398,13 @@ final class ChatViewModel: ObservableObject {
         switch reply.turn.source {
         case .tool, .rule:
             if !fortune, BrainRoute.needsBirthday(reply.turn.text) {
-                brainAnswer(text, mode: .chat, lang: L, brain: brain, onFail: fallback)
+                brainChat(text, L, brain: brain, onFail: fallback)
                 return true
             }
             return false
         case .reader, .grounded, .corrected:
             if !fortune {
-                brainAnswer(text, mode: .chat, lang: L, brain: brain, onFail: fallback)
+                brainChat(text, L, brain: brain, onFail: fallback)
                 return true
             }
             // 命盤推算的結果：只有引擎算得出你的盤，大腦用白話回答
@@ -412,9 +412,16 @@ final class ChatViewModel: ObservableObject {
             let reading = reply.turn.text + (reply.augmentFacts.isEmpty ? "" : "\n" + reply.augmentFacts)
             brainAnswer(text, reading: reading, mode: .reading, lang: L, brain: brain, card: reply.turn.card, onFail: fallback)
         case .knowledge, .neural:
-            brainAnswer(text, mode: .chat, lang: L, brain: brain, onFail: fallback)
+            brainChat(text, L, brain: brain, onFail: fallback)
         }
         return true
+    }
+
+    /// 一般問題交給大腦：先查 NineSun 的知識庫（疾病、急救、國家、元素、動物、命理名詞……），
+    /// 查到的當成資料交給大腦照著回答；情緒類的當參考，還是用聊天的語氣
+    private func brainChat(_ text: String, _ L: Lang, brain: String, onFail: @escaping (String) -> Void) {
+        let found = L == .zh ? BrainRoute.lookup(text, in: engine?.knowledge[.zh]) : (facts: "", hint: "")
+        brainAnswer(text, hint: found.hint, notes: found.facts, mode: found.facts.isEmpty ? .chat : .grounded, lang: L, brain: brain, onFail: onFail)
     }
 
     /// 翻譯的問題交給大腦：用問的人說的語言回答，不是翻成的語言
@@ -425,13 +432,14 @@ final class ChatViewModel: ObservableObject {
 
     /// 問大腦，一邊寫一邊顯示；寫不出來（模型讀不進來、記憶體不夠）就用 onFail（引擎原本的回答）
     private func brainAnswer(_ question: String, facts: String = "", evidence: [String] = [], reading: String = "", hint: String = "",
-                             mode: LocalBrain.Mode, lang L: Lang, brain: String, card: FortuneCard? = nil, query: String? = nil,
+                             notes: String = "", mode: LocalBrain.Mode, lang L: Lang, brain: String, card: FortuneCard? = nil, query: String? = nil,
                              note: String = "", onFail: @escaping (String) -> Void) {
         thinking = true
         streaming = LocalBrain.shared.isLoaded ? "🧠 想一想…" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
         let past = turns.dropLast().suffix(6).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
         let system = LocalBrain.system(lang: L.rawValue)
-        let user = LocalBrain.userMessage(question: question, facts: facts, evidence: evidence, reading: reading, hint: hint, lang: L.rawValue)
+        let user = LocalBrain.userMessage(question: question, facts: facts, evidence: evidence, reading: reading, hint: hint, notes: notes,
+                                          lang: L.rawValue)
         let book = rules
         // 切到別的 App 也繼續寫
         let work = BackgroundWork.start()

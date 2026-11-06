@@ -62,10 +62,11 @@ for (i, line) in lines.enumerated() where i % shards == shard {
         user = LocalBrain.userMessage(question: q, reading: it["reading"] as? String ?? "", lang: lang)
     case "grounded":
         mode = .grounded
-        user = LocalBrain.userMessage(question: q, facts: it["facts"] as? String ?? "", evidence: it["evidence"] as? [String] ?? [], lang: lang)
+        user = LocalBrain.userMessage(question: q, facts: it["facts"] as? String ?? "", evidence: it["evidence"] as? [String] ?? [],
+                                      hint: it["hint"] as? String ?? "", notes: it["notes"] as? String ?? "", lang: lang)
     default:
         mode = .chat
-        user = LocalBrain.userMessage(question: q, lang: lang)
+        user = LocalBrain.userMessage(question: q, hint: it["hint"] as? String ?? "", lang: lang)
     }
     let (temp, most) = LocalBrain.settings(mode)
     let prompt = runner.chatPrompt(LocalBrain.messages(system: system, history: history, user: user))

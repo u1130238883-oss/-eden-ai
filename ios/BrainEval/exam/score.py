@@ -75,6 +75,10 @@ def grade(item, ans):
         tail = [float(x.replace(",", "")) for x in tail]
         if not ns or (abs(ns[-1] - want) > 1e-6 and not (tail and abs(tail[-1] - want) < 1e-6)):
             why.append(f"數字錯（要 {item['num']}，最後是 {ns[-1] if ns else '沒有'}）")
+    if "approx" in item:
+        want = float(item["approx"])
+        if not any(abs(x - want) <= max(0.06, abs(want) * 0.02) for x in numbers(a)):
+            why.append(f"數字不對（要約 {want:g}）")
     if "maxlen" in item and len(a) > item["maxlen"]:
         why.append(f"太長（{len(a)} 字）")
     if item.get("script") == "en" and cjk_ratio(a) > 0.05:

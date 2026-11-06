@@ -18,7 +18,13 @@ final class ExamRouteTests: XCTestCase {
             guard var item = try JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any],
                   let q = item["q"] as? String else { continue }
             let hist = (item["history"] as? [[String]] ?? []).map { ChatTurn(role: $0[0] == "user" ? .user : .echo, text: $0[1]) }
-            let route = Self.route(q, item: item, history: hist, engine: engine)
+            var route = Self.route(q, item: item, history: hist, engine: engine)
+            // App 的 brainChat：一般問題先查知識庫，查到的當資料（大腦照著回答）、情緒類的當參考
+            if route.route == "chat", route.lang == "zh" || route.lang == nil {
+                let found = BrainRoute.lookup(q, in: engine.knowledge[.zh])
+                if !found.facts.isEmpty { route.route = "grounded"; item["notes"] = found.facts }
+                if !found.hint.isEmpty { item["hint"] = found.hint }
+            }
             item["route"] = route.route
             if let t = route.text { item["engine_text"] = t }
             if let r = route.reading { item["reading"] = r }

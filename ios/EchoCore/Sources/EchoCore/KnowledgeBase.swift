@@ -93,6 +93,25 @@ public final class KnowledgeBase {
         return scored.sorted { $0.1 > $1.1 }.prefix(limit).map { ($0.0, $0.1) }
     }
 
+    /// 這句話提到的條目（標題或別名出現在句子裡）：交給大腦當參考資料。名字越長、越具體越優先；
+    /// 被更長的名字蓋過的短名字不算（問「急性腸胃炎」就不要再給「腸胃炎」以外的「胃」）
+    public func mentioned(in text: String, limit: Int = 2) -> [Entry] {
+        let chem = ["元素", "化學", "符號", "原子"].contains { text.contains($0) }
+        var hits: [(entry: Entry, name: String)] = []
+        for e in entries {
+            let names = ([e.title] + e.aliases).filter { $0.count >= 2 || (chem && e.cat == "化學元素") }
+            if let best = names.filter({ text.contains($0) }).max(by: { $0.count < $1.count }) { hits.append((e, best)) }
+        }
+        hits = hits.filter { h in !hits.contains { $0.name.count > h.name.count && $0.name.contains(h.name) } }
+        var out = hits.sorted { $0.name.count > $1.name.count }.prefix(limit).map(\.entry)
+        // 「為什麼天空是藍的」這種整句的條目：用雙字重疊找
+        if out.isEmpty, let best = search(text, limit: 1).first, best.score >= 1.2,
+           ["為什麼", "急救衛教"].contains(best.entry.cat) {
+            out = [best.entry]
+        }
+        return Array(out)
+    }
+
     /// 對話用：只在很有把握時回答
     public func answer(_ query: String) -> Entry? {
         guard let best = search(query, limit: 1).first, best.score >= 5 else { return nil }

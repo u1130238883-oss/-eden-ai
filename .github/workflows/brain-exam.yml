@@ -71,11 +71,24 @@ jobs:
           fi
           true
 
+      # 每 15 分鐘把答到的存到分支一次（中途就能看成績）
       - name: Exam
         env:
           NSUnbufferedIO: "YES"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          timeout 320m ./brain-eval model.gguf ios/BrainEval/exam/run.jsonl answers-${{ matrix.shard }}.jsonl shard=${{ matrix.shard }}/12 || true
+          A=answers-${{ matrix.shard }}.jsonl
+          save() {
+            [ -f "$A" ] || return 0
+            D=$(mktemp -d) && cp "$A" "$D/" && cd "$D" && git init -q && git add . \
+              && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Exam $H shard ${{ matrix.shard }}" \
+              && git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/evals/exam-$H-${{ matrix.shard }}
+            cd "$GITHUB_WORKSPACE"
+          }
+          timeout 320m ./brain-eval model.gguf ios/BrainEval/exam/run.jsonl "$A" shard=${{ matrix.shard }}/12 &
+          P=$!
+          while kill -0 $P 2>/dev/null; do sleep 900; save || true; done
+          wait $P || true
 
       - name: Score this shard
         if: always()

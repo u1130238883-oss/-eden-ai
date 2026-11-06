@@ -211,7 +211,7 @@ final class LocalBrain {
     /// 交給大腦的訊息：問題＋引擎給的東西
     /// hint：參考用的（NineSun 用命盤看到的心情處境），挑一兩句用，不用照抄
     static func userMessage(question: String, facts: String = "", evidence: [String] = [], reading: String = "", hint: String = "",
-                            lang: String = "zh") -> String {
+                            notes: String = "", lang: String = "zh") -> String {
         let zh = !["en", "es", "it"].contains(lang)
         var s = ""
         if !hint.isEmpty {
@@ -225,6 +225,10 @@ final class LocalBrain {
         }
         if !facts.isEmpty {
             s += (zh ? "【NineSun 查到的資料】（正確，照著它的結論回答，不能說相反的話）\n" : "[NineSun's facts] (correct; follow their conclusion, never contradict them)\n") + String(facts.prefix(1500)) + "\n\n"
+        }
+        if !notes.isEmpty {
+            s += (zh ? "【NineSun 的知識庫】（資料是正確的；跟問題有關的才用，無關就忽略）\n" : "[NineSun's notes] (accurate; use only what is relevant)\n")
+                + String(notes.prefix(1200)) + "\n\n"
         }
         if !evidence.isEmpty {
             var used = 0
@@ -249,7 +253,7 @@ final class LocalBrain {
         s = s.replacingOccurrences(of: #"(?s)<\|channel>.*?<channel\|>"#, with: "", options: .regularExpression)   // Gemma 4 的思考
         s = s.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "<|im_end|>", with: "")
         // 有的模型會把提示裡的資料標題抄回來：答完之後再抄一遍資料的整段拿掉，開頭的標題行拿掉
-        for tag in ["【NineSun 查到的資料】", "[NineSun's facts]", "【命盤推算結果】", "[chart results]"] {
+        for tag in ["【NineSun 查到的資料】", "[NineSun's facts]", "【命盤推算結果】", "[chart results]", "【NineSun 的知識庫】", "[NineSun's notes]"] {
             if let r = s.range(of: tag) {
                 if s[..<r.lowerBound].trimmingCharacters(in: .whitespacesAndNewlines).count > 20 { s = String(s[..<r.lowerBound]) }
                 else { s = s.replacingOccurrences(of: #"(?m)^.*"# + NSRegularExpression.escapedPattern(for: tag) + #".*\n?"#, with: "", options: .regularExpression) }
