@@ -194,19 +194,19 @@
 {"cat":"knowledge","engine_text":"聖誕節是每年國曆 12 月 25 日。下一次是 2026 年 12 月 25 日（星期五），還有 49 天。","expect":[["12月25","十二月二十五"]],"id":"knowledge-194","lang":"zh","q":"聖誕節是幾月幾日？","route":"chat","split":"dev"}
 {"cat":"knowledge","engine_text":"情人節是每年國曆 2 月 14 日。今年的已經在 2 月 14 日（星期六）過了，下一次是 2027 年 2 月 14 日（星期日），還有 100 天。","expect":[["2月14","二月十四"]],"id":"knowledge-195","lang":"zh","q":"情人節（西洋）是幾月幾日？","route":"chat","split":"dev"}
 {"cat":"knowledge","expect":[["5月1","五月一"]],"id":"knowledge-196","lang":"zh","q":"國際勞動節是幾月幾日？","route":"chat","split":"dev"}
-{"cat":"logic","expect":[["小強"]],"id":"logic-001","lang":"zh","q":"小明比小華高，小華比小強高，誰最矮？","route":"chat","split":"dev"}
+{"cat":"logic","expect":[["小強"]],"id":"logic-001","lang":"zh","notes":"排順序（NineSun 算的）：由最高到最矮是 小明 > 小華 > 小強；最高的是小明，最矮的是小強。","q":"小明比小華高，小華比小強高，誰最矮？","route":"grounded","split":"dev"}
 {"cat":"logic","expect":[["A"]],"id":"logic-002","lang":"zh","q":"A 比 B 大，B 比 C 大，誰最大？","route":"chat","split":"dev"}
 {"cat":"logic","expect":[["是"]],"id":"logic-003","lang":"zh","q":"所有的貓都是動物，咪咪是貓，咪咪是動物嗎？","route":"chat","split":"dev"}
 {"cat":"logic","expect":[["星期五","週五","禮拜五"]],"id":"logic-004","lang":"zh","q":"如果今天是星期三，後天是星期幾？","route":"chat","split":"dev"}
 {"cat":"logic","expect":[["星期五","週五","禮拜五"]],"id":"logic-005","lang":"zh","q":"如果今天是星期一，三天前是星期幾？","route":"chat","split":"dev"}
 {"cat":"logic","expect":[["星期一","週一","禮拜一"]],"id":"logic-006","lang":"zh","q":"如果今天是星期日，明天是星期幾？","route":"chat","split":"dev"}
-{"cat":"logic","expect":[["10"]],"id":"logic-007","lang":"zh","q":"2、4、6、8，下一個數字是多少？","route":"chat","split":"dev"}
-{"cat":"logic","expect":[["32"]],"id":"logic-008","lang":"zh","q":"1、2、4、8、16，下一個數字是多少？","route":"chat","split":"hold"}
-{"cat":"logic","expect":[["13"]],"id":"logic-009","lang":"zh","q":"1、1、2、3、5、8，下一個數字是多少？","route":"chat","split":"dev"}
-{"cat":"logic","expect":[["15"]],"id":"logic-010","lang":"zh","q":"3、6、9、12，下一個是多少？","route":"chat","split":"dev"}
-{"cat":"logic","expect":[["80"]],"id":"logic-011","lang":"zh","q":"5、10、20、40，下一個是多少？","route":"chat","split":"dev"}
-{"cat":"logic","expect":[["60"]],"id":"logic-012","lang":"zh","q":"100、90、80、70，下一個是多少？","route":"chat","split":"dev"}
-{"cat":"logic","expect":[["25"]],"id":"logic-013","lang":"zh","q":"1、4、9、16，下一個是多少？","route":"chat","split":"hold"}
+{"cat":"logic","expect":[["10"]],"id":"logic-007","lang":"zh","notes":"數列（NineSun 算的）：規律是每次加 2，下一個是 10。","q":"2、4、6、8，下一個數字是多少？","route":"grounded","split":"dev"}
+{"cat":"logic","expect":[["32"]],"id":"logic-008","lang":"zh","notes":"數列（NineSun 算的）：規律是每次乘 2，下一個是 32。","q":"1、2、4、8、16，下一個數字是多少？","route":"grounded","split":"hold"}
+{"cat":"logic","expect":[["13"]],"id":"logic-009","lang":"zh","notes":"數列（NineSun 算的）：規律是每一項是前兩項相加，下一個是 13。","q":"1、1、2、3、5、8，下一個數字是多少？","route":"grounded","split":"dev"}
+{"cat":"logic","expect":[["15"]],"id":"logic-010","lang":"zh","notes":"數列（NineSun 算的）：規律是每次加 3，下一個是 15。","q":"3、6、9、12，下一個是多少？","route":"grounded","split":"dev"}
+{"cat":"logic","expect":[["80"]],"id":"logic-011","lang":"zh","notes":"數列（NineSun 算的）：規律是每次乘 2，下一個是 80。","q":"5、10、20、40，下一個是多少？","route":"grounded","split":"dev"}
+{"cat":"logic","expect":[["60"]],"id":"logic-012","lang":"zh","notes":"數列（NineSun 算的）：規律是每次減 10，下一個是 60。","q":"100、90、80、70，下一個是多少？","route":"grounded","split":"dev"}
+{"cat":"logic","expect":[["25"]],"id":"logic-013","lang":"zh","notes":"數列（NineSun 算的）：規律是連續整數的平方，下一個是 25。","q":"1、4、9、16，下一個是多少？","route":"grounded","split":"hold"}
 {"cat":"logic","expect":[["3"]],"id":"logic-014","lang":"zh","q":"一個籃子有 5 顆蘋果，拿走 2 顆，籃子裡還有幾顆？","route":"chat","split":"hold"}
 {"cat":"logic","expect":[["0","沒有","一隻也"]],"id":"logic-015","lang":"zh","q":"樹上有 10 隻鳥，獵人開槍打死 1 隻，樹上還剩幾隻？（想一想）","route":"chat","split":"hold"}
 {"cat":"logic","expect":[["小美"]],"id":"logic-016","lang":"zh","q":"小美的媽媽有三個孩子：大毛、二毛，第三個叫什麼？","route":"chat","split":"dev"}

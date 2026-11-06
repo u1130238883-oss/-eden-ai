@@ -10,8 +10,17 @@ public enum BrainFacts {
         var out: [String] = []
         out += fortune(text)
         out += health(text)
+        out += reasoning(text)
         return out
     }
+
+    static let nayin = ["海中金", "爐中火", "大林木", "路旁土", "劍鋒金", "山頭火", "澗下水", "城頭土", "白蠟金", "楊柳木",
+                        "泉中水", "屋上土", "霹靂火", "松柏木", "長流水", "沙中金", "山下火", "平地木", "壁上土", "金箔金",
+                        "覆燈火", "天河水", "大驛土", "釵釧金", "桑柘木", "大溪水", "沙中土", "天上火", "石榴木", "大海水"]
+    static let liuhe: [Set<Int>: String] = [[0, 1]: "土", [2, 11]: "木", [3, 10]: "火", [4, 9]: "金", [5, 8]: "水", [6, 7]: "土（一說火）"]
+    static let chong: [Set<Int>] = [[0, 6], [1, 7], [2, 8], [3, 9], [4, 10], [5, 11]]
+    static let hai: [Set<Int>] = [[0, 7], [1, 6], [2, 5], [3, 4], [8, 11], [9, 10]]
+    static let sanhe: [(Set<Int>, String)] = [([8, 0, 4], "水"), ([11, 3, 7], "木"), ([2, 6, 10], "火"), ([5, 9, 1], "金")]
 
     // MARK: - 命理
 
@@ -39,6 +48,34 @@ public enum BrainFacts {
                 let pairs: [String] = [w + "生", w + "剋", w + "克", "生" + w, "剋" + w, "克" + w]
                 guard pairs.contains(where: { t.contains($0) }) else { continue }
                 out.append("五行（NineSun 的資料）：\(w)生\(wx[(i + 1) % 5])、\(w)剋\(wx[(i + 2) % 5])；生\(w)的是\(wx[(i + 4) % 5])、剋\(w)的是\(wx[(i + 3) % 5])。")
+            }
+        }
+        // 納音：「甲辰的納音」「己未是什麼命」
+        if t.contains("納音") || t.contains("什麼命") || t.contains("年命") {
+            let cs = Array(t)
+            for i in 0..<(max(0, cs.count - 1)) {
+                if let a = stems.firstIndex(of: String(cs[i])), let b = branches.firstIndex(of: String(cs[i + 1])), a % 2 == b % 2 {
+                    let g = GZ.index(stem: a, branch: b)
+                    out.append("納音（NineSun 的資料）：\(stems[a])\(branches[b])的納音是「\(nayin[g / 2])」，五行屬\(nayin[g / 2].suffix(1))。")
+                }
+            }
+        }
+        // 地支的合、沖、害：「巳和申是六合嗎」「卯戌合化什麼」
+        if ["合", "沖", "冲", "害", "刑"].contains(where: { t.contains($0) }) {
+            let bs = t.compactMap { branches.firstIndex(of: String($0)) }
+            let uniq = Array(NSOrderedSet(array: bs)) as? [Int] ?? bs
+            if uniq.count >= 2 {
+                for i in 0..<uniq.count { for j in (i + 1)..<uniq.count {
+                    let p: Set<Int> = [uniq[i], uniq[j]]
+                    let name = branches[uniq[i]] + branches[uniq[j]]
+                    if let el = liuhe[p] { out.append("地支（NineSun 的資料）：\(name)是六合，合化\(el)。") }
+                    if chong.contains(p) { out.append("地支（NineSun 的資料）：\(name)是六沖（相沖）。") }
+                    if hai.contains(p) { out.append("地支（NineSun 的資料）：\(name)是六害（相害）。") }
+                    if liuhe[p] == nil && !chong.contains(p) && !hai.contains(p) { out.append("地支（NineSun 的資料）：\(name)不是六合、六沖，也不是六害。") }
+                } }
+                for (tri, el) in sanhe where tri.isSubset(of: Set(uniq)) {
+                    out.append("地支（NineSun 的資料）：" + tri.sorted().map { branches[$0] }.joined() + "三合\(el)局。")
+                }
             }
         }
         // 生年四化：「甲年生的四化」
@@ -99,7 +136,7 @@ public enum BrainFacts {
             else if s >= 120 { cat = "偏高（120～129／80 以下）：還不到高血壓，要開始少鹽、運動" }
             else if s < 90 || d < 60 { cat = "偏低：沒有不舒服通常不用擔心，頭暈快暈倒要就醫" }
             else { cat = "理想（低於 120/80）" }
-            out.append("血壓（NineSun 判斷的）：\(Int(s))/\(Int(d)) mmHg 屬於\(cat)。")
+            out.append("血壓（NineSun 判斷的）：\(Int(s))/\(Int(d)) mmHg 屬於\(cat)。回答時直接說出這個分類，不要輕描淡寫。")
         }
         if let v = nums(t, #"空腹血糖(?:驗出來|是|有)?(\d{2,3})"#), let g = v.first {
             let cat = g < 70 ? "低血糖" : g < 100 ? "正常" : g < 126 ? "糖尿病前期" : "可能是糖尿病（要另一天再驗一次確認）"
@@ -114,6 +151,106 @@ public enum BrainFacts {
             out.append("體溫（NineSun 判斷的）：\(c)°C 屬於\(cat)（耳溫或口溫 38°C 以上算發燒；三個月以下嬰兒發燒要立刻就醫）。")
         }
         return out
+    }
+}
+
+extension BrainFacts {
+    // MARK: - 推理（日期、數列、排順序、雞兔同籠）
+
+    static func reasoning(_ raw: String) -> [String] {
+        let t = raw.replacingOccurrences(of: " ", with: "")
+        var out: [String] = []
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        let week = ["日", "一", "二", "三", "四", "五", "六"]
+        // 日期是星期幾
+        if let v = nums(t, #"(\d{4})[/年\-.](\d{1,2})[/月\-.](\d{1,2})"#), v.count == 3,
+           let d = cal.date(from: DateComponents(year: Int(v[0]), month: Int(v[1]), day: Int(v[2]))),
+           cal.component(.month, from: d) == Int(v[1]) {
+            out.append("日期（NineSun 算的）：\(Int(v[0]))年\(Int(v[1]))月\(Int(v[2]))日是星期\(week[cal.component(.weekday, from: d) - 1])。")
+        }
+        // 某年某月有幾天、1 號星期幾
+        if let v = nums(t, #"(\d{4})年(\d{1,2})月有幾天"#), v.count == 2,
+           let d = cal.date(from: DateComponents(year: Int(v[0]), month: Int(v[1]), day: 1)),
+           let r = cal.range(of: .day, in: .month, for: d) {
+            out.append("日期（NineSun 算的）：\(Int(v[0]))年\(Int(v[1]))月有 \(r.count) 天，\(Int(v[1]))月1日是星期\(week[cal.component(.weekday, from: d) - 1])。")
+        }
+        // 數列下一個
+        if t.contains("下一個") || t.contains("下一項") {
+            let xs = allNumbers(t)
+            if xs.count >= 4, let (next, rule) = nextInSequence(xs) {
+                out.append("數列（NineSun 算的）：規律是\(rule)，下一個是 \(fmt(next))。")
+            }
+        }
+        // 排順序：「A比B高，B比C高……誰最高」
+        let pairs = matches(t, #"([\p{Han}]{1,3}?)比([\p{Han}]{1,3}?)(高|矮|大|小|快|慢|重|輕|早到|晚到|多|少|長|短)"#)
+        if pairs.count >= 2 {
+            var gt: [String: Set<String>] = [:]
+            var names: [String] = []
+            var adj = ""
+            for p in pairs {
+                let a = p[0], b = p[1]
+                adj = p[2]
+                for n in [a, b] where !names.contains(n) { names.append(n) }
+                gt[a, default: []].insert(b)
+            }
+            // 拓撲排序（由「比較 X」的那一端排到另一端）
+            var order: [String] = []
+            var left = Set(names)
+            while !left.isEmpty {
+                guard let top = left.first(where: { n in !left.contains { gt[$0]?.contains(n) == true } }) else { break }
+                order.append(top)
+                left.remove(top)
+            }
+            if order.count == names.count {
+                let opposite = ["高": "矮", "矮": "高", "大": "小", "小": "大", "快": "慢", "慢": "快", "重": "輕", "輕": "重", "早到": "晚到", "晚到": "早到",
+                                "多": "少", "少": "多", "長": "短", "短": "長"][adj] ?? ""
+                out.append("排順序（NineSun 算的）：由最\(adj)到最\(opposite)是 " + order.joined(separator: " > ") + "；最\(adj)的是\(order[0])，最\(opposite)的是\(order.last!)。")
+            }
+        }
+        // 雞兔同籠
+        if t.contains("雞") && t.contains("兔"), let v = nums(t, #"(\d+)個頭.*?(\d+)隻腳"#), v.count == 2 {
+            let h = Int(v[0]), l = Int(v[1])
+            let rabbit = (l - 2 * h) / 2, chicken = h - rabbit
+            if (l - 2 * h) % 2 == 0, rabbit >= 0, chicken >= 0 {
+                out.append("雞兔同籠（NineSun 算的）：兔 (\(l) − 2×\(h)) ÷ 2 = \(rabbit) 隻，雞 \(h) − \(rabbit) = \(chicken) 隻。")
+            }
+        }
+        return out
+    }
+
+    static func allNumbers(_ t: String) -> [Double] {
+        matches(t, #"(-?\d+(?:\.\d+)?)"#).compactMap { Double($0[0]) }
+    }
+
+    static func matches(_ t: String, _ pattern: String) -> [[String]] {
+        guard let re = try? NSRegularExpression(pattern: pattern) else { return [] }
+        return re.matches(in: t, range: NSRange(t.startIndex..., in: t)).map { m in
+            (1..<m.numberOfRanges).compactMap { Range(m.range(at: $0), in: t).map { String(t[$0]) } }
+        }
+    }
+
+    static func fmt(_ x: Double) -> String { x == x.rounded() ? String(Int(x)) : String(format: "%.2f", x) }
+
+    static func nextInSequence(_ xs: [Double]) -> (Double, String)? {
+        let d = zip(xs.dropFirst(), xs).map { $0 - $1 }
+        if Set(d).count == 1 { return (xs.last! + d[0], d[0] >= 0 ? "每次加 \(fmt(d[0]))" : "每次減 \(fmt(-d[0]))") }
+        if !xs.contains(0) {
+            let r = zip(xs.dropFirst(), xs).map { $0 / $1 }
+            if Set(r).count == 1 { return (xs.last! * r[0], "每次乘 \(fmt(r[0]))") }
+        }
+        if xs.count >= 3, (2..<xs.count).allSatisfy({ xs[$0] == xs[$0 - 1] + xs[$0 - 2] }) {
+            return (xs[xs.count - 1] + xs[xs.count - 2], "每一項是前兩項相加")
+        }
+        let roots = xs.map { $0.squareRoot() }
+        if roots.allSatisfy({ $0 == $0.rounded() }), Set(zip(roots.dropFirst(), roots).map { $0 - $1 }) == [1] {
+            return ((roots.last! + 1) * (roots.last! + 1), "連續整數的平方")
+        }
+        if d.count >= 3, Set(zip(d.dropFirst(), d).map { $0 - $1 }).count == 1 {
+            let dd = d[1] - d[0]
+            return (xs.last! + d.last! + dd, "相鄰兩項的差每次多 \(fmt(dd))")
+        }
+        return nil
     }
 }
 
