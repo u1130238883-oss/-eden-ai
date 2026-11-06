@@ -311,6 +311,7 @@ ul.dont li::before{content:"✕";position:absolute;left:0;color:var(--inhib);fon
 <script src="med/med-5-psych-obgyn-peds-ent.js"></script>
 <script src="med/med-6-drug.js"></script>
 <script src="med/med-7-lab-aid.js"></script>
+<script src="med/med-9-more.js"></script>
 <script src="med/med-8-bridge.js"></script>
 <script>
 (function(){
@@ -655,7 +656,7 @@ function renderHome(){
   const el=document.getElementById("v-home");const nH=G.reduce((s,g)=>s+g.h.length,0);
   const reds=M.DIS.filter(d=>d.red);
   const tip=TIPS[Math.floor(Math.random()*TIPS.length)];
-  el.innerHTML=`<div class="vh"><h2>今天想查什麼？</h2><p>涵蓋 15 個身體系統的常見疾病、症狀反查、常用藥物、檢驗正常值、急救步驟與台灣公費保健資訊，全部可離線使用。</p></div>
+  el.innerHTML=`<div class="vh"><h2>今天想查什麼？</h2><p>涵蓋 ${M.SYS.length} 個身體系統的常見疾病、症狀反查、常用藥物、檢驗正常值、急救步驟與台灣公費保健資訊，全部可離線使用。</p></div>
   <div class="stats-row">
     <button class="stat" data-go="dis"><b>${M.DIS.length}</b><span>種疾病</span></button>
     <button class="stat" data-go="sym"><b>${vocab.length}</b><span>項症狀可反查</span></button>
