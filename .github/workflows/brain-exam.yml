@@ -71,24 +71,32 @@ jobs:
           fi
           true
 
-      # 每 15 分鐘把答到的存到分支一次（中途就能看成績）
+      # 每 15 分鐘把答到的（和紀錄）存到分支一次（中途就能看成績）；考試本身在前景跑
       - name: Exam
         env:
           NSUnbufferedIO: "YES"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          A=answers-${{ matrix.shard }}.jsonl
-          save() {
-            [ -f "$A" ] || return 0
-            D=$(mktemp -d) && cp "$A" "$D/" && cd "$D" && git init -q && git add . \
-              && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Exam $H shard ${{ matrix.shard }}" \
-              && git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/evals/exam-$H-${{ matrix.shard }}
-            cd "$GITHUB_WORKSPACE"
-          }
-          timeout 320m ./brain-eval model.gguf ios/BrainEval/exam/run.jsonl "$A" shard=${{ matrix.shard }}/12 &
-          P=$!
-          while kill -0 $P 2>/dev/null; do sleep 900; save || true; done
-          wait $P || true
+          cat > save.sh <<'SH'
+          #!/bin/bash
+          cd "$GITHUB_WORKSPACE"
+          A=answers-$1.jsonl
+          [ -f "$A" ] || [ -f exam.log ] || exit 0
+          D=$(mktemp -d)
+          cp "$A" exam.log "$D/" 2>/dev/null
+          cd "$D" && git init -q && git add . \
+            && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Exam $H shard $1" \
+            && git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/evals/exam-$H-$1
+          SH
+          chmod +x save.sh
+          ( while sleep 900; do ./save.sh ${{ matrix.shard }} || true; done ) &
+          SAVER=$!
+          set +e
+          timeout 320m ./brain-eval model.gguf ios/BrainEval/exam/run.jsonl answers-${{ matrix.shard }}.jsonl shard=${{ matrix.shard }}/12 > exam.log 2>&1
+          echo "brain-eval 結束，代碼 $?" >> exam.log
+          kill $SAVER 2>/dev/null
+          tail -40 exam.log
+          true
 
       - name: Score this shard
         if: always()
@@ -99,7 +107,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          [ -f answers-${{ matrix.shard }}.jsonl ] || exit 0
-          D="$RUNNER_TEMP/out" && mkdir -p "$D" && cp answers-${{ matrix.shard }}.jsonl "$D/"
-          cd "$D" && git init -q && git add . && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Exam $H shard ${{ matrix.shard }} (${{ github.sha }})"
-          for i in 1 2 3; do git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/evals/exam-$H-${{ matrix.shard }} && break; sleep 5; done
+          for i in 1 2 3; do ./save.sh ${{ matrix.shard }} && break; sleep 5; done

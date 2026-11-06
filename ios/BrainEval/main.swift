@@ -16,10 +16,14 @@ for a in args.dropFirst(4) {
     if a.hasPrefix("limit=") { limit = Int(a.dropFirst(6)) ?? limit }
 }
 
+// 模型寫 dry：不讀模型，只把每題的提示組出來（在沒有模型的機器上測整個流程）
+let dry = args[1] == "dry"
 let loadStart = Date()
-let runner: LlamaRunner
-do { runner = try LlamaRunner(path: args[1], contextSize: 2048, gpu: gpu, threads: ProcessInfo.processInfo.activeProcessorCount) } catch { print("讀不進模型：\(error)"); exit(1) }
-print(String(format: "模型：%@ 讀取 %.1f 秒（gpu=%@）", (args[1] as NSString).lastPathComponent, Date().timeIntervalSince(loadStart), gpu ? "on" : "off"))
+var runner: LlamaRunner?
+if !dry {
+    do { runner = try LlamaRunner(path: args[1], contextSize: 2048, gpu: gpu, threads: ProcessInfo.processInfo.activeProcessorCount) } catch { print("讀不進模型：\(error)"); exit(1) }
+    print(String(format: "模型：%@ 讀取 %.1f 秒（gpu=%@）", (args[1] as NSString).lastPathComponent, Date().timeIntervalSince(loadStart), gpu ? "on" : "off"))
+}
 
 // 已經答過的
 let outURL = URL(fileURLWithPath: args[3])
@@ -72,8 +76,16 @@ for (i, line) in lines.enumerated() where i % shards == shard {
         user = LocalBrain.userMessage(question: math ? LocalBrain.mathQuestion(q, lang: lang) : q, hint: it["hint"] as? String ?? "", lang: lang)
     }
     let (temp, most) = LocalBrain.settings(mode)
-    let prompt = runner.chatPrompt(LocalBrain.messages(system: system, history: history, user: user))
     var rec: [String: Any] = ["id": id]
+    guard let runner else {
+        let msgs = LocalBrain.messages(system: system, history: history, user: user)
+        rec["answer"] = LocalBrain.tidy("（dry）" + user, lang: lang)
+        rec["prompt_chars"] = msgs.reduce(0) { $0 + $1.content.count }
+        let d = try JSONSerialization.data(withJSONObject: rec, options: [.sortedKeys])
+        out.write(d + Data("\n".utf8))
+        continue
+    }
+    let prompt = runner.chatPrompt(LocalBrain.messages(system: system, history: history, user: user))
     do {
         let r = try runner.generate(prompt: prompt, maxTokens: most, temperature: temp, stop: LocalBrain.stops, seed: seed(id))
         let text = LocalBrain.tidy(r.text, lang: lang)

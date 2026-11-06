@@ -45,6 +45,14 @@ public enum BrainRoute {
             let line = "\(e.title)：\(e.body)"
             if soft.contains(e.cat) { hint.append(line) } else { facts.append(line) }
         }
+        // 成語：NineSun 的成語辭典（意思、近義、反義）
+        if let w = Idioms.find(text), let e = Idioms.entry(w) {
+            var line = "成語「\(w)」：\(e.meaning)"
+            let near = Idioms.near(w).prefix(3), anti = Idioms.opposites(w).prefix(3)
+            if !near.isEmpty { line += "；近義：" + near.joined(separator: "、") }
+            if !anti.isEmpty { line += "；反義：" + anti.joined(separator: "、") }
+            facts.append(line)
+        }
         return (facts.joined(separator: "\n"), hint.joined(separator: "\n"))
     }
 }
