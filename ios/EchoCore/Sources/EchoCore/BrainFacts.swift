@@ -288,7 +288,8 @@ public enum Composure {
     /// 嘴砲模式：只拒絕越過底線的要求
     public static func beyondLine(_ raw: String) -> String? {
         let t = raw.replacingOccurrences(of: " ", with: "")
-        guard t.range(of: lineAsk, options: .regularExpression) != nil else { return nil }
+        let slurAsk = slurs.contains { t.contains($0) } || t.lowercased().contains("死gay")
+        guard slurAsk || t.range(of: lineAsk, options: .regularExpression) != nil else { return nil }
         return "嘴砲可以，但這條線我不踩：不罵種族、性向、身障這些，不叫人去死、不威脅人，也不幫忙寫拿去騷擾別人的話。換個方向，我照樣把你罵到笑出來。"
     }
 
