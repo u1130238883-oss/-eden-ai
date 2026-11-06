@@ -67,7 +67,8 @@ jobs:
           H=$(sha1sum ios/BrainEval/exam/run.jsonl | cut -c1-10)
           echo "H=$H" >> "$GITHUB_ENV"
           if git fetch -q origin "evals/exam-$H-${{ matrix.shard }}" 2>/dev/null; then
-            git show FETCH_HEAD:answers-${{ matrix.shard }}.jsonl > answers-${{ matrix.shard }}.jsonl && wc -l answers-${{ matrix.shard }}.jsonl
+            git show FETCH_HEAD:answers-${{ matrix.shard }}.jsonl > answers-${{ matrix.shard }}.jsonl 2>/dev/null || rm -f answers-${{ matrix.shard }}.jsonl
+            wc -l answers-${{ matrix.shard }}.jsonl 2>/dev/null || true
           fi
           true
 
@@ -92,7 +93,10 @@ jobs:
           ( while sleep 900; do ./save.sh ${{ matrix.shard }} || true; done ) &
           SAVER=$!
           set +e
-          timeout 320m ./brain-eval model.gguf ios/BrainEval/exam/run.jsonl answers-${{ matrix.shard }}.jsonl shard=${{ matrix.shard }}/12 > exam.log 2>&1
+          # libllama 需要的 libggml 要從這裡找（快取裡沒有原本的編譯資料夾）
+          export LD_LIBRARY_PATH="$HOME/llama-linux/lib:${LD_LIBRARY_PATH:-}"
+          ./brain-eval dry ios/BrainEval/exam/run.jsonl /dev/null limit=1 >> exam.log 2>&1 || echo "dry 失敗" >> exam.log
+          timeout 320m ./brain-eval model.gguf ios/BrainEval/exam/run.jsonl answers-${{ matrix.shard }}.jsonl shard=${{ matrix.shard }}/12 >> exam.log 2>&1
           echo "brain-eval 結束，代碼 $?" >> exam.log
           kill $SAVER 2>/dev/null
           tail -40 exam.log
