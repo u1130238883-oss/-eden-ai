@@ -728,3 +728,10 @@ Next weak spots: language 87.3%, logic 86%, roleplay identity questions (charact
 - Roleplay: identity questions (你是 AI 嗎／幾歲／做什麼工作) answer from the role, never "I'm an AI".
 - KB: `ai/corpus/common_data.py` — classic books→authors, famous poem lines→poets, landmarks→countries, everyday facts.
 - All `*_routed.jsonl` re-routed; run.jsonl rebuilt (engine answers: logic 50/50, language 52/55).
+
+## Round 14 (commit ff7a255, answers hash 4c18cbd016) — 2785/2854 = 97.6% (dev 97.7%, hold 97.3%)
+Up from 96.4%. translate 92→100%, knowledge 92.3→97.4%, roleplay 88.8→92.5%, instruct 93.3→97.8%,
+c_medical 90→96.7%, ziwei_deep 100%. Small drops are model wording (c_world 104/108, fortune_read 116/120,
+logic 48/50, language 50/55, stress/english 28/30 "too long").
+IPA: build 240 (`builds/ninesun-build-240/NineSun.ipa`) — sent to the user.
+Next: engine answers for 星期幾 offsets, 第 N 號元素, 雞兔同籠, rate puzzles (三人三天吃三個), "改成問句".
