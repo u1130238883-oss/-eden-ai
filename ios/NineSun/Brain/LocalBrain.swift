@@ -137,8 +137,20 @@ final class LocalBrain {
         let serious = isSerious(text) ? (en ? " This is a real question: your first sentence answers it directly and concretely; do not open with an action in parentheses."
                                             : "這是認真的問題：第一句就直接、具體地回答問題本身，不要用括號的動作描寫開頭。") : ""
         if role.isEmpty { return serious.isEmpty ? text : text + (en ? "\n\n(" + serious + ")" : "\n\n（" + serious + "）") }
-        return text + (en ? "\n\n(You are: \(role). Reply in character, exactly as set up.\(serious))"
-                          : "\n\n（你是：\(role)。照這個設定、用這個角色的身分回我。\(serious)）")
+        // 問角色本人（你是 AI 嗎、幾歲、做什麼工作）：照設定回答，你就是這個人
+        let me = asksIdentity(text) ? (en ? " You ARE this person: answer from the role's own details (name, age, job as set up). Never say you are an AI, a program or a language model."
+                                          : "你就是這個人：照設定裡的名字、年紀、工作回答，絕對不要說自己是 AI、程式、機器人或語言模型。") : serious
+        return text + (en ? "\n\n(You are: \(role). Reply in character, exactly as set up.\(me))"
+                          : "\n\n（你是：\(role)。照這個設定、用這個角色的身分回我。\(me)）")
+    }
+
+    /// 問角色本人是誰：是不是 AI／真人、幾歲、做什麼、叫什麼
+    static func asksIdentity(_ raw: String) -> Bool {
+        let t = raw.lowercased().replacingOccurrences(of: " ", with: "")
+        let zh = ["你是ai", "你是人工智慧", "你是機器人", "你是真人", "你是真的人", "你是不是ai", "你是不是真人", "你是不是機器人", "你是程式",
+                  "你幾歲", "你多大", "你做什麼工作", "你的工作", "你是做什麼的", "你叫什麼", "你的名字"]
+        let en = ["areyouanai", "areyouai", "areyouarobot", "areyoureal", "areyouhuman", "howoldareyou", "whatdoyoudo", "what'syourname", "whatisyourname"]
+        return (zh + en).contains { t.contains($0) }
     }
 
     /// 角色扮演裡被認真問問題（知識、人生、算數、要不要辭職……），不是在調情、演戲
@@ -169,8 +181,53 @@ final class LocalBrain {
         if ["用英文回答", "用英文說", "用英語回答", "answer in english"].contains(where: { text.lowercased().contains($0) }) {
             return text + "\n（簡短用英文回答就好，一兩句。）"
         }
+        // 「朋友的法文怎麼說」：問的是某一種語言，只答那一種；常用詞先給標準答案當參考，免得小模型亂猜
+        if let (name, code) = askedLanguage(text) {
+            var hint = ""
+            if let (_, row) = phrasebook.first(where: { text.contains($0.0) }), let w = row[code] { hint = "參考答案：\(name)是「\(w)」。" }
+            return text + "\n（只要\(name)的說法：第一句先寫\(name)原文，再附念法和使用時機，不用寫其他語言。\(hint)）"
+        }
         return text + "\n（請把每一種語言的說法都寫出來，附上念法和使用時機。）"
     }
+
+    static let languages: [(String, String)] = [("英文", "en"), ("英語", "en"), ("法文", "fr"), ("法語", "fr"), ("西班牙文", "es"), ("西班牙語", "es"),
+                                                 ("義大利文", "it"), ("義大利語", "it"), ("意大利文", "it"), ("德文", "de"), ("德語", "de"),
+                                                 ("日文", "ja"), ("日語", "ja"), ("韓文", "ko"), ("韓語", "ko")]
+
+    static func askedLanguage(_ text: String) -> (String, String)? {
+        let hits = languages.filter { text.contains($0.0) }
+        guard let first = hits.first, Set(hits.map(\.1)).count == 1 else { return nil }
+        return first
+    }
+
+    /// 常用詞的標準說法（長的詞放前面，免得「生日快樂」被「快樂」先配到）
+    static let phrasebook: [(String, [String: String])] = [
+        ("洗手間在哪裡", ["en": "Where is the restroom?", "fr": "Où sont les toilettes ?", "es": "¿Dónde está el baño?", "it": "Dov'è il bagno?", "de": "Wo ist die Toilette?", "ja": "トイレはどこですか (toire wa doko desu ka)", "ko": "화장실이 어디예요? (hwajangsiri eodiyeyo)"]),
+        ("生日快樂", ["en": "Happy birthday", "fr": "Joyeux anniversaire", "es": "Feliz cumpleaños", "it": "Buon compleanno", "de": "Alles Gute zum Geburtstag", "ja": "お誕生日おめでとう (otanjōbi omedetō)", "ko": "생일 축하해요 (saengil chukahaeyo)"]),
+        ("新年快樂", ["en": "Happy New Year", "fr": "Bonne année", "es": "Feliz año nuevo", "it": "Buon anno", "de": "Frohes neues Jahr", "ja": "明けましておめでとう (akemashite omedetō)", "ko": "새해 복 많이 받으세요 (saehae bok mani badeuseyo)"]),
+        ("多少錢", ["en": "How much is it?", "fr": "Combien ça coûte ?", "es": "¿Cuánto cuesta?", "it": "Quanto costa?", "de": "Wie viel kostet das?", "ja": "いくらですか (ikura desu ka)", "ko": "얼마예요? (eolmayeyo)"]),
+        ("加油", ["en": "Go for it! / You can do it!", "fr": "Courage ! / Bon courage !", "es": "¡Ánimo! / ¡Vamos!", "it": "Forza! / Dai!", "de": "Viel Erfolg! / Du schaffst das!", "ja": "頑張って (ganbatte)", "ko": "화이팅 (hwaiting) / 힘내 (himnae)"]),
+        ("不客氣", ["en": "You're welcome", "fr": "De rien", "es": "De nada", "it": "Prego", "de": "Bitte / Gern geschehen", "ja": "どういたしまして (dō itashimashite)", "ko": "천만에요 (cheonmaneyo)"]),
+        ("我愛你", ["en": "I love you", "fr": "Je t'aime", "es": "Te quiero / Te amo", "it": "Ti amo", "de": "Ich liebe dich", "ja": "愛してる (aishiteru)", "ko": "사랑해요 (saranghaeyo)"]),
+        ("對不起", ["en": "Sorry", "fr": "Pardon / Désolé", "es": "Lo siento / Perdón", "it": "Scusa / Mi dispiace", "de": "Entschuldigung", "ja": "ごめんなさい (gomen nasai)", "ko": "미안해요 (mianhaeyo)"]),
+        ("早安", ["en": "Good morning", "fr": "Bonjour", "es": "Buenos días", "it": "Buongiorno", "de": "Guten Morgen", "ja": "おはようございます (ohayō gozaimasu)", "ko": "좋은 아침이에요 (joeun achimieyo)"]),
+        ("晚安", ["en": "Good night", "fr": "Bonne nuit", "es": "Buenas noches", "it": "Buonanotte", "de": "Gute Nacht", "ja": "おやすみなさい (oyasumi nasai)", "ko": "안녕히 주무세요 (annyeonghi jumuseyo)"]),
+        ("謝謝", ["en": "Thank you", "fr": "Merci", "es": "Gracias", "it": "Grazie", "de": "Danke", "ja": "ありがとう (arigatō)", "ko": "감사합니다 (gamsahamnida)"]),
+        ("你好", ["en": "Hello", "fr": "Bonjour", "es": "Hola", "it": "Ciao", "de": "Hallo", "ja": "こんにちは (konnichiwa)", "ko": "안녕하세요 (annyeonghaseyo)"]),
+        ("再見", ["en": "Goodbye", "fr": "Au revoir", "es": "Adiós", "it": "Arrivederci", "de": "Auf Wiedersehen", "ja": "さようなら (sayōnara)", "ko": "안녕히 가세요 (annyeonghi gaseyo)"]),
+        ("好吃", ["en": "Delicious", "fr": "Délicieux / C'est bon", "es": "Delicioso / Rico", "it": "Buonissimo / Delizioso", "de": "Lecker", "ja": "おいしい (oishii)", "ko": "맛있어요 (masisseoyo)"]),
+        ("朋友", ["en": "Friend", "fr": "Ami (男) / Amie (女)", "es": "Amigo (男) / Amiga (女)", "it": "Amico (男) / Amica (女)", "de": "Freund (男) / Freundin (女)", "ja": "友達 (tomodachi)", "ko": "친구 (chingu)"]),
+        ("蘋果", ["en": "Apple", "fr": "Pomme", "es": "Manzana", "it": "Mela", "de": "Apfel", "ja": "りんご (ringo)", "ko": "사과 (sagwa)"]),
+        ("香蕉", ["en": "Banana", "fr": "Banane", "es": "Plátano / Banana", "it": "Banana", "de": "Banane", "ja": "バナナ (banana)", "ko": "바나나 (banana)"]),
+        ("水", ["en": "Water", "fr": "Eau", "es": "Agua", "it": "Acqua", "de": "Wasser", "ja": "水 (mizu)", "ko": "물 (mul)"]),
+        ("貓", ["en": "Cat", "fr": "Chat", "es": "Gato", "it": "Gatto", "de": "Katze", "ja": "猫 (neko)", "ko": "고양이 (goyangi)"]),
+        ("狗", ["en": "Dog", "fr": "Chien", "es": "Perro", "it": "Cane", "de": "Hund", "ja": "犬 (inu)", "ko": "개 (gae)"]),
+        ("愛", ["en": "Love", "fr": "Amour", "es": "Amor", "it": "Amore", "de": "Liebe", "ja": "愛 (ai)", "ko": "사랑 (sarang)"]),
+        ("家", ["en": "Home", "fr": "Maison", "es": "Casa", "it": "Casa", "de": "Haus / Zuhause", "ja": "家 (ie)", "ko": "집 (jip)"]),
+        ("學校", ["en": "School", "fr": "École", "es": "Escuela", "it": "Scuola", "de": "Schule", "ja": "学校 (gakkō)", "ko": "학교 (hakgyo)"]),
+        ("咖啡", ["en": "Coffee", "fr": "Café", "es": "Café", "it": "Caffè", "de": "Kaffee", "ja": "コーヒー (kōhī)", "ko": "커피 (keopi)"]),
+        ("美麗", ["en": "Beautiful", "fr": "Beau / Belle", "es": "Hermoso / Hermosa", "it": "Bello / Bella", "de": "Schön", "ja": "美しい (utsukushii)", "ko": "아름다워요 (areumdawoyo)"]),
+    ]
 
     /// 各家模型的對話結束記號（模型說完了卻沒停時用）
     static let stops = ["<|im_end|>", "<|im_start|>", "<end_of_turn>", "<start_of_turn>", "<|eot_id|>", "<|start_header_id|>", "<turn|>", "<|turn>",

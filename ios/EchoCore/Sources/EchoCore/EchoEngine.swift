@@ -1203,7 +1203,12 @@ public enum ProfileParser {
     public static func parse(_ raw: String, expectingTime: Bool = false, expectingGender: Bool = false) -> Update? {
         let text = normalizeTime(raw)
         var u = Update()
-        let aboutMe = text.contains("我是") || text.contains("性別") || expectingGender
+        var aboutMe = text.contains("我是") || text.contains("性別") || expectingGender
+        // 「哥哥的兒子叫我什麼（我是男生）」：括號裡順便說的，問的是別的事，不是在登記性別
+        if aboutMe && !expectingGender && !text.contains("性別") && !ManticReader.wants(text) {
+            let rest = text.replacingOccurrences(of: #"[（(][^）)]*[）)]|我是(男|女)(生|的|人|性|孩)"#, with: "", options: .regularExpression)
+            if ["什麼", "幾", "哪", "誰", "嗎", "怎麼", "如何", "?", "？"].contains(where: { rest.contains($0) }) { aboutMe = false }
+        }
         if aboutMe && ["男生", "男的", "男人", "男性", "性別男", "男孩"].contains(where: { text.contains($0) }) { u.male = true }
         if aboutMe && ["女生", "女的", "女人", "女性", "性別女", "女孩"].contains(where: { text.contains($0) }) { u.male = false }
         if expectingGender && u.male == nil {

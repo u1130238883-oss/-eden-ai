@@ -1,13 +1,14 @@
 import Foundation
 
 /// 有標準答案、用算的就知道的題目：大腦（小模型）很常算錯或亂猜，引擎直接算給它。
-/// 某年生肖、某年干支、日期加幾天、兩個日期差幾天、地支沖合、按比例分錢、長方形面積周長、單利利息、原子序。
+/// 某年生肖、某年干支、日期加幾天、兩個日期差幾天、地支沖合、按比例分錢、長方形面積周長、單利利息、原子序、
+/// 轉向後面向哪、時針分針夾角、幾點再過幾小時、親戚稱謂、繩子對折剪一刀。
 /// 前後的口頭禪（「認真問：」「考考你：」「不要騙我」「拜託」「快」）先拿掉再看。
 public enum QuickCalc {
     public static func answer(_ raw: String) -> String? {
         let t = strip(raw)
         guard !t.isEmpty, t.count <= 60 else { return nil }
-        for f in [zodiacYear, ganzhiYear, dateAdd, dateDiff, branchClash, branchHarmony, share, rectangle, interest, element] {
+        for f in [zodiacYear, ganzhiYear, dateAdd, dateDiff, branchClash, branchHarmony, share, rectangle, interest, element, facing, clockAngle, timeAdd, kinship, ropeCut, zhuyinFill, polyphone] {
             if let a = f(t) { return a }
         }
         return nil
@@ -152,5 +153,177 @@ public enum QuickCalc {
         guard let g = groups(t, #"^原子序(?:是|為)?(\d{1,3})(?:號)?(?:的)?(?:是)?(?:什麼|哪個|哪一個|哪種)(?:元素)?$"#), let n = Int(g[0]),
               let e = elements.first(where: { $0.0 == n }) else { return nil }
         return "原子序 \(n) 是\(e.2)，化學符號 \(e.1)。"
+    }
+
+    // MARK: - 小邏輯題
+
+    /// 「一」「十二」或「3」→ 數字
+    static func n(_ w: String) -> Int? { Int(w) ?? ProfileParser.cnNumber(w) }
+
+    static let dirs = ["北", "東", "南", "西"]
+
+    /// 面向東，向後轉／向左轉再向右轉 → 面向哪裡
+    static func facing(_ t: String) -> String? {
+        guard let g = groups(t, #"^(?:一個人|我|他|她|小明)?(?:面向|面朝|面對|朝)([東南西北])(?:方)?[,，]?(.+?)(?:之?後)?(?:會)?(?:面向|面朝|朝|面對)(?:哪裡|哪邊|哪個方向|哪一個方向|什麼方向|哪方)$"#),
+              var i = dirs.firstIndex(of: g[0]) else { return nil }
+        guard let re = try? NSRegularExpression(pattern: #"(?:向|往)?(左|右|後)轉"#) else { return nil }
+        let ms = re.matches(in: g[1], range: NSRange(g[1].startIndex..., in: g[1]))
+        guard !ms.isEmpty else { return nil }
+        for m in ms {
+            guard let r = Range(m.range(at: 1), in: g[1]) else { return nil }
+            switch g[1][r] { case "右": i += 1; case "左": i += 3; default: i += 2 }
+        }
+        return "原本面向\(g[0])，轉完之後面向\(dirs[i % 4])。"
+    }
+
+    /// 鐘面上 6 點整（3 點半、9 點 15 分），時針和分針的夾角
+    static func clockAngle(_ t: String) -> String? {
+        guard t.contains("夾角") || t.contains("角度"), t.contains("針"),
+              let g = groups(t, #"(\d{1,2}|[一二兩三四五六七八九十]{1,3})(?:點|時)(整|半|(\d{1,2})分)?"#),
+              let h0 = n(g[0]), h0 <= 24 else { return nil }
+        let m = g[1] == "半" ? 30 : (Int(g[2]) ?? 0)
+        guard m < 60 else { return nil }
+        let h = h0 % 12
+        var a = abs(Double(h * 30) - 5.5 * Double(m))
+        if a > 180 { a = 360 - a }
+        let when = m == 0 ? "\(h0) 點整" : "\(h0) 點 \(m) 分"
+        return "\(when)：時針在 \(num(Double(h * 30) + 0.5 * Double(m))) 度、分針在 \(m * 6) 度，夾角是 \(num(a)) 度。"
+    }
+
+    static func clock(_ h: Int) -> String {
+        let p = h < 5 ? "凌晨" : h < 12 ? "早上" : h == 12 ? "中午" : h < 18 ? "下午" : "晚上"
+        let d = h % 12 == 0 ? 12 : h % 12
+        return "\(p)\(d)點"
+    }
+
+    /// 現在下午 3 點，再過 10 個小時是幾點
+    static func timeAdd(_ t: String) -> String? {
+        guard let g = groups(t, #"(凌晨|半夜|早上|上午|中午|下午|傍晚|晚上)?(\d{1,2}|[一二兩三四五六七八九十]{1,3})點(?:整)?[,，]?(?:再)?(?:過|經過|加)(\d{1,3}|[一二兩三四五六七八九十]{1,3})(?:個)?(?:小時|鐘頭)(?:後|之後|以後)?(?:是|會是)?(?:幾點|什麼時候|幾點鐘)$"#),
+              var h = n(g[1]), h <= 24, let d = n(g[2]) else { return nil }
+        if ["下午", "傍晚", "晚上"].contains(g[0]) && h < 12 { h += 12 }
+        if g[0] == "中午" && h < 11 { h += 12 }
+        if ["凌晨", "半夜"].contains(g[0]) && h == 12 { h = 0 }
+        let e = h + d, days = e / 24
+        let next = days == 0 ? "" : days == 1 ? "隔天" : "\(days) 天後的"
+        return "\(clock(h % 24))再過 \(d) 小時，是\(next)\(clock(e % 24))（\(e % 24):00）。"
+    }
+
+    static let kin: [String: String] = [
+        "爸爸的爸爸": "爺爺（祖父）", "爸爸的媽媽": "奶奶（祖母）", "媽媽的爸爸": "外公（外祖父）", "媽媽的媽媽": "外婆（外祖母）",
+        "爸爸的哥哥": "伯伯（伯父）", "爸爸的弟弟": "叔叔（叔父）", "爸爸的姊姊": "姑姑（姑媽）", "爸爸的姐姐": "姑姑（姑媽）", "爸爸的妹妹": "姑姑（姑姑）",
+        "媽媽的哥哥": "舅舅", "媽媽的弟弟": "舅舅", "媽媽的姊姊": "阿姨（姨媽）", "媽媽的姐姐": "阿姨（姨媽）", "媽媽的妹妹": "阿姨",
+        "爸爸的爸爸的爸爸": "曾祖父（阿祖）", "哥哥的兒子": "姪子", "弟弟的兒子": "姪子", "哥哥的女兒": "姪女", "弟弟的女兒": "姪女",
+        "姊姊的兒子": "外甥", "姐姐的兒子": "外甥", "妹妹的兒子": "外甥", "姊姊的女兒": "外甥女", "姐姐的女兒": "外甥女", "妹妹的女兒": "外甥女",
+        "爸爸的哥哥的兒子": "堂哥或堂弟（看年紀）", "爸爸的弟弟的兒子": "堂哥或堂弟（看年紀）", "媽媽的哥哥的兒子": "表哥或表弟（看年紀）",
+        "媽媽的姊姊的女兒": "表姊或表妹（看年紀）", "老婆的爸爸": "岳父", "老婆的媽媽": "岳母", "老公的爸爸": "公公", "老公的媽媽": "婆婆",
+        "兒子的兒子": "孫子", "兒子的女兒": "孫女", "女兒的兒子": "外孫", "女兒的女兒": "外孫女", "哥哥的老婆": "大嫂（嫂嫂）", "弟弟的老婆": "弟媳",
+        "姊姊的老公": "姊夫", "姐姐的老公": "姊夫", "妹妹的老公": "妹夫",
+    ]
+
+    /// 爸爸的爸爸叫什麼；哥哥的兒子叫我什麼（我是男生）
+    static func kinship(_ t: String) -> String? {
+        let u = t.replacingOccurrences(of: "父親", with: "爸爸").replacingOccurrences(of: "母親", with: "媽媽")
+            .replacingOccurrences(of: "我的", with: "").replacingOccurrences(of: "你的", with: "")
+        if let g = groups(u, #"^((?:(?:爸爸|媽媽|哥哥|弟弟|姊姊|姐姐|妹妹|兒子|女兒|老婆|老公)的)+(?:爸爸|媽媽|哥哥|弟弟|姊姊|姐姐|妹妹|兒子|女兒|老婆|老公))(?:要)?(?:叫|稱呼|是)(?:什麼|做什麼|我的什麼|誰)$"#),
+           let k = kin[g[0]] {
+            return "\(g[0])叫\(k)。"
+        }
+        // 反過來：他們叫我什麼
+        guard let g = groups(u, #"^(哥哥|弟弟|姊姊|姐姐|妹妹)的(兒子|女兒|小孩)(?:要)?(?:叫|稱呼)我(?:什麼)[（(]?(?:我是)?(男生|女生|男的|女的)?[）)]?$"#) else { return nil }
+        let mySide = g[0].hasSuffix("哥") || g[0].hasSuffix("弟")   // 兄弟的小孩：我是叔叔／伯伯或姑姑
+        let male: Bool? = g[2].isEmpty ? nil : g[2].hasPrefix("男")
+        let older = !(g[0] == "哥哥" || g[0] == "姊姊" || g[0] == "姐姐")   // 我比對方大
+        let title: String
+        switch (mySide, male) {
+        case (true, true?): title = older ? "伯伯（伯父）" : "叔叔"
+        case (true, false?): title = "姑姑"
+        case (false, true?): title = "舅舅"
+        case (false, false?): title = "阿姨"
+        case (true, nil): title = older ? "伯伯（男生）或姑姑（女生）" : "叔叔（男生）或姑姑（女生）"
+        case (false, nil): title = "舅舅（男生）或阿姨（女生）"
+        }
+        return "\(g[0])的\(g[1])叫你\(title)。"
+    }
+
+    /// 一根繩子對折再對折，從中間剪一刀，變成幾段：對折 k 次是 2^k 層，一刀切 2^k 個口 → 2^k＋1 段
+    static func ropeCut(_ t: String) -> String? {
+        guard t.contains("繩") || t.contains("線"), t.contains("剪一刀") || t.contains("剪1刀") || t.contains("切一刀"),
+              t.contains("幾段") || t.contains("多少段") else { return nil }
+        var k = t.components(separatedBy: "對折").count - 1
+        if let g = groups(t, #"對折(\d|[一二兩三四五六])次"#), let c = n(g[0]) { k = c }
+        guard (1...6).contains(k) else { return nil }
+        let layers = 1 << k
+        return "對折 \(k) 次是 \(layers) 層，剪一刀會剪斷 \(layers) 個地方，所以變成 \(layers)＋1＝\(layers + 1) 段。"
+    }
+
+    // MARK: - 國字：注音填字、多音字
+
+    /// 常用但不在成語表裡的詞（注音填字用）
+    static let commonWords = ["迫不及待", "再接再厲", "一帆風順", "按部就班", "一鼓作氣", "名列前茅", "義不容辭", "走投無路", "一籌莫展",
+                              "迫在眉睫", "既往不咎", "不可思議", "莫名其妙", "罄竹難書", "首當其衝", "如火如荼", "炙手可熱", "差強人意",
+                              "美輪美奐", "七嘴八舌", "一臂之力", "語重心長", "專心致志", "興高采烈", "金榜題名", "鴉雀無聲"]
+
+    /// 「再接再ㄌㄧˋ」的ㄌㄧˋ是哪個字：把注音當成一個字，到成語表裡找唯一對得上的
+    static func zhuyinFill(_ t: String) -> String? {
+        guard let g = groups(t, #"^(.+?)的([ㄅ-ㄩ˙ˊˇˋ]+)是(?:哪個|哪一個|什麼)字$"#), g[0].contains(g[1]) else { return nil }
+        let parts = g[0].components(separatedBy: g[1])
+        guard parts.count == 2, parts.joined().count >= 2 else { return nil }
+        let n = parts[0].count + parts[1].count + 1
+        let pool = Set(Idioms.names + commonWords)
+        let hits = pool.filter { $0.count == n && $0.hasPrefix(parts[0]) && $0.hasSuffix(parts[1]) }
+        guard hits.count == 1, let w = hits.first else { return nil }
+        let c = w[w.index(w.startIndex, offsetBy: parts[0].count)]
+        return "「\(w)」，\(g[1])是「\(c)」。"
+    }
+
+    /// 多音字：(字, 詞, 注音, 拼音)
+    static let readings: [(String, String, String, String)] = [
+        ("長", "校長", "ㄓㄤˇ", "zhǎng"), ("長", "長大", "ㄓㄤˇ", "zhǎng"), ("長", "長度", "ㄔㄤˊ", "cháng"), ("長", "長短", "ㄔㄤˊ", "cháng"),
+        ("樂", "音樂", "ㄩㄝˋ", "yuè"), ("樂", "樂器", "ㄩㄝˋ", "yuè"), ("樂", "快樂", "ㄌㄜˋ", "lè"), ("樂", "樂觀", "ㄌㄜˋ", "lè"),
+        ("行", "銀行", "ㄏㄤˊ", "háng"), ("行", "行業", "ㄏㄤˊ", "háng"), ("行", "行走", "ㄒㄧㄥˊ", "xíng"), ("行", "旅行", "ㄒㄧㄥˊ", "xíng"),
+        ("重", "重要", "ㄓㄨㄥˋ", "zhòng"), ("重", "重新", "ㄔㄨㄥˊ", "chóng"), ("重", "重複", "ㄔㄨㄥˊ", "chóng"),
+        ("好", "好人", "ㄏㄠˇ", "hǎo"), ("好", "愛好", "ㄏㄠˋ", "hào"), ("好", "好奇", "ㄏㄠˋ", "hào"),
+        ("還", "還錢", "ㄏㄨㄢˊ", "huán"), ("還", "還有", "ㄏㄞˊ", "hái"),
+        ("覺", "睡覺", "ㄐㄧㄠˋ", "jiào"), ("覺", "覺得", "ㄐㄩㄝˊ", "jué"), ("覺", "感覺", "ㄐㄩㄝˊ", "jué"),
+        ("都", "首都", "ㄉㄨ", "dū"), ("都", "都市", "ㄉㄨ", "dū"), ("都", "都是", "ㄉㄡ", "dōu"),
+        ("便", "便宜", "ㄆㄧㄢˊ", "pián"), ("便", "方便", "ㄅㄧㄢˋ", "biàn"),
+        ("數", "數學", "ㄕㄨˋ", "shù"), ("數", "數一數", "ㄕㄨˇ", "shǔ"),
+        ("了", "了解", "ㄌㄧㄠˇ", "liǎo"), ("了", "走了", "˙ㄌㄜ", "le"), ("了", "吃飯了", "˙ㄌㄜ", "le"),
+        ("得", "得到", "ㄉㄜˊ", "dé"), ("得", "跑得快", "˙ㄉㄜ", "de"), ("得", "覺得", "˙ㄉㄜ", "de"),
+        ("地", "慢慢地", "˙ㄉㄜ", "de"), ("地", "地方", "ㄉㄧˋ", "dì"), ("地", "土地", "ㄉㄧˋ", "dì"),
+        ("的", "我的", "˙ㄉㄜ", "de"), ("的", "目的", "ㄉㄧˋ", "dì"), ("的", "的確", "ㄉㄧˊ", "dí"),
+        ("會", "會計", "ㄎㄨㄞˋ", "kuài"), ("會", "開會", "ㄏㄨㄟˋ", "huì"),
+        ("藏", "西藏", "ㄗㄤˋ", "zàng"), ("藏", "寶藏", "ㄗㄤˋ", "zàng"), ("藏", "收藏", "ㄘㄤˊ", "cáng"), ("藏", "躲藏", "ㄘㄤˊ", "cáng"),
+        ("傳", "傳說", "ㄔㄨㄢˊ", "chuán"), ("傳", "自傳", "ㄓㄨㄢˋ", "zhuàn"),
+        ("差", "差不多", "ㄔㄚˋ", "chà"), ("差", "出差", "ㄔㄞ", "chāi"), ("差", "差別", "ㄔㄚ", "chā"),
+        ("調", "調查", "ㄉㄧㄠˋ", "diào"), ("調", "調整", "ㄊㄧㄠˊ", "tiáo"),
+        ("朝", "朝代", "ㄔㄠˊ", "cháo"), ("朝", "朝陽", "ㄓㄠ", "zhāo"),
+        ("角", "角色", "ㄐㄩㄝˊ", "jué"), ("角", "角落", "ㄐㄧㄠˇ", "jiǎo"),
+        ("乾", "乾淨", "ㄍㄢ", "gān"), ("乾", "乾坤", "ㄑㄧㄢˊ", "qián"),
+        ("率", "效率", "ㄌㄩˋ", "lǜ"), ("率", "率領", "ㄕㄨㄞˋ", "shuài"),
+        ("種", "種類", "ㄓㄨㄥˇ", "zhǒng"), ("種", "種田", "ㄓㄨㄥˋ", "zhòng"),
+        ("為", "為什麼", "ㄨㄟˋ", "wèi"), ("為", "作為", "ㄨㄟˊ", "wéi"), ("為", "認為", "ㄨㄟˊ", "wéi"),
+        ("空", "天空", "ㄎㄨㄥ", "kōng"), ("空", "空閒", "ㄎㄨㄥˋ", "kòng"),
+        ("興", "高興", "ㄒㄧㄥˋ", "xìng"), ("興", "興奮", "ㄒㄧㄥ", "xīng"),
+        ("降", "投降", "ㄒㄧㄤˊ", "xiáng"), ("降", "下降", "ㄐㄧㄤˋ", "jiàng"),
+        ("處", "處理", "ㄔㄨˇ", "chǔ"), ("處", "到處", "ㄔㄨˋ", "chù"),
+        ("給", "給你", "ㄍㄟˇ", "gěi"), ("給", "供給", "ㄐㄧˇ", "jǐ"),
+        ("看", "看守", "ㄎㄢ", "kān"), ("看", "看書", "ㄎㄢˋ", "kàn"),
+        ("教", "教書", "ㄐㄧㄠ", "jiāo"), ("教", "教育", "ㄐㄧㄠˋ", "jiào"),
+        ("背", "背包", "ㄅㄟ", "bēi"), ("背", "背後", "ㄅㄟˋ", "bèi"),
+        ("發", "頭髮", "ㄈㄚˇ", "fǎ"), ("曲", "歌曲", "ㄑㄩˇ", "qǔ"), ("曲", "彎曲", "ㄑㄩ", "qū"),
+    ]
+
+    /// 「長」在「校長」裡念什麼；「慢慢地」的「地」怎麼念
+    static func polyphone(_ t: String) -> String? {
+        var ch = "", word = ""
+        if let g = groups(t, #"^(.)在(.{2,5}?)(?:這個詞)?(?:裡|中|裡面|裡頭)?(?:要|應該)?(?:念|讀|唸|發音)(?:什麼|作什麼|成什麼|哪個音|幾聲)?$"#) { ch = g[0]; word = g[1] }
+        else if let g = groups(t, #"^(.{2,5}?)的(.)(?:要|應該)?(?:怎麼|如何)(?:念|讀|唸|發音)$|^(.{2,5}?)的(.)(?:念|讀|唸)(?:什麼|幾聲)$"#) {
+            word = g[0].isEmpty ? g[2] : g[0]; ch = g[0].isEmpty ? g[3] : g[1]
+        }
+        guard !ch.isEmpty, word.contains(ch), let r = readings.first(where: { $0.0 == ch && $0.1 == word }) else { return nil }
+        let others = readings.filter { $0.0 == ch && $0.2 != r.2 }.map { "\($0.1)的\($0.0)念\($0.2)" }
+        let extra = others.isEmpty ? "" : "（多音字：" + Array(Set(others)).sorted().prefix(2).joined(separator: "、") + "。）"
+        return "「\(word)」的「\(ch)」念 \(r.2)（\(r.3)）。" + extra
     }
 }

@@ -8,6 +8,7 @@ python3 build_kb.py
 import json
 import os
 
+import common_data
 import emo_data
 import gen_fortune_tables as F
 import med_data
@@ -17,7 +18,8 @@ import world_data
 HERE = os.path.dirname(os.path.abspath(__file__))
 KB = os.path.join(HERE, "../../ios/NineSun/Resources/knowledge_zh.json")
 GEN = {"疾病", "急救衛教", "人體器官", "情緒", "思考陷阱", "安定方法", "國家", "化學元素", "行星", "動物", "為什麼", "台灣縣市", "納音",
-       "七政四餘", "二十八宿", "地支關係", "哲學家", "名言", "哲學概念", "思想實驗"}
+       "七政四餘", "二十八宿", "地支關係", "哲學家", "名言", "哲學概念", "思想實驗",
+       "書籍", "詩句", "名勝", "常識"}
 
 old = [e for e in json.load(open(KB, encoding="utf-8")) if e["cat"] not in GEN]
 new = []
@@ -98,6 +100,15 @@ for c in phil_data.C:
     add("哲學概念", name, [], f"{d}。例子：{ex}。代表人物：{'、'.join(people)}。批評：{crit}。")
 for name, setup, ask, views in phil_data.T:
     add("思想實驗", name, [], f"{setup}。問題：{ask.rstrip("？?")}？不同看法：{'；'.join(views)}。")
+
+for t, author, era, note in common_data.BOOKS:
+    add("書籍", t, [f"《{t}》"], f"《{t}》的作者是{author}（{era}）。{note}。")
+for line, poet, name, dyn in common_data.POEMS:
+    add("詩句", line, [], f"「{line}」出自{dyn}朝{poet}的〈{name}〉，作者是{poet}。")
+for name, country, city, note in common_data.PLACES:
+    add("名勝", name, [], f"{name}在{country}（{city}）。{note}。")
+for t, al, body in common_data.FACTS:
+    add("常識", t, al, body)
 
 titles = {e["title"] for e in old}
 new = [e for e in new if e["title"] not in titles]
