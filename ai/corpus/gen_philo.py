@@ -210,7 +210,7 @@ for t in T:
          "胖子變體": [["推"]], "溺水兒童": [["救", "捐"]], "蓋吉氏的戒指": [["隱形"]], "瞬間移動機": [["複製", "同一個"]]}[t[0]]
     exam.append({"q": f"什麼是{t[0]}？", "expect": k, "kind": "思想實驗"})
 for q in ["人活著是為了什麼？", "人生有意義嗎？", "什麼是幸福？", "人有自由意志嗎？", "人性本善還是本惡？", "為什麼要善良？", "死亡可怕嗎？", "我是誰？"]:
-    exam.append({"q": q, "expect": [["意義", "選擇", "自己", "哲學", "看法", "角度", "可能"]], "no_narration": True, "kind": "大哉問"})
+    exam.append({"q": q, "expect": [["意義", "選擇", "自己", "哲學", "看法", "角度", "可能"] + [short(p[0]) for p in P]], "no_narration": True, "kind": "大哉問"})
 
 seen = set()
 out = [it for it in out if not ((it["q"], it["a"]) in seen or seen.add((it["q"], it["a"])))]

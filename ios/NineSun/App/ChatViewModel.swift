@@ -487,7 +487,8 @@ final class ChatViewModel: ObservableObject {
             work.tick(t.count)
             // 大腦寫到未成年的內容：馬上停、不顯示
             if AdultGuard.crosses(t) { LocalBrain.shared.cancel(); return }
-            DispatchQueue.main.async { if !t.isEmpty { self.streaming = LocalBrain.noKiss(t) } }
+            let shown = LocalBrain.dropNarration(t, question: text, partial: true)
+            DispatchQueue.main.async { if !t.isEmpty { self.streaming = LocalBrain.noKiss(shown) } }
         },
                               done: { result in
             work.end()
@@ -496,7 +497,8 @@ final class ChatViewModel: ObservableObject {
                 case .success(let r) where AdultGuard.crosses(r.text):
                     self.finish(ChatTurn(role: .echo, text: AdultGuard.refusal(L), source: .tool))
                 case .success(let r) where !r.text.isEmpty:
-                    self.finish(ChatTurn(role: .echo, text: self.trashTalk ? Composure.clean(r.text) : r.text, source: .neural))
+                    let said = LocalBrain.dropNarration(r.text, question: text)
+                    self.finish(ChatTurn(role: .echo, text: self.trashTalk ? Composure.clean(said) : said, source: .neural))
                 case .success:
                     self.finish(ChatTurn(role: .echo, text: "（大腦這次沒有寫出東西，再說一次試試。）", source: .tool))
                 case .failure(let e):

@@ -326,6 +326,9 @@ public final class EchoEngine {
         // 2) 觸發規則
         if let t = ctx.rules.trigger(for: text) { return done(t, .rule) }
 
+        // 2.001) 有標準答案、用算的就知道的（某年生肖、干支、日期加減、地支沖合、按比例分、面積、利息、原子序）：引擎直接算
+        if L == .zh, let a = QuickCalc.answer(text) { return done(a, .tool) }
+
         // 2.005) 詞性和仿寫：「分析詞性：…」「仿寫：…」
         if let g = Grammar.parse(message) { return done(Grammar.reply(g.kind, g.text), .knowledge) }
         // 2.01) 寫作：詳寫（「小明哭了，請詳寫」）、擴寫（「擴寫：樹在成長」「Expand: The tree is growing.」）、修改——

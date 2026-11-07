@@ -89,7 +89,8 @@ for (i, line) in lines.enumerated() where i % shards == shard {
     let prompt = runner.chatPrompt(LocalBrain.messages(system: system, history: history, user: user))
     do {
         let r = try runner.generate(prompt: prompt, maxTokens: most, temperature: temp, stop: LocalBrain.stops, seed: seed(id))
-        let formatted = LocalBrain.followFormat(question: q, answer: LocalBrain.tidy(r.text, lang: lang))
+        var formatted = LocalBrain.followFormat(question: q, answer: LocalBrain.tidy(r.text, lang: lang))
+        if route == "roleplay" { formatted = LocalBrain.dropNarration(formatted, question: q) }
         let text = low && route != "roleplay" ? LocalBrain.soften(formatted) : formatted
         rec["answer"] = text
         rec["tokens"] = r.tokens

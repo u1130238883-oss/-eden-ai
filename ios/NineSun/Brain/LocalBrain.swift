@@ -133,14 +133,43 @@ final class LocalBrain {
     /// 角色扮演：小模型聊久了會忘記角色，每一句都附上角色設定提醒它（只給模型看，對話裡不會出現）
     static func roleplayUser(_ text: String, character: String, lang: String) -> String {
         let role = character.trimmingCharacters(in: .whitespacesAndNewlines)
-        if role.isEmpty { return text }
-        return text + (["en", "es", "it"].contains(lang) ? "\n\n(You are: \(role). Reply in character, exactly as set up.)"
-                                                          : "\n\n（你是：\(role)。照這個設定、用這個角色的身分回我。）")
+        let en = ["en", "es", "it"].contains(lang)
+        let serious = isSerious(text) ? (en ? " This is a real question: your first sentence answers it directly and concretely; do not open with an action in parentheses."
+                                            : "這是認真的問題：第一句就直接、具體地回答問題本身，不要用括號的動作描寫開頭。") : ""
+        if role.isEmpty { return serious.isEmpty ? text : text + (en ? "\n\n(" + serious + ")" : "\n\n（" + serious + "）") }
+        return text + (en ? "\n\n(You are: \(role). Reply in character, exactly as set up.\(serious))"
+                          : "\n\n（你是：\(role)。照這個設定、用這個角色的身分回我。\(serious)）")
+    }
+
+    /// 角色扮演裡被認真問問題（知識、人生、算數、要不要辭職……），不是在調情、演戲
+    static func isSerious(_ raw: String) -> Bool {
+        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let flirt = ["想我", "愛我", "喜歡我", "抱", "親", "吻", "床", "脫", "摸", "睡覺", "陪我", "寶貝", "老公", "老婆", "你在幹嘛", "你在做什麼", "穿", "身體",
+                     "miss me", "love me", "kiss", "hug", "bed", "touch"]
+        if flirt.contains(where: { t.lowercased().contains($0) }) { return false }
+        let ask = ["什麼", "嗎", "怎麼", "如何", "為什麼", "是不是", "該不該", "要不要", "幾", "哪", "多少", "有沒有", "意義", "?", "？",
+                   "what", "why", "how", "should"]
+        return ask.contains(where: { t.lowercased().contains($0) })
+    }
+
+    /// 認真的問題：拿掉整段的括號動作描寫（答案留著）；沒寫完的括號也拿掉
+    static func dropNarration(_ raw: String, question: String, partial: Bool = false) -> String {
+        guard isSerious(question) else { return raw }
+        var s = raw.replacingOccurrences(of: #"（[^（）]*）|\([^()]*\)"#, with: "", options: .regularExpression)
+        if let r = s.range(of: "（") ?? s.range(of: "(") { s = String(s[..<r.lowerBound]) }
+        s = s.replacingOccurrences(of: #"\n{3,}"#, with: "\n\n", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return s.count >= 4 ? s : partial ? "…" : raw
     }
 
     /// 翻譯的問題：請大腦把每種語言的說法、念法、使用時機都寫出來
     static func translateQuestion(_ text: String, lang: String) -> String {
-        lang == "zh" ? text + "\n（請把每一種語言的說法都寫出來，附上念法和使用時機。）" : text
+        guard lang == "zh" else { return text }
+        // 「用英文回答：蘋果的英文是什麼？」只要簡短的答案
+        if ["用英文回答", "用英文說", "用英語回答", "answer in english"].contains(where: { text.lowercased().contains($0) }) {
+            return text + "\n（簡短用英文回答就好，一兩句。）"
+        }
+        return text + "\n（請把每一種語言的說法都寫出來，附上念法和使用時機。）"
     }
 
     /// 各家模型的對話結束記號（模型說完了卻沒停時用）
@@ -278,7 +307,7 @@ final class LocalBrain {
         if !reading.isEmpty {
             s += (zh ? "【命盤推算結果】（NineSun 的九型十二宮引擎精確算出來的，不能改）\n" : "[chart results] (computed exactly by NineSun's engine; do not change)\n")
             s += String(reading.prefix(1400)) + "\n\n"
-            s += zh ? "用上面的結果回答：先講結論，再用白話說為什麼（結果裡的關鍵名詞要直接說出來，像正財、七殺、食神、命宮的主星，再用白話解釋它代表什麼），最後給一個具體可以做的建議。\n\n" : "Answer from these results: conclusion first, then why in plain words (name the key terms from the results, such as the ten gods or the palace's main stars, and explain them), then one concrete suggestion.\n\n"
+            s += zh ? "用上面的結果回答：先講結論，再用白話說為什麼（結果裡的關鍵名詞要直接說出來，像正財、七殺、食神、命宮的主星，再用白話解釋它代表什麼；講四化一定連星名和宮位一起說，像「廉貞化忌在流年遷移宮」，宮位照結果的寫法，結果寫流年就寫流年），最後給一個具體可以做的建議。\n\n" : "Answer from these results: conclusion first, then why in plain words (name the key terms from the results, such as the ten gods or the palace's main stars, and explain them; for the four transformations always name the star with the palace, exactly as the results label it), then one concrete suggestion.\n\n"
         }
         if !facts.isEmpty {
             s += (zh ? "【NineSun 查到的資料】（正確，照著它的結論回答，不能說相反的話）\n" : "[NineSun's facts] (correct; follow their conclusion, never contradict them)\n") + String(facts.prefix(1500)) + "\n\n"
@@ -355,7 +384,25 @@ final class LocalBrain {
     }
 
     /// 對方指定只要答案（「只回答數字」「只回答是或不是」「只要回答城市名」「不要解釋」「一句話」）：只留第一句，吐槽和解釋拿掉
-    static func followFormat(question q: String, answer a: String) -> String {
+    static func followFormat(question q: String, answer raw: String) -> String {
+        var a = raw
+        // 「用頓號分開」：模型常用 - 或 / 隔開，第一行換成頓號
+        if q.contains("頓號"), !a.contains("、") {
+            var lines = a.components(separatedBy: "\n")
+            lines[0] = lines[0].replacingOccurrences(of: #"\s*[-－/／,，]\s*"#, with: "、", options: .regularExpression)
+            a = lines.joined(separator: "\n")
+        }
+        // 「不要超過 50 個字」「30 字以內」：超過就在限制內最後一個句號（沒有就逗號）切掉
+        if let m = q.range(of: #"(不要超過|不超過|最多|限)\s*\d+\s*個?字|\d+\s*字以內"#, options: .regularExpression),
+           let n = Int(q[m].filter(\.isNumber)), n >= 5, a.count > n {
+            let head = a.prefix(n)
+            if let i = head.lastIndex(where: { "。！？!?\n".contains($0) }) ?? head.lastIndex(where: { "，,；".contains($0) }),
+               head.distance(from: head.startIndex, to: i) >= n / 3 {
+                a = String(head[..<i]) + (head[i] == "，" || head[i] == "," || head[i] == "；" || head[i] == "\n" ? "。" : String(head[i]))
+            } else {
+                a = String(head)
+            }
+        }
         let strict = ["只回答", "只要回答", "只說", "不要解釋", "不用解釋", "直接告訴我", "只要答案", "answer only", "just the number", "yes or no"]
         let oneSentence = ["一句話", "用一句", "in one sentence"]
         guard strict.contains(where: { q.lowercased().contains($0) }) || oneSentence.contains(where: { q.contains($0) }) else { return a }
@@ -364,6 +411,11 @@ final class LocalBrain {
         first = String(first.unicodeScalars.filter { !($0.properties.isEmojiPresentation || ($0.properties.isEmoji && $0.value > 0x2000)) })
             .trimmingCharacters(in: .whitespaces)
         for w in ["啊", "啦", "喔", "囉"] where first.hasSuffix(w) && first.count > 2 { first.removeLast() }
+        // 一句話卻寫很長：在 60 字內最後一個逗號切掉
+        if oneSentence.contains(where: { q.contains($0) }), first.count > 60,
+           let i = first.prefix(60).lastIndex(where: { "，,；".contains($0) }), first.distance(from: first.startIndex, to: i) >= 15 {
+            first = String(first[..<i])
+        }
         return first.isEmpty ? a : first + (oneSentence.contains(where: { q.contains($0) }) ? "。" : "")
     }
 
@@ -405,9 +457,20 @@ final class LocalBrain {
         ("質量很好", "品質很好"), ("質量好", "品質好"), ("高質量", "高品質"), ("接地氣", "貼近生活"), ("靠譜", "可靠"),
     ]
 
+    /// 轉繁體時會轉錯的字（丑→醜、采→採）和台灣慣用的哲學家譯名
+    static let fixWords: [(String, String)] = [
+        ("尼採", "尼采"), ("風採", "風采"), ("神採", "神采"), ("文採", "文采"), ("笛卡爾", "笛卡兒"), ("加繆", "卡繆"), ("海德格爾", "海德格"),
+        ("維特根斯坦", "維根斯坦"), ("漢娜·阿倫特", "漢娜・鄂蘭"), ("阿倫特", "鄂蘭"), ("伊壁鳩魯", "伊比鳩魯"), ("薩特", "沙特"), ("庫恩", "孔恩"),
+        ("波普爾", "波普"), ("馬基雅維利", "馬基維利"), ("馬基雅維里", "馬基維利"), ("帕斯卡爾", "帕斯卡"), ("弗蘭克爾", "弗蘭克"),
+        ("約翰·斯圖亞特·密爾", "約翰・彌爾"), ("密爾", "彌爾"), ("穆勒", "彌爾"), ("克爾凱郭爾", "齊克果"),
+    ]
+
     static func taiwanese(_ s: String) -> String {
         var t = s
-        for (a, b) in twWords { t = t.replacingOccurrences(of: a, with: b) }
+        for (a, b) in twWords + fixWords { t = t.replacingOccurrences(of: a, with: b) }
+        // 地支的丑被轉成「醜」：癸丑、丑時、丑宮、子丑……換回來
+        t = t.replacingOccurrences(of: #"([甲乙丙丁戊己庚辛壬癸子（(、])醜"#, with: "$1丑", options: .regularExpression)
+        t = t.replacingOccurrences(of: #"醜([時宮年月日未土牛戌辰])"#, with: "丑$1", options: .regularExpression)
         return t
     }
 }
