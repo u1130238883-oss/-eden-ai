@@ -712,3 +712,10 @@ Linux 上 12 台同時考（Mac 排不到）；Mahou 在 4 核 CPU 約每秒 6�
     回答再用 `dropNarration` 拿掉括號旁白（調情的話不動）；App 和考試共用。
   - 紫微：宮位都對，但常沒說星名或少了「流年」兩字。→ 解讀提示要求四化連星名和宮位一起說、照結果寫流年。
   - 照指示：「用頓號分開」換成頓號、「不要超過 N 個字」在限制內切句、「用一句話」過長在 60 字內切、「用英文回答」不再要求列各國語言。
+
+## Round 13 (commit 8817eae, answers hash a980d9c48d) — 2751/2854 = 96.4% (dev 96.4%, hold 96.4%)
+Up from 91.6% in round 12. philosophy 37.9→93.7%, roleplay_q 25→100%, random 80.4→98.3%,
+ziwei_deep 81→98%, instruct 82.2→93.3%, fortune_read 99.2%, bazi_deep 100%. No real regressions
+(roleplay 91.2→88.8% is noise; in-character "你是 AI 嗎？" items failed in round 12 too).
+IPA: build 237 (`builds/ninesun-build-237/NineSun.ipa`) — sent to the user.
+Next weak spots: language 87.3%, logic 86%, roleplay identity questions (character admits being AI).
