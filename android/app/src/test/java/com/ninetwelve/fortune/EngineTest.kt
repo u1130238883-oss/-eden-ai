@@ -235,6 +235,12 @@ class EngineTest {
         assertEquals(listOf("3 壞12因7", "9 好12因7"), natal(2012))
         assertEquals(emptyList<String>(), natal(2030))
 
+        // 流年引動本命：本命盤裡因或果落在流年所走那一宮的各列
+        fun yearNatal(y: Int) = d.triggeredNatalRowsForYear(y).map { "${it.palace} ${it.reading.display}" }
+        assertEquals(listOf("2 好2因9", "8 壞9因2"), yearNatal(2025))
+        assertEquals(listOf("5 壞3因8", "11 壞8因3"), yearNatal(2026))
+        assertEquals(listOf("3 壞12因7", "12 正11因7", "9 好12因7", "6 正5因7"), yearNatal(2027))
+
         // 作者的例子：本命 9宮 → 本命 2宮 好2因9、8宮 壞9因2
         fun own(p: Int) = d.triggeredNatalRows(p).map { "${it.palace} ${it.reading.display}" }
         assertEquals(listOf("2 好2因9", "8 壞9因2"), own(9))

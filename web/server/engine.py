@@ -194,6 +194,10 @@ class Destiny:
         return [r for r in self.luck_aspects(year)["aspects"]
                 if palace in (r["reading"][1], r["reading"][2])]
 
+    def triggered_natal_rows_for_year(self, year):
+        """某一年的流年所引動的本命盤宮位（因或果落在流年所走那一宮的各列）。"""
+        return self.triggered_natal_by_palace(self.year_row(year)["palace"])
+
     def triggered_natal_rows(self, period):
         """某一段大運所引動的本命盤宮位（因或果落在大運所走那一宮的各列）。"""
         return self.triggered_natal_by_palace(period["row"]["palace"])

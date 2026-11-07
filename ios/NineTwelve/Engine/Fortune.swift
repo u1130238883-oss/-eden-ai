@@ -224,6 +224,11 @@ public struct Destiny: Equatable, Sendable {
         }
     }
 
+    /// 某一年的流年所引動的本命盤宮位（本命盤中，因或果落在流年所走那一宮的各列）。
+    public func triggeredNatalRows(forYear y: Int) -> [PalaceRow] {
+        triggeredNatalRows(forPalace: year(y).palace)
+    }
+
     /// 某一段大運所引動的本命盤宮位（本命盤中，因或果落在大運所走那一宮的各列）。
     public func triggeredNatalRows(for period: LuckPeriod) -> [PalaceRow] {
         triggeredNatalRows(forPalace: period.row.palace)

@@ -98,6 +98,11 @@ check("大運 2019–2027 引動", trig(d.triggered_natal_rows(d.luck_period_con
 check("大運 2010–2018 引動", trig(d.triggered_natal_rows(d.luck_period_containing(2012))),
       ["3 壞12因7", "9 好12因7"])
 check("大運 2028–2036 引動", trig(d.triggered_natal_rows(d.luck_period_containing(2030))), [])
+# 流年 → 本命盤因或果為流年那一宮的宮位（2026-11-07，照作者的 Quidam）
+check("2025 流年引動本命", trig(d.triggered_natal_rows_for_year(2025)), ["2 好2因9", "8 壞9因2"])
+check("2026 流年引動本命", trig(d.triggered_natal_rows_for_year(2026)), ["5 壞3因8", "11 壞8因3"])
+check("2027 流年引動本命", trig(d.triggered_natal_rows_for_year(2027)),
+      ["3 壞12因7", "12 正11因7", "9 好12因7", "6 正5因7"])
 # 本命 9宮 → 本命盤因或果為9的宮位（作者 2026-10-20 的例子）
 check("本命 9宮 引動", trig(d.triggered_natal_by_palace(9)), ["2 好2因9", "8 壞9因2"])
 check("本命 1宮 引動", trig(d.triggered_natal_by_palace(1)), [])

@@ -163,7 +163,7 @@ struct ChipSheet: Identifiable {
         case .meaning:
             return ChipSheet(kind: .meaning(palace))
         case .triggers:
-            guard let triggers, !triggers.items.isEmpty else { return nil }
+            guard let triggers, !triggers.isEmpty else { return nil }
             return ChipSheet(kind: .triggers(triggers))
         }
     }
@@ -197,7 +197,9 @@ struct ChipSheetView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 case .triggers(let triggers):
-                    TriggerCard(triggers: triggers, lang: lang)
+                    ForEach(Array(triggers.cards.enumerated()), id: \.offset) { _, card in
+                        TriggerCard(triggers: card, lang: lang)
+                    }
                 }
             }
             .padding(16)
@@ -215,7 +217,10 @@ struct ChipSheetView: View {
     private var title: String {
         switch item.kind {
         case .meaning(let palace): return t.palace(palace)
-        case .triggers(let triggers): return TriggerCard.title(triggers.kind, t)
+        case .triggers(let triggers):
+            let cards = triggers.cards
+            if cards.count == 1 { return TriggerCard.title(cards[0].kind, t) }
+            return t("引動", "Triggered", "Activados", "Attivati")
         }
     }
 }
@@ -263,8 +268,10 @@ struct RowDetailView: View {
                 }
 
                 // 沒有引動就整張卡不顯示
-                if let triggers, !triggers.items.isEmpty {
-                    TriggerCard(triggers: triggers, lang: lang)
+                if let triggers {
+                    ForEach(Array(triggers.cards.enumerated()), id: \.offset) { _, card in
+                        TriggerCard(triggers: card, lang: lang)
+                    }
                 }
 
                 Card(title: "\(t.effectWord) — \(t.palaceNamed(row.reading.result))",
@@ -322,12 +329,26 @@ struct TriggerList {
     let items: [(palace: Int, row: PalaceRow)]
     /// 每一項底下「被影響」的大運方面，和 items 一一對應（只有大運引動本命時才有）。
     var affected: [[(palace: Int, row: PalaceRow)]] = []
+    /// 接在這一張後面的其他引動（流年：引動本命之後接引動大運）。
+    var extra: [TriggerList] = []
+
+    /// 要顯示的每一張引動卡（沒有項目的不顯示）。
+    var cards: [TriggerList] {
+        ([self] + extra).filter { !$0.items.isEmpty }
+    }
+
+    /// 一張都沒有。
+    var isEmpty: Bool { cards.isEmpty }
 
     /// 某一年的流年所引動的大運方面。
     static func year(_ y: Int, in destiny: Destiny) -> TriggerList {
-        TriggerList(kind: .luckAspects,
-                    span: destiny.luckPeriod(containing: y).span,
-                    items: destiny.triggeredAspects(forYear: y).map { (palace: $0.aspect, row: $0.row) })
+        let luck = TriggerList(kind: .luckAspects,
+                               span: destiny.luckPeriod(containing: y).span,
+                               items: destiny.triggeredAspects(forYear: y).map { (palace: $0.aspect, row: $0.row) })
+        // 先列流年引動的本命宮，再列流年引動的大運方面
+        return TriggerList(kind: .natal,
+                           items: destiny.triggeredNatalRows(forYear: y).map { (palace: $0.palace, row: $0) },
+                           extra: [luck])
     }
 
     /// 本命盤某一宮所引動的本命宮位。

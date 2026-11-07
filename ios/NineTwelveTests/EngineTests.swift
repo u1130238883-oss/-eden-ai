@@ -201,6 +201,14 @@ final class EngineTests: XCTestCase {
         XCTAssertEqual(natal(2012), ["3 壞12因7", "9 好12因7"])
         XCTAssertEqual(natal(2030), [])
 
+        // 流年引動本命：本命盤裡因或果落在流年所走那一宮的各列
+        func yearNatal(_ y: Int) -> [String] {
+            d.triggeredNatalRows(forYear: y).map { "\($0.palace) \($0.reading.display)" }
+        }
+        XCTAssertEqual(yearNatal(2025), ["2 好2因9", "8 壞9因2"])
+        XCTAssertEqual(yearNatal(2026), ["5 壞3因8", "11 壞8因3"])
+        XCTAssertEqual(yearNatal(2027), ["3 壞12因7", "12 正11因7", "9 好12因7", "6 正5因7"])
+
         // 作者的例子：本命 9宮 → 本命 2宮 好2因9、8宮 壞9因2
         func own(_ p: Int) -> [String] {
             d.triggeredNatalRows(forPalace: p).map { "\($0.palace) \($0.reading.display)" }
