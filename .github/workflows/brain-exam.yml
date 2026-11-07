@@ -61,10 +61,11 @@ jobs:
           curl -fsSL --retry 3 -o model.gguf "https://huggingface.co/mradermacher/gemma4-e4b-mahou-nsfw-GGUF/resolve/main/gemma4-e4b-mahou-nsfw.Q4_K_M.gguf"
           ls -la model.gguf
 
-      # 同一份題目之前考到一半（取消、超時）：接著考，不重考已經答過的
+      # 同一份題目、同一套提示之前考到一半（取消、超時）：接著考，不重考已經答過的
+      # （雜湊包含提示和考試程式：提示改了就重考）
       - name: Resume earlier answers
         run: |
-          H=$(sha1sum ios/BrainEval/exam/run.jsonl | cut -c1-10)
+          H=$(cat ios/BrainEval/exam/run.jsonl ios/NineSun/Brain/LocalBrain.swift ios/BrainEval/main.swift | sha1sum | cut -c1-10)
           echo "H=$H" >> "$GITHUB_ENV"
           if git fetch -q origin "evals/exam-$H-${{ matrix.shard }}" 2>/dev/null; then
             git show FETCH_HEAD:answers-${{ matrix.shard }}.jsonl > answers-${{ matrix.shard }}.jsonl 2>/dev/null || rm -f answers-${{ matrix.shard }}.jsonl

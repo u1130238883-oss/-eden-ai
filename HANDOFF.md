@@ -682,3 +682,6 @@ Linux 上 12 台同時考（Mac 排不到）；Mahou 在 4 核 CPU 約每秒 6�
   - 生氣發洩不再被當成難過：罵人類 88.2% → 99.4%，安慰 97%，危機 100%。
   - 解盤題 60%（合稱算對後 80%）：解讀內容對，但常只講白話、不說出正財、七殺、命宮主星這些名詞。
   - 解讀提示改成「關鍵名詞直接說出來，再用白話解釋」，第 11 輪驗證。
+- 考試回答的分支 `evals/exam-<H>-<機器>`：H 是 run.jsonl、LocalBrain.swift、BrainEval/main.swift 三個檔案接在一起的 sha1 前 10 碼
+  （`cat ios/BrainEval/exam/run.jsonl ios/NineSun/Brain/LocalBrain.swift ios/BrainEval/main.swift | sha1sum`）。
+  以前只看 run.jsonl，第 11 輪因此沿用了第 10 輪的回答、沒有重考。
