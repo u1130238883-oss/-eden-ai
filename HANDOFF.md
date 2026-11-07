@@ -719,3 +719,12 @@ ziwei_deep 81→98%, instruct 82.2→93.3%, fortune_read 99.2%, bazi_deep 100%. 
 (roleplay 91.2→88.8% is noise; in-character "你是 AI 嗎？" items failed in round 12 too).
 IPA: build 237 (`builds/ninesun-build-237/NineSun.ipa`) — sent to the user.
 Next weak spots: language 87.3%, logic 86%, roleplay identity questions (character admits being AI).
+
+## Round 14 changes (after round 13's 96.4%)
+- QuickCalc now also answers: facing direction after turns, clock-hand angle, "X 點再過 N 小時", kinship titles,
+  folded-rope cuts, 注音 fill-in (matched against the idiom table + common words), 多音字 readings.
+- ProfileParser: "（我是男生）" inside a question about something else no longer sets gender / hijacks the question.
+- Translate: a question naming one language gets only that language, plus a phrasebook hint (common words × 7 languages).
+- Roleplay: identity questions (你是 AI 嗎／幾歲／做什麼工作) answer from the role, never "I'm an AI".
+- KB: `ai/corpus/common_data.py` — classic books→authors, famous poem lines→poets, landmarks→countries, everyday facts.
+- All `*_routed.jsonl` re-routed; run.jsonl rebuilt (engine answers: logic 50/50, language 52/55).
