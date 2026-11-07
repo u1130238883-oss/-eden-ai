@@ -42,7 +42,14 @@ def numbers(s):
     return [float(x) for x in re.findall(r"-?\d+(?:\.\d+)?", s)]
 
 
+# 命理的合稱：說「財星」「官殺」也算講到了正財／七殺
+GROUP = {"正財": "財星", "偏財": "財星", "七殺": "官殺", "正官": "官殺", "比肩": "比劫", "劫財": "比劫",
+         "食神": "食傷", "傷官": "食傷", "正印": "印星", "偏印": "印星"}
+
+
 def has(ans, alt):
+    if alt in GROUP and GROUP[alt] in ans:
+        return True
     if alt.lower().replace(" ", "") in ans.translate(FW).lower().replace(" ", ""):
         return True
     a = norm(ans)

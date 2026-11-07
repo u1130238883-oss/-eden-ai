@@ -262,7 +262,7 @@ final class LocalBrain {
         if !reading.isEmpty {
             s += (zh ? "【命盤推算結果】（NineSun 的九型十二宮引擎精確算出來的，不能改）\n" : "[chart results] (computed exactly by NineSun's engine; do not change)\n")
             s += String(reading.prefix(1400)) + "\n\n"
-            s += zh ? "用上面的結果回答：先講結論，再用白話說為什麼，最後給一個具體可以做的建議。\n\n" : "Answer from these results: conclusion first, then why in plain words, then one concrete suggestion.\n\n"
+            s += zh ? "用上面的結果回答：先講結論，再用白話說為什麼（結果裡的關鍵名詞要直接說出來，像正財、七殺、食神、命宮的主星，再用白話解釋它代表什麼），最後給一個具體可以做的建議。\n\n" : "Answer from these results: conclusion first, then why in plain words (name the key terms from the results, such as the ten gods or the palace's main stars, and explain them), then one concrete suggestion.\n\n"
         }
         if !facts.isEmpty {
             s += (zh ? "【NineSun 查到的資料】（正確，照著它的結論回答，不能說相反的話）\n" : "[NineSun's facts] (correct; follow their conclusion, never contradict them)\n") + String(facts.prefix(1500)) + "\n\n"
