@@ -292,7 +292,8 @@ final class ChatViewModel: ObservableObject {
         }
 
         // 成人模式：照設定的角色聊（說想死的話還是先接住；命理、規則照常）
-        if adultMode, RuleBook.parse(text) == nil, !Self.isReading(text) || Solace.isFeeling(text) {
+        // 大腦關著或還沒下載：不擋人，照一般的方式由 NineSun 的引擎回答
+        if adultMode, brainPath != nil, RuleBook.parse(text) == nil, !Self.isReading(text) || Solace.isFeeling(text) {
             let L = autoDetect ? Lang.detect(text, fallback: language) : language
             if let care = Safety.crisisReply(text, L) {
                 finish(ChatTurn(role: .echo, text: care, source: .tool))
@@ -303,16 +304,7 @@ final class ChatViewModel: ObservableObject {
                 finish(ChatTurn(role: .echo, text: AdultGuard.refusal(L), source: .tool))
                 return
             }
-            // 模型關著：先請使用者打開
-            if !useBrain, ModelStore.shared.readyModel != nil {
-                finish(ChatTurn(role: .echo, text: "大腦現在是關著的：到「調頻台」→「NineSun 的大腦」把模型的開關打開，再回來聊。", source: .tool))
-                return
-            }
-            guard let brain = ModelStore.shared.readyModel.map({ ModelStore.shared.path($0).path }) else {
-                finish(ChatTurn(role: .echo, text: "成人模式要用 NineSun 的大腦：先到「調頻台」→「NineSun 的大腦」挑一個模型下載，再回來聊。", source: .tool))
-                return
-            }
-            roleplay(text, L, brain: brain)
+            roleplay(text, L, brain: brainPath!)
             return
         }
 

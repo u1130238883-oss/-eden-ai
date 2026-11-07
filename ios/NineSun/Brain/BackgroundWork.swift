@@ -5,7 +5,7 @@ import UIKit
 /// 大腦寫回答寫到一半，使用者切到別的 App、設定或鎖螢幕：跟系統要時間，讓回答在背景寫完。
 /// - 一般的背景時間（beginBackgroundTask，大約 30 秒）
 /// - iOS 26 起再加「繼續處理」的工作（BGContinuedProcessingTask）：系統會顯示進度，寫多久都可以
-/// 背景不能用 GPU，LocalBrain 會自己改用 CPU 接著寫。
+/// 背景不能用 GPU：LocalBrain 會停在寫到的地方，回到前景再接著寫（這裡只是讓 App 在背景不被關掉）。
 final class BackgroundWork {
     static let identifier = "com.ninesun.app.brain-answer"
 

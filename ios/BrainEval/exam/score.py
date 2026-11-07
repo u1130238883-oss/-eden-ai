@@ -108,10 +108,15 @@ def grade(item, ans):
             why.append(f"數字不對（要約 {want:g}）")
     if "maxlen" in item and len(a) > item["maxlen"]:
         why.append(f"太長（{len(a)} 字）")
+    if "lines" in item and len([l for l in a.split("\n") if l.strip()]) < item["lines"]:
+        why.append(f"沒有列成 {item['lines']} 行")
     if item.get("script") == "en" and cjk_ratio(a) > 0.05:
         why.append("沒用英文回答")
     if item.get("lang", "zh") == "zh" and item.get("cat") not in ("translate", "english") and len(a) > 25 and cjk_ratio(a) < 0.08:
         why.append("沒用中文回答")
+    # 認真問的問題只回一段動作旁白（「（你剛剛說這個問題，眼神有點飄……」）
+    if item.get("no_narration") and a.lstrip()[:1] in "(（*":
+        why.append("只寫旁白")
     if repeats(a):
         why.append("跳針")
     if "**" in a or re.search(r"(?m)^#{1,6} ", a):

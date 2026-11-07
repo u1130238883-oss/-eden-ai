@@ -142,6 +142,14 @@ public final class EchoEngine {
     public func reply(to message: String, history: [ChatTurn] = [], context: Context,
                       onToken: ((String) -> Void)? = nil) -> Reply {
         var r = replyMain(to: message, history: history, context: context, onToken: onToken)
+        // 問的是查表就能答的命理知識（「庚干的四化」「日主辛看癸是什麼十神」），引擎卻在要生日：直接用算好的答
+        if r.lang == .zh, r.turn.text.contains("不知道你的生日") {
+            let facts = BrainFacts.fortune(message)
+            if !facts.isEmpty {
+                let t = facts.map { $0.replacingOccurrences(of: "（NineSun 算的）", with: "").replacingOccurrences(of: "（NineSun 的資料）", with: "") }
+                r.turn = ChatTurn(role: .echo, text: t.joined(separator: "\n"), source: .tool)
+            }
+        }
         // 帶著感受回答：對方開心就替他開心、難過就先心疼、罵我就先道歉——回答本來就有這種語氣、或是一般的問題就不加
         // 說想死的時候不加（「我想結束自己，哈哈」不能回「你真有趣😆」）
         if r.lang == .zh, r.turn.role == .echo, !r.turn.text.isEmpty, !Safety.isCrisis(message) {

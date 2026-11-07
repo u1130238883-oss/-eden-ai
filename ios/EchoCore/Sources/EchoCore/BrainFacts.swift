@@ -30,7 +30,19 @@ public enum BrainFacts {
         // 十神：「日主甲看到乙」「甲日主，乙是什麼十神」
         if t.contains("十神") || t.contains("日主") {
             let found = t.compactMap { c -> Int? in stems.firstIndex(of: String(c)) }
-            if found.count >= 2 {
+            // 「我的八字是…，日主辛，癸亥這一柱的天干是什麼十神」：日主看那一柱
+            let cs = Array(t)
+            var pillar: (stem: Int, branch: Int)?
+            if let r = t.range(of: "這一柱") ?? t.range(of: "這柱") ?? t.range(of: "柱的"), let dmR = t.range(of: "日主") {
+                let end = t.distance(from: t.startIndex, to: r.lowerBound)
+                if end >= 2, let a = stems.firstIndex(of: String(cs[end - 2])), let b = branches.firstIndex(of: String(cs[end - 1])),
+                   let d = t[dmR.upperBound...].first.flatMap({ stems.firstIndex(of: String($0)) }) {
+                    pillar = (a, b)
+                    let g = BaZi.tenGod(dayStem: d, other: a)
+                    out.append("十神（NineSun 算的）：日主\(stems[d])（\(yy(d))\(wx[BaZi.stemEl[d]])），\(stems[a])\(branches[b])這一柱的天干\(stems[a])（\(yy(a))\(wx[BaZi.stemEl[a]])）是「\(g)」。")
+                }
+            }
+            if pillar == nil, found.count >= 2 {
                 var dm = found[0], other = found[1]
                 // 「乙，甲日主」這種：緊接著「日主」的才是日主
                 if let r = t.range(of: "日主") {
@@ -80,9 +92,9 @@ public enum BrainFacts {
         }
         // 生年四化：「甲年生的四化」
         if t.contains("四化") || t.contains("化祿") || t.contains("化忌") {
-            for (i, s) in stems.enumerated() where t.contains(s + "年") || t.contains("天干" + s) {
+            for (i, s) in stems.enumerated() where t.contains(s + "年") || t.contains("天干" + s) || t.contains(s + "干") {
                 if let four = ZiWei.sihua[s] {
-                    out.append("生年四化（NineSun 的資料）：\(stems[i])年 \(four[0])化祿、\(four[1])化權、\(four[2])化科、\(four[3])化忌。")
+                    out.append("四化（NineSun 的資料）：\(stems[i])干（\(stems[i])年生、或宮干\(stems[i])）\(four[0])化祿、\(four[1])化權、\(four[2])化科、\(four[3])化忌。")
                 }
             }
         }

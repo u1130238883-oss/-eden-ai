@@ -87,6 +87,8 @@ public enum ZiWeiReading {
         if s.hasSuffix("。") { s.removeLast() }
         return s
     }
+    /// 流年盤：流年命宮在 lb，地支 b 是流年的哪一宮（命宮、兄弟、夫妻……逆時針排）
+    static func yearPalace(_ lb: Int, _ b: Int) -> String { ZiWei.palaces[Astro.pmod(lb - b, 12)] }
     static func branchOf(_ zw: ZiWei, star: String) -> Int? {
         (0..<12).first { zw.main[$0].contains(star) || zw.aux[$0].contains(star) }
     }
@@ -107,6 +109,16 @@ public enum ZiWeiReading {
     static func yearSihua(_ zw: ZiWei, year y: Int) -> [(tag: String, star: String, palace: String?)] {
         let stem = GZ.stems[Astro.pmod(y - 4, 60) % 10]
         return hua(zw, stem: stem)
+    }
+
+    /// 流年四化落在流年盤的哪一宮，和本命的哪一宮；label 是「流年遷移宮（本命田宅宮）」
+    public static func yearHua(_ zw: ZiWei, year y: Int) -> [(tag: String, star: String, year: String?, natal: String?, label: String?)] {
+        let lb = Astro.pmod(y - 4, 60) % 12
+        return yearSihua(zw, year: y).map { h in
+            guard let b = branchOf(zw, star: h.star), let np = h.palace else { return (h.tag, h.star, nil, nil, nil) }
+            let yp = yearPalace(lb, b)
+            return (h.tag, h.star, yp, np, "流年\(pname(yp))（本命\(pname(np))）")
+        }
     }
 
     static func natalSihua(_ zw: ZiWei) -> [(tag: String, star: String, palace: String?)] {
@@ -231,27 +243,37 @@ public enum ZiWeiReading {
         let bad = zw.aux[lb].filter { sha.contains($0) }
         if !bad.isEmpty { t += "流年命宮有\(bad.joined(separator: "、"))，今年容易有波折和情緒起伏。" }
 
-        t += "\n② 流年四化（\(GZ.stems[gz % 10])干）："
+        // 流年四化看流年盤：以流年命宮起，逆數排出流年的十二宮；括號裡附上本命宮位
+        t += "\n② 流年四化（\(GZ.stems[gz % 10])干，宮位看流年盤；括號裡是本命宮位）："
         var score = 0.0
         let hs = yearSihua(zw, year: y)
         for h in hs {
-            guard let p = h.palace else { t += "\n  · \(h.star)\(h.tag)：不在你的盤上。"; continue }
-            t += "\n  · \(h.star)\(h.tag)落在\(pname(p))：" + sihuaLine(h.tag, palace: p, natal: false)
-            let key = ["命宮", "財帛", "官祿", "夫妻", "疾厄", "福德"].contains(p)
+            guard let b = branchOf(zw, star: h.star), let np = h.palace else { t += "\n  · \(h.star)\(h.tag)：不在你的盤上。"; continue }
+            let yp = yearPalace(lb, b)
+            t += "\n  · \(h.star)\(h.tag)落在流年\(pname(yp))（\(GZ.branches[b])宮，本命\(pname(np))）：" + sihuaLine(h.tag, palace: yp, natal: false)
+            if yp != np {
+                let extra = h.tag == "化祿" ? luGood[np] : (h.tag == "化忌" ? jiBad[np] : nil)
+                if let e = extra { t += "本命\(pname(np))也被引動：\(e)。" }
+            }
+            let key = ["命宮", "財帛", "官祿", "夫妻", "疾厄", "福德"].contains(yp)
             if h.tag == "化祿" { score += key ? 1.2 : 0.6 }
             if h.tag == "化科" { score += 0.3 }
             if h.tag == "化忌" { score -= key ? 1.5 : 0.8 }
         }
-        // 流年忌沖：化忌所在宮的對宮受沖
-        if let ji = hs.last, let p = ji.palace {
-            let b = zw.palaceOf(p)
-            let opp = zw.palaceAt[Astro.pmod(b + 6, 12)]!
-            t += "\n  · 化忌在\(pname(p))，會沖到對面的\(pname(opp))，\(ptext(opp))這方面也會被牽動。"
-            if opp == "命宮" { score -= 0.8 }
+        // 流年忌沖：化忌所在宮的對宮受沖（流年盤）
+        if let ji = hs.last, let b = branchOf(zw, star: ji.star) {
+            let yp = yearPalace(lb, b)
+            let opp = yearPalace(lb, Astro.pmod(b + 6, 12))
+            if opp == "命宮" {
+                t += "\n  · 化忌在流年\(pname(yp))，會沖到對面的流年命宮：今年自己會比較累、壓力大，做決定要多想一下。"
+                score -= 0.8
+            } else {
+                t += "\n  · 化忌在流年\(pname(yp))，會沖到對面的流年\(pname(opp))，\(ptext(opp))這方面也會被牽動。"
+            }
         }
         // 本命化忌被流年引動
         if let nj = natalSihua(zw).last, let np = nj.palace, hs.contains(where: { $0.palace == np && $0.tag == "化忌" }) {
-            t += "\n  · 本命化忌和流年化忌都在\(pname(np))，雙忌疊在一起，這一年\(jiBad[np] ?? "")會特別明顯。"
+            t += "\n  · 本命化忌和流年化忌都在本命\(pname(np))，雙忌疊在一起，這一年\(jiBad[np] ?? "")會特別明顯。"
             score -= 1.0
         }
 
@@ -265,8 +287,14 @@ public enum ZiWeiReading {
         }
         let v: NTVerdict = score >= 0.8 ? .good : (score <= -0.8 ? .bad : .neutral)
         t += "\n④ 綜合：今年整體是" + ["好", "中性", "壞"][v.rawValue] + "的。"
-        if let lu = hs.first?.palace { t += "最順的是\(pname(lu))（\(luGood[lu] ?? "")），可以多往這裡用力；" }
-        if let ji = hs.last?.palace { t += "最要小心的是\(pname(ji))（\(jiBad[ji] ?? "")）。" }
+        if let lu = hs.first, let b = branchOf(zw, star: lu.star) {
+            let yp = yearPalace(lb, b)
+            t += "最順的是流年\(pname(yp))（\(luGood[yp] ?? "")），可以多往這裡用力；"
+        }
+        if let ji = hs.last, let b = branchOf(zw, star: ji.star) {
+            let yp = yearPalace(lb, b)
+            t += "最要小心的是流年\(pname(yp))（\(jiBad[yp] ?? "")）。"
+        }
         return (t, v)
     }
 
@@ -280,12 +308,17 @@ public enum ZiWeiReading {
         return Astro.pmod(Astro.pmod(y - 4, 60) % 12 - (lm - 1) + zw.hourBranch, 12)
     }
 
+    /// 流月：流月命宮的地支、本命宮名；流月化忌／化祿落在流月盤的哪一宮（括號附本命宮）
     static func monthInfo(_ zw: ZiWei, year y: Int, lunarMonth m: Int) -> (branch: Int, palace: String, ji: String?, lu: String?) {
         let b = Astro.pmod(douJun(zw, year: y) + m - 1, 12)
         let ys = Astro.pmod(y - 4, 60) % 10
         let stem = GZ.stems[((ys % 5) * 2 + 2 + m - 1) % 10]
         let h = hua(zw, stem: stem)
-        return (b, zw.palaceAt[b]!, h.last?.palace, h.first?.palace)
+        func at(_ star: String?) -> String? {
+            guard let star, let sb = branchOf(zw, star: star) else { return nil }
+            return yearPalace(b, sb)
+        }
+        return (b, zw.palaceAt[b]!, at(h.last?.star), at(h.first?.star))
     }
 
     public static func month(_ zw: ZiWei, now: Date) -> String {
@@ -295,12 +328,12 @@ public enum ZiWeiReading {
         let info = monthInfo(zw, year: y, lunarMonth: ld.month)
         var t = "【紫微流月 · 農曆\(GZ.monthNames[ld.month - 1])月】"
         t += "\n這個月的流月命宮走到\(GZ.branches[info.branch])宮，也就是你本命的\(pname(info.palace))（\(starsLine(zw, info.branch))）：這個月的重心在\(ManticData.ziweiPalaceText[info.palace] ?? "")"
-        if let lu = info.lu { t += "\n流月化祿在\(pname(lu))：\(luGood[lu] ?? "")。" }
-        if let ji = info.ji { t += "\n流月化忌在\(pname(ji))：\(jiBad[ji] ?? "")，這個月這方面要小心。" }
+        if let lu = info.lu { t += "\n流月化祿在流月\(pname(lu))：\(luGood[lu] ?? "")。" }
+        if let ji = info.ji { t += "\n流月化忌在流月\(pname(ji))：\(jiBad[ji] ?? "")，這個月這方面要小心。" }
         t += "\n\n今年每個月的重點："
         for m in 1...12 {
             let i = monthInfo(zw, year: y, lunarMonth: m)
-            t += "\n• 農曆\(GZ.monthNames[m - 1])月：走\(pname(i.palace))" + (i.ji.map { "，化忌在\(pname($0))" } ?? "") + (m == ld.month ? " ← 這個月" : "")
+            t += "\n• 農曆\(GZ.monthNames[m - 1])月：流月命宮在本命\(pname(i.palace))" + (i.ji.map { "，化忌在流月\(pname($0))" } ?? "") + (m == ld.month ? " ← 這個月" : "")
         }
         return t
     }
@@ -322,7 +355,7 @@ public enum ZiWeiReading {
         t += "\n③ 對宮是\(pname(zw.palaceAt[opp]!))（\(starsLine(zw, opp))），也會影響這一宮。"
         let gz = Astro.pmod(y - 4, 60)
         let ys = yearSihua(zw, year: y).filter { $0.palace == name }
-        t += "\n④ \(y)年："
+        t += "\n④ \(y)年：這一宮（\(GZ.branches[b])宮）在今年的流年盤是流年\(pname(yearPalace(gz % 12, b)))。"
         if gz % 12 == b { t += "流年命宮正好走到這一宮，今年這方面就是主題。" }
         if ys.isEmpty { t += "流年四化沒有落在這裡，照本命的樣子走。" }
         for h in ys { t += "流年\(h.star)\(h.tag)落在這裡：" + sihuaLine(h.tag, palace: name, natal: false) }

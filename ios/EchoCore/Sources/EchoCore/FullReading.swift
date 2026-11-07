@@ -89,8 +89,8 @@ public enum FullReading {
         if let h = bs.hits.max(by: { abs($0.score) < abs($1.score) }) { t += h.text + "。" }
         if let h = profile?.hour {
             let zw = ZiWei(bd.year, bd.month, bd.day, hour: h, male: profile?.male ?? true)
-            let hs = ZiWeiReading.yearSihua(zw, year: y)
-            t += "\n紫微：命宮主星\(ZiWeiReading.mainStars(zw, zw.ming).stars.joined(separator: "、"))；今年化祿在\(hs.first?.palace.map { ZiWeiReading.pname($0) } ?? "—")，化忌在\(hs.last?.palace.map { ZiWeiReading.pname($0) } ?? "—")。"
+            let hs = ZiWeiReading.yearHua(zw, year: y)
+            t += "\n紫微：命宮主星\(ZiWeiReading.mainStars(zw, zw.ming).stars.joined(separator: "、"))；今年\(hs.first?.star ?? "")化祿在\(hs.first?.label ?? "—")，\(hs.last?.star ?? "")化忌在\(hs.last?.label ?? "—")。"
         } else {
             t += "\n紫微：告訴我出生時間，就能一起對照紫微斗數。"
         }

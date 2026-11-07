@@ -200,16 +200,16 @@ public enum ManticReader {
             let st = ZiWeiReading.mainStars(zw, zw.palaceOf(p)).stars.joined(separator: "")
             terms = ["紫微斗數 \(st)在\(ZiWeiReading.pname(p))"]
         } else if yearAsk {
-            let hs = ZiWeiReading.yearSihua(zw, year: y)
-            if let ji = hs.last, let p = ji.palace { terms.append("紫微斗數 流年\(ji.star)化忌 \(ZiWeiReading.pname(p))") }
-            if let lu = hs.first, let p = lu.palace { terms.append("紫微斗數 流年\(lu.star)化祿 \(ZiWeiReading.pname(p))") }
+            let hs = ZiWeiReading.yearHua(zw, year: y)
+            if let ji = hs.last, let p = ji.year { terms.append("紫微斗數 流年\(ji.star)化忌 流年\(ZiWeiReading.pname(p))") }
+            if let lu = hs.first, let p = lu.year { terms.append("紫微斗數 流年\(lu.star)化祿 流年\(ZiWeiReading.pname(p))") }
         } else {
             terms = ["紫微斗數 \(ming)坐命宮"]
             if let nj = ZiWeiReading.natalSihua(zw).last, let p = nj.palace { terms.append("紫微斗數 \(nj.star)化忌在\(ZiWeiReading.pname(p))") }
         }
         var summary = "你的命宮主星是\(ming.isEmpty ? "空宮" : ming)"
-        if yearAsk, let ji = ZiWeiReading.yearSihua(zw, year: y).last, let p = ji.palace {
-            summary += "；\(y)年流年化忌在\(ZiWeiReading.pname(p))"
+        if yearAsk, let ji = ZiWeiReading.yearHua(zw, year: y).last, let p = ji.label {
+            summary += "；\(y)年\(ji.star)化忌在\(p)"
         }
         return (terms, summary)
     }
@@ -306,14 +306,15 @@ extension ManticReader {
             case .why:
                 var s = "紫微看一年的好壞，主要看兩件事：流年命宮走到哪一宮、流年四化落在哪裡。"
                 s += "\n\(y)年是\(GZ.stems[gz % 10])年，\(GZ.stems[gz % 10])干的四化是" + hs.map { "\($0.star)\($0.tag)" }.joined(separator: "、") + "。"
-                for h in hs { if let p = h.palace { s += "\n• \(h.star)\(h.tag)在你的\(ZiWeiReading.pname(p))，所以\(ZiWeiReading.ptext(p))這方面\(h.tag == "化忌" ? "會卡、會煩" : (h.tag == "化祿" ? "會有好處" : (h.tag == "化權" ? "你會很用力" : "有貴人")))。" } }
+                for h in ZiWeiReading.yearHua(zw, year: y) { if let p = h.year, let l = h.label { s += "\n• \(h.star)\(h.tag)在你今年的\(l)，所以\(ZiWeiReading.ptext(p))這方面\(h.tag == "化忌" ? "會卡、會煩" : (h.tag == "化祿" ? "會有好處" : (h.tag == "化權" ? "你會很用力" : "有貴人")))。" } }
                 s += "\n化祿是資源，化忌是執著和阻礙；忌落在的宮位就是今年最費心的地方。"
                 return s
             case .advice:
                 var s = "怎麼做比較好："
-                if let ji = hs.last?.palace { s += "\n• 化忌在\(ZiWeiReading.pname(ji))：這方面放慢、不要硬碰，\(jiAdvice[ji] ?? "多留後路")。" }
-                if let lu = hs.first?.palace { s += "\n• 化祿在\(ZiWeiReading.pname(lu))：把力氣放在這裡，\(ZiWeiReading.luGood[lu] ?? "")。" }
-                if let k = hs.dropFirst(2).first?.palace { s += "\n• 化科在\(ZiWeiReading.pname(k))：有事可以找這方面的貴人幫忙。" }
+                let yh = ZiWeiReading.yearHua(zw, year: y)
+                if let h = yh.last, let ji = h.year, let l = h.label { s += "\n• 化忌在\(l)：這方面放慢、不要硬碰，\(jiAdvice[ji] ?? "多留後路")。" }
+                if let h = yh.first, let lu = h.year, let l = h.label { s += "\n• 化祿在\(l)：把力氣放在這裡，\(ZiWeiReading.luGood[lu] ?? "")。" }
+                if let h = yh.dropFirst(2).first, let l = h.label { s += "\n• 化科在\(l)：有事可以找這方面的貴人幫忙。" }
                 return s
             case .more:
                 return ZiWeiReading.natal(zw, male: profile.male, age: nowYear - bd.year, year: nowYear)

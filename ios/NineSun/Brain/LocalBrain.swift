@@ -61,7 +61,8 @@ final class LocalBrain {
     }
 
     /// 問大腦。onText：寫到哪就回呼到哪（已經整理成繁體、去掉思考過程）；done：寫完或失敗（在背景執行緒）
-    /// 寫到一半切到背景：GPU 停下來，改用 CPU 從寫到的地方接著寫
+    /// 寫到一半切到背景（別的 App、鎖螢幕）：iOS 不讓背景用 GPU，就先停在寫到的地方，回到前景再用 GPU 從那裡接著寫。
+    /// （以前改用 CPU 接著寫：要在背景重讀 5 GB 的模型、手機 CPU 又很慢，常常看起來整個卡住）
     func ask(modelPath: String, system: String, history: [Turn], user: String, mode: Mode, lang: String,
              onText: @escaping (String) -> Void, done: @escaping (Swift.Result<LlamaRunner.Result, Error>) -> Void) {
         queue.async {
@@ -70,39 +71,52 @@ final class LocalBrain {
             let (temp, most) = Self.settings(mode)
             var written = ""
             var tokens = 0
-            var switches = 0
+            var pauses = 0
             let started = Date()
+            func finish(_ promptTokens: Int) {
+                done(.success(LlamaRunner.Result(text: Self.tidy(written, lang: lang), promptTokens: promptTokens, tokens: tokens,
+                                                 seconds: Date().timeIntervalSince(started))))
+            }
             do {
                 while true {
-                    let gpu = !self.inBackground
-                    let r: LlamaRunner
+                    // 在背景：等回到前景（或被取消）再寫
+                    if !self.waitForForeground() { finish(0); return }
                     let res: LlamaRunner.Result
                     do {
-                        r = try self.runner(modelPath, gpu: gpu)
+                        let r = try self.runner(modelPath, gpu: true)
                         let sofar = written
                         res = try r.generate(prompt: r.chatPrompt(messages) + sofar, maxTokens: max(1, most - tokens), temperature: temp,
                                              stop: Self.stops,
-                                             shouldStop: { self.isCancelled || (gpu && self.inBackground) },
+                                             shouldStop: { self.isCancelled || self.inBackground },
                                              onText: { onText(Self.tidy(sofar + $0, lang: lang)) })
                     } catch {
-                        // GPU 在背景被系統擋掉：改用 CPU 再試
-                        if gpu && self.inBackground && switches < 2 && !self.isCancelled { switches += 1; continue }
+                        // GPU 在背景被系統擋掉：回到前景再試
+                        if self.inBackground && pauses < 20 && !self.isCancelled { pauses += 1; continue }
                         throw error
                     }
                     written += res.text
                     tokens += res.tokens
-                    if res.interrupted && gpu && self.inBackground && switches < 2 && !self.isCancelled && tokens < most {
-                        switches += 1
+                    if res.interrupted && self.inBackground && pauses < 20 && !self.isCancelled && tokens < most {
+                        pauses += 1
                         continue
                     }
-                    done(.success(LlamaRunner.Result(text: Self.tidy(written, lang: lang), promptTokens: res.promptTokens, tokens: tokens,
-                                                     seconds: Date().timeIntervalSince(started))))
+                    finish(res.promptTokens)
                     return
                 }
             } catch {
                 done(.failure(error))
             }
         }
+    }
+
+    /// 在背景就等，回到前景回傳 true；被取消、或在背景等太久（30 分鐘）回傳 false
+    private func waitForForeground() -> Bool {
+        let until = Date().addingTimeInterval(30 * 60)
+        while inBackground {
+            if isCancelled || Date() > until { return false }
+            Thread.sleep(forTimeInterval: 0.3)
+        }
+        return !isCancelled
     }
 
     // MARK: - 提示（給模型的話）
@@ -233,6 +247,7 @@ final class LocalBrain {
             If the setup only names an orientation or a preference, play an adult character who fits it (e.g. "gay man" means you are an adult man attracted to men and the user is a man). Never say you are an AI or NineSun; stay in character.
             Reply in \(name), in first person, as the character: show feelings, actions and desire; flirting, intimacy and explicit sexual content between consenting adults are allowed when the user leads there.
             Firm limits you never cross: every character is an adult (18+) and nobody is described as a child or childlike; everything is consensual; no real, existing people.
+            When the user seriously asks something (knowledge, life, philosophy, fortune, a problem they need help with), answer the actual question properly in the character's voice, with at most one short action line; never reply with only narration.
             Keep each reply under 200 words, vivid and natural, and keep the story going. No Markdown symbols. Never use kissing emoji (😘💋 etc.).
             \(swear ? "The character can swear, tease and talk trash when it fits (no slurs, no telling anyone to die, no threats)." : "")
             """
@@ -243,6 +258,7 @@ final class LocalBrain {
             設定只寫了性向或喜好時，就扮演一個符合它的成年角色（例如「男同性傾向」：你是喜歡男生的成年男生，把使用者當成男生來互動）。不要說自己是 AI 或 NineSun，一直待在角色裡。
             用繁體中文（台灣用語）、用角色的第一人稱說話：有情緒、有動作、有慾望；使用者想要的時候，可以寫成年人之間的調情、親密和露骨的性愛內容。
             絕對不能跨過的底線：所有角色都是成年人（18 歲以上），不寫小孩或像小孩的角色；一切都是雙方自願；不寫真實存在的人。
+            對方認真問問題（知識、人生、哲學、命理、遇到的困難）時，用角色的口吻把問題本身認真答好，動作描寫最多一句，不能只寫旁白。
             每次回覆兩百字以內，生動自然、接著劇情往下走，不要跳出角色說教。不要用 Markdown 符號。不要用親吻的表情符號（😘💋 這類）。
             \(swear ? "角色可以說髒話、吐槽、互嗆（不用歧視字眼、不叫人去死、不威脅）。" : "")
             """
