@@ -64,8 +64,9 @@ public enum BrainRoute {
     public static func feelingLow(_ raw: String, previous: String? = nil) -> Bool {
         if let p = previous, feelingLow(p), !raw.contains("罵") && !raw.contains("嗆") { return true }
         let t = raw.replacingOccurrences(of: " ", with: "")
-        if t.range(of: #"罵我|罵醒|嗆我|髒話|陪我罵|一起罵|罵爆|罵一罵|罵他|互嗆"#, options: .regularExpression) != nil { return false }
         if Safety.isCrisis(t) { return true }
+        // 叫它罵、陪他罵，或是在生氣、想發洩：用嘴砲的個性，不是溫柔安慰
+        if t.range(of: #"罵我|罵到我|罵醒|嗆我|髒話|陪我罵|一起罵|罵爆|罵一罵|罵他|互嗆|氣死|好氣|超氣|氣炸|火大|靠北|幹|媽的|爛透|很靠北"#, options: .regularExpression) != nil { return false }
         let words = ["難過", "好累", "心好累", "心好亂", "好想哭", "想哭", "不知道怎麼辦", "崩潰", "失戀", "被分手", "被劈腿", "失眠", "睡不著", "焦慮",
                      "孤單", "寂寞", "自責", "好沒用", "很沒用", "什麼都做不好", "想放棄", "撐不下去", "過世", "走了", "被裁", "失業", "卡債", "被詐騙",
                      "被霸凌", "被欺負", "被背叛", "被罵", "被當", "考砸", "沒上", "好怕", "害怕", "恐慌", "壓力好大", "壓力很大", "憂鬱", "心情不好",
