@@ -685,3 +685,5 @@ Linux 上 12 台同時考（Mac 排不到）；Mahou 在 4 核 CPU 約每秒 6�
 - 考試回答的分支 `evals/exam-<H>-<機器>`：H 是 run.jsonl、LocalBrain.swift、BrainEval/main.swift 三個檔案接在一起的 sha1 前 10 碼
   （`cat ios/BrainEval/exam/run.jsonl ios/NineSun/Brain/LocalBrain.swift ios/BrainEval/main.swift | sha1sum`）。
   以前只看 run.jsonl，第 11 輪因此沿用了第 10 輪的回答、沒有重考。
+- 第 11 輪（2,339 題，95.9%；保留題 95.2%）：解盤 60% → 97.5%（解讀提示要求先說出正財、七殺、命宮主星等名詞再白話解釋）。
+  其他項目和第 10 輪差不多；最弱的是照指示 77.8%、語文 80%、推理 84%。
