@@ -1,13 +1,12 @@
 import Foundation
 
-/// iOS 只允許從 HTTPS 網站安裝 App，所以簽好的 IPA 上傳到你自己的簽名網站（mysign），
+/// iOS 只允許從 HTTPS 網站安裝 App，所以簽好的 IPA 上傳到你自己的簽名網站（部署在 Render 上的 ipa-signer），
 /// 由網站生成 itms-services 安裝鏈接。
 enum InstallService {
     struct WrongPassword: LocalizedError {
         var errorDescription: String? { "網站密碼錯誤" }
     }
 
-    static let defaultServer = "https://mysign.onrender.com"
 
     static func baseURL(_ server: String) throws -> URL {
         let trimmed = server.trimmingCharacters(in: .whitespacesAndNewlines)

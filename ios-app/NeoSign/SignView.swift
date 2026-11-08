@@ -3,8 +3,8 @@ import SwiftUI
 struct SignView: View {
     @EnvironmentObject private var store: Store
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("server") private var server = InstallService.defaultServer
-    @AppStorage("serverPassword") private var serverPassword = ""
+    @AppStorage("installServer") private var server = ""
+    @AppStorage("installPassword") private var serverPassword = ""
 
     @State private var app: AppRecord
     @State private var certID = ""
@@ -17,6 +17,7 @@ struct SignView: View {
     @State private var askPassword = false
     @State private var passwordWasWrong = false
     @State private var passwordInput = ""
+    @State private var serverInput = ""
 
     enum Phase: Equatable {
         case idle, signing, signed, installing, installed
@@ -54,16 +55,23 @@ struct SignView: View {
             certID = store.selectedCert?.id ?? ""
             if store.signedURL(for: app) != nil { phase = .signed }
         }
-        .alert("輸入簽名網站密碼", isPresented: $askPassword) {
+        .alert("安裝網站", isPresented: $askPassword) {
+            TextField("https://xxx.onrender.com", text: $serverInput)
+                .keyboardType(.URL)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
             SecureField("網站密碼", text: $passwordInput)
             Button("取消", role: .cancel) { passwordInput = "" }
             Button("安裝") {
+                var address = serverInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !address.isEmpty, !address.hasPrefix("http") { address = "https://" + address }
+                server = address
                 serverPassword = passwordInput
                 passwordInput = ""
                 Task { await install() }
             }
         } message: {
-            Text(passwordWasWrong ? "密碼不對，再試一次" : "就是你在 Render 設置的 ACCESS_PASSWORD，只需要輸入一次")
+            Text(passwordWasWrong ? "密碼不對，再試一次" : "填你在 Render 上的簽名網站地址和 ACCESS_PASSWORD，只需要填一次")
         }
         .sheet(item: $log) { item in
             LogSheet(text: item.text)
@@ -179,9 +187,17 @@ struct SignView: View {
             case .failed(let message):
                 VStack(alignment: .leading, spacing: 8) {
                     Text(message).font(.system(size: 15, weight: .bold)).foregroundColor(Theme.danger)
-                    Button("查看簽名日誌") { showLog() }
-                        .font(.mono(12, .heavy))
-                        .foregroundColor(Theme.cyan)
+                    HStack(spacing: 18) {
+                        Button("查看簽名日誌") { showLog() }
+                        if store.signedURL(for: app) != nil {
+                            Button("更改安裝網站") {
+                                passwordWasWrong = false
+                                showServerPrompt()
+                            }
+                        }
+                    }
+                    .font(.mono(12, .heavy))
+                    .foregroundColor(Theme.cyan)
                 }
                 .panel(accent: Theme.danger)
                 signButton(title: "重新簽名")
@@ -246,9 +262,9 @@ struct SignView: View {
 
     private func install() async {
         guard let ipa = store.signedURL(for: app) else { return }
-        guard !serverPassword.isEmpty else {
+        guard !server.isEmpty, !serverPassword.isEmpty else {
             passwordWasWrong = false
-            askPassword = true
+            showServerPrompt()
             return
         }
         phase = .installing
@@ -260,10 +276,16 @@ struct SignView: View {
             serverPassword = ""
             phase = .signed
             passwordWasWrong = true
-            askPassword = true
+            showServerPrompt()
         } catch {
             phase = .failed("安裝失敗：\(error.localizedDescription)")
         }
+    }
+
+    private func showServerPrompt() {
+        serverInput = server
+        passwordInput = ""
+        askPassword = true
     }
 
     private func showLog() {

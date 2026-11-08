@@ -34,7 +34,7 @@ struct SettingsView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     CautionTape(text: "NEO//SIGN")
-                    Text("霓簽 v1.1").font(.display(22)).foregroundColor(.white)
+                    Text("霓簽 v1.2").font(.display(22)).foregroundColor(.white)
                     Text("簽名引擎：zsign（開源）").font(.mono(11, .medium)).foregroundColor(Theme.muted)
                 }
                 .panel(accent: Theme.neon)

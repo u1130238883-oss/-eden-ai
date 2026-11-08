@@ -124,6 +124,9 @@ final class Store: ObservableObject {
     private var stagedProfile: URL?
 
     init() {
+        // 舊版把網址寫死成 mysign.onrender.com，那個網站已經沒了，清掉舊的網址和密碼，避免密碼被發到別人的網站
+        UserDefaults.standard.removeObject(forKey: "server")
+        UserDefaults.standard.removeObject(forKey: "serverPassword")
         selectedCertID = UserDefaults.standard.string(forKey: "selectedCert") ?? ""
         certs = Storage.loadAll(CertRecord.self, in: Storage.certs).sorted { $0.importedAt > $1.importedAt }
         apps = Storage.loadAll(AppRecord.self, in: Storage.apps).sorted { $0.importedAt > $1.importedAt }

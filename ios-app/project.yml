@@ -12,7 +12,7 @@ targets:
       path: NeoSign/Info.plist
       properties:
         CFBundleDisplayName: 霓簽
-        CFBundleShortVersionString: "1.0"
+        CFBundleShortVersionString: "1.2"
         CFBundleVersion: "1"
         UILaunchScreen:
           UIColorName: LaunchBackground
