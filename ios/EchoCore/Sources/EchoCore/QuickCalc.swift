@@ -8,7 +8,7 @@ public enum QuickCalc {
     public static func answer(_ raw: String) -> String? {
         let t = strip(raw)
         guard !t.isEmpty, t.count <= 60 else { return nil }
-        for f in [zodiacYear, ganzhiYear, dateAdd, dateDiff, branchClash, branchHarmony, share, rectangle, interest, element, facing, clockAngle, timeAdd, kinship, ropeCut, zhuyinFill, polyphone] {
+        for f in [zodiacYear, ganzhiYear, dateAdd, dateDiff, branchClash, branchHarmony, share, rectangle, interest, element, facing, clockAngle, timeAdd, kinship, ropeCut, zhuyinFill, polyphone, weekday, chickenRabbit, rate] {
             if let a = f(t) { return a }
         }
         return nil
@@ -150,12 +150,46 @@ public enum QuickCalc {
     ]
 
     static func element(_ t: String) -> String? {
-        guard let g = groups(t, #"^原子序(?:是|為)?(\d{1,3})(?:號)?(?:的)?(?:是)?(?:什麼|哪個|哪一個|哪種)(?:元素)?$"#), let n = Int(g[0]),
+        guard let g = groups(t, #"^原子序(?:是|為)?(\d{1,3})(?:號)?(?:的)?(?:是)?(?:什麼|哪個|哪一個|哪種)(?:元素)?$"#)
+                ?? groups(t, #"^(?:週期表上?的?)?第(\d{1,3})號(?:化學)?元素(?:是)?(?:什麼|哪個|哪一個|哪種)?(?:元素)?$"#), let n = Int(g[0]),
               let e = elements.first(where: { $0.0 == n }) else { return nil }
         return "原子序 \(n) 是\(e.2)，化學符號 \(e.1)。"
     }
 
     // MARK: - 小邏輯題
+
+    static let weekNames = ["一", "二", "三", "四", "五", "六", "日"]
+
+    /// 今天星期一，三天前／五天後是星期幾
+    static func weekday(_ t: String) -> String? {
+        guard let g = groups(t, #"^(?:如果)?(今天|明天|昨天)(?:是)?(?:星期|禮拜|週)([一二三四五六日天])[,，]?(?:那)?(?:再過)?([0-9一二三四五六七八九十百兩]+)天(前|後|之前|之後|以前|以後)?(?:是|會是)?(?:星期|禮拜|週)幾$"#),
+              var d = weekNames.firstIndex(of: g[1] == "天" ? "日" : g[1]), let k = n(g[2]) else { return nil }
+        if g[0] == "明天" { d -= 1 } else if g[0] == "昨天" { d += 1 }
+        let back = g[3].hasSuffix("前")
+        let w = ((d + (back ? -k : k)) % 7 + 7) % 7
+        let w0 = weekNames[(d % 7 + 7) % 7]
+        let given = g[0] == "今天" ? "" : "\(g[0])是星期\(g[1] == "天" ? "日" : g[1])，"
+        return given + "今天是星期\(w0)，\(k) 天\(back ? "前" : "後")是星期\(weekNames[w])。"
+    }
+
+    /// 雞兔同籠：共有 H 個頭、F 隻腳，雞和兔各幾隻
+    static func chickenRabbit(_ t: String) -> String? {
+        guard t.contains("雞"), t.contains("兔"), let g = groups(t, #"([0-9]+)(?:個|顆)頭.*?([0-9]+)(?:隻|條)腳"#),
+              let h = Int(g[0]), let f = Int(g[1]) else { return nil }
+        let rabbits = (f - 2 * h) / 2, chickens = h - rabbits
+        guard (f - 2 * h) % 2 == 0, rabbits >= 0, chickens >= 0 else { return "這組數字湊不出來：\(h) 個頭最少 \(2 * h) 隻腳、最多 \(4 * h) 隻腳，而且腳數要是雙數。" }
+        return "雞 \(chickens) 隻、兔 \(rabbits) 隻。\n假設全部是雞：\(h) × 2 = \(2 * h) 隻腳，比實際少 \(f - 2 * h) 隻；每把一隻雞換成兔多 2 隻腳，所以兔 = \(f - 2 * h) ÷ 2 = \(rabbits) 隻，雞 = \(h) − \(rabbits) = \(chickens) 隻。"
+    }
+
+    /// 三個人三天吃三個蘋果，九個人九天吃幾個（工作量 ∝ 人數 × 天數）
+    static func rate(_ t: String) -> String? {
+        let nn = "([0-9一二三四五六七八九十百兩]+)"
+        guard let g = groups(t, "^" + nn + "(?:個|位|名)?(人|隻貓|隻雞|隻|台機器|台)" + nn + "(天|小時|分鐘)(?:能|可以|會)?(吃|做|喝|生|印|蓋|挖|搬|寫|摺)(?:完|了)?" + nn + "(個|顆|條|件|瓶|杯|頁|隻|張|塊|間|袋|箱|顆蛋)([^,，]{0,3})[,，]?(?:那|照這樣)?(?:麼)?" + nn + "(?:個|位|名)?\\2?" + nn + "\\4(?:能|可以|會)?\\5?(?:完|了)?(?:幾|多少)"),
+              let a = n(g[0]), let d = n(g[2]), let c = n(g[5]), let a2 = n(g[8]), let d2 = n(g[9]), a > 0, d > 0 else { return nil }
+        let x = Double(c) * Double(a2) * Double(d2) / (Double(a) * Double(d))
+        let what = g[6] + g[7]
+        return "\(num(x)) \(what)。\n\(g[4])的量跟數量和時間成正比：\(c) × (\(a2) × \(d2)) ÷ (\(a) × \(d)) = \(num(x)) \(what)。"
+    }
 
     /// 「一」「十二」或「3」→ 數字
     static func n(_ w: String) -> Int? { Int(w) ?? ProfileParser.cnNumber(w) }

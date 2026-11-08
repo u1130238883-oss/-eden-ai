@@ -387,6 +387,11 @@ final class ChatViewModel: ObservableObject {
             return true
         }
         if let q = reply.webQuery {
+            // 問現在、最新的事：大腦記得的可能過時，先上網查，再讓大腦照查到的整理回答
+            if BrainRoute.timeSensitive(text) {
+                lookupWeb(q, L, brain: brain, asked: text)
+                return true
+            }
             // 大腦寫不出來才用原本的上網查
             brainChat(text, L, brain: brain) { _ in self.lookupWeb(q, L) }
             return true

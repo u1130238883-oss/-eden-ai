@@ -735,3 +735,17 @@ c_medical 90→96.7%, ziwei_deep 100%. Small drops are model wording (c_world 10
 logic 48/50, language 50/55, stress/english 28/30 "too long").
 IPA: build 240 (`builds/ninesun-build-240/NineSun.ipa`) — sent to the user.
 Next: engine answers for 星期幾 offsets, 第 N 號元素, 雞兔同籠, rate puzzles (三人三天吃三個), "改成問句".
+
+## Round 15 changes (user screenshots: 發達國家 answered as books, 免簽 list full of junk, 貓品種 not listed, 最新 AI 模型 not found)
+User direction: do NOT build knowledge into the app — make it find things on the web itself (a built-in KnownLists table was tried and removed).
+- Web lists (`Think.plainList`): collect 、-separated names from every sentence about the subject across sites; rank by how many
+  sentences/sites mention each; drop rarely-mentioned ones; skip runs in "reason" sentences (由於/因為) and treat names in
+  "not / candidate" sentences (候選、還不是、爭取、退出) as counter-evidence (歐盟 → exactly 27, 安理會 → exactly 5).
+- `itemsDigest` (《書名》＋「我會先看」) only for work collections; ordinary lists no longer get book formatting.
+- `Countries.swift`: country names (TW + mainland + English spellings) used only to *filter* web lists (drops 「3天前」「請選擇護照」),
+  and visa pages are read section by section (互免簽證／免簽／落地簽／電子簽). Long lists are printed 8 per line.
+- Bare "X有哪些／X是哪些" plans name-list searches; "現在／最新 … 有哪些" searches with the current year and is no longer news mode.
+- With the brain on, 現在／最新／最近 questions search the web first and the brain answers from what was found.
+- Brain prompt: how to think (what the asker really wants, main point first, several angles incl. the critical one, correct own mistakes,
+  own tastes/values). New exam section `think` (84 items: taste, angles, intent, priority, correct, negative, view) from `gen_think.py`.
+- QuickCalc: 星期幾 offsets, 第 N 號元素, 雞兔同籠, rate puzzles. "運動""捷運""生命""故宮" no longer count as fortune words.

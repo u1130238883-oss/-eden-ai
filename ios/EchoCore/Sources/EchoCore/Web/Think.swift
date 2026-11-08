@@ -331,6 +331,12 @@ public enum Think {
         }
         let top = count.filter { $0.value >= 1 }.sorted { ($0.value, -$0.key.count) > ($1.value, -$1.key.count) }.prefix(6).map(\.key)
         guard top.count >= 2 else { return nil }
+        // 這個寫法（《書名》、各在講什麼、「我會先看」）只適合作品集。「發達國家有哪些」「貓有哪些品種」問的是一般的名單：
+        // 主題不像作品、名字也不是用《》寫的，就交給一般的名單整理（不加書名號、不說「我會先看《希臘》」）
+        let workWords = ["故事", "童話", "寓言", "神話", "作品", "代表作", "名作", "經典", "書", "小說", "詩", "詞", "散文", "電影", "影集", "劇",
+                         "動畫", "漫畫", "歌", "專輯", "曲", "畫", "全集", "選集", "集", "名著", "文章", "篇"]
+        let titled = top.filter { t in sents.contains { $0.text.contains("《\(t)》") } }.count
+        guard titled * 2 >= top.count || workWords.contains(where: { subject.contains($0) || ask.kind.contains($0) }) else { return nil }
         var lines: [String] = []
         // 它是什麼（有幾個也一起說）
         if let intro = sents.first(where: { s in s.text.hasPrefix("《\(subject)》") || s.text.hasPrefix(subject) }), intro.text.count <= 110,
@@ -362,6 +368,115 @@ public enum Think {
             lines.append("🧠 我的看法：如果只挑一個開始，我會先看《\(top[0])》——它是最常被提到的，通常也最能代表\(subject)的味道。")
         }
         return lines.joined(separator: "\n")
+    }
+
+    /// 一般的「有哪些」名單（國家、水果、程式語言、品種……）：從講到主題的句子裡，把「、」分開的短名字拿出來，
+    /// 看有幾個不同的句子、網站都提到，最常被提到的排前面；問國家、品種的話只留真的是國家、品種的項目。
+    /// 不加《》、不說「我會先看」（那是作品集的寫法）
+    public static func plainList(question: String, pages: [Understanding.Evidence], subject: String, noun: String) -> String? {
+        let subj = subject.trimmingCharacters(in: .whitespaces)
+        guard !subj.isEmpty else { return nil }
+        // 「狗」「貓」這種一個字的主題：covers 對一個字永遠成立，改成看有沒有這個字
+        func about(_ text: String) -> Bool { subj.count >= 2 ? covers(text, subj, least: true) : text.contains(subj) }
+        func isSubject(_ x: String) -> Bool { subj.count >= 2 ? covers(x, subj) : x == subj }
+        // 名單常在很長的一句裡（「七大洲是…，即亞洲（Asia）、歐洲（Europe）、…」）：不用一般的 160 字上限
+        var sents: [(text: String, host: String)] = []
+        for p in pages {
+            for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) {
+                let t = raw.trimmingCharacters(in: .whitespaces)
+                if (8...600).contains(t.count), !looksLikeNoise(t) { sents.append((t, p.host)) }
+            }
+        }
+        let countryList = Countries.isCountryNoun(noun) || Countries.isCountryNoun(subj) || subj.hasSuffix("國")
+        let breedTail: [String]? = ["品種", "種類", "品系"].contains(noun) && (1...2).contains(subj.count)
+            ? (["狗", "犬"].contains(subj) ? ["犬", "狗"] : [String(subj.last!)]) : nil
+        func fits(_ x: String) -> Bool {
+            if countryList { return Countries.canonical(x) != nil }
+            if let breedTail { return x.count > breedTail[0].count && breedTail.contains { x.hasSuffix($0) } }
+            return true
+        }
+        let typed = countryList || breedTail != nil
+        var count: [String: Int] = [:], hostsOf: [String: Set<String>] = [:], order: [String] = []
+        var runs: [(items: [String], host: String, about: Bool)] = []
+        var negative: [String: Int] = [:]
+        let core = noun.isEmpty ? subj : noun
+        for s in sents where about(s.text) || s.text.contains(core) {
+            let body = s.text.replacingOccurrences(of: #"（[^）]*）|\([^)]*\)|[「」『』《》]"#, with: "", options: .regularExpression)
+            let parts = body.components(separatedBy: "、")
+            guard parts.count >= (typed ? 2 : 3) else { continue }
+            var names: [String] = []
+            for (i, p) in parts.enumerated() {
+                var cands = [p]
+                if i == 0 {
+                    var f = String(p.split(whereSeparator: { "，,：:；是有如像即為".contains($0) }).last ?? Substring(p))
+                    for w in ["包含", "包括", "例如", "比如", "像是", "譬如", "其中", "分別", "主要", "常見"] {
+                        if let r = f.range(of: w, options: .backwards) { f = String(f[r.upperBound...]) }
+                    }
+                    cands = [f]
+                }
+                if i == parts.count - 1 {
+                    var l = String(p.split(whereSeparator: { "，,。；等".contains($0) }).first ?? Substring(p))
+                    l = Understanding.cutVerbTail(l)
+                    if let r = l.range(of: "以及") ?? l.range(of: "和") ?? l.range(of: "及") ?? l.range(of: "與"),
+                       l.distance(from: l.startIndex, to: r.lowerBound) >= 1, l.distance(from: r.upperBound, to: l.endIndex) >= 1 {
+                        cands = [String(l[..<r.lowerBound]), String(l[r.upperBound...])]
+                    } else { cands = [l] }
+                }
+                for c in cands {
+                    guard let it = Understanding.item(c.trimmingCharacters(in: .whitespaces)), !isSubject(it), it != noun, fits(it),
+                          !["情況", "資訊", "介紹", "排名", "列表", "名單", "比較", "推薦", "整理", "一覽"].contains(where: { it.contains($0) }) else { continue }
+                    let name = countryList ? (Countries.canonical(it) ?? it) : it
+                    if !names.contains(name) { names.append(name) }
+                }
+            }
+            guard names.count >= (typed ? 2 : 3) else { continue }
+            // 問品種：講毛色、花色的一串（「橘貓、虎斑貓、賓士貓」）是顏色，不是品種
+            if breedTail != nil, ["毛色", "花色", "顏色", "米克斯", "混種"].contains(where: { s.text.contains($0) }) { continue }
+            // 在講原因的一串（「其中六個由於地震、火災、戰爭而毀壞」）不是名單
+            if ["由於", "因為", "原因", "導致", "造成", "毀於"].contains(where: { s.text.contains($0) }) { continue }
+            // 反過來想：句子說的是「不是」「候選」「想加入」（「歐盟候選國包括冰島、土耳其…」「日本、印度爭取入常」），
+            // 這些名字恰恰不是答案——記下來，除非別的句子明確把它列進去，不然拿掉
+            if ["候選", "申請加入", "想加入", "希望加入", "尚未", "還不是", "不是", "非成員", "退出", "脫離", "脫歐", "爭取", "觀察員", "前成員"].contains(where: { s.text.contains($0) }) {
+                for n in names { negative[n, default: 0] += 1 }
+                continue
+            }
+            runs.append((names, s.host, subj.count >= 2 ? covers(s.text, subj) : s.text.contains(subj)))
+            for n in names {
+                count[n, default: 0] += 1
+                hostsOf[n, default: []].insert(s.host)
+                if !order.contains(n) { order.append(n) }
+            }
+        }
+        guard !runs.isEmpty else { return nil }
+        func rank(_ a: String, _ b: String) -> Bool {
+            let ca = count[a] ?? 0, cb = count[b] ?? 0
+            return ca != cb ? ca > cb : (order.firstIndex(of: a) ?? 0) < (order.firstIndex(of: b) ?? 0)
+        }
+        var items: [String]
+        let agreed = order.filter { (count[$0] ?? 0) >= 2 }
+        if typed {
+            items = order.sorted(by: rank)
+        } else if agreed.count >= 4 {
+            // 好幾個句子都提到的才算（網頁上一次性的雜字不會被重複提到）
+            items = agreed.sorted(by: rank)
+        } else if let best = runs.filter({ $0.about }).max(by: { $0.items.count < $1.items.count }) ?? runs.max(by: { $0.items.count < $1.items.count }),
+                  best.items.count >= 4 {
+            items = best.items
+        } else { return nil }
+        items = items.filter { (count[$0] ?? 0) > (negative[$0] ?? 0) }
+        // 只被提到一兩次、遠比前面的少的（「安理會常任理事國」的句子順便提到日本、印度想入常）：拿掉
+        if let top = items.first.flatMap({ count[$0] }), top >= 3 {
+            let floor = Int((Double(top) * 0.4).rounded(.up))
+            let kept = items.filter { (count[$0] ?? 0) >= floor }
+            if kept.count >= 3 { items = kept }
+        }
+        guard items.count >= (typed ? 3 : 4) else { return nil }
+        items = Array(items.prefix(countryList ? 60 : 16))
+        let hosts = Array(Set(items.prefix(8).flatMap { hostsOf[$0] ?? [] })).sorted().prefix(3)
+        // 「常見的熱帶水果」＋「熱帶水果」不要說成「常見的熱帶水果的熱帶水果」
+        let what = noun.isEmpty || subj.hasSuffix(noun) || noun == "國家" && subj.hasSuffix("國") ? subj : subj + "的" + noun
+        let head = items.count >= 10 && countryList ? "一共找到 \(items.count) 個\(noun.isEmpty ? "國家" : noun)：" : "\(what)，常見的有這些（越多網站提到的排越前面）："
+        return head + "\n" + Countries.lines(items) + "\n（整理自 " + hosts.joined(separator: "、") + "；不一定是全部）"
     }
 
     /// 「iPhone和安卓哪個好」：網路上很少有一句話同時把兩邊講清楚，所以分開找——各自的優缺點各找一句，

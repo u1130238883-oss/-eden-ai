@@ -68,8 +68,10 @@ public enum WebAgent {
         let kind: Kind
         if fortune { kind = .fortune }
         else if WebSearch.wantsWeather(q) { kind = .weather }
+        // 「現在ai有哪些最新模型」：要的是一份名單，不是新聞標題
         else if has(["新聞", "最新", "最近發生", "今天發生", "消息", "股價", "股市", "台股", "美股", "大盤", "匯率", "油價", "金價", "比分",
-                     "latest", "news", "noticias", "notizie", "stock market", "exchange rate"]) { kind = .news }
+                     "latest", "news", "noticias", "notizie", "stock market", "exchange rate"])
+                    && !(has(["哪些", "有什麼", "有啥", "哪幾"]) && !has(["新聞", "消息"])) { kind = .news }
         else if WebStrategy.isLegal(q) { kind = .legal }
         // 「怎麼克服拖延症」「如何改善失眠」：問的是自己可以怎麼做，不是疾病介紹
         else if WebStrategy.isHealth(q) && q.range(of: "(怎麼|如何|怎樣)(才能|可以)?(克服|戒|改善|擺脫|提升|培養|養成|讓|改掉|減少)", options: .regularExpression) == nil { kind = .health }
@@ -429,6 +431,24 @@ public enum WebAgent {
                     brainAnswered = true
                     digested = true
                     return (d, true)
+                }
+                // 一般的名單（國家、水果、品種……）：好幾個網站都提到的排前面
+                var listNoun: String? = nil
+                if case let .list(n) = fr.want { listNoun = n } else if asksItems { listNoun = Understanding.itemsAsk(question)?.kind ?? "" }
+                if let n = listNoun {
+                    let old = solve(fr, pages: ps, snippets: sn)
+                    let how = Understanding.lastListDebug
+                    // 網頁上照分類列好的簽證名單、句子自己說有幾個而且數目對得上的名單：最可靠，直接用
+                    if old.ok && !old.text.isEmpty && (how.hasPrefix("sectioned") || how.hasPrefix("counted")) { brainAnswered = false; return old }
+                    // 其他情況：一張表可能是別的東西（「從沒當過安理會成員的國家」），好幾個網站都列到的名字比較可信
+                    let subj = Understanding.itemsAsk(question)?.subject ?? fr.subject
+                    if let d = Think.plainList(question: question, pages: ps + sn, subject: subj, noun: n) {
+                        brainNote = "這題要的是一份名單：把各網站列出來的名字放在一起比，越多地方提到的排越前面。"
+                        brainAnswered = true
+                        digested = true
+                        return (d, true)
+                    }
+                    if old.ok && !old.text.isEmpty { brainAnswered = false; return old }
                 }
                 // 「金閣寺在講什麼」：有這部作品就講它的內容（同名的寺廟、改編的電影不算）
                 let asksContent = (Intent.shared?.top(question)).map { $0.label == "content" && $0.p >= 0.6 } ?? false

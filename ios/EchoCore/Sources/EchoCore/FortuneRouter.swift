@@ -272,7 +272,7 @@ public enum FortuneRouter {
                             "流月", "流年", "大運", "命盤", "命宮", "九型", "幾型", "什麼型", "靈數", "本命", "十二宮", "宮位", "算算", "幫我算", "看看", "預測", "命格", "好嗎", "會好", "旺", "衰", "走什麼", "性格", "人格", "個性", "適合", "注意", "小心", "宜", "忌", "幾宮", "哪一宮", "哪宮", "哪個宮"]
         let hasTime = containsAny(text, timeWords) || firstMatch(text, #"(\d{4})年"#) != nil || firstMatch(text, #"(\d{1,2})月"#) != nil
         let personal = text.contains("我")
-        let fortune = containsAny(text, fortuneWords)
+        let fortune = containsAny(BrainRoute.withoutEveryday(text), fortuneWords)
         // 純概念問題（「流年是什麼」「5宮是什麼意思」）交給資料庫
         if containsAny(text, knowledgeMarkers) && !hasTime && !personal { return nil }
         // 只有時間詞、沒在問運勢（「今天好累」）是聊天；短的追問（「那明天呢」「今年呢」）算命

@@ -35,6 +35,16 @@ final class QuickCalcTests: XCTestCase {
         XCTAssertTrue(a("「慢慢地」的「地」怎麼念？").contains("˙ㄉㄜ"))
     }
 
+    func testRound14Misses() {
+        XCTAssertTrue(a("如果今天是星期一，三天前是星期幾？").contains("3 天前是星期五"))
+        XCTAssertTrue(a("今天星期六，再過10天是星期幾").contains("是星期二"))
+        XCTAssertTrue(a("第 26 號元素是什麼？").contains("鐵"))
+        XCTAssertTrue(a("第36號元素是什麼").contains("氪"))
+        XCTAssertTrue(a("雞和兔關在一起，共有19個頭、54隻腳，雞和兔各幾隻？").hasPrefix("雞 11 隻、兔 8 隻"))
+        XCTAssertTrue(a("三個人三天吃三個蘋果，九個人九天吃幾個蘋果？").hasPrefix("27 個蘋果"))
+        XCTAssertTrue(a("5台機器5分鐘做5個零件，100台機器100分鐘做幾個零件").hasPrefix("2000 個零件"))
+    }
+
     func testGenderAsideIsNotProfile() {
         XCTAssertNil(ProfileParser.parse("哥哥的兒子叫我什麼（我是男生）？"))
         XCTAssertEqual(ProfileParser.parse("我是男生")?.male, true)

@@ -89,10 +89,13 @@ public enum Understanding {
         let pats = [#"^(.{2,20}?)(?:的)?(?:代表作|作品|名作|經典)(?:有哪些|有什麼|是哪些)$"#,
                     #"^(.{2,20}?)(?:裡面|裡頭|當中|中)?(?:有|收錄了?|包括|包含|都有)(?:些)?(?:什麼|哪些|哪幾個|哪幾篇|哪幾本|哪幾首|哪幾部|哪幾)(.{0,6})$"#,
                     #"^(.{2,20}?)(?:寫過|拍過|唱過|畫過)(?:哪些|什麼)(.{0,4})$"#,
+                    #"^(.{2,20}?)(?:是|分別是|指的是|指)(?:哪些|哪幾個|哪幾種|哪幾)(.{0,4})$"#,
                     #"^(?:列出|舉幾個|說幾個|介紹幾個)(.{2,20}?)(?:的例子)?$"#]
         for p in pats {
             guard let m = match(t, p) else { continue }
-            let subject = m[1].trimmingCharacters(in: CharacterSet(charactersIn: "的"))
+            // 「發達國家現在有哪些」：「現在」「目前」不是主題的一部分
+            let subject = m[1].replacingOccurrences(of: #"(現在|目前|如今|最近|今年|現今|當今)$"#, with: "", options: .regularExpression)
+                .trimmingCharacters(in: CharacterSet(charactersIn: "的"))
             let kind = m.count > 2 ? m[2].replacingOccurrences(of: #"(?:比較)?(?:有名|出名|好看)的?"#, with: "", options: .regularExpression) : ""
             guard subject.count >= 2, !["你", "我", "他", "這", "那", "這裡", "那裡"].contains(subject) else { return nil }
             return (subject, kind)
@@ -370,15 +373,38 @@ extension Understanding {
             return frame(m[1] + "有哪些" + m[2])
         }
 
+        // 「發達國家現在有哪些」「七大洲是哪些」：哪些後面沒有名詞，主題本身就是要列的東西 → 查名單，不是查介紹文章
+        // （作品集「格林童話有哪些」照原本的作品寫法）
+        let worky = ["故事", "童話", "寓言", "神話", "作品", "代表作", "書", "小說", "詩", "電影", "劇", "動畫", "漫畫", "歌", "專輯", "名著"]
+        if match(t, #"哪些$|哪幾個$|哪幾種$"#) != nil, let ia = itemsAsk(t), ia.kind.isEmpty, !worky.contains(where: { ia.subject.contains($0) }) {
+            let sj = ia.subject
+            let noun = sj.hasSuffix("國家") || sj.hasSuffix("國") ? "國家" : sj
+            return F(sj, .list(noun: noun), ["\(sj) 名單", "\(sj)有哪些"], ["\(sj) 列表 一覽", "\(sj) 包括"], ["\(sj)列表", sj],
+                     "你想知道「\(sj)」有哪些 → 要一份把每一個都列出來的名單，不是介紹文章。")
+        }
+
         // 名單：X 有哪些 Y
         if let m = match(t, #"^(.*?)哪些(.+)$"#) {
-            var pre = m[1], noun = trimTail(m[2], ["的", "列表", "名單", "一覽"])
+            var pre = m[1].replacingOccurrences(of: #"(現在|目前|如今|最近|今年|現今|當今)$"#, with: "", options: .regularExpression)
+            var noun = trimTail(m[2], ["的", "列表", "名單", "一覽"])
             if pre.isEmpty, let mm = match(noun, #"^(.+?)(?:在|屬於|位於)(.+)$"#) { noun = mm[1]; pre = mm[2] }
             pre = trimTail(pre, ["都是", "都有", "是", "有", "都", "的", "了", "寫", "畫", "拍", "唱", "做", "出版", "發明", "演"])
+            pre = trimTail(pre.replacingOccurrences(of: #"(現在|目前|如今|最近|今年|現今|當今)$"#, with: "", options: .regularExpression), ["都是", "都有", "是", "有", "都", "的"])
             if pre.hasSuffix(noun) && pre.count > noun.count { pre.removeLast(noun.count) }
             pre = trimTail(pre, ["的"])
+            // 「現在ai都有哪些最新模型」：開頭的「現在」不是主題；問的是最新的東西，搜尋時加上今年（不然會查到好幾年前的名單）
+            let fresh = ["現在", "目前", "最近", "最新", "今年", "如今"].contains { t.contains($0) }
+            pre = pre.replacingOccurrences(of: #"^(現在的?|目前的?|最近的?|如今的?|今年的?)"#, with: "", options: .regularExpression)
+            pre = trimTail(pre, ["都", "的"])
             let full = pre + noun
             let admin = ["縣", "省", "州", "市", "區"].contains { noun.hasSuffix($0) }
+            if fresh {
+                let y = Calendar(identifier: .gregorian).component(.year, from: Date())
+                let n = noun.replacingOccurrences(of: "最新", with: "")
+                return F(pre.isEmpty ? noun : pre, .list(noun: noun), ["\(y) \(pre) 最新\(n)", "\(pre)有哪些\(noun)"], ["\(y) \(pre) \(n) 整理", "\(full) \(y)"],
+                         ["\(full)列表", full],
+                         "你想知道現在「\(pre)」有哪些「\(noun)」→ 要一份最新的名單（以今年的資料為準）。")
+            }
             return F(pre.isEmpty ? noun : pre, .list(noun: noun), ["\(full)列表", "\(pre)有哪些\(noun)"], ["\(pre) \(noun) 名單", "\(full) 一覽"],
                      ["\(full)列表", full] + (admin ? ["\(pre)行政區劃"] : []),
                      "你想知道「\(pre)」有哪些「\(noun)」→ 要一份把每一個都列出來的名單，不是介紹文章。")
@@ -666,7 +692,7 @@ extension Understanding {
         // 名字不會有「是、的、於、為、比、稱、僅、最」這些句子用的字（「是世界人口第三多的洲」是一句話，不是一個國家）
         guard (2...12).contains(s.count), !s.contains(where: { "。，：:；;？?！!".contains($0) }),
               !["是", "的", "僅", "稱為", "之一", "位於", "次於", "約為", "大約", "合稱", "全稱", "最北", "最南", "最大", "最高", "第三", "第二",
-                "分為", "劃分", "將", "以下", "如下"].contains(where: { s.contains($0) }),
+                "分為", "劃分", "將", "以下", "如下", "情況", "資訊", "介紹", "排名", "一覽", "推薦", "整理", "請選擇", "天前", "小時前", "分鐘前"].contains(where: { s.contains($0) }),
               s.filter(\.isNumber).count <= 1, !stop.contains(s) else { return nil }
         return s
     }
@@ -737,11 +763,29 @@ extension Understanding {
 
     public static func extractList(_ pages: [Evidence], noun: String, subject: String) -> (items: [String], hosts: [String]) {
         // 句子自己說了有幾個、列出來的數目也對得上：直接用
+        // 簽證名單（「中國護照免簽哪些國家」）：照網頁上的分段（互免／免簽／落地簽／電子簽）整份拿出來
+        if Countries.isCountryNoun(noun), subject.contains("簽") || subject.contains("護照"),
+           let sec = Countries.sectioned(pages.map { ($0.text, $0.host) }) {
+            lastListDebug = "sectioned=" + sec.host
+            return (sec.items, [sec.host])
+        }
         if let c = countedList(pages, noun: noun, subject: subject) {
             lastListDebug = "counted=" + c.items.joined(separator: "/")
             return c
         }
         let suffix = ["縣", "省", "州", "市", "區", "島", "山", "河", "湖", "星", "洲", "洋"].first { noun.hasSuffix($0) }
+        // 認得出是不是這一類的項目：問國家就對國名表（「3天前」「請選擇護照」不是國家）；
+        // 問「貓有哪些品種」，品種名都是「…貓」（英國短毛貓、波斯貓），狗是「…犬」「…狗」
+        let countryList = Countries.isCountryNoun(noun)
+        let breedTail: [String]? = ["品種", "種類", "品系"].contains(noun) && (1...2).contains(subject.count)
+            ? (["狗", "犬"].contains(subject) ? ["犬", "狗"] : [String(subject.last!)]) : nil
+        func fits(_ x: String) -> Bool {
+            if countryList { return Countries.canonical(x) != nil || Countries.heading(x) != nil }
+            if let breedTail { return x.count > breedTail[0].count && breedTail.contains { x.hasSuffix($0) } }
+            if let suffix { return x.hasSuffix(suffix) || x.hasSuffix("都") || x.hasSuffix("道") || x.hasSuffix("府") }
+            return true
+        }
+        let typed = countryList || breedTail != nil || suffix != nil
         var groups: [(items: [String], host: String, ctx: Bool)] = []
         let subj = subject.filter { $0.isLetter || $0.isNumber }
         for p in pages {
@@ -891,23 +935,25 @@ extension Understanding {
             return (g.items.filter { $0 != noun && $0 != subject && !header($0) && seen.insert($0).inserted }, g.host, g.ctx)
         }.filter { g in
             // 沒有明確字尾（國家、景點……）時，這一串前後一定要提到主題，不然很可能是側欄
-            guard let suffix else { return g.items.count >= 4 && g.ctx }
-            let fit = g.items.filter { $0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府") }.count
+            guard typed else { return g.items.count >= 4 && g.ctx }
+            let fit = g.items.filter(fits).count
             // 多數符合，或是符合的夠多（一張表裡混了「地區」也沒關係，後面只留符合的）
             return (fit * 2 >= g.items.count && fit >= 3) || fit >= 5
         }
         // 沒有字尾可以檢查時，要有第二份資料印證：另一串（另一句、另一個網站、表格）至少有兩個相同的項目
         var confirmed = good
-        if suffix == nil {
+        if !typed || countryList {
             // 名單要有明確的來源：表頭對得上的表格、「X國家包括…」這種在列名單的句子、或《作品》
             confirmed = good.filter { g in g.host.hasPrefix("★") || g.items.first?.hasPrefix("《") == true }
+            // 問國家：沒有這種來源時，用大部分都是國名的那一串（免簽名單常常是一頁上連續的國名）
+            if countryList && confirmed.isEmpty { confirmed = good.filter { g in g.ctx || g.items.filter(fits).count >= 8 } }
         }
         lastListDebug = "groups=" + groups.map { "\($0.host):\($0.items.count):\($0.items.prefix(3).joined(separator: "/"))" }.joined(separator: " | ")
             + " good=\(good.count) confirmed=\(confirmed.count)"
         // 有字尾時比「符合的有幾個」，不是比整串多長（城市清單很長，但裡面的「省」很少）
         func fitCount(_ g: (items: [String], host: String, ctx: Bool)) -> Int {
-            guard let suffix else { return g.items.count }
-            return g.items.filter { $0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府") }.count
+            guard typed else { return g.items.count }
+            return g.items.filter(fits).count
         }
         // 先用直接列名單的句子（●），再來是照條件從大表挑出來的（◆），都沒有才比哪一組最多
         // 直接列名單的句子（●）要有別的資料印證一半以上（或只有它），才不會拿到運動賽事「參賽的歐洲國家包括西德、蘇聯…」這種句子
@@ -919,11 +965,11 @@ extension Understanding {
         let preferred = suffix != nil ? nil
             : confirmed.first(where: { $0.host.hasPrefix("★●") && corroborated($0) }) ?? confirmed.first(where: { $0.host.hasPrefix("★◆") })
         guard var best = preferred ?? confirmed.max(by: { fitCount($0) < fitCount($1) }) else { return ([], []) }
-        if let suffix {
-            best.items = best.items.filter { ($0.hasSuffix(suffix) || $0.hasSuffix("都") || $0.hasSuffix("道") || $0.hasSuffix("府")) && !$0.contains("列表") && !$0.hasPrefix(noun) }
+        if typed {
+            best.items = best.items.filter { fits($0) && !$0.contains("列表") && !$0.hasPrefix(noun) }
         }
         // 問國家：「西歐」「東亞」這種地區不是一個國家
-        if noun.contains("國") {
+        if noun.contains("國") && !countryList {
             let regions = ["東歐", "西歐", "南歐", "北歐", "中歐", "東亞", "西亞", "南亞", "東南亞", "中亞", "北非", "東非", "西非", "南非洲", "中東", "歐洲", "亞洲", "非洲", "美洲", "大洋洲"]
             best.items = best.items.filter { !regions.contains($0) }
         }
@@ -932,7 +978,7 @@ extension Understanding {
         best.items = best.items.filter { !$0.contains("列表") && !$0.hasPrefix("按") && $0 != "地區" && Set($0).intersection(kinds).count < 3 }
         // 沒有字尾、又很長的名單（手機版維基把好幾張表疊在一起：「芬蘭／政府首腦／瑞典／議會議長…」）：
         // 一半以上別的資料都沒提到時，只留別的資料也提到的項目（至少要剩 4 個）
-        if suffix == nil, best.items.count > 12 {
+        if !typed, best.items.count > 12 {
             var freq: [String: Int] = [:]
             for g in good { for it in Set(g.items) { freq[it, default: 0] += 1 } }
             let agreed = best.items.filter { (freq[$0] ?? 0) >= 2 }
@@ -1068,9 +1114,23 @@ extension WebAgent {
             // 句子自己說了有幾個、數目也對得上的名單是完整的（「北歐五國…這五個國家」）
             let counted = Understanding.lastListDebug.hasPrefix("counted=")
             guard r.items.count >= (counted ? 2 : 4) else { return ("", false) }
+            let source = "\n（名單整理自 " + r.hosts.joined(separator: "、") + "；不同資料的算法可能略有差異）"
+            // 問國家：只留真的是國家（地區）的項目（「3天前」「請選擇護照」這種網頁上的字拿掉），
+            // 網頁上的分類標題（免簽／落地簽／電子簽、亞洲／歐洲）拿來分組，長名單每行幾個排整齊
+            if Countries.isCountryNoun(noun) {
+                let t = Countries.tidy(r.items)
+                let total = t.groups.reduce(0) { $0 + $1.names.count }
+                guard total >= (counted ? 2 : 3) else { return ("", false) }
+                if t.groups.count >= 2 || !(t.groups.first?.label.isEmpty ?? true) {
+                    let body = t.groups.map { g in (g.label.isEmpty ? "其他" : g.label) + "（\(g.names.count) 個）：\n" + Countries.lines(g.names) }
+                    return ("一共找到 \(total) 個\(noun)，照網頁上的分類列：\n\n" + body.joined(separator: "\n\n") + source, true)
+                }
+                let names = t.groups.first?.names ?? []
+                let h = counted ? "一共 \(total) 個\(noun)：" : total >= 10 ? "一共找到 \(total) 個\(noun)：" : "我找到的\(noun)有這些（不一定是全部）："
+                return (h + "\n" + Countries.lines(names) + source, true)
+            }
             let head = counted ? "一共 \(r.items.count) 個\(noun)：" : r.items.count >= 10 ? "一共找到 \(r.items.count) 個\(noun)：" : "我找到的\(noun)有這些（不一定是全部）："
-            return (head + "\n" + r.items.joined(separator: "、")
-                    + "\n（名單整理自 " + r.hosts.joined(separator: "、") + "；不同資料的算法可能略有差異）", true)
+            return (head + "\n" + Countries.lines(r.items) + source, true)
         case let .reason(pred):
             let rs = Understanding.extractReason(sents, pred: pred, subject: fr.subject)
             guard let first = rs.first else { return ("", false) }

@@ -46,6 +46,7 @@ final class WebTapeTests: XCTestCase {
             }
             let w = await WebAgent.run(wq, lang: .zh)
             out += "[題型 \(w.want ?? "-")] \n" + w.text + "\n\n"
+            if ProcessInfo.processInfo.environment["NINESUN_TAPE_DEBUG"] != nil { out += "DEBUG " + Understanding.lastListDebug + "\n\n" }
         }
         out += "TAPE searches=\(tape.counts.searches) pages=\(tape.counts.pages) misses=\(tape.misses.count)\n"
         if let p = ProcessInfo.processInfo.environment["NINESUN_TAPE_ANSWERS"] {

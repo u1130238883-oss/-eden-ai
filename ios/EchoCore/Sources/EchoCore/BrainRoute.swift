@@ -6,8 +6,21 @@ import Foundation
 public enum BrainRoute {
     /// 提到命理的字
     public static func fortuneWords(_ text: String) -> Bool {
-        ["運", "命", "宮", "流年", "大運", "流月", "八字", "紫微", "卦", "九型", "第幾型"].contains { text.contains($0) }
+        // 「運動」「捷運」「生命」「故宮」「子宮」這些平常的詞裡也有運、命、宮，先拿掉再看
+        let t = withoutEveryday(text)
+        return ["運", "命", "宮", "流年", "大運", "流月", "八字", "紫微", "卦", "九型", "第幾型"].contains { t.contains($0) }
     }
+
+    /// 拿掉含有運、命、宮的平常詞（「運動」「捷運」「生命」）
+    public static func withoutEveryday(_ text: String) -> String {
+        var t = text
+        for w in everyday { t = t.replacingOccurrences(of: w, with: "") }
+        return t
+    }
+
+    static let everyday = ["運動", "運送", "運輸", "運作", "運用", "運算", "運費", "運轉", "運河", "運行", "捷運", "營運", "奧運", "空運", "海運", "貨運", "客運", "託運", "搬運",
+                           "命令", "生命", "拼命", "救命", "命名", "革命", "壽命", "使命", "性命", "人命", "要命", "待命", "命中", "致命", "續命",
+                           "宮殿", "故宮", "子宮", "迷宮", "王宮", "皇宮", "白宮", "宮崎", "宮廷", "後宮", "宮保", "龍宮", "布達拉宮", "宮頸"]
 
     /// 要 NineSun 自己的命理引擎算的（運勢、命盤、八字、紫微、九型、生日…），或是在說心情
     public static func isReading(_ text: String) -> Bool {
@@ -19,6 +32,13 @@ public enum BrainRoute {
 
     /// 這句話真的在問命理（或說心情）
     public static func asksFortune(_ text: String) -> Bool { isReading(text) || fortuneWords(text) }
+
+    /// 問的是會變的事（「現在」「最新」「最近」「今年」「目前」）：大腦記得的可能過時了，要先上網查、再讓大腦照資料回答
+    public static func timeSensitive(_ text: String) -> Bool {
+        let t = text.lowercased()
+        return ["現在", "最新", "最近", "目前", "今年", "這幾年", "近期", "當前", "now", "latest", "recent", "current", "this year"].contains { t.contains($0) }
+            && !asksFortune(text)
+    }
 
     /// 引擎的回答只是在要生日（「我還不知道你的生日…例如：我的生日是2000年1月1日」）
     public static func needsBirthday(_ reply: String) -> Bool {
