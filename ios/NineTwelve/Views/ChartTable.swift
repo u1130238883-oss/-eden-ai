@@ -340,15 +340,11 @@ struct TriggerList {
     /// 一張都沒有。
     var isEmpty: Bool { cards.isEmpty }
 
-    /// 某一年的流年所引動的大運方面。
+    /// 某一年的流年所引動的本命宮。
     static func year(_ y: Int, in destiny: Destiny) -> TriggerList {
-        let luck = TriggerList(kind: .luckAspects,
-                               span: destiny.luckPeriod(containing: y).span,
-                               items: destiny.triggeredAspects(forYear: y).map { (palace: $0.aspect, row: $0.row) })
-        // 先列流年引動的本命宮，再列流年引動的大運方面
-        return TriggerList(kind: .natal,
-                           items: destiny.triggeredNatalRows(forYear: y).map { (palace: $0.palace, row: $0) },
-                           extra: [luck])
+        // 流年只列引動的本命宮（引動大運方面不顯示，2026-11-08 使用者要求）
+        TriggerList(kind: .natal,
+                    items: destiny.triggeredNatalRows(forYear: y).map { (palace: $0.palace, row: $0) })
     }
 
     /// 本命盤某一宮所引動的本命宮位。
