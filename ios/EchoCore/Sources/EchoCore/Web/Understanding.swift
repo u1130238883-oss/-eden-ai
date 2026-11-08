@@ -376,7 +376,11 @@ extension Understanding {
         // 「發達國家現在有哪些」「七大洲是哪些」：哪些後面沒有名詞，主題本身就是要列的東西 → 查名單，不是查介紹文章
         // （作品集「格林童話有哪些」照原本的作品寫法）
         let worky = ["故事", "童話", "寓言", "神話", "作品", "代表作", "書", "小說", "詩", "電影", "劇", "動畫", "漫畫", "歌", "專輯", "名著"]
-        if match(t, #"哪些$|哪幾個$|哪幾種$"#) != nil, let ia = itemsAsk(t), ia.kind.isEmpty, !worky.contains(where: { ia.subject.contains($0) }) {
+        // 「學吉他的技巧有哪些」「熬夜的壞處有哪些」要的是做法、說明，不是一份名字的清單
+        let notNames = ["技巧", "方法", "秘訣", "訣竅", "建議", "辦法", "注意事項", "步驟", "好處", "壞處", "優點", "缺點", "原因", "症狀",
+                        "影響", "特色", "功能", "作用", "用途", "風險", "副作用", "規定", "條件", "流程", "撇步", "心得", "差別", "區別", "意義"]
+        if match(t, #"哪些$|哪幾個$|哪幾種$"#) != nil, let ia = itemsAsk(t), ia.kind.isEmpty, !worky.contains(where: { ia.subject.contains($0) }),
+           !notNames.contains(where: { ia.subject.hasSuffix($0) }) {
             let sj = ia.subject
             let noun = sj.hasSuffix("國家") || sj.hasSuffix("國") ? "國家" : sj
             return F(sj, .list(noun: noun), ["\(sj) 名單", "\(sj)有哪些"], ["\(sj) 列表 一覽", "\(sj) 包括"], ["\(sj)列表", sj],
