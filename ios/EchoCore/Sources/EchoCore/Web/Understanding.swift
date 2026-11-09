@@ -792,11 +792,11 @@ extension Understanding {
         // 認得出是不是這一類的項目：問國家就對國名表（「3天前」「請選擇護照」不是國家）；
         // 問「貓有哪些品種」，品種名都是「…貓」（英國短毛貓、波斯貓），狗是「…犬」「…狗」
         let countryList = Countries.isCountryNoun(noun)
-        let breedTail: [String]? = ["品種", "種類", "品系"].contains(noun) && (1...2).contains(subject.count)
-            ? (["狗", "犬"].contains(subject) ? ["犬", "狗"] : [String(subject.last!)]) : nil
+        let animal: String? = ["品種", "種類", "品系"].contains(noun) && (1...2).contains(subject.count) ? subject : Think.breedAnimal(noun) ?? Think.breedAnimal(subject)
+        let breedTail: [String]? = animal.map { ["狗", "犬"].contains($0) ? ["犬", "狗"] : [String($0.last!)] }
         func fits(_ x: String) -> Bool {
             if countryList { return Countries.canonical(x) != nil || Countries.heading(x) != nil }
-            if let breedTail { return x.count > breedTail[0].count && breedTail.contains { x.hasSuffix($0) } }
+            if let breedTail { return Think.isBreed(x, tail: breedTail) }
             if let suffix { return x.hasSuffix(suffix) || x.hasSuffix("都") || x.hasSuffix("道") || x.hasSuffix("府") }
             return true
         }

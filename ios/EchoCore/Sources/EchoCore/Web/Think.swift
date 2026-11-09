@@ -382,6 +382,20 @@ public enum Think {
         return n.flatMap { (2...30).contains($0) ? $0 : nil }
     }
 
+    /// 「常見的貓品種」「狗的品種」→ 貓、狗
+    public static func breedAnimal(_ subject: String) -> String? {
+        Understanding.match(subject, #"^(?:常見的?|有名的?|熱門的?|台灣的?)?(\p{Han}{1,2})的?(?:品種|品系)$"#)?[1]
+    }
+
+    /// 是不是一個品種的名字：要是「…貓」「…犬」，而且不是體型、用途、年紀（小型犬、導盲犬、幼犬不是品種）
+    public static func isBreed(_ x: String, tail: [String]) -> Bool {
+        guard x.count > tail[0].count, tail.contains(where: { x.hasSuffix($0) }) else { return false }
+        let kinds = ["小型", "中型", "大型", "超大型", "迷你", "導盲", "搜救", "工作", "警", "軍", "寵物", "幼", "成", "老", "流浪", "家", "野", "公", "母",
+                     "長毛", "短毛", "純種", "混種", "米克斯", "名", "獵", "牧羊", "看門", "護衛", "伴侶", "療癒", "聰明", "好養", "安靜", "黏人"]
+        let body = String(x.dropLast(tail.first { x.hasSuffix($0) }!.count))
+        return !kinds.contains(body) && !(body.count <= 2 && kinds.contains { body.hasPrefix($0) })
+    }
+
     /// 最近一次 plainList 整理出的名單（給呼叫的地方和別的方法比較）
     nonisolated(unsafe) static var lastItems: [String] = []
 
@@ -402,11 +416,11 @@ public enum Think {
         let countryList = Countries.isCountryNoun(noun) || Countries.isCountryNoun(subj) || subj.hasSuffix("國")
         // 「貓有哪些品種」（主題貓、名詞品種），或「常見的貓品種有哪些」（品種寫在主題裡）：品種名都是「…貓」「…犬」
         var animal: String? = ["品種", "種類", "品系"].contains(noun) && (1...2).contains(subj.count) ? subj : nil
-        if animal == nil, let m = Understanding.match(subj, #"^(?:常見的?|有名的?|熱門的?|台灣的?)?(\p{Han}{1,2})的?(?:品種|品系)$"#) { animal = m[1] }
+        if animal == nil { animal = breedAnimal(subj) }
         let breedTail: [String]? = animal.map { ["狗", "犬"].contains($0) ? ["犬", "狗"] : [String($0.last!)] }
         func fits(_ x: String) -> Bool {
             if countryList { return Countries.canonical(x) != nil }
-            if let breedTail { return x.count > breedTail[0].count && breedTail.contains { x.hasSuffix($0) } }
+            if let breedTail { return isBreed(x, tail: breedTail) }
             return true
         }
         let typed = countryList || breedTail != nil
