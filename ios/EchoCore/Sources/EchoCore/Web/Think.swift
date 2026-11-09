@@ -413,7 +413,19 @@ public enum Think {
         var negative: [String: Int] = [:]
         let core = noun.isEmpty ? subj : noun
         var seenSent = Set<String>()
-        for s in sents where about(s.text) || s.text.contains(core) {
+        var counted: [(items: [String], host: String)] = []
+        // 括號裡的名單（「由11個獨立國家（汶萊、緬甸、柬埔寨…）組成」）也拿出來當一句看，前面接著括號前的話（知道有幾個）
+        var expanded: [(text: String, host: String)] = []
+        for s in sents {
+            expanded.append(s)
+            guard let re = try? NSRegularExpression(pattern: #"[（(]([^（）()]*、[^（）()]*、[^（）()]*)[）)]"#) else { continue }
+            let ns = s.text as NSString
+            for m in re.matches(in: s.text, range: NSRange(location: 0, length: ns.length)) {
+                let before = ns.substring(to: m.range.location)
+                expanded.append((String(before.suffix(30)) + "：" + ns.substring(with: m.range(at: 1)), s.host))
+            }
+        }
+        for s in expanded where about(s.text) || s.text.contains(core) {
             // 同一頁重複出現的同一句話（導覽、摘要又印一次）只算一次
             guard seenSent.insert(s.host + "|" + s.text).inserted else { continue }
             let body = s.text.replacingOccurrences(of: #"（[^）]*）|\([^)]*\)|[「」『』《》]"#, with: "", options: .regularExpression)
@@ -470,11 +482,17 @@ public enum Think {
                 // 想加入的（「四國入常」「擴容」「草案」）
                 "入常", "擴容", "四國集團", "草案", "要求增加"].contains(where: { s.text.contains($0) })
                 // 殖民過這裡的（「曾被葡萄牙、西班牙、荷蘭殖民」）：名字緊接在「被」後面才算；「泰國是唯一沒有被殖民的」不算
-                || ["殖民", "統治", "佔領", "占領"].contains(where: { s.text.contains($0) }) && (parts.first.map { $0.suffix(8).contains("被") || $0.suffix(8).contains("受") } ?? false) {
+                // 講殖民、侵略的一串（「歐洲列強，特別是葡萄牙、西班牙、荷蘭…開始殖民東南亞」）：這些是外來的國家，不是這個地區的
+                || ["殖民", "列強", "侵略", "入侵", "佔領", "占領"].contains(where: { s.text.contains($0) }) {
                 for n in names { negative[n, default: 0] += 1 }
                 continue
             }
             runs.append((names, s.host, subj.count >= 2 ? covers(s.text, subj) : s.text.contains(subj)))
+            // 句子自己說有幾個（「由11個獨立國家…組成」），列出來的剛好那麼多：最可信
+            if let m = Understanding.match(s.text, #"([0-9]{1,2}|[一二三四五六七八九十兩]{1,3})(?:個|國|大)"#),
+               let n = Int(m[1]) ?? Understanding.smallNumber(m[1]), n == names.count, n >= 3 {
+                counted.append((names, s.host))
+            }
             for n in names {
                 count[n, default: 0] += 1
                 hostsOf[n, default: []].insert(s.host)
@@ -483,6 +501,12 @@ public enum Think {
         }
         Understanding.lastListDebug = "plain runs=" + runs.map { "\($0.host):\($0.items.joined(separator: "/"))" }.joined(separator: " | ") + " neg=\(negative)"
         guard !runs.isEmpty else { return nil }
+        if let c = counted.first {
+            lastItems = c.items
+            let hosts = Array(Set(counted.filter { $0.items == c.items }.map(\.host))).sorted()
+            return "\(subj)\(noun.isEmpty || subj.hasSuffix(noun) || noun == "國家" && subj.hasSuffix("國") ? "" : "的" + noun)一共 \(c.items.count) 個：\n" + Countries.lines(c.items)
+                + "\n（資料自己寫了有 \(c.items.count) 個，列出來的也剛好這麼多；整理自 " + hosts.joined(separator: "、") + "）"
+        }
         // 主題自己說了有幾個（「七大洲」「世界三大宗教」「四大名著」）：剛好列出那麼多個的那一串最可信——
         // 只找到六個就再找找看有沒有七個的那句，不要少一個
         if let want = expectedCount(subj), let exact = runs.first(where: { $0.items.count == want }) {
