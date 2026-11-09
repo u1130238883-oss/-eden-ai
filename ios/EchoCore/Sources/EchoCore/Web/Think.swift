@@ -336,7 +336,8 @@ public enum Think {
         let workWords = ["故事", "童話", "寓言", "神話", "作品", "代表作", "名作", "經典", "書", "小說", "詩", "詞", "散文", "電影", "影集", "劇",
                          "動畫", "漫畫", "歌", "專輯", "曲", "畫", "全集", "選集", "集", "名著", "文章", "篇"]
         let titled = top.filter { t in sents.contains { $0.text.contains("《\(t)》") } }.count
-        guard titled * 2 >= top.count || workWords.contains(where: { subject.contains($0) || ask.kind.contains($0) }) else { return nil }
+        // 只有真的在問作品集才用（「世界七大奇蹟」碰到遊戲《奇蹟世界》也有書名號，但不是在問作品）
+        guard workWords.contains(where: { subject.contains($0) || ask.kind.contains($0) }) else { return nil }
         var lines: [String] = []
         // 它是什麼（有幾個也一起說）
         if let intro = sents.first(where: { s in s.text.hasPrefix("《\(subject)》") || s.text.hasPrefix(subject) }), intro.text.count <= 110,
@@ -534,7 +535,11 @@ public enum Think {
         }
         // 主題自己說了有幾個（「七大洲」「世界三大宗教」「四大名著」）：剛好列出那麼多個的那一串最可信——
         // 只找到六個就再找找看有沒有七個的那句，不要少一個
-        if let want = expectedCount(subj), let exact = runs.first(where: { $0.items.count == want }) {
+        // 那一串要出自講主題的句子（「世界三大宗教」的句子要提到「宗教」），名字也不能是「它們」「核心教義」這種代稱、章節
+        let headNoun = String(subj.suffix(2))
+        if let want = expectedCount(subj), let exact = runs.first(where: { r in r.items.count == want && r.about
+            && !r.items.contains { x in ["它們", "他們", "核心", "主要", "流派", "教義", "簡介", "介紹", "特色", "歷史"].contains { x.contains($0) } } }),
+           expanded.contains(where: { $0.host == exact.host && $0.text.contains(headNoun) }) {
             let hosts = Array(Set(runs.filter { $0.items == exact.items }.map(\.host))).sorted()
             lastItems = exact.items
             return "\(subj)是：\n" + Countries.lines(exact.items) + "\n（一共 \(want) 個，跟「\(subj)」的數目對得上；整理自 " + hosts.joined(separator: "、") + "）"
@@ -655,7 +660,7 @@ public enum Think {
                     #"([\p{Han}·．]{2,10})(?:在|於)?(?:\d{4}年)?(?:首先|最早|共同|一起)?"# + verbs,
                     #"(?:創辦人|創始人|發明者|發明人|提出者|作者|發現者)(?:是|為|：|:)?\s*([\p{Han}·．]{2,6})"#]
         let titles = ["好友", "朋友", "同學", "夥伴", "合夥人", "創辦人", "創始人", "物理學家", "科學家", "數學家", "化學家", "生物學家", "發明家", "企業家", "工程師", "作家", "學家", "家", "者", "師", "人", "年", "後來", "當年", "最初", "首先"]
-        let bad = ["的", "是", "了", "被", "這", "那", "一", "們", "該", "公司", "團隊", "政府", "共同", "它", "他", "她", "所", "其"]
+        let bad = ["的", "是", "了", "被", "這", "那", "一", "們", "該", "公司", "團隊", "政府", "共同", "它", "他", "她", "所", "其", "位", "名", "個", "人士", "大家"]
         var votes: [String: Int] = [:], quote: [String: (String, String)] = [:]
         for p in pages {
             for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) where raw.contains(subj) && raw.count <= 220 {
