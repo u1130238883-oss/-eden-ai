@@ -749,3 +749,17 @@ User direction: do NOT build knowledge into the app — make it find things on t
 - Brain prompt: how to think (what the asker really wants, main point first, several angles incl. the critical one, correct own mistakes,
   own tastes/values). New exam section `think` (84 items: taste, angles, intent, priority, correct, negative, view) from `gen_think.py`.
 - QuickCalc: 星期幾 offsets, 第 N 號元素, 雞兔同籠, rate puzzles. "運動""捷運""生命""故宮" no longer count as fortune words.
+
+## Round 15 (commit a9e054a, answers hash 204982de07) — 2857/2938 = 97.2% incl. new `think` section; old questions 2796/2854 = 98.0%
+think: taste 14/18, angles 4/18 (picks one side only), intent 13/14, priority 9/10, correct 6/8, negative 7/8, view 8/8.
+instruct 44→39: the brain said its intent guess out loud ("看你現在心情，應該是想…") and got too long.
+
+## Round 16 changes
+- Prompt: intent guessing is silent. Debatable questions (該不該／要不要／好不好…, not about NineSun itself, not when low) get
+  `LocalBrain.chatQuestion` → one reason for, one against, then pick a side (app `brainChat` and BrainEval chat route).
+- Grader: "用英文回答" questions may answer in English; taste items only require a real pick (no "AI has no preferences").
+- Web lists, from tape 95 (20 questions incl. 5 unseen): counts each repeated sentence once; treats historical/charter, candidate,
+  入常／擴容, colonial sentences as counter-evidence; country names checked before the 12-char item limit; categories (…類) and
+  table headers (發布時間) aren't items; prefers a fuller table list only if it contains every cross-site name.
+  Results: 安理會 5/5, 歐盟 26–27, 東南亞 8 correct, 貓 17 breeds, 七大奇蹟 7/7, 發達國家 30, 免簽 grouped by visa type.
+  Still weak: 中國朝代 (picks capitals), 北歐 (only 3), 最新 AI 模型 (pages are about benchmarks).

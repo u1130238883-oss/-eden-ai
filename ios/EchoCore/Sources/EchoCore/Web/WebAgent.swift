@@ -442,7 +442,16 @@ public enum WebAgent {
                     if old.ok && !old.text.isEmpty && (how.hasPrefix("sectioned") || how.hasPrefix("counted")) { brainAnswered = false; return old }
                     // 其他情況：一張表可能是別的東西（「從沒當過安理會成員的國家」），好幾個網站都列到的名字比較可信
                     let subj = Understanding.itemsAsk(question)?.subject ?? fr.subject
+                    Think.lastItems = []
                     if let d = Think.plainList(question: question, pages: ps + sn, subject: subj, noun: n) {
+                        // 表格抓到的名單比較完整、而且包含了大部分各網站都提到的名字（「北歐五國」的表格 vs 句子裡只提到三國）：用表格的
+                        let ext = Understanding.extractList(ps, noun: n, subject: fr.subject).items
+                            .map { Countries.canonical($0) ?? $0 }
+                        let plain = Think.lastItems
+                        if old.ok, ext.count > plain.count, plain.allSatisfy({ ext.contains($0) }) {
+                            brainAnswered = false
+                            return old
+                        }
                         brainNote = "這題要的是一份名單：把各網站列出來的名字放在一起比，越多地方提到的排越前面。"
                         brainAnswered = true
                         digested = true

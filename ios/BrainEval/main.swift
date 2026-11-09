@@ -74,7 +74,7 @@ for (i, line) in lines.enumerated() where i % shards == shard {
         // App 的 brainChat：算數的應用題用比較穩的設定、一步一步算
         let math = LocalBrain.isArithmetic(q)
         mode = math ? .grounded : .chat
-        user = LocalBrain.userMessage(question: math ? LocalBrain.mathQuestion(q, lang: lang) : q, hint: it["hint"] as? String ?? "", lang: lang)
+        user = LocalBrain.userMessage(question: math ? LocalBrain.mathQuestion(q, lang: lang) : low ? q : LocalBrain.chatQuestion(q, lang: lang), hint: it["hint"] as? String ?? "", lang: lang)
     }
     let (temp, most) = LocalBrain.settings(mode)
     var rec: [String: Any] = ["id": id]

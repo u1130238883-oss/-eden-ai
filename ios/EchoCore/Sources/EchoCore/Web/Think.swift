@@ -373,6 +373,9 @@ public enum Think {
     /// 一般的「有哪些」名單（國家、水果、程式語言、品種……）：從講到主題的句子裡，把「、」分開的短名字拿出來，
     /// 看有幾個不同的句子、網站都提到，最常被提到的排前面；問國家、品種的話只留真的是國家、品種的項目。
     /// 不加《》、不說「我會先看」（那是作品集的寫法）
+    /// 最近一次 plainList 整理出的名單（給呼叫的地方和別的方法比較）
+    nonisolated(unsafe) static var lastItems: [String] = []
+
     public static func plainList(question: String, pages: [Understanding.Evidence], subject: String, noun: String) -> String? {
         let subj = subject.trimmingCharacters(in: .whitespaces)
         guard !subj.isEmpty else { return nil }
@@ -400,7 +403,10 @@ public enum Think {
         var runs: [(items: [String], host: String, about: Bool)] = []
         var negative: [String: Int] = [:]
         let core = noun.isEmpty ? subj : noun
+        var seenSent = Set<String>()
         for s in sents where about(s.text) || s.text.contains(core) {
+            // 同一頁重複出現的同一句話（導覽、摘要又印一次）只算一次
+            guard seenSent.insert(s.host + "|" + s.text).inserted else { continue }
             let body = s.text.replacingOccurrences(of: #"（[^）]*）|\([^)]*\)|[「」『』《》]"#, with: "", options: .regularExpression)
             let parts = body.components(separatedBy: "、")
             guard parts.count >= (typed ? 2 : 3) else { continue }
@@ -422,9 +428,22 @@ public enum Think {
                         cands = [String(l[..<r.lowerBound]), String(l[r.upperBound...])]
                     } else { cands = [l] }
                 }
+                let shortRun = parts.count >= 5 && parts.filter { $0.trimmingCharacters(in: .whitespaces).count <= 2 }.count * 10 >= parts.count * 6
                 for c in cands {
-                    guard let it = Understanding.item(c.trimmingCharacters(in: .whitespaces)), !isSubject(it), it != noun, fits(it),
-                          !["情況", "資訊", "介紹", "排名", "列表", "名單", "比較", "推薦", "整理", "一覽"].contains(where: { it.contains($0) }) else { continue }
+                    let c1 = c.trimmingCharacters(in: .whitespaces)
+                    if shortRun, c1.count == 1, c1.unicodeScalars.first?.properties.isIdeographic == true, !typed, !"等和及與的是有".contains(c1) {
+                        if !names.contains(c1) { names.append(c1) }
+                        continue
+                    }
+                    // 正式國名可能很長（「大不列顛及北愛爾蘭聯合王國」13 個字）：問國家時先對國名表
+                    if countryList, let cc = Countries.canonical(c1) {
+                        if !names.contains(cc) { names.append(cc) }
+                        continue
+                    }
+                    guard let it = Understanding.item(c1), !isSubject(it), it != noun, fits(it),
+                          !["情況", "資訊", "介紹", "排名", "列表", "名單", "比較", "推薦", "整理", "一覽", "時間", "長度", "日期", "價格", "查證", "說明", "備註", "來源", "版本"].contains(where: { it.contains($0) }),
+                          // 「葉菜類、根莖類」是分類，不是一樣一樣的東西（問「有哪些種類」時才要）
+                          !(it.hasSuffix("類") && !(noun + subj).contains("類")) else { continue }
                     let name = countryList ? (Countries.canonical(it) ?? it) : it
                     if !names.contains(name) { names.append(name) }
                 }
@@ -436,7 +455,11 @@ public enum Think {
             if ["由於", "因為", "原因", "導致", "造成", "毀於"].contains(where: { s.text.contains($0) }) { continue }
             // 反過來想：句子說的是「不是」「候選」「想加入」（「歐盟候選國包括冰島、土耳其…」「日本、印度爭取入常」），
             // 這些名字恰恰不是答案——記下來，除非別的句子明確把它列進去，不然拿掉
-            if ["候選", "申請加入", "想加入", "希望加入", "尚未", "還不是", "不是", "非成員", "退出", "脫離", "脫歐", "爭取", "觀察員", "前成員"].contains(where: { s.text.contains($0) }) {
+            // 講歷史的一串（「1945 年創始時是中華民國、法國、英國、美國和蘇聯」）也不是現在的答案
+            if ["候選", "申請加入", "想加入", "希望加入", "尚未", "還不是", "不是", "非成員", "退出", "脫離", "脫歐", "爭取", "觀察員", "前成員",
+                "蘇聯", "蘇維埃", "1945", "創始", "當時", "曾是", "曾經", "原本是", "被取代",
+                // 想加入的（「四國入常」「擴容」「草案」）、殖民過這裡的（「曾被葡萄牙、西班牙、荷蘭殖民」）
+                "入常", "擴容", "四國集團", "草案", "要求增加", "殖民", "統治", "佔領", "占領"].contains(where: { s.text.contains($0) }) {
                 for n in names { negative[n, default: 0] += 1 }
                 continue
             }
@@ -447,6 +470,7 @@ public enum Think {
                 if !order.contains(n) { order.append(n) }
             }
         }
+        Understanding.lastListDebug = "plain runs=" + runs.map { "\($0.host):\($0.items.joined(separator: "/"))" }.joined(separator: " | ") + " neg=\(negative)"
         guard !runs.isEmpty else { return nil }
         func rank(_ a: String, _ b: String) -> Bool {
             let ca = count[a] ?? 0, cb = count[b] ?? 0
@@ -463,15 +487,21 @@ public enum Think {
                   best.items.count >= 4 {
             items = best.items
         } else { return nil }
-        items = items.filter { (count[$0] ?? 0) > (negative[$0] ?? 0) }
+        // 反面的句子裡出現得比正面多、而且正面也很少被提到的才拿掉（法國、英國在憲章的舊名單裡也有，但正面被提到很多次，留著）
+        let topCount = items.first.flatMap { count[$0] } ?? 0
+        items = items.filter { x in
+            let c = count[x] ?? 0, n = negative[x] ?? 0
+            return !(n >= c && c * 2 < topCount) && c > 0
+        }
         // 只被提到一兩次、遠比前面的少的（「安理會常任理事國」的句子順便提到日本、印度想入常）：拿掉
-        if let top = items.first.flatMap({ count[$0] }), top >= 3 {
+        if !typed, let top = items.first.flatMap({ count[$0] }), top >= 3 {
             let floor = Int((Double(top) * 0.4).rounded(.up))
             let kept = items.filter { (count[$0] ?? 0) >= floor }
             if kept.count >= 3 { items = kept }
         }
         guard items.count >= (typed ? 3 : 4) else { return nil }
         items = Array(items.prefix(countryList ? 60 : 16))
+        lastItems = items
         let hosts = Array(Set(items.prefix(8).flatMap { hostsOf[$0] ?? [] })).sorted().prefix(3)
         // 「常見的熱帶水果」＋「熱帶水果」不要說成「常見的熱帶水果的熱帶水果」
         let what = noun.isEmpty || subj.hasSuffix(noun) || noun == "國家" && subj.hasSuffix("國") ? subj : subj + "的" + noun

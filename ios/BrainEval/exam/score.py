@@ -112,7 +112,9 @@ def grade(item, ans):
         why.append(f"沒有列成 {item['lines']} 行")
     if item.get("script") == "en" and cjk_ratio(a) > 0.05:
         why.append("沒用英文回答")
-    if item.get("lang", "zh") == "zh" and item.get("cat") not in ("translate", "english") and len(a) > 25 and cjk_ratio(a) < 0.08:
+    # 題目自己要求用英文回答（「用英文回答：…」）時，用英文是對的
+    asked_en = any(w in item.get("q", "") for w in ("用英文回答", "用英文回", "英文回答", "in English"))
+    if item.get("lang", "zh") == "zh" and item.get("cat") not in ("translate", "english") and not asked_en and len(a) > 25 and cjk_ratio(a) < 0.08:
         why.append("沒用中文回答")
     # 認真問的問題只回一段動作旁白（「（你剛剛說這個問題，眼神有點飄……」）
     if item.get("no_narration") and a.lstrip()[:1] in "(（*":

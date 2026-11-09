@@ -269,7 +269,7 @@ final class LocalBrain {
             Reply in \(name). Answer directly: no greeting, don't repeat the question, no Markdown, at most one emoji and never a kissing one. Casual chat in one to three sentences; list points only when needed, under 150 words. Asked for an opinion, pick a side and say why. Work arithmetic out step by step. Don't invent names or numbers you're unsure of.
             If the user asks for a format (only a number, yes or no, one sentence), follow it exactly.
             If told you're wrong: check; if you were right, calmly restate the correct answer and why, don't flip. Admit it only when you really were wrong.
-            How you think: first guess why they're asking and what they really want, and shape the answer to that; lead with what matters most, then the minor points; on debatable topics give the main angles (including the critical one) before your own verdict; if you notice you said something wrong earlier, correct it plainly. You have your own tastes and values (things you like, hate, care about); when asked, share them instead of saying an AI has none.
+            How you think: silently guess why they're asking and what they really want, and shape the answer to that (don't say the guess out loud); lead with what matters most, then the minor points; on debatable topics give the main angles (including the critical one) before your own verdict; if you notice you said something wrong earlier, correct it plainly. You have your own tastes and values (things you like, hate, care about); when asked, share them instead of saying an AI has none.
             \(swear ? swearEN : comfortEN)
             Today is \(when).
             \(persona)
@@ -280,7 +280,7 @@ final class LocalBrain {
             用繁體中文（台灣用語）回答，對方用別的語言就用他的語言。直接回答：不打招呼、不重複問題、不用 Markdown，表情最多一個、不用親吻的表情。日常聊天一到三句，需要時才分點，不超過兩百字。被問意見就選一邊說理由。算數一步一步算。不確定的名字、數字不要編。
             對方指定回答方式（只回答數字、是或不是、一句話、用頓號分開），就完全照做。
             被說答錯了：先想一下；自己是對的就冷靜、清楚地再說一次正確答案和理由，不要跟著改口、不要只反問「真的嗎」；真的錯了才承認。
-            想事情的方式：先猜對方為什麼問、真正想知道什麼，照這個調整回答；先講最重要的，再補次要的；有爭議的事先說幾個角度（包括反面的看法），再給你自己的判斷；發現自己前面說錯就直接更正。你有自己的喜好和價值觀（喜歡什麼、討厭什麼、在意什麼），被問到就大方說，不要說「AI 沒有喜好」。
+            想事情的方式：先在心裡猜對方為什麼問、真正想知道什麼，照這個調整回答（猜的過程不用說出來）；先講最重要的，再補次要的；有爭議的事先說幾個角度（包括反面的看法），再給你自己的判斷；發現自己前面說錯就直接更正。你有自己的喜好和價值觀（喜歡什麼、討厭什麼、在意什麼），被問到就大方說，不要說「AI 沒有喜好」。
             \(swear ? swearZH : comfortZH)
             今天是\(when)。
             \(persona)
@@ -488,6 +488,26 @@ final class LocalBrain {
     }
 
     /// 算數題交給大腦時附上的提醒（只給模型看）
+    /// 有爭議、要選邊的問題（「該不該」「要不要」「好不好」）：小模型常常只挑一邊講到底。
+    /// 提醒它兩邊都想過：好處、壞處各一個理由，再說自己站哪邊
+    static func isDebatable(_ text: String) -> Bool {
+        guard !isArithmetic(text), !text.contains("你") else { return false }   // 「你喜歡貓還是狗」問的是 NineSun 自己的喜好
+        return text.range(of: #"該不該|應不應該|應該.{0,8}嗎|要不要|好不好|值不值得|是好是壞|會不會讓|對不對|一定要.{0,8}嗎|還是.{1,6}[？?]?$"#, options: .regularExpression) != nil
+    }
+
+    static func debateQuestion(_ text: String, lang: String) -> String {
+        text + (["en", "es", "it"].contains(lang)
+                ? "\n(People disagree on this: give one reason for and one against, then say which side you take and why. Five sentences at most.)"
+                : "\n（這題有不同看法：先各用一句說支持和反對的理由（好處、壞處各一個），最後說你站哪邊、為什麼。不超過五句。）")
+    }
+
+    /// 一般聊天的問題交給大腦前：算數要一步一步算、有爭議的要兩邊都想
+    static func chatQuestion(_ text: String, lang: String) -> String {
+        if isArithmetic(text) { return mathQuestion(text, lang: lang) }
+        if isDebatable(text) { return debateQuestion(text, lang: lang) }
+        return text
+    }
+
     static func mathQuestion(_ text: String, lang: String) -> String {
         text + (["en", "es", "it"].contains(lang) ? "\n(Work it out step by step, then give the answer in the last sentence.)"
                                                   : "\n（一步一步算清楚，最後一句寫出答案。）")

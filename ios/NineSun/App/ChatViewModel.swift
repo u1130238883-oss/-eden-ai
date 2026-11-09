@@ -427,7 +427,10 @@ final class ChatViewModel: ObservableObject {
         let found = L == .zh ? BrainRoute.lookup(text, in: engine?.knowledge[.zh]) : (facts: "", hint: "")
         // 算數的應用題：用比較穩的設定、一步一步算
         let math = LocalBrain.isArithmetic(text)
-        brainAnswer(math ? LocalBrain.mathQuestion(text, lang: L.rawValue) : text, hint: found.hint, notes: found.facts,
+        // 有爭議的問題（「該不該」「要不要」）：提醒大腦兩邊都想過再選邊；心情不好的時候不用（先陪他）
+        let asked = math ? LocalBrain.mathQuestion(text, lang: L.rawValue)
+            : found.facts.isEmpty && !BrainRoute.feelingLow(text) ? LocalBrain.chatQuestion(text, lang: L.rawValue) : text
+        brainAnswer(asked, hint: found.hint, notes: found.facts,
                     mode: found.facts.isEmpty && !math ? .chat : .grounded, lang: L, brain: brain, onFail: onFail)
     }
 
