@@ -763,3 +763,7 @@ instruct 44→39: the brain said its intent guess out loud ("看你現在心情�
   table headers (發布時間) aren't items; prefers a fuller table list only if it contains every cross-site name.
   Results: 安理會 5/5, 歐盟 26–27, 東南亞 8 correct, 貓 17 breeds, 七大奇蹟 7/7, 發達國家 30, 免簽 grouped by visa type.
   Still weak: 中國朝代 (picks capitals), 北歐 (only 3), 最新 AI 模型 (pages are about benchmarks).
+
+## Round 16 (commit 091d937, answers hash f4c8005926) — 2876/2938 = 97.9% (hold 97.4%)
+think/angles 4→15/18 after the debate hint (answers now give 支持／反對 then pick a side; grader accepts 支持/反對/也有人/但).
+instruct 40→42, c_world 108/108, logic 50/50, reading 120/120. IPA build 244 sent to the user.
