@@ -267,6 +267,16 @@ public enum Synthesize {
             let lg = grams(lead)
             pts.removeAll { same($0.grams, lg) || $0.hosts.count < 2 && lead.contains($0.hosts[0]) }
         }
+        // 網頁摘要開頭的日期（「2021年11月10日 · 」）不是內容
+        for i in pts.indices { pts[i].text = pts[i].text.replacingOccurrences(of: #"^\d{4}年\d{1,2}月\d{1,2}日\s*[·・]\s*"#, with: "", options: .regularExpression) }
+        // 問「什麼是 X」：最前面要放真的在下定義的那句（「ESG 是指環境、社會、公司治理」），不是順帶提到 X 的句子（「和 ESG 容易搞混的是 CSR」）
+        if shape == .definition, !subject.isEmpty {
+            let sj = NSRegularExpression.escapedPattern(for: subject)
+            let defines = #"^[「『]?"# + sj + #"[」』]?\s*(?:[（(][^）)]{0,40}[）)])?\s*(?:就是|是指|指的是|是一種|是一個|是|指|為|意指|又稱|即)"#
+            if let i = pts.firstIndex(where: { $0.text.range(of: defines, options: [.regularExpression, .caseInsensitive]) != nil }), i > 0 {
+                let d = pts.remove(at: i); pts.insert(d, at: 0)
+            }
+        }
         let n = shape == .advice ? 5 : (shape == .reason ? 3 : 4)
         let chosen = Array(pts.prefix(n))
         guard chosen.count >= (lead == nil ? 2 : 1) else { return nil }

@@ -373,6 +373,15 @@ public enum Think {
     /// 一般的「有哪些」名單（國家、水果、程式語言、品種……）：從講到主題的句子裡，把「、」分開的短名字拿出來，
     /// 看有幾個不同的句子、網站都提到，最常被提到的排前面；問國家、品種的話只留真的是國家、品種的項目。
     /// 不加《》、不說「我會先看」（那是作品集的寫法）
+    /// 「七大洲」→ 7、「世界三大宗教」→ 3、「四大名著」→ 4、「十二生肖」→ 12：主題自己說的數目
+    static func expectedCount(_ subject: String) -> Int? {
+        // 數字後面接「大／個／種／國」（七大洲、北歐五國），或主題開頭就是中文數字（十二生肖）；「iPhone 17」的 17 不是數目
+        guard let m = Understanding.match(subject, #"([一二三四五六七八九十兩]{1,3}|\d{1,2})(?:大|個|種|國)"#)
+                ?? Understanding.match(subject, #"^([一二三四五六七八九十]{1,3})\p{Han}"#) else { return nil }
+        let n = Int(m[1]) ?? Understanding.smallNumber(m[1])
+        return n.flatMap { (2...30).contains($0) ? $0 : nil }
+    }
+
     /// 最近一次 plainList 整理出的名單（給呼叫的地方和別的方法比較）
     nonisolated(unsafe) static var lastItems: [String] = []
 
@@ -458,8 +467,10 @@ public enum Think {
             // 講歷史的一串（「1945 年創始時是中華民國、法國、英國、美國和蘇聯」）也不是現在的答案
             if ["候選", "申請加入", "想加入", "希望加入", "尚未", "還不是", "不是", "非成員", "退出", "脫離", "脫歐", "爭取", "觀察員", "前成員",
                 "蘇聯", "蘇維埃", "1945", "創始", "當時", "曾是", "曾經", "原本是", "被取代",
-                // 想加入的（「四國入常」「擴容」「草案」）、殖民過這裡的（「曾被葡萄牙、西班牙、荷蘭殖民」）
-                "入常", "擴容", "四國集團", "草案", "要求增加", "殖民", "統治", "佔領", "占領"].contains(where: { s.text.contains($0) }) {
+                // 想加入的（「四國入常」「擴容」「草案」）
+                "入常", "擴容", "四國集團", "草案", "要求增加"].contains(where: { s.text.contains($0) })
+                // 殖民過這裡的（「曾被葡萄牙、西班牙、荷蘭殖民」）：名字緊接在「被」後面才算；「泰國是唯一沒有被殖民的」不算
+                || ["殖民", "統治", "佔領", "占領"].contains(where: { s.text.contains($0) }) && (parts.first.map { $0.suffix(8).contains("被") || $0.suffix(8).contains("受") } ?? false) {
                 for n in names { negative[n, default: 0] += 1 }
                 continue
             }
@@ -472,6 +483,13 @@ public enum Think {
         }
         Understanding.lastListDebug = "plain runs=" + runs.map { "\($0.host):\($0.items.joined(separator: "/"))" }.joined(separator: " | ") + " neg=\(negative)"
         guard !runs.isEmpty else { return nil }
+        // 主題自己說了有幾個（「七大洲」「世界三大宗教」「四大名著」）：剛好列出那麼多個的那一串最可信——
+        // 只找到六個就再找找看有沒有七個的那句，不要少一個
+        if let want = expectedCount(subj), let exact = runs.first(where: { $0.items.count == want }) {
+            let hosts = Array(Set(runs.filter { $0.items == exact.items }.map(\.host))).sorted()
+            lastItems = exact.items
+            return "\(subj)是：\n" + Countries.lines(exact.items) + "\n（一共 \(want) 個，跟「\(subj)」的數目對得上；整理自 " + hosts.joined(separator: "、") + "）"
+        }
         func rank(_ a: String, _ b: String) -> Bool {
             let ca = count[a] ?? 0, cb = count[b] ?? 0
             return ca != cb ? ca > cb : (order.firstIndex(of: a) ?? 0) < (order.firstIndex(of: b) ?? 0)
@@ -498,6 +516,10 @@ public enum Think {
             let floor = Int((Double(top) * 0.4).rounded(.up))
             let kept = items.filter { (count[$0] ?? 0) >= floor }
             if kept.count >= 3 { items = kept }
+        }
+        // 大部分名字都是同一個字結尾（臺北市、新北市…；基督教、佛教…）：不是這樣結尾的多半是雜字（「文化」）
+        if !typed, items.count >= 4, let tail = items.compactMap({ $0.last }).mostCommon(), items.filter({ $0.last == tail }).count * 10 >= items.count * 7 {
+            items = items.filter { $0.last == tail }
         }
         guard items.count >= (typed ? 3 : 4) else { return nil }
         items = Array(items.prefix(countryList ? 60 : 16))
@@ -557,6 +579,51 @@ public enum Think {
         guard items.count >= 3 else { return nil }
         let hosts = Array(Set(items.prefix(8).flatMap { hostsOf[$0] ?? [] })).sorted()
         return (Array(items.prefix(12)), Array(hosts.prefix(3)))
+    }
+
+    /// 「相對論是誰提出的」「微軟是誰創立的」：找緊接在動詞前面的名字（「愛因斯坦提出相對論」「由比爾·蓋茲創立」），
+    /// 看有幾句都這樣說；職稱（物理學家、工程師）拿掉
+    public static func whoDid(question: String, pages: [Understanding.Evidence], subject: String) -> String? {
+        guard let m = Understanding.match(question.replacingOccurrences(of: " ", with: ""), #"是誰(創立|創辦|發明|發現|寫|畫|設計|建立|提出|導演|唱|作曲|成立)"#) else { return nil }
+        let verb = m[1]
+        let verbs = verb == "創立" || verb == "創辦" || verb == "成立" || verb == "建立" ? "(?:創立|創辦|成立|創建|建立)" : "(?:" + verb + ")"
+        let subj = subject.trimmingCharacters(in: .whitespaces)
+        guard subj.count >= 2 else { return nil }
+        let pats = [#"由([\p{Han}·．A-Za-z ]{2,14}?)(?:於[^，。]{1,12})?(?:共同|所|一起)?"# + verbs,
+                    #"([\p{Han}·．]{2,10})(?:在|於)?(?:\d{4}年)?(?:首先|最早|共同|一起)?"# + verbs,
+                    #"(?:創辦人|創始人|發明者|發明人|提出者|作者|發現者)(?:是|為|：|:)?\s*([\p{Han}·．]{2,6})"#]
+        let titles = ["好友", "朋友", "同學", "夥伴", "合夥人", "創辦人", "創始人", "物理學家", "科學家", "數學家", "化學家", "生物學家", "發明家", "企業家", "工程師", "作家", "學家", "家", "者", "師", "人", "年", "後來", "當年", "最初", "首先"]
+        let bad = ["的", "是", "了", "被", "這", "那", "一", "們", "該", "公司", "團隊", "政府", "共同", "它", "他", "她", "所", "其"]
+        var votes: [String: Int] = [:], quote: [String: (String, String)] = [:]
+        for p in pages {
+            for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) where raw.contains(subj) && raw.count <= 220 {
+                var seen = Set<String>()
+                for pat in pats {
+                    guard let re = try? NSRegularExpression(pattern: pat) else { continue }
+                    let ns = raw as NSString
+                    for mm in re.matches(in: raw, range: NSRange(location: 0, length: ns.length)) {
+                        var n = ns.substring(with: mm.range(at: 1)).trimmingCharacters(in: .whitespaces)
+                        // 「美國物理學家愛因斯坦」→「愛因斯坦」：取最後一個職稱後面的部分
+                        for t in titles { if let r = n.range(of: t, options: .backwards), r.upperBound < n.endIndex, n.distance(from: r.upperBound, to: n.endIndex) >= 2 { n = String(n[r.upperBound...]) } }
+                        // 「比爾·蓋茲與保羅·艾倫」：兩個人都算
+                        for one in n.components(separatedBy: CharacterSet(charactersIn: "與和及、")) {
+                            let x = one.trimmingCharacters(in: .whitespaces)
+                            guard (2...12).contains(x.count), !x.contains(subj), !subj.contains(x), !bad.contains(where: { x.contains($0) }),
+                                  seen.insert(x).inserted else { continue }
+                            votes[x, default: 0] += 1
+                            if quote[x] == nil { quote[x] = (raw.trimmingCharacters(in: .whitespaces), p.host) }
+                        }
+                    }
+                }
+            }
+        }
+        let ranked = votes.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key.count > $1.key.count }
+        guard let top = ranked.first, top.value >= 2 || ranked.count == 1 else { return nil }
+        // 一起創立的（票數接近的第二個人）也說出來
+        var names = [top.key]
+        if ranked.count >= 2, ranked[1].value * 2 >= top.value, ranked[1].value >= 2 { names.append(ranked[1].key) }
+        let q = quote[top.key]!
+        return "答案：\(names.joined(separator: "、"))（\(top.value) 個地方這樣說）。\n依據：" + Cite.whole(q.0, host: q.1)
     }
 
     /// 「iPhone和安卓哪個好」：網路上很少有一句話同時把兩邊講清楚，所以分開找——各自的優缺點各找一句，
@@ -935,5 +1002,15 @@ public enum Think {
         let topBest = top.best.values.map(\.span.score).max() ?? 0
         return Conclusion(text: t, confident: true, read: chosen.count, relevant: readings.count, hosts: allHosts, unsure: unsure,
                           answer: top.shown, topScore: topBest, support: top.count)
+    }
+}
+
+
+extension Array where Element: Hashable {
+    /// 出現最多次的那個
+    func mostCommon() -> Element? {
+        var c: [Element: Int] = [:]
+        for x in self { c[x, default: 0] += 1 }
+        return c.max { $0.value < $1.value }?.key
     }
 }

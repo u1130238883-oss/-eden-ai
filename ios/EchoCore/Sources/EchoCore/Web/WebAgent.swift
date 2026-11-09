@@ -462,9 +462,17 @@ public enum WebAgent {
                     digested = true
                     return (d, true)
                 }
+                // 「X 是誰提出／創立的」：緊接在動詞前面的名字，好幾句都這樣說才算
+                if case .person = fr.want, let d = Think.whoDid(question: question, pages: ps + sn, subject: fr.subject) {
+                    brainNote = "找緊接在「提出、創立、發明」前面的名字，看有幾句都這樣說。"
+                    brainAnswered = true
+                    return (d, true)
+                }
                 // 一般的名單（國家、水果、品種……）：好幾個網站都提到的排前面
                 var listNoun: String? = nil
-                if case let .list(n) = fr.want { listNoun = n } else if asksItems { listNoun = Understanding.itemsAsk(question)?.kind ?? "" }
+                // 只有真的在問名單才用（「感冒和流感有什麼差別」是比較題，理解模型可能誤判成要清單）
+                let notNames = ["差別", "區別", "不同", "差異", "意思", "好處", "壞處", "優點", "缺點", "原因", "影響", "特色", "症狀", "方法", "技巧", "建議"]
+                if case let .list(n) = fr.want { listNoun = n } else if let ia = Understanding.itemsAsk(question), !notNames.contains(where: { ia.kind.contains($0) }) { listNoun = ia.kind }
                 if let n = listNoun {
                     // 產品（AI 模型、手機…）：照上下文認出真的被「發布、推出」的名字，不拿評測項目、分類充數
                     if Think.isProductNoun(n), let r = Think.releases(pages: ps + sn, noun: n) {

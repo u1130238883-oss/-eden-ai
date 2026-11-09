@@ -708,7 +708,7 @@ extension Understanding {
     /// 「…、瑞典、芬蘭同意成立」：名單最後一項後面接著的動詞不是名字的一部分
     static func cutVerbTail(_ s: String) -> String {
         var t = s
-        for v in ["同意", "簽署", "加入", "組成", "成立", "決定", "共同", "均", "皆", "也", "曾", "已", "將", "於", "在", "則", "被", "之間", "的"] {
+        for v in ["並稱", "並列", "合稱", "被稱為", "同意", "簽署", "加入", "組成", "成立", "決定", "共同", "均", "皆", "也", "曾", "已", "將", "於", "在", "則", "被", "之間", "的"] {
             if let r = t.range(of: v), t.distance(from: t.startIndex, to: r.lowerBound) >= 2 { t = String(t[..<r.lowerBound]) }
         }
         return t

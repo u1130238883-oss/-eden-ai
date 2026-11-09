@@ -183,7 +183,15 @@ public enum Commonsense {
 
     static func howto(_ t: String) -> String? {
         guard howCues.contains(where: { t.contains($0) }) else { return nil }
-        var hit = mentions(t, in: howtos).first?.entity
+        let first = mentions(t, in: howtos).first
+        var hit = first?.entity
+        // 「番茄炒蛋怎麼做」不是「炒蛋」：問的菜名前面還多了別的料，是另一道菜，交給上網查
+        if let f = first, f.entity.kind == "做法", let r = t.range(of: f.alias) {
+            var pre = String(t[..<r.lowerBound])
+            for w in howCues + ["怎麼", "如何", "怎樣", "教我", "請問", "我想", "想要", "要"] { pre = pre.replacingOccurrences(of: w, with: "") }
+            let before = pre.filter { $0.unicodeScalars.first?.properties.isIdeographic == true }
+            if before.count >= 1 { return nil }
+        }
         // 「白飯怎麼煮」「英文怎麼學」「錢怎麼存」：動詞放回前面再找一次
         if hit == nil, let g = RuleBook.match(t, #"^(?:我的?)?(.{1,4}?)(?:要|該)?(?:怎麼|如何|怎樣)(.)"#) {
             hit = mentions(g[1] + g[0], in: howtos).first?.entity
