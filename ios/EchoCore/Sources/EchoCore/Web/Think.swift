@@ -492,7 +492,7 @@ public enum Think {
             if let m = Understanding.match(s.text, #"([0-9]{1,2}|[一二三四五六七八九十兩]{1,3})(?:個|國|大)"#),
                let n = Int(m[1]) ?? Understanding.smallNumber(m[1]), n == names.count, n >= 3,
                // 那句話要在講問的東西（「台灣的四大族群」不是在講直轄市）
-               s.text.contains(core) || subj.count >= 2 && s.text.contains(subj) {
+               noun.isEmpty ? (subj.count >= 2 && s.text.contains(subj)) : s.text.contains(noun) {
                 counted.append((names, s.host))
             }
             for n in names {
