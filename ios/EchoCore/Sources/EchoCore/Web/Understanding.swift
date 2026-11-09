@@ -793,7 +793,7 @@ extension Understanding {
         // 問「貓有哪些品種」，品種名都是「…貓」（英國短毛貓、波斯貓），狗是「…犬」「…狗」
         let countryList = Countries.isCountryNoun(noun)
         let animal: String? = ["品種", "種類", "品系"].contains(noun) && (1...2).contains(subject.count) ? subject : Think.breedAnimal(noun) ?? Think.breedAnimal(subject)
-        let breedTail: [String]? = animal.map { ["狗", "犬"].contains($0) ? ["犬", "狗"] : [String($0.last!)] }
+        let breedTail: [String]? = animal.flatMap { ["狗", "犬"].contains($0) ? nil : [String($0.last!)] }
         func fits(_ x: String) -> Bool {
             if countryList { return Countries.canonical(x) != nil || Countries.heading(x) != nil }
             if let breedTail { return Think.isBreed(x, tail: breedTail) }
