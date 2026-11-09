@@ -520,8 +520,18 @@ public enum Think {
             let kept = items.filter { (count[$0] ?? 0) >= floor }
             if kept.count >= 3 { items = kept }
         }
+        // 同一個東西的兩種寫法（「台北」和「臺北市」）：只留一個（留完整的那個）
+        func norm(_ x: String) -> String { x.replacingOccurrences(of: "臺", with: "台") }
+        var merged: [String] = []
+        for x in items {
+            let nx = norm(x)
+            if let i = merged.firstIndex(where: { let m = norm($0); return m == nx || m.hasPrefix(nx) && m.count == nx.count + 1 || nx.hasPrefix(m) && nx.count == m.count + 1 }) {
+                if x.count > merged[i].count { merged[i] = x }
+            } else { merged.append(x) }
+        }
+        items = merged
         // 大部分名字都是同一個字結尾（臺北市、新北市…；基督教、佛教…）：不是這樣結尾的多半是雜字（「文化」）
-        if !typed, items.count >= 4, let tail = items.compactMap({ $0.last }).mostCommon(), items.filter({ $0.last == tail }).count * 10 >= items.count * 7 {
+        if !typed, items.count >= 4, let tail = items.compactMap({ $0.last }).mostCommon(), items.filter({ $0.last == tail }).count * 10 >= items.count * 6 {
             items = items.filter { $0.last == tail }
         }
         guard items.count >= (typed ? 3 : 4) else { return nil }

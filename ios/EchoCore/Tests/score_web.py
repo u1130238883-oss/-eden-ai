@@ -20,7 +20,7 @@ fails = []
 for q, groups in spec.items():
     if q not in ans: continue
     n += 1
-    a = ans[q]
+    a = ans[q].replace(",", "").replace("，", "，")   # 「299,792,458」和「299792458」一樣
     why = [("缺：" + "/".join(g)) for g in groups if not any(x.lower() in a.lower() for x in g)]
     if any(w in a for w in fail_words): why.append("沒答到")
     if not why: ok += 1
