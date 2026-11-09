@@ -276,6 +276,16 @@ public enum Synthesize {
             if let i = pts.firstIndex(where: { $0.text.range(of: defines, options: [.regularExpression, .caseInsensitive]) != nil }), i > 0 {
                 let d = pts.remove(at: i); pts.insert(d, at: 0)
             }
+            // 英文縮寫（ESG、GDP）：最好的定義是把每個字母講出來的那句（「環境（E）、社會（S）、公司治理（G）的縮寫」「國內生產毛額」）
+            let acronym = subject.count <= 6 && subject.allSatisfy { $0.isASCII && ($0.isUppercase || $0.isNumber) }
+            if acronym, let i = pts.firstIndex(where: { p in p.text.contains(subject) && ["縮寫", "簡稱", "分別", "代表", "英文全稱", "全名"].contains(where: { p.text.contains($0) }) }), i > 0 {
+                let d = pts.remove(at: i); pts.insert(d, at: 0)
+            }
+        }
+        // 「X 代表什麼」「象徵什麼」：放最前面的要是說它代表什麼的那句，不是介紹它是誰設計的
+        if question.contains("代表") || question.contains("象徵") || question.contains("意義"),
+           let i = pts.firstIndex(where: { p in ["代表", "象徵", "意味", "意義是"].contains(where: { p.text.contains($0) }) }), i > 0 {
+            let d = pts.remove(at: i); pts.insert(d, at: 0)
         }
         let n = shape == .advice ? 5 : (shape == .reason ? 3 : 4)
         let chosen = Array(pts.prefix(n))
