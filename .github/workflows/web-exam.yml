@@ -1,0 +1,42 @@
+name: Web exam
+
+# commit 訊息有 [webexam] 時：8 台機器同時真的上網考一批有標準答案的題目（web_questions_graded.txt），
+# 每台的網路位址不同、每題隔 30 秒，比較不會被搜尋引擎擋。錄音帶和回答存到分支 tapes/web-exam-<run>-<shard>，
+# 開發環境下載回來打分數、離線重播改進
+on:
+  push:
+    paths:
+      - "ios/**"
+      - ".github/workflows/web-exam.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    if: contains(github.event.head_commit.message, '[webexam]') || github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record
+        working-directory: ios/EchoCore
+        run: |
+          NINESUN_TAPE_SET=graded NINESUN_TAPE_SHARD=${{ matrix.shard }}/8 NINESUN_TAPE_GAP=30 \
+          NINESUN_TAPE_OUT="$PWD/web_tape.json" NINESUN_TAPE_ANSWERS="$PWD/web_answers.txt" \
+            swift test -c release -Xswiftc -enable-testing --filter WebTapeTests/testRecord > tape.log 2>&1 || true
+          tail -5 tape.log
+          ls -la web_tape.json web_answers.txt
+          gzip -9 -k web_tape.json
+      - name: Save to a branch
+        working-directory: ios/EchoCore
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          D="$RUNNER_TEMP/tape" && mkdir -p "$D" && cp web_tape.json.gz web_answers.txt "$D/"
+          cd "$D" && git init -q && git add . && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "web exam ${{ github.run_number }} shard ${{ matrix.shard }}"
+          git push -q "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/tapes/web-exam-${{ github.run_number }}-${{ matrix.shard }}

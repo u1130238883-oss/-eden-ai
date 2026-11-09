@@ -7,11 +7,21 @@ import XCTest
 /// 回答寫到 NINESUN_TAPE_ANSWERS（沒設就印出來）
 final class WebTapeTests: XCTestCase {
     static func questions() throws -> [String] {
-        let focus = ProcessInfo.processInfo.environment["NINESUN_TAPE_FOCUS"] != nil
-        let url = try XCTUnwrap(Bundle.module.url(forResource: focus ? "web_questions_focus" : "web_questions", withExtension: "txt", subdirectory: "Fixtures"))
-        let only = ProcessInfo.processInfo.environment["NINESUN_TAPE_ONLY"].map { Set($0.split(separator: "|").map(String.init)) }
-        return try String(contentsOf: url, encoding: .utf8).split(separator: "\n").map(String.init)
-            .filter { !$0.isEmpty && !$0.hasPrefix("#") && (only?.contains($0) ?? true) }
+        let env = ProcessInfo.processInfo.environment
+        let focus = env["NINESUN_TAPE_FOCUS"] != nil
+        // NINESUN_TAPE_SET=graded：大批有標準答案的考題（「問題|關鍵字」，這裡只取問題）
+        let name = env["NINESUN_TAPE_SET"].map { "web_questions_" + $0 } ?? (focus ? "web_questions_focus" : "web_questions")
+        let url = try XCTUnwrap(Bundle.module.url(forResource: name, withExtension: "txt", subdirectory: "Fixtures"))
+        let only = env["NINESUN_TAPE_ONLY"].map { Set($0.split(separator: "|").map(String.init)) }
+        var qs = try String(contentsOf: url, encoding: .utf8).split(separator: "\n").map(String.init)
+            .filter { !$0.isEmpty && !$0.hasPrefix("#") }
+            .map { String($0.split(separator: "|", maxSplits: 1).first ?? Substring($0)) }
+            .filter { only?.contains($0) ?? true }
+        // NINESUN_TAPE_SHARD=3/8：好幾台機器分著問（每台的網路位址不同，比較不會被搜尋引擎擋）
+        if let sh = env["NINESUN_TAPE_SHARD"]?.split(separator: "/").compactMap({ Int($0) }), sh.count == 2, sh[1] > 0 {
+            qs = qs.enumerated().filter { $0.offset % sh[1] == sh[0] }.map(\.element)
+        }
+        return qs
     }
 
     func run(_ tape: WebTape) async throws {
@@ -42,7 +52,8 @@ final class WebTapeTests: XCTestCase {
             // 錄的時候像一個人在問：一題問完隔一陣子再問下一題（一口氣問太快，搜尋引擎會把我們當機器人擋掉）
             if !tape.replaying {
                 let focus = ProcessInfo.processInfo.environment["NINESUN_TAPE_FOCUS"] != nil
-                try? await Task.sleep(nanoseconds: (focus ? 120 : 8) * 1_000_000_000)
+                let gap = ProcessInfo.processInfo.environment["NINESUN_TAPE_GAP"].flatMap { UInt64($0) } ?? (focus ? 120 : 8)
+                try? await Task.sleep(nanoseconds: gap * 1_000_000_000)
             }
             let w = await WebAgent.run(wq, lang: .zh)
             out += "[題型 \(w.want ?? "-")] \n" + w.text + "\n\n"
