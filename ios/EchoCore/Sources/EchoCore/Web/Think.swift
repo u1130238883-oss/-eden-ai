@@ -484,6 +484,8 @@ public enum Think {
                           // 「葉菜類、根莖類」是分類，不是一樣一樣的東西（問「有哪些種類」時才要）
                           !(it.hasSuffix("類") && !(noun + subj).contains("類")),
                           !(dog && (it.hasSuffix("犬") || it.hasSuffix("狗")) && !isBreed(it, tail: ["犬", "狗"])),
+                          // 問品種：「個性溫和」「好訓練」是個性，「米克斯」是混種，都不是品種
+                          !(animal != nil && (["個性", "溫和", "訓練", "好養", "活潑", "聰明", "黏人", "安靜", "掉毛", "價格", "米克斯", "混種", "親人", "適合"].contains { it.contains($0) })),
                           // 問城市：海、海峽、灣、河是地形，不是城市（「西隔東海、黃海、朝鮮海峽」）
                           !((noun + subj).contains("城市") && ["海", "峽", "灣", "洋", "河", "江", "山脈", "島"].contains(where: { it.hasSuffix($0) })) else { continue }
                     let name = countryList ? (Countries.canonical(it) ?? it) : it

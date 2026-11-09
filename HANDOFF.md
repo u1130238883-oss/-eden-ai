@@ -767,3 +767,12 @@ instruct 44→39: the brain said its intent guess out loud ("看你現在心情�
 ## Round 16 (commit 091d937, answers hash f4c8005926) — 2876/2938 = 97.9% (hold 97.4%)
 think/angles 4→15/18 after the debate hint (answers now give 支持／反對 then pick a side; grader accepts 支持/反對/也有人/但).
 instruct 40→42, c_world 108/108, logic 50/50, reading 120/120. IPA build 244 sent to the user.
+
+## Web exam (live search on 8 CI machines, `.github/workflows/web-exam.yml`, `[webexam]` or manual run)
+104 graded questions in `ios/EchoCore/Tests/EchoCoreTests/Fixtures/web_questions_graded.txt` (`問題|關鍵字;關鍵字/同義`), scored with
+`python3 ios/EchoCore/Tests/score_web.py <questions> answers*.txt`; tapes on branches `tapes/web-exam-<run>-<shard>`.
+Social sources through search engines (no login): latest → X + Threads, opinions → 知乎 + Threads, English names → Reddit.
+Live round 1 82.7%, live round 2 89.4%; replay with current code 93.3% / 94.2%.
+Fixes: who-did finder, expected counts (七大洲 → 7), lists in parentheses with stated counts (「由11個國家（…）組成」),
+colonizer/candidate/charter sentences as counter-evidence, shared endings, units from the subject (光速 → 公里/秒),
+acronym definitions, breed checks (cats need …貓; dogs only drop sizes/jobs/traits), recipe tip lines, product names by release context.
