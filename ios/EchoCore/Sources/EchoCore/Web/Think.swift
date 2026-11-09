@@ -509,6 +509,56 @@ public enum Think {
         return head + "\n" + Countries.lines(items) + "\n（整理自 " + hosts.joined(separator: "、") + "；不一定是全部）"
     }
 
+    /// 產品類的名單（AI 模型、手機、晶片、遊戲……）：網頁上「聚合 ARC-AGI-2、HLE、編程榜」這種一串是評測項目，不是產品。
+    /// 怎麼認：看上下文——緊接在「發布／推出／上線／釋出／開源」後面的名字，或後面接著「模型／手機…」的名字，才是在講一個產品；
+    /// 產品名通常有版本號（GPT-6、Gemini 3.8）或好幾個字（Claude Fable），只有「AI」「API」「Google」這種一個詞的是統稱或公司
+    static let productNouns = ["模型", "大模型", "手機", "晶片", "顯卡", "遊戲", "產品", "app", "App", "車款", "電動車", "筆電", "相機", "耳機", "手錶", "平板"]
+
+    public static func isProductNoun(_ noun: String) -> Bool { productNouns.contains { noun.contains($0) } }
+
+    public static func releases(pages: [Understanding.Evidence], noun: String) -> (items: [String], hosts: [String])? {
+        let head = productNouns.first { noun.contains($0) } ?? noun
+        let name = #"([A-Za-z][A-Za-z0-9\.\-]*(?: [A-Za-z0-9][A-Za-z0-9\.\-]*){0,3})"#
+        let pats = [#"(?:發布|發佈|推出|上線|釋出|開源|亮相|登場|升級到|更新到|迎來)(?:了|全新的?|新一代的?|最新的?)?\s*"# + name,
+                    name + #"\s*(?:這款|這個)?\s*(?:"# + NSRegularExpression.escapedPattern(for: head) + "|大模型|模型)"]
+        let generic: Set<String> = ["ai", "api", "llm", "gpu", "cpu", "app", "ios", "android", "ai 模型", "chatbot", "agent", "sota", "pro", "new", "the"]
+        var count: [String: Int] = [:], hostsOf: [String: Set<String>] = [:], order: [String] = []
+        for p in pages {
+            var seen = Set<String>()
+            for pat in pats {
+                guard let re = try? NSRegularExpression(pattern: pat) else { continue }
+                let ns = p.text as NSString
+                for m in re.matches(in: p.text, range: NSRange(location: 0, length: ns.length)) {
+                    var n = ns.substring(with: m.range(at: 1)).trimmingCharacters(in: .whitespaces)
+                    // 句子接著的英文字不是名字的一部分（「GPT-6 Astra and」）
+                    n = n.replacingOccurrences(of: #"\s+(and|or|with|to|for|in|on|is|the|vs)\b.*$"#, with: "", options: [.regularExpression, .caseInsensitive])
+                    while let l = n.last, ".-".contains(l) { n.removeLast() }
+                    let low = n.lowercased()
+                    guard n.count >= 3, n.count <= 30, !generic.contains(low),
+                          n.contains(where: \.isNumber) || n.split(separator: " ").count >= 2 else { continue }
+                    // 「ARC-AGI-2」「HLE」「MMLU」這種全大寫的評測代號，或明說是榜、測試的，不是產品
+                    let letters = n.filter(\.isLetter)
+                    if letters.count >= 3 && letters == letters.uppercased() && !n.contains(" ") && n.filter(\.isNumber).count <= 1 && !low.hasPrefix("gpt") { continue }
+                    guard seen.insert(low).inserted else { continue }
+                    count[n, default: 0] += 1
+                    hostsOf[n, default: []].insert(p.host)
+                    if !order.contains(n) { order.append(n) }
+                }
+            }
+        }
+        // 同一個產品的短名字被長名字包含（「Gemini 3.8」和「Gemini 3.8 Flash」）：留長的、票數加總
+        var items = order
+        // 「Gemini 3」被「Gemini 3.8 Flash」包含、「Claude Fable 5」被「Claude Fable 5.1」包含：是同一個系列被截斷，留完整的
+        for a in order { for b in order where b != a && b.hasPrefix(a) && (b.count > a.count) {
+            let next = b[b.index(b.startIndex, offsetBy: a.count)]
+            if next == " " || next == "." || next.isNumber { count[b, default: 0] += count[a] ?? 0; items.removeAll { $0 == a } }
+        } }
+        items.sort { (count[$0] ?? 0, -(order.firstIndex(of: $0) ?? 0)) > (count[$1] ?? 0, -(order.firstIndex(of: $1) ?? 0)) }
+        guard items.count >= 3 else { return nil }
+        let hosts = Array(Set(items.prefix(8).flatMap { hostsOf[$0] ?? [] })).sorted()
+        return (Array(items.prefix(12)), Array(hosts.prefix(3)))
+    }
+
     /// 「iPhone和安卓哪個好」：網路上很少有一句話同時把兩邊講清楚，所以分開找——各自的優缺點各找一句，
     /// 有直接比較兩邊的句子也放上，最後給一個怎麼選的判斷（不硬選邊）
     static let compareAliases: [String: [String]] = [

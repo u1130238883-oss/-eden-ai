@@ -405,7 +405,11 @@ extension Understanding {
             if fresh {
                 let y = Calendar(identifier: .gregorian).component(.year, from: Date())
                 let n = noun.replacingOccurrences(of: "最新", with: "")
-                return F(pre.isEmpty ? noun : pre, .list(noun: noun), ["\(y) \(pre) 最新\(n)", "\(pre)有哪些\(noun)"], ["\(y) \(pre) \(n) 整理", "\(full) \(y)"],
+                // 最新的產品：找「發布、推出」的盤點文章（排行榜、評測頁列的是測試項目，不是產品）
+                let product = Think.isProductNoun(n)
+                return F(pre.isEmpty ? noun : pre, .list(noun: noun),
+                         product ? ["\(y) 最新\(pre)\(n) 發布 盤點", "\(y)年 \(pre) 新\(n) 推出"] : ["\(y) \(pre) 最新\(n)", "\(pre)有哪些\(noun)"],
+                         product ? ["\(pre) \(n) 最新發布 \(y)", "\(y) \(pre)\(n) 盤點"] : ["\(y) \(pre) \(n) 整理", "\(full) \(y)"],
                          ["\(full)列表", full],
                          "你想知道現在「\(pre)」有哪些「\(noun)」→ 要一份最新的名單（以今年的資料為準）。")
             }

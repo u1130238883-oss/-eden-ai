@@ -102,6 +102,30 @@ public enum WebAgent {
         return Plan(kind: kind, keywords: kw, core: core, queries: qs.filter { !$0.isEmpty && seen.insert($0).inserted }, numeric: numeric)
     }
 
+    /// 去社群平台找什麼：
+    /// - 最新的事（現在、最新、最近、今年、新聞）→ X（消息最快，官方帳號、記者第一手）
+    /// - 大家的看法、經驗（推薦、好不好、值不值得、為什麼、怎麼辦、比較）→ 知乎（中文問答）
+    /// - 主題有英文名字（AI、iPhone、Gemini）→ Reddit（英文社群討論最多）
+    /// - 中文的新消息、看法 → Threads（台灣使用者多）
+    /// 一題最多三個平台，查詢加上 site: 讓搜尋引擎只回那個平台的貼文
+    public static func socialQueries(_ question: String, kind: Kind, core: String, zh: Bool) -> [String] {
+        let q = question.lowercased()
+        let topic = core.trimmingCharacters(in: .whitespaces)
+        guard topic.count >= 2 else { return [] }
+        let fresh = kind == .news || ["現在", "最新", "最近", "今年", "目前", "剛剛", "新出", "latest", "newest", "recent", "now", "this year"].contains { q.contains($0) }
+        let opinion = [.recommend, .compare, .reason, .method].contains(kind)
+            || ["推薦", "好不好", "值不值得", "值得", "怎麼看", "評價", "心得", "體驗", "好用", "建議", "哪個好", "worth", "best", "review", "opinion"].contains { q.contains($0) }
+        let latin = topic.contains { $0.isASCII && $0.isLetter }
+        var out: [String] = []
+        if fresh { out.append("site:x.com " + topic) }
+        // Threads：台灣的使用者很多，新消息和大家的看法都有
+        if zh && (fresh || opinion) { out.append("site:threads.com " + topic) }
+        if opinion && zh { out.append("site:zhihu.com " + topic) }
+        if latin && (fresh || opinion) { out.append("site:reddit.com " + topic) }
+        if fresh && zh && !opinion { out.append("site:zhihu.com " + topic) }
+        return Array(out.prefix(3))
+    }
+
     /// 把口語問句整理成關鍵字
     public static func keywords(_ raw: String) -> String {
         var q = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -222,6 +246,12 @@ public enum WebAgent {
         for q in also.prefix(2) where !jobs.contains(where: { $0.q == q }) { jobs.append((-1, q, true)) }
         // 指定去這個領域的專業網站找（健康：國健署、康健、Heho；職場：經理人、天下；書：博客來、Openbook……）
         if zh, !fortune, let pq = Cite.proQuery(fr?.subject ?? plan.core, question: question) { jobs.append((-1, pq, false)) }
+        // 社群平台（X、知乎、Reddit）：搜尋引擎收錄的貼文摘要也拿來當資料（不用登入、不直接抓平台的網頁）
+        if !fortune {
+            for q in socialQueries(question, kind: plan.kind, core: fr?.subject ?? plan.core, zh: zh) where !jobs.contains(where: { $0.q == q }) {
+                jobs.append((-1, q, false))
+            }
+        }
         for (i, a) in strat.angles.enumerated() { jobs.append((i, topic + a.suffix, false)) }
         // 完整的搜尋一次最多兩組，查完再查下一批（太密集會被搜尋引擎當成機器人，回一堆無關的結果）；
         // 小問題的輕量搜尋（Bing＋維基）跟第一批一起查，不用多等一輪
@@ -436,6 +466,14 @@ public enum WebAgent {
                 var listNoun: String? = nil
                 if case let .list(n) = fr.want { listNoun = n } else if asksItems { listNoun = Understanding.itemsAsk(question)?.kind ?? "" }
                 if let n = listNoun {
+                    // 產品（AI 模型、手機…）：照上下文認出真的被「發布、推出」的名字，不拿評測項目、分類充數
+                    if Think.isProductNoun(n), let r = Think.releases(pages: ps + sn, noun: n) {
+                        brainNote = "問的是產品：只算網頁上說「發布、推出」或叫它「\(n)」的名字，評測項目、分類不算。"
+                        brainAnswered = true
+                        digested = true
+                        return ("網路上最近提到、有發布或推出的\(n)（越多地方提到的排越前面）：\n" + r.items.map { "• " + $0 }.joined(separator: "\n")
+                                + "\n（整理自 " + r.hosts.joined(separator: "、") + "；這類東西更新很快，以官方公布為準）", true)
+                    }
                     let old = solve(fr, pages: ps, snippets: sn)
                     let how = Understanding.lastListDebug
                     // 網頁上照分類列好的簽證名單、句子自己說有幾個而且數目對得上的名單：最可靠，直接用
