@@ -588,7 +588,7 @@ public enum Think {
         if !typed, items.count >= 4, let tail = items.compactMap({ $0.last }).mostCommon(), items.filter({ $0.last == tail }).count * 10 >= items.count * 6 {
             items = items.filter { $0.last == tail }
         }
-        guard items.count >= (typed ? 3 : 4) else { return nil }
+        guard items.count >= (typed || animal != nil ? 3 : 4) else { return nil }
         items = Array(items.prefix(countryList ? 60 : 16))
         lastItems = items
         let hosts = Array(Set(items.prefix(8).flatMap { hostsOf[$0] ?? [] })).sorted().prefix(3)
