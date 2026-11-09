@@ -499,8 +499,11 @@ public enum Think {
         if typed {
             items = order.sorted(by: rank)
         } else if agreed.count >= 4 {
-            // 好幾個句子都提到的才算（網頁上一次性的雜字不會被重複提到）
+            // 好幾個句子都提到的才算（網頁上一次性的雜字不會被重複提到）；再補上講主題最完整的那一串裡的（「Python」可能只在一句裡）
             items = agreed.sorted(by: rank)
+            if let best = runs.filter({ $0.about }).max(by: { $0.items.count < $1.items.count }) {
+                for x in best.items where !items.contains(x) && items.count < 12 { items.append(x) }
+            }
         } else if let best = runs.filter({ $0.about }).max(by: { $0.items.count < $1.items.count }) ?? runs.max(by: { $0.items.count < $1.items.count }),
                   best.items.count >= 4 {
             items = best.items

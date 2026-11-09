@@ -200,6 +200,12 @@ public enum Understanding {
         if attr.hasSuffix("錢") || attr.hasSuffix("價格") { return ["元", "美元", "台幣", "萬"] }
         if attr.hasSuffix("歲") || attr.hasSuffix("年齡") { return ["歲"] }
         if attr.hasSuffix("面積") { return ["平方公里", "公頃"] }
+        // 主題本身就說了是哪一種量（光速、音速 → 速度；沸點、氣溫 → 溫度；身高、樓高 → 高度）：數字要有那種單位，「10萬年」不是速度
+        if attr.contains("速") { return ["公里/秒", "公里每秒", "km/s", "公尺/秒", "米/秒", "m/s", "公里/小時", "km/h", "每秒"] }
+        if ["沸點", "熔點", "溫度", "氣溫", "體溫", "冰點"].contains(where: { attr.contains($0) }) { return ["度", "°C", "℃", "°F"] }
+        if ["身高", "高度", "海拔"].contains(where: { attr.contains($0) }) { return ["公尺", "米", "公分", "m"] }
+        if ["距離", "長度", "周長", "直徑", "半徑"].contains(where: { attr.contains($0) }) { return ["公里", "公尺", "米", "km"] }
+        if ["重量", "體重", "質量"].contains(where: { attr.contains($0) }) { return ["公斤", "克", "噸", "kg"] }
         return ["個", "座", "名", "位", "種", "條", "人", "萬", "億"]
     }
 
@@ -445,7 +451,8 @@ extension Understanding {
             }
             if noun.isEmpty || noun == "錢" || noun == "歲" {
                 let attr = subject + noun
-                return F(subject, .number(attr: noun.isEmpty ? "數量" : noun, units: unitsFor(attr)), [t, "\(subject) \(noun)"], ["\(subject) \(noun) 最新"], [],
+                let speed = attr.contains("速")
+                return F(subject, .number(attr: speed ? "速度" : noun.isEmpty ? "數量" : noun, units: unitsFor(attr)), [t, "\(subject) \(noun)"], ["\(subject) \(noun) 最新"], [],
                          "你想知道「\(t)」→ 要一個有單位的數字，並說明是哪個來源、哪一年的數字。")
             }
             return F(subject, .number(attr: noun, units: ["個\(noun)", "座\(noun)", "種\(noun)", "名\(noun)", noun]), [t, "\(subject) \(noun) 數量"],
@@ -1043,6 +1050,9 @@ extension Understanding {
                 // 問答（「A: 可能水太多…」）、文章預告（「本文深入探討…」結尾是「…」）不是步驟
                 let faq = ["A:", "Q:", "A：", "Q：", "答：", "問："].contains { s.hasPrefix($0) }
                 guard !faq, !s.contains("本文"), !s.contains("？"), !s.contains("?"), !s.hasSuffix("…"), !s.hasSuffix("...") else { continue }
+                // 「厚度：太薄容易煮散」「份量拿捏：…」「必備：老薑、青蔥」是挑選、準備的小技巧，不是一步一步的做法
+                let tipLabels = ["厚度", "寬度", "份量", "分量", "必備", "挑選", "選購", "小技巧", "技巧", "注意", "重點", "食材", "材料", "調味料", "器具", "保存", "提醒", "秘訣", "心得"]
+                if let lab = Understanding.match(s, #"^(?:\d{1,2}[\.、．)）]\s*)?([^，。：:]{1,10})[：:]"#)?[1], tipLabels.contains(where: { lab.contains($0) }) { continue }
                 // 每一步都要有動作（加水、煮、泡……），光有編號或營養成分表不算；
                 // 而且要真的是做法：網站自己的廣告（「在 Google 搜尋食譜時，愛料理的食譜會優先出現」）、名字由來（「可能因此取名黃燜」）、留言都不算
                 if stepVerbs.contains(where: { s.contains($0) }) {
