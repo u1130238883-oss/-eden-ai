@@ -1,0 +1,130 @@
+===== 問：G7有哪些國家
+[題型 list] 
+📌 回答
+G7的國家，常見的有這些（越多網站提到的排越前面）：
+美國、德國、日本、英國、法國、義大利、加拿大、印度
+巴西
+（整理自 ebc.com；不一定是全部）
+
+💬 你可能還想知道：想知道其中哪一個的詳細介紹？
+來源：ebc.com、uptogo.com.tw、yololab.net
+
+===== 問：台灣有哪些直轄市
+[題型 list] 
+📌 回答
+台灣的直轄市，常見的有這些（越多網站提到的排越前面）：
+臺北市、新北市、桃園市、臺中市、臺南市、文化
+（整理自 president.gov.tw、taiwan.md、tyaward.com.tw；不一定是全部）
+
+💬 你可能還想知道：想知道其中哪一個的詳細介紹？
+來源：jsstb.gov.cn、president.gov.tw、uptogo.com.tw
+
+===== 問：奧運的五環代表什麼
+[題型 definition] 
+📌 回答
+簡單說：奧林匹克標誌（the Olympic symbol），又稱奧運五環標誌，是由《奧林匹克憲章》確定的 奧林匹克運動 在全球範圍內的視覺形象標識。
+
+重點：
+① 奧運五環的誕生，歸功於「現代奧林匹克之父」——法國教育家皮埃爾·德·顧拜旦男爵（Pierre de Coubertin）
+（參考：baike.baidu.com、uptogo.com.tw）
+
+💬 你可能還想知道：要我舉一個生活中的例子說明「奧運的五環」嗎？
+來源：uptogo.com.tw、baike.baidu.com、whbydcc.com
+
+===== 問：日本的首都是哪裡
+（沒上網）日本的首都是東京。由四個大島和許多小島組成，有 47 個都道府縣。
+
+===== 問：光速是多少
+[題型 number] 
+📌 回答
+答案：10萬（2 個網站都這樣說）。
+依據：「另一端也需要10萬年——比…」（baijiahao.baidu.com）
+
+💬 你可能還想知道：想跟其他同類的東西比一比嗎？
+來源：baijiahao.baidu.com
+
+===== 問：哈利波特的作者是誰
+[題型 person] 
+📌 回答
+答案：介紹J.K羅琳（3 個網站都這樣說）
+依據：「作者介紹 :: 英國與哈利波特英國與哈利波特請稍候...作者介紹J.K羅琳(1965年7月31日－)本名在出嫁前是Joanne Rowling，結婚後改為」（harrypottertoengland.webnode.tw）
+
+【次要・補充】
+• 「你將對大英圖書館珍藏的魔法文物以及J.K.羅琳從未公諸於世的手稿與素描感到驚歎不已，這也將是深入《哈利波特》故事核心，一場令人永難忘懷的魔法歷史探索之旅！」（books.com.tw）
+• 「2000年6月23日 · 十一歲的哈利波特，從小被阿姨一家當成怪胎，經常得滿屋子躲避表哥達力的追打。」（share.readmoo.com）
+
+💬 你可能還想知道：想知道他還有哪些重要的事蹟嗎？
+來源：harrypottertoengland.webnode.tw、books.com.tw、share.readmoo.com
+
+===== 問：進化論是誰提出的
+[題型 person] 
+📌 回答
+答案：達爾文（2 個網站都這樣說）
+依據：「達爾文研究生物在家養狀態和自然狀態下的變異，提出了以自然選擇理論為核心的進化論，認為在」（newton.com.tw）
+
+【次要・補充】
+• 「[新頭殼newtalk] 達爾文進化論指出，基因突變是隨機發生的，不過專家 12 日發表論文，研究一種會開花的雜草，證明引發生物突變的 DNA 並非隨機產生，而」（tw.news.yahoo.com）
+• 「基本介紹 中文名：進化論 外文名：theory of evolution 別稱：演化論、天演論 提出者： 布豐 和 拉馬克 最早提出， 達爾文 為公認的集大成者」（newton.com.tw）
+
+💬 你可能還想知道：想知道他還有哪些重要的事蹟嗎？
+來源：newton.com.tw、tw.news.yahoo.com
+
+===== 問：為什麼會有潮汐
+（沒上網）主要是月亮的引力（加上太陽的引力）拉著地球上的海水，面向月亮和背對月亮的兩邊海水隆起，地球自轉，所以大部分地方一天大約有兩次漲潮、兩次退潮。
+
+===== 問：怎麼學好英文
+（沒上網）想學英文，可以這樣做：
+1. 每天固定學一點，15 到 30 分鐘就好，比週末一次讀很久有效
+2. 多聽：選自己喜歡的影集、Podcast、YouTube，先用英文字幕
+3. 多說：跟著影片模仿（shadowing），或找語言交換的朋友
+4. 背單字放在句子裡背，用間隔重複的方法（例如 Anki）
+5. 讀簡單的英文文章或繪本，從看得懂八九成的開始
+
+我覺得最重要的是「找到你本來就喜歡的東西，換成
+
+===== 問：什麼是人工智慧
+（沒上網）人工智慧是讓電腦學會理解、推理、學習的技術，例如辨識照片、翻譯、聊天。
+現在的 AI 大多是用大量資料「訓練」出來的；我（NineSun）也是一個從零開始訓練的小 AI。
+
+我的看法：我覺得 AI 最好的用法是當人的幫手，讓人有更多時間做自己真正在乎的事。
+
+===== 問：什麼是ESG
+[題型 definition] 
+📌 回答
+簡單說：另一個和 ESG 容易搞混的概念是 CSR，意思是企業社會責任（CSR，corporate social responsibility）
+
+重點：
+① 企業永續關鍵字 CSR、ESG、SDGs 一次學|經理人。
+② 根據台灣集中保管結算所分析，2020 年 7 月甫發行的「00878 國泰永續高股息」，不到一年就躍升 20～29 歲股民持股庫存前 15 名。
+③ CSR 是廣泛概念，ESG 則是具體實踐永續的原則。
+（參考：managertoday.com.tw）
+
+💬 你可能還想知道：要我舉一個生活中的例子說明「ESG」嗎？
+來源：managertoday.com.tw、bing.com、projectmanager.com.tw
+
+===== 問：Gemini最新的模型是什麼
+[題型 definition] 
+📌 回答
+我找到這些最新的相關新聞：
+
+【最新消息】
+• Gemini、Claude輸了！2026必用AI工具TOP10冠軍是它：生圖功能強到沒對手、 訂閱物超所值 - 風傳媒 · 11/8 01:30
+• Gemini 4 Argon上線！Google AI訂閱方案怎麼選？5種方案價格、功能完整比較 - 數位時代 · 10/14 07:00
+• Google Gemini 是什麼？2026 完整指南：Gemini 4 Argon、Omni 影片與方案怎麼選 - 鏈新聞 ABMedia · 3/27 07:00
+• 【Google I/O 2026】Gemini 3.5 Flash、Gemini Omni 都來了，一文搞懂 Google 最新 AI 模型 - INSIDE · 5/20 07:00
+
+💬 你可能還想知道：要我舉一個生活中的例子說明「Gemini的模型」嗎？
+來源：penchan.co、bing.com、news.google.com
+
+===== 問：Claude好用嗎
+[題型 open] 
+📌 回答
+綜合 4 個網站的資料，重點如下：
+① More Claude models。（3 個網站都提到）
+② 但在深入使用後，我發現 Claude 確實有其獨到之處。（2 個網站都提到）
+③ Claude Science。（2 個網站都提到）
+④ Claude Design, Slides, Docs。
+（參考：claude.com、bing.com、claude.ai、grenade.tw）
+來源：claude.com、bing.com、claude.ai
+
+TAPE searches=30 pages=22 misses=0
