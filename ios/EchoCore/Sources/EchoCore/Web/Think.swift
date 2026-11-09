@@ -400,8 +400,10 @@ public enum Think {
             }
         }
         let countryList = Countries.isCountryNoun(noun) || Countries.isCountryNoun(subj) || subj.hasSuffix("國")
-        let breedTail: [String]? = ["品種", "種類", "品系"].contains(noun) && (1...2).contains(subj.count)
-            ? (["狗", "犬"].contains(subj) ? ["犬", "狗"] : [String(subj.last!)]) : nil
+        // 「貓有哪些品種」（主題貓、名詞品種），或「常見的貓品種有哪些」（品種寫在主題裡）：品種名都是「…貓」「…犬」
+        var animal: String? = ["品種", "種類", "品系"].contains(noun) && (1...2).contains(subj.count) ? subj : nil
+        if animal == nil, let m = Understanding.match(subj, #"^(?:常見的?|有名的?|熱門的?|台灣的?)?(\p{Han}{1,2})的?(?:品種|品系)$"#) { animal = m[1] }
+        let breedTail: [String]? = animal.map { ["狗", "犬"].contains($0) ? ["犬", "狗"] : [String($0.last!)] }
         func fits(_ x: String) -> Bool {
             if countryList { return Countries.canonical(x) != nil }
             if let breedTail { return x.count > breedTail[0].count && breedTail.contains { x.hasSuffix($0) } }
@@ -464,7 +466,9 @@ public enum Think {
                     guard let it = Understanding.item(c1), !isSubject(it), it != noun, fits(it),
                           !["情況", "資訊", "介紹", "排名", "列表", "名單", "比較", "推薦", "整理", "一覽", "時間", "長度", "日期", "價格", "查證", "說明", "備註", "來源", "版本"].contains(where: { it.contains($0) }),
                           // 「葉菜類、根莖類」是分類，不是一樣一樣的東西（問「有哪些種類」時才要）
-                          !(it.hasSuffix("類") && !(noun + subj).contains("類")) else { continue }
+                          !(it.hasSuffix("類") && !(noun + subj).contains("類")),
+                          // 問城市：海、海峽、灣、河是地形，不是城市（「西隔東海、黃海、朝鮮海峽」）
+                          !((noun + subj).contains("城市") && ["海", "峽", "灣", "洋", "河", "江", "山脈", "島"].contains(where: { it.hasSuffix($0) })) else { continue }
                     let name = countryList ? (Countries.canonical(it) ?? it) : it
                     if !names.contains(name) { names.append(name) }
                 }
