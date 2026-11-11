@@ -776,3 +776,10 @@ Live round 1 82.7%, live round 2 89.4%; replay with current code 93.3% / 94.2%.
 Fixes: who-did finder, expected counts (七大洲 → 7), lists in parentheses with stated counts (「由11個國家（…）組成」),
 colonizer/candidate/charter sentences as counter-evidence, shared endings, units from the subject (光速 → 公里/秒),
 acronym definitions, breed checks (cats need …貓; dogs only drop sizes/jobs/traits), recipe tip lines, product names by release context.
+
+## Engine looks up, brain speaks (round 17)
+- App: with the brain on, factual questions (`BrainRoute.needsLookup`: number/person/place/time/list) and 現在/最新 questions search first;
+  the engine's confident answer goes to the brain as facts (`WebAgent.plain`), long lists/steps are shown as-is (`WebAgent.showAsIs`).
+- Exam: `webbrain` (46 items) built by `gen_webbrain.py` from tape dumps (`NINESUN_TAPE_JSONL` in WebTapeTests), graded with the web keywords.
+- Live web exam round 4 (run 17): 98/104 = 94.2% (rounds 1–3: 82.7 / 89.4 / 86.5). IPA build 262 sent.
+- Numbers ignore historical measurements (珠峰 8839 → 8848.86); work lists keep only the stated count (四大名著 → 4).

@@ -329,7 +329,10 @@ public enum Think {
                 if (2...8).contains(name.count), !covers(name, subject) { count[name, default: 0] += 1 }
             }
         }
-        let top = count.filter { $0.value >= 1 }.sorted { ($0.value, -$0.key.count) > ($1.value, -$1.key.count) }.prefix(6).map(\.key)
+        // 「這四部巨著」「該書」這種代稱不是作品名；主題自己說了有幾部（四大名著 → 4）就只留最常被提到的那幾部
+        let limit = expectedCount(subject) ?? 6
+        let top = count.filter { $0.value >= 1 && !["這", "那", "該", "此", "本書", "場景", "作品", "名著", "巨著"].contains(where: $0.key.hasPrefix) }
+            .sorted { ($0.value, -$0.key.count) > ($1.value, -$1.key.count) }.prefix(limit).map(\.key)
         guard top.count >= 2 else { return nil }
         // 這個寫法（《書名》、各在講什麼、「我會先看」）只適合作品集。「發達國家有哪些」「貓有哪些品種」問的是一般的名單：
         // 主題不像作品、名字也不是用《》寫的，就交給一般的名單整理（不加書名號、不說「我會先看《希臘》」）

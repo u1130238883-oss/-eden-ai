@@ -1113,6 +1113,10 @@ extension WebAgent {
                 let fresh = sents.filter { (Understanding.latestYear($0.text) ?? 0) >= newest }
                 if !fresh.isEmpty { pool = fresh }
             }
+            // 講以前的量法、舊紀錄的句子（「當時用簡陋的工具測得 8839 公尺」「最初估計…」）不是現在的答案；還有別的句子時就不算它
+            let oldCues = ["當時", "最初", "首次測", "第一次測", "早期", "曾經", "曾被", "簡陋", "過去", "原先", "舊的", "19世紀", "十九世紀", "18世紀", "古代", "估計曾"]
+            let modern = pool.filter { e in !oldCues.contains { e.text.contains($0) } && e.text.range(of: #"1[0-8]\d\d年"#, options: .regularExpression) == nil }
+            if modern.count >= 2 { pool = modern }
             guard let v = Understanding.voteNumber(pool, units: units, subject: fr.subject, rates: attr == "速度") else { return ("", false) }
             var t = "答案：\(v.shown)"
             t += v.votes >= 2 ? "（\(v.votes) 個網站都這樣說）。" : "。"
