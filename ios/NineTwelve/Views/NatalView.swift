@@ -39,6 +39,11 @@ struct NatalView: View {
                                               value: destiny.triple.day)
                                 }
                                 Divider()
+                                LabeledLine(
+                                    label: t("三柱相加（九進制）", "Sum of the three (base 9)",
+    "Suma de los tres (base 9)",
+    "Somma dei tre (base 9)"),
+                                    value: "\(t.lifeNumber) \(destiny.lifeNumber)")
                                 LabeledLine(label: t.lifePalace,
                                             value: t.palaceNamed(destiny.lifeNumber))
                             }
