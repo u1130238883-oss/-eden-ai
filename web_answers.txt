@@ -1,0 +1,127 @@
+===== 問：G7有哪些國家
+[題型 list] 
+📌 回答
+G7的國家一共 7 個：
+美國、德國、日本、英國、法國、義大利、加拿大
+（資料自己寫了有 7 個，列出來的也剛好這麼多；整理自 ebc.com）
+
+💬 你可能還想知道：想知道其中哪一個的詳細介紹？
+來源：ebc.com、eventsinfocus.org、uptogo.com.tw
+
+===== 問：台灣有哪些直轄市
+[題型 list] 
+📌 回答
+我找到的直轄市有這些（不一定是全部）：
+臺北市、新北市、桃園市、臺中市、臺南市、高雄市、基隆市、新竹市
+嘉義市
+（名單整理自 president.gov.tw；不同資料的算法可能略有差異）
+
+💬 你可能還想知道：想知道其中哪一個的詳細介紹？
+來源：president.gov.tw、tad.gov.tw、uptogo.com.tw
+
+===== 問：奧運的五環代表什麼
+[題型 definition] 
+📌 回答
+簡單說：這三個拉丁語字詞是由顧拜旦在1913年所提出的，是為了宣傳奧運的精神，同時鼓勵運動員們，意思是更快、更高、更強。
+
+重點：
+① 奧林匹克標誌（the Olympic symbol），又稱奧運五環標誌，是由《奧林匹克憲章》確定的 奧林匹克運動 在全球範圍內的視覺形象標識。
+② 但奧運是非常遵循承襲下來的傳統，希臘是奧運會的起源，因此希臘會是第一個進場的國家，如果是在希臘舉辦奧運的話，則會是希臘國旗先進場，希臘的運動選手們會是壓軸進場。
+③ 在紀念大會上，顧拜旦拿出自己設計的五環標誌進行展示，並建議將其作為奧林匹克運動的標誌。
+（參考：womenshealthmag.com、baike.baidu.com、marieclaire.com.tw）
+
+💬 你可能還想知道：要我舉一個生活中的例子說明「奧運的五環」嗎？
+來源：marieclaire.com.tw、womenshealthmag.com、uptogo.com.tw
+
+===== 問：日本的首都是哪裡
+（沒上網）日本的首都是東京。由四個大島和許多小島組成，有 47 個都道府縣。
+
+===== 問：光速是多少
+[題型 number] 
+📌 回答
+答案：299,792,458 m/s。
+依據：「為什麼光速是…」（tam.gov.taipei）
+
+💬 你可能還想知道：想跟其他同類的東西比一比嗎？
+來源：tam.gov.taipei
+
+===== 問：哈利波特的作者是誰
+[題型 person] 
+📌 回答
+答案：J.K. 羅琳最新作品（8 個地方這樣說）。
+依據：「title="聖誕小豬：《哈利波特》作者J.K. 羅琳最新作品」（cite.com.tw）
+
+💬 你可能還想知道：想知道他還有哪些重要的事蹟嗎？
+來源：cite.com.tw
+
+===== 問：進化論是誰提出的
+[題型 person] 
+📌 回答
+答案：達爾文（3 個地方這樣說）。
+依據：「根據這些現象，達爾文提出生物進化的學說，叫做漸進（Gradualism），也就是通常所說的自然進化論（Naturalistic evolutionism），或者…」（luke54.org）
+
+💬 你可能還想知道：想知道他還有哪些重要的事蹟嗎？
+來源：luke54.org
+
+===== 問：為什麼會有潮汐
+（沒上網）主要是月亮的引力（加上太陽的引力）拉著地球上的海水，面向月亮和背對月亮的兩邊海水隆起，地球自轉，所以大部分地方一天大約有兩次漲潮、兩次退潮。
+
+===== 問：怎麼學好英文
+（沒上網）想學英文，可以這樣做：
+1. 每天固定學一點，15 到 30 分鐘就好，比週末一次讀很久有效
+2. 多聽：選自己喜歡的影集、Podcast、YouTube，先用英文字幕
+3. 多說：跟著影片模仿（shadowing），或找語言交換的朋友
+4. 背單字放在句子裡背，用間隔重複的方法（例如 Anki）
+5. 讀簡單的英文文章或繪本，從看得懂八九成的開始
+
+我覺得最重要的是「找到你本來就喜歡的東西，換成
+
+===== 問：什麼是人工智慧
+（沒上網）人工智慧是讓電腦學會理解、推理、學習的技術，例如辨識照片、翻譯、聊天。
+現在的 AI 大多是用大量資料「訓練」出來的；我（NineSun）也是一個從零開始訓練的小 AI。
+
+我的看法：我覺得 AI 最好的用法是當人的幫手，讓人有更多時間做自己真正在乎的事。
+
+===== 問：什麼是ESG
+[題型 definition] 
+📌 回答
+簡單說：2026年11月19日：【科教融合協同育人系列講座之三十九】環境、社會和治理（ESG）對中國企業海外投資的影響及對策研究。
+
+重點：
+① ESG 為衡量一家企業經營的績效指標，也就是市場參照的投資標準。
+② 另一個和 ESG 容易搞混的概念是 CSR，意思是企業社會責任（CSR，corporate social responsibility）
+③ 企業永續關鍵字 CSR、ESG、SDGs 一次學|經理人。
+（參考：szb.aufe.edu.cn、managertoday.com.tw）
+
+💬 你可能還想知道：要我舉一個生活中的例子說明「ESG」嗎？
+來源：managertoday.com.tw、szb.aufe.edu.cn、bing.com
+
+===== 問：Gemini最新的模型是什麼
+[題型 definition] 
+📌 回答
+我找到這些最新的相關新聞：
+
+【最新消息】
+• Gemini、Claude輸了！2026必用AI工具TOP10冠軍是它：生圖功能強到沒對手、 訂閱物超所值 - 風傳媒 · 11/8 01:30
+• Gemini 免費版只剩 Flash-Lite！Google AI 訂閱方案怎麼選？Plus、Pro、Ultra 比較一次看 - 未來商務 · 10/12 07:00
+• Google Gemini 是什麼？2026 完整指南：Gemini 4 Argon、Omni 影片與方案怎麼選 - 鏈新聞 ABMedia · 3/27 07:00
+• 【Google I/O 2026】Gemini 3.5 Flash、Gemini Omni 都來了，一文搞懂 Google 最新 AI 模型 - INSIDE · 5/20 07:00
+
+💬 你可能還想知道：要我舉一個生活中的例子說明「Gemini的模型」嗎？
+來源：vuncloud.com、gate.com、news.google.com
+
+===== 問：Claude好用嗎
+[題型 open] 
+📌 回答
+答案：以前沒有用過
+依據：「如果你以前沒有用過 Claude，不知道從哪裡進入、該選哪個模型，或者不知道怎樣提問才能得到更好的」（claude-chinese.com）
+
+其他網站也提到：
+① Claude Design, Slides, Docs。（2 個網站都提到）
+② Claude 是由 Anthropic 構建的大型語言模型 (LLM)（2 個網站都提到）
+③ Claude Science。
+④ More Claude models。
+（參考：claude.com、bing.com、support.claude.com、claude-chinese.com）
+來源：claude-chinese.com
+
+TAPE searches=29 pages=22 misses=0
