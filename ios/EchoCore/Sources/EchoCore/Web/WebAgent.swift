@@ -315,6 +315,7 @@ public enum WebAgent {
         if fortune { terms = termSet(topic); for q in also { terms.formUnion(termSet(WebFortune.base(q))) } }
         let need = max(1, min(2, ((fortune ? terms.count : termSet(plan.core).count) + 1) / 3))
         var hits: [(tag: Int, hit: WebSearch.Hit)] = []
+        var dupSnips: [(tag: Int, hit: WebSearch.Hit)] = []
         var lead: String?, leadSource: String?
         var engines: [String: Int] = [:]
         var seenURL = Set<String>()
@@ -332,7 +333,15 @@ public enum WebAgent {
                     if dropped.count < 6 { dropped.append("[\(tag)] " + String(h.title.prefix(40))) }
                     continue
                 }
-                if seenURL.insert(WebSearch.normURL(h.url)).inserted { hits.append((tag, h)) }
+                if seenURL.insert(WebSearch.normURL(h.url)).inserted {
+                    hits.append((tag, h))
+                } else if let old = hits.first(where: { WebSearch.normURL($0.hit.url) == WebSearch.normURL(h.url) })?.hit,
+                          h.snippet.count >= 20, dupSnips.count < 12,
+                          !old.snippet.contains(h.snippet.prefix(30)) || !old.snippet.contains(h.snippet.suffix(30)) {
+                    // 同一個網頁被不同的搜尋找到，摘要是不同的段落（一個講它是什麼、一個講它代表什麼）：
+                    // 第二段也留著當資料（不影響要讀哪些網頁）
+                    dupSnips.append((tag, h))
+                }
             }
         }
         if hits.isEmpty && lead == nil {
@@ -404,7 +413,7 @@ public enum WebAgent {
                 findings.append(Finding(text: s, host: WebSearch.host(h.url), url: h.url, angle: angleOf(s, default: -1), trusted: isTrusted(h.url)))
             }
         }
-        for (tag, h) in hits where !h.snippet.isEmpty {
+        for (tag, h) in hits + dupSnips where !h.snippet.isEmpty {
             let whole = zh ? WebStrategy.toTraditional(h.snippet) : h.snippet
             // 摘要也要拆成一句一句，才不會把「你知道…嗎？」這種開場白當成答案
             let parts = sentences(whole)
@@ -515,14 +524,14 @@ public enum WebAgent {
                         let plain = Think.lastItems
                         if old.ok, ext.count > plain.count, plain.allSatisfy({ ext.contains($0) }) {
                             brainAnswered = false
-                            return old
+                            return (WebAgent.topOfTable(old.text, question: question), old.ok)
                         }
                         brainNote = "這題要的是一份名單：把各網站列出來的名字放在一起比，越多地方提到的排越前面。"
                         brainAnswered = true
                         digested = true
                         return (d, true)
                     }
-                    if old.ok && !old.text.isEmpty { brainAnswered = false; return old }
+                    if old.ok && !old.text.isEmpty { brainAnswered = false; return (WebAgent.topOfTable(old.text, question: question), old.ok) }
                 }
                 // 「金閣寺在講什麼」：有這部作品就講它的內容（同名的寺廟、改編的電影不算）
                 let asksContent = (Intent.shared?.top(question)).map { $0.label == "content" && $0.p >= 0.6 } ?? false
@@ -731,7 +740,8 @@ public enum WebAgent {
             case .reason, .definition, .open: if ok { lead = answer }
             default: lead = ""
             }
-            if lead != "", let syn = Synthesize.compose(question: question, subject: fr.subject, want: fr.want, pages: texts, lead: lead) {
+            if lead != "", let syn = Synthesize.compose(question: question, subject: fr.subject, want: fr.want, pages: texts, lead: lead,
+                                                         extra: (hits + dupSnips).map { (host: WebSearch.host($0.hit.url), text: $0.hit.snippet) }) {
                 answer = syn
                 synthesized = true
             } else if case .steps = fr.want, !numberedSteps, !Synthesize.actionable(answer) || Synthesize.isMeta(answer) {
@@ -977,6 +987,19 @@ public enum WebAgent {
     }
 
     // MARK: - 挑句子
+
+    /// 問「大城市、主要的、有名的…」卻拿到一張八十個的表：表通常照大小排，只列前面 12 個，說清楚表上一共幾個
+    static func topOfTable(_ text: String, question: String) -> String {
+        guard ["大城市", "大都市", "主要", "重要", "著名", "知名", "有名", "熱門", "常見", "最大"].contains(where: { question.contains($0) }),
+              let m = Understanding.match(text, #"^一共找到 (\d+) 個([^：\n]*)：\n"#), let n = Int(m[1]), n > 20,
+              let end = text.range(of: "\n（") else { return text }
+        let bodyStart = text.index(text.startIndex, offsetBy: m[0].count)
+        guard bodyStart < end.lowerBound else { return text }
+        let items = text[bodyStart..<end.lowerBound].components(separatedBy: CharacterSet(charactersIn: "、\n"))
+            .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        guard items.count >= 12 else { return text }
+        return "\(m[2])排在前面的 12 個（表上一共 \(n) 個）：\n" + Countries.lines(Array(items.prefix(12))) + String(text[end.lowerBound...])
+    }
 
     static func sentences(_ s: String) -> [String] {
         var out: [String] = [], cur = ""

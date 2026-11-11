@@ -65,7 +65,7 @@ final class WebTapeTests: XCTestCase {
                     h.seekToEndOfFile(); h.write(d); h.write("\n".data(using: .utf8)!); h.closeFile()
                 }
             }
-            if ProcessInfo.processInfo.environment["NINESUN_TAPE_DEBUG"] != nil { out += "DEBUG " + Understanding.lastListDebug + "\n\n" }
+            if ProcessInfo.processInfo.environment["NINESUN_TAPE_DEBUG"] != nil { out += "DEBUG " + Understanding.lastListDebug + "\nPLAIN " + Think.lastPlainDebug + "\n\n"; Think.lastPlainDebug = "" }
         }
         out += "TAPE searches=\(tape.counts.searches) pages=\(tape.counts.pages) misses=\(tape.misses.count)\n"
         if let p = ProcessInfo.processInfo.environment["NINESUN_TAPE_ANSWERS"] {

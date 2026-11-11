@@ -462,6 +462,40 @@ final class LocalBrain {
                 a = String(head)
             }
         }
+        // 「很簡短地說」「長話短說」：只留前面幾句（60 字內）
+        let ql = q.lowercased()
+        let brief = ["簡短", "簡答", "長話短說", "一兩句", "briefly", "keep it short"].contains { ql.contains($0) } ? 60 : 0
+        if brief > 0, a.count > brief {
+            var kept = "", cur = ""
+            for ch in a {
+                cur.append(ch)
+                guard "。！？!?\n".contains(ch) else { continue }
+                if kept.count + cur.count > brief { break }
+                kept += cur; cur = ""
+            }
+            kept = kept.trimmingCharacters(in: .whitespacesAndNewlines)
+            if kept.count >= 4 {
+                a = kept
+            } else if let i = a.prefix(brief).lastIndex(where: { "，,；".contains($0) }) {
+                a = String(a[..<i]) + "。"
+            }
+        }
+        // 「給我三個…」：每一點只留第一句，後面的長篇解釋和結尾的閒聊拿掉（整段超過兩百字才動）
+        if a.count > 200, q.range(of: #"[給列舉說講提推想][我出供薦]?[我]?\s*[一二兩三四五六七八九十\d]+\s*[個種項件點部本首樣招]"#, options: .regularExpression) != nil {
+            let lines = a.components(separatedBy: "\n")
+            func isItem(_ l: String) -> Bool { l.range(of: #"^\s*(•|-|\d+[.、)）]|[一二三四五六七八九十]+[、.])"#, options: .regularExpression) != nil }
+            if lines.filter(isItem).count >= 2 {
+                var out: [String] = []
+                for l in lines {
+                    if isItem(l) {
+                        if let i = l.firstIndex(where: { "。！？!?".contains($0) }) { out.append(String(l[...i])) } else { out.append(l) }
+                    } else if out.isEmpty, !l.trimmingCharacters(in: .whitespaces).isEmpty, l.count <= 40 {
+                        out.append(l)
+                    }
+                }
+                a = out.joined(separator: "\n")
+            }
+        }
         let strict = ["只回答", "只要回答", "只說", "不要解釋", "不用解釋", "直接告訴我", "只要答案", "answer only", "just the number", "yes or no"]
         let oneSentence = ["一句話", "用一句", "in one sentence"]
         guard strict.contains(where: { q.lowercased().contains($0) }) || oneSentence.contains(where: { q.contains($0) }) else { return a }
@@ -501,8 +535,43 @@ final class LocalBrain {
                 : "\n（這題有不同看法：先各用一句說支持和反對的理由（好處、壞處各一個），最後說你站哪邊、為什麼。不超過五句。）")
     }
 
-    /// 一般聊天的問題交給大腦前：算數要一步一步算、有爭議的要兩邊都想
+    /// 好到不像真的、或要先給錢的事（保證獲利、中獎先付運費、上班先繳保證金、網友要你匯錢、神奇療效）：
+    /// 小模型常常順著對方說「可以啊」。提醒它先從壞的方面想：這是不是常見的陷阱
+    static func isTooGood(_ text: String) -> Bool {
+        let t = text.lowercased()
+        func any(_ ws: [String]) -> Bool { ws.contains { t.contains($0) } }
+        let promise = ["保證賺", "保證獲利", "保證每", "保證月", "保證回本", "穩賺", "只賺不賠", "包賺", "零風險", "沒有風險", "無風險", "保本保息", "漲十倍", "漲10倍", "漲 10 倍",
+                       "翻十倍", "躺著賺", "快速致富", "內線消息", "明牌", "日賺", "帶你賺", "帶我賺", "輕鬆賺", "免經驗高薪", "guaranteed return", "guaranteed profit", "risk-free", "no risk", "get rich quick", "double your money"]
+        let miracle = ["治癌", "治好癌", "治療癌", "抗癌神", "包治", "根治百病", "治百病", "一週瘦", "一周瘦", "一星期瘦", "七天瘦", "不用運動", "不用節食", "神藥", "神奇療效",
+                       "cure cancer", "cures cancer", "miracle cure", "without exercise"]
+        let prize = ["中獎", "中了", "抽中", "得獎", "免費送", "免費領", "you won", "you've won", "won a", "prize", "lottery"]
+        let fees = ["保證金", "手續費", "運費", "解凍金", "稅金", "押金", "入會費", "加盟金", "報名費", "訂金", "點數", "驗證碼", "提款卡", "存摺", "gift card", "upfront", "deposit", "fee"]
+        let stranger = ["網友", "陌生人", "不認識的人", "簡訊", "自稱", "交友軟體", "投資老師", "投資群", "text message", "stranger", "online friend", "someone i met online"]
+        let money = ["匯錢", "匯款", "轉帳", "借錢", "借我錢", "投資", "買點數", "給他錢", "給她錢", "付錢", "send money", "wire", "invest", "lend"]
+        let payFirst = t.range(of: #"(先|預先|事先)[^，。？?！!]{0,6}(付|繳|匯|轉帳|交|給|買|入金|儲值)|pay (first|upfront)|pay .{0,20}(before|to start)"#, options: .regularExpression) != nil
+        if any(promise) || any(miracle) { return true }
+        if payFirst && (any(fees) || any(prize) || any(["教材", "材料費", "會員費", "入金", "儲值", "日領", "在家工作", "打字", "兼職", "高薪"])) { return true }
+        if any(prize) && any(fees) { return true }
+        if any(stranger) && any(money) { return true }
+        // 假冒檢警、銀行、客服：「帳戶涉嫌洗錢，把錢轉到安全帳戶」「解除分期付款要操作 ATM」
+        if any(["安全帳戶", "監管帳戶", "涉嫌洗錢", "涉嫌詐欺", "解除分期", "解除設定", "重複扣款"]) && any(["轉", "匯", "操作", "要我", "叫我", "atm", "提款機"]) { return true }
+        // 要密碼、驗證碼、提款卡、存摺：不管誰要都不能給
+        if any(["驗證碼", "提款卡", "存摺", "網銀密碼", "帳號密碼", "信用卡卡號", "verification code", "one-time code", "otp"])
+            && any(["給他", "給她", "給對方", "輸入", "寄給", "寄過去", "提供", "告訴他", "告訴對方", "要我", "叫我", "asked me", "wants my", "send"]) { return true }
+        // 吃了就不用吃藥、不用看醫生
+        if any(["不用吃藥", "不用看醫生", "不必吃藥", "停藥", "取代藥", "包醫"]) && any(["保健食品", "產品", "偏方", "買", "療法", "課程", "老師說", "廣告"]) { return true }
+        return false
+    }
+
+    static func waryQuestion(_ text: String, lang: String) -> String {
+        text + (["en", "es", "it"].contains(lang)
+                ? "\n(Think from the bad side first: is this a common scam, trap or baseless hype? If it looks like one, say so in the first sentence and tell them not to pay, buy or go along; then point out one or two giveaways, and say what to do instead, e.g. verify with the official source or ask a doctor. Don't go along with it.)"
+                : "\n（先從壞的方面想：這是不是常見的詐騙、陷阱，或沒有根據的誇大說法？像的話，第一句就直接說「這很可能是詐騙（或騙人的），不要付錢、不要買、不要照做」，再講一兩個看得出來的破綻，最後說該怎麼做：錢的事打 165 反詐騙專線查證，身體的事問醫生。不要順著說可以。）")
+    }
+
+    /// 一般聊天的問題交給大腦前：算數要一步一步算、好到不像真的先想陷阱、有爭議的要兩邊都想
     static func chatQuestion(_ text: String, lang: String) -> String {
+        if isTooGood(text) { return waryQuestion(text, lang: lang) }
         if isArithmetic(text) { return mathQuestion(text, lang: lang) }
         if isDebatable(text) { return debateQuestion(text, lang: lang) }
         return text

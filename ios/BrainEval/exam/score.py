@@ -52,6 +52,8 @@ def has(ans, alt):
         return True
     if alt.lower().replace(" ", "") in ans.translate(FW).lower().replace(" ", ""):
         return True
+    if alt.isdigit() and len(alt) >= 5 and alt in re.sub(r"(?<=\d),(?=\d{3})", "", ans.translate(FW)):   # 299,792,458 裡有 299792
+        return True
     a = norm(ans)
     t = norm(alt)
     if re.fullmatch(r"\d+(\.\d+)?", t):   # 數字要完整：12 不能算到 120 裡

@@ -111,7 +111,13 @@ public enum Synthesize {
                 }
             }
             for part in line.components(separatedBy: sentenceEnd) {
-                let p = part.trimmingCharacters(in: .whitespaces)
+                var p = part.trimmingCharacters(in: .whitespaces)
+                // 「這篇就把我會給新手的方法寫出來：先用一到兩週搞定五十音，再…」：冒號前面在介紹文章，後面才是內容
+                if let c = p.firstIndex(where: { $0 == "：" || $0 == ":" }) {
+                    let head = String(p[..<c]), tail = String(p[p.index(after: c)...]).trimmingCharacters(in: .whitespaces)
+                    if tail.count >= 12, head.count <= 70, !isMeta(tail),
+                       ["這篇", "本文", "本篇", "整理", "寫出來", "分享", "告訴你", "懶人包"].contains(where: { head.contains($0) }) { p = tail }
+                }
                 guard p.count >= 8, p.count <= 220, !isMeta(p), !WebAgent.looksLikeJunk(p), !Think.looksLikeNoise(p) else { continue }
                 // 判斷這句是不是內容：廣告、文章介紹、留言、標題都不要
                 let v = Judge.check(p, want: .open, subject: "", inContext: true)
@@ -255,9 +261,45 @@ public enum Synthesize {
         return pts.filter { $0.text.count >= 8 }.sorted { $0.score > $1.score }
     }
 
+    /// 「奧運的五環代表什麼」：直接找「五環象徵五大洲的團結」這種句子——主題後面緊接著「代表、象徵」的那句。
+    /// 好幾個網站說的意思一樣的排前面；「並非由…所代表」這種否定句不算
+    static func meaning(question: String, subject: String, pages: [(host: String, text: String)]) -> (text: String, hosts: [String])? {
+        guard question.range(of: #"(代表|象徵|寓意)(什麼|甚麼|著什麼|了什麼|的是什麼|哪)"#, options: .regularExpression) != nil else { return nil }
+        // 主題最後那個詞（「奧運的五環」→「五環」）
+        let tail = (subject.components(separatedBy: "的").last ?? subject).trimmingCharacters(in: .whitespaces)
+        guard tail.count >= 2 else { return nil }
+        let pat = NSRegularExpression.escapedPattern(for: tail) + #"[^，。；！？\n]{0,10}?(?:代表著?|象徵著?|寓意著?|意味著)\s*(?:的是|了)?([^，。；！？\n]{2,40})"#
+        guard let re = try? NSRegularExpression(pattern: pat) else { return nil }
+        var cands: [(text: String, host: String, obj: Set<String>)] = []
+        for p in pages {
+            for raw in p.text.components(separatedBy: sentenceEnd) where raw.count <= 160 && raw.contains(tail) {
+                let ns = raw as NSString
+                guard let m = re.firstMatch(in: raw, range: NSRange(location: 0, length: ns.length)) else { continue }
+                let whole = ns.substring(with: m.range), obj = ns.substring(with: m.range(at: 1))
+                if ["並非", "不是", "並不", "沒有", "什麼", "甚麼", "？", "?"].contains(where: { whole.contains($0) }) { continue }
+                let text = clean(raw).replacingOccurrences(of: #"^\d{4}年[^：:]{0,30}(指出|表示|寫道)[：:]\s*"#, with: "", options: .regularExpression)
+                guard text.count >= 8 else { continue }
+                cands.append((text, p.host, grams(obj)))
+            }
+        }
+        guard !cands.isEmpty else { return nil }
+        func support(_ c: (text: String, host: String, obj: Set<String>)) -> [String] {
+            var hs = [c.host]
+            for o in cands where !hs.contains(o.host) && o.obj.intersection(c.obj).count >= 2 { hs.append(o.host) }
+            return hs
+        }
+        let best = cands.max { a, b in
+            let sa = support(a).count, sb = support(b).count
+            return sa != sb ? sa < sb : a.text.count > b.text.count
+        }!
+        return (best.text, support(best))
+    }
+
     /// 寫出整理好的回答；重點不夠（少於兩個）就回 nil，讓原本的方法處理
     /// lead：已經找到的直接答案（原因、定義），放在最前面，下面補其他網站也提到的重點
-    public static func compose(question: String, subject: String, want: Understanding.Want, pages: [(host: String, text: String)], lead: String? = nil) -> String? {
+    /// extra：搜尋結果的摘要原文（網頁沒讀到、摘要裡卻有答案時用得上）
+    public static func compose(question: String, subject: String, want: Understanding.Want, pages: [(host: String, text: String)], lead: String? = nil,
+                               extra: [(host: String, text: String)] = []) -> String? {
         guard let shape = shape(want) else { return nil }
         var pred = ""
         if case let .reason(p) = want { pred = p }
@@ -295,9 +337,16 @@ public enum Synthesize {
         let marks = ["①", "②", "③", "④", "⑤"]
         func line(_ i: Int, _ p: Point) -> String { marks[i] + " " + p.text + (p.hosts.count >= 2 ? "（\(p.hosts.count) 個網站都提到）" : "") }
         var t = ""
+        let means = meaning(question: question, subject: subject, pages: pages + extra)
+        if let means { for h in means.hosts where !allHosts.contains(h) { allHosts.insert(h, at: 0) } }
         if let lead {
             // 只留直接答案那一段（後面零散的補充不要）
-            let head = lead.components(separatedBy: "\n\n").first ?? lead
+            var head = lead.components(separatedBy: "\n\n").first ?? lead
+            // 問「代表什麼」：先說它代表什麼，原本那句介紹退到後面當補充
+            if let means, !head.contains(means.text.prefix(12)) {
+                head = "簡單說：" + means.text + (means.hosts.count >= 2 ? "（\(means.hosts.count) 個網站都這樣說）" : "")
+                    + "\n\n補充：" + (head.hasPrefix("簡單說：") ? String(head.dropFirst(4)) : head)
+            }
             t = head + "\n\n其他網站也提到：\n" + chosen.enumerated().map { line($0.offset, $0.element) }.joined(separator: "\n")
         } else {
             let n = allHosts.count
@@ -307,7 +356,7 @@ public enum Synthesize {
             case .reason:
                 t = "簡單說：" + chosen[0].text + "\n\n其他原因：\n"
             case .definition:
-                t = "簡單說：" + chosen[0].text + "\n\n重點：\n"
+                t = "簡單說：" + (means.map { $0.text + "\n\n補充：" } ?? "") + chosen[0].text + "\n\n重點：\n"
             case .open:
                 t = (n >= 2 ? "綜合 \(n) 個網站的資料，重點如下：\n" : "重點如下：\n")
             }

@@ -355,7 +355,7 @@ extension Understanding {
         }
 
         // 要建議、技巧：「面試要注意什麼」「減肥有什麼方法」「讀書的技巧」——要可以照著做的重點，不是名單、不是名詞解釋
-        if let m = match(t, #"^(.+?)(?:要|該|需要|應該)?(?:有什麼要注意的|有什麼需要注意的|有哪些要注意的|有哪些需要注意的|需要注意哪些|需要注意什麼|注意什麼|注意哪些|注意些什麼|有什麼技巧|有什麼方法|有什麼辦法|有什麼建議|有什麼秘訣|有什麼訣竅|有哪些方法|有哪些技巧|的方法|的技巧|的秘訣|的訣竅|的建議|注意事項)$"#) {
+        if let m = match(t, #"^(.+?)(?:要|該|需要|應該)?(?:有什麼要注意的|有什麼需要注意的|有哪些要注意的|有哪些需要注意的|需要注意哪些|需要注意什麼|注意什麼|注意哪些|注意些什麼|有什麼技巧|有什麼方法|有什麼辦法|有什麼建議|有什麼秘訣|有什麼訣竅|有哪些方法|有哪些技巧|推薦什麼方法|推薦哪些方法|推薦用什麼方法|用什麼方法(?:比較)?好|用什麼方法|有推薦的方法嗎|的方法|的技巧|的秘訣|的訣竅|的建議|注意事項)$"#) {
             let subject = trimTail(m[1], ["要", "該", "的"])
             return F(subject, .steps(target: subject), ["\(subject) 注意事項 技巧", "\(subject) 建議", t], ["\(subject) 該怎麼做"], [],
                      "你想知道「\(subject)」有什麼要注意、怎麼做比較好 → 要可以照著做的重點。")
@@ -1063,7 +1063,7 @@ extension Understanding {
                 } else if Judge.check(s, want: .steps(target: target), subject: target, inContext: true) == .trivia, facts.count < 2 {
                     facts.append(s)
                 }
-                if steps.count >= 8 { break }
+                if steps.count >= 12 { break }
             }
             if steps.count >= 3, steps.count > (best?.steps.count ?? 0) { best = (steps, p.host, facts) }
         }

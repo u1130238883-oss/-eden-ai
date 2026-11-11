@@ -32,6 +32,24 @@ public enum Think {
                   Understanding.isCJK(p.key), !lead.contains(p.key) else { break }
             a = String(p.key) + a
         }
+        // 後面也一樣（「張忠謀」框成「張忠」）：資料裡這幾個字後面每次都接同一個字、又不是虛字或動詞的開頭，那個字也是名字的一部分
+        let tail: Set<Character> = Set("的是在和與及或為被由從把將對向於了有指稱叫說即乃之其這那一、都也曾就才又還並而所以等先生女士博教授表示認指創發提建成設寫畫導唱作出去逝年月日歲時後前上下中內外道曰則已會能可要想到來給讓使帶率領任擔當獲得拿贏不沒很最更與跟同以及因但卻且及並")
+        for _ in 0..<2 where a.count >= 2 {
+            var after: [Character: Int] = [:]
+            var total = 0, holders = 0
+            for t in texts {
+                var from = t.startIndex, hit = false
+                while let r = t.range(of: a, range: from..<t.endIndex) {
+                    total += 1; hit = true
+                    if r.upperBound < t.endIndex { after[t[r.upperBound], default: 0] += 1 }
+                    from = r.upperBound
+                }
+                if hit { holders += 1 }
+            }
+            guard total >= 3 || (total >= 2 && holders >= 2), after.count == 1, let n = after.first, n.value == total,
+                  Understanding.isCJK(n.key), !tail.contains(n.key) else { break }
+            a += String(n.key)
+        }
         return a
     }
 
@@ -403,6 +421,7 @@ public enum Think {
     /// 最近一次 plainList 整理出的名單（給呼叫的地方和別的方法比較）
     nonisolated(unsafe) static var lastItems: [String] = []
 
+    nonisolated(unsafe) public static var lastPlainDebug = ""
     public static func plainList(question: String, pages: [Understanding.Evidence], subject: String, noun: String) -> String? {
         let subj = subject.trimmingCharacters(in: .whitespaces)
         guard !subj.isEmpty else { return nil }
@@ -411,10 +430,19 @@ public enum Think {
         func isSubject(_ x: String) -> Bool { subj.count >= 2 ? covers(x, subj) : x == subj }
         // 名單常在很長的一句裡（「七大洲是…，即亞洲（Asia）、歐洲（Europe）、…」）：不用一般的 160 字上限
         var sents: [(text: String, host: String)] = []
+        // 接著上一句講的名單（「有幾種流行的程式語言。最常見的一些包括 Java、C++、Python 和 JavaScript」）：
+        // 這句自己沒提主題，但上一句在講、這句用「包括、例如」接下去，也算在講主題
+        var continues = Set<String>()
         for p in pages {
+            var prev = ""
             for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) {
                 let t = raw.trimmingCharacters(in: .whitespaces)
-                if (8...600).contains(t.count), !looksLikeNoise(t) { sents.append((t, p.host)) }
+                if (8...600).contains(t.count), !looksLikeNoise(t) {
+                    sents.append((t, p.host))
+                    if !prev.isEmpty, ["包括", "包含", "例如", "像是", "分別是", "分別為", "有："].contains(where: { t.prefix(16).contains($0) }),
+                       subj.count >= 2 ? covers(prev, subj, least: true) : prev.contains(subj) { continues.insert(p.host + "|" + t) }
+                }
+                if !t.isEmpty { prev = t }
             }
         }
         let countryList = Countries.isCountryNoun(noun) || Countries.isCountryNoun(subj) || subj.hasSuffix("國")
@@ -447,12 +475,14 @@ public enum Think {
                 expanded.append((String(before.suffix(30)) + "：" + ns.substring(with: m.range(at: 1)), s.host))
             }
         }
-        for s in expanded where about(s.text) || s.text.contains(core) {
+        for s in expanded where about(s.text) || s.text.contains(core) || continues.contains(s.host + "|" + s.text) {
             // 同一頁重複出現的同一句話（導覽、摘要又印一次）只算一次
             guard seenSent.insert(s.host + "|" + s.text).inserted else { continue }
             let body = s.text.replacingOccurrences(of: #"（[^）]*）|\([^)]*\)|[「」『』《》]"#, with: "", options: .regularExpression)
             let parts = body.components(separatedBy: "、")
-            guard parts.count >= (typed ? 2 : 3) else { continue }
+            // 「C、Java 和 Python」只有一個頓號，但也是三個
+            let joined = parts.count == 2 && ["和", "及", "與", "以及"].contains(where: { parts[1].prefix(14).contains($0) })
+            guard parts.count >= (typed || joined ? 2 : 3) else { continue }
             var names: [String] = []
             for (i, p) in parts.enumerated() {
                 var cands = [p]
@@ -499,6 +529,8 @@ public enum Think {
             guard names.count >= (typed ? 2 : 3) else { continue }
             // 問品種：講毛色、花色的一串（「橘貓、虎斑貓、賓士貓」）是顏色，不是品種
             if breedTail != nil, ["毛色", "花色", "顏色", "米克斯", "混種"].contains(where: { s.text.contains($0) }) { continue }
+            // 別篇文章的標題（「貴賓狗品種全解析：大小、性格、飼養指南與常見問題」）不是名單
+            if s.text.count <= 50, ["全解析", "全攻略", "懶人包", "完整指南", "一次看懂", "一次搞懂", "指南與", "大公開", "總整理"].contains(where: { s.text.contains($0) }) { continue }
             // 在講原因的一串（「其中六個由於地震、火災、戰爭而毀壞」）不是名單
             if ["由於", "因為", "原因", "導致", "造成", "毀於"].contains(where: { s.text.contains($0) }) { continue }
             // 反過來想：句子說的是「不是」「候選」「想加入」（「歐盟候選國包括冰島、土耳其…」「日本、印度爭取入常」），
@@ -514,7 +546,7 @@ public enum Think {
                 for n in names { negative[n, default: 0] += 1 }
                 continue
             }
-            runs.append((names, s.host, subj.count >= 2 ? covers(s.text, subj) : s.text.contains(subj)))
+            runs.append((names, s.host, continues.contains(s.host + "|" + s.text) || (subj.count >= 2 ? covers(s.text, subj) : s.text.contains(subj))))
             // 句子自己說有幾個（「由11個獨立國家…組成」），列出來的剛好那麼多：最可信
             if let m = Understanding.match(s.text, #"([0-9]{1,2}|[一二三四五六七八九十兩]{1,3})(?:個|國|大)"#),
                let n = Int(m[1]) ?? Understanding.smallNumber(m[1]), n == names.count, n >= 3,
@@ -528,6 +560,36 @@ public enum Think {
                 if !order.contains(n) { order.append(n) }
             }
         }
+        // 編了號的小標題（「1.吉娃娃 (Chihuahua)」「2.博美犬 (Pomeranian)」…）：一篇文章一個一個介紹，標題連起來就是名單。
+        // 每一項底下重複出現的小節（「1. 外貌特徵」「2. 個性」）不是；號碼要從 1 一路排下去、至少五個
+        if let re = try? NSRegularExpression(pattern: #"^\s*(\d{1,2})\s*[.、．]\s*([\p{Han}·]{2,8})\s*(?:[（(][A-Za-z .'’\-]+[）)])?\s*$"#) {
+            for p in pages where about(p.text) || p.text.contains(core) {
+                var heads: [(n: Int, name: String)] = []
+                var times: [String: Int] = [:]
+                for line in p.text.components(separatedBy: "\n") where line.count <= 40 {
+                    let ns = line as NSString
+                    guard let m = re.firstMatch(in: line, range: NSRange(location: 0, length: ns.length)), let n = Int(ns.substring(with: m.range(at: 1))) else { continue }
+                    let name = ns.substring(with: m.range(at: 2))
+                    heads.append((n, name)); times[name, default: 0] += 1
+                }
+                var names: [String] = []
+                var next = 1
+                for h in heads where times[h.name] == 1 && h.n == next {
+                    next += 1
+                    guard let it = Understanding.item(h.name), !isSubject(it), it != noun, fits(it),
+                          !(dog && (it.hasSuffix("犬") || it.hasSuffix("狗")) && !isBreed(it, tail: ["犬", "狗"])) else { continue }
+                    if !names.contains(it) { names.append(it) }
+                }
+                guard next > 5, names.count >= 5 else { continue }
+                runs.append((names, p.host, true))
+                for n in names {
+                    count[n, default: 0] += 1
+                    hostsOf[n, default: []].insert(p.host)
+                    if !order.contains(n) { order.append(n) }
+                }
+            }
+        }
+        lastPlainDebug = "plain runs=" + runs.map { "\($0.host):\($0.items.joined(separator: "/"))" }.joined(separator: " | ") + " count=\(count.filter { $0.value >= 2 })"
         Understanding.lastListDebug = "plain runs=" + runs.map { "\($0.host):\($0.items.joined(separator: "/"))" }.joined(separator: " | ") + " neg=\(negative)"
         guard !runs.isEmpty else { return nil }
         if let c = counted.first {
@@ -551,17 +613,36 @@ public enum Think {
             let ca = count[a] ?? 0, cb = count[b] ?? 0
             return ca != cb ? ca > cb : (order.firstIndex(of: a) ?? 0) < (order.firstIndex(of: b) ?? 0)
         }
+        // 同一種東西的名單會互相重疊（一串有 Java、Python，另一串有 Python、JavaScript）；
+        // 跟誰都不重疊的那幾串多半是別的東西（「網路開發、資料分析、人工智慧」是用途，不是程式語言）。
+        // 把有共同名字的串連成一群，只留最大的那一群（先比來自幾個網站，再比有幾串）
+        if !typed, runs.count >= 3 {
+            var group = Array(0..<runs.count)
+            func root(_ i: Int) -> Int { var r = i; while group[r] != r { r = group[r] }; return r }
+            for i in 0..<runs.count { for j in (i + 1)..<runs.count where j < runs.count && !Set(runs[i].items).isDisjoint(with: runs[j].items) { group[root(j)] = root(i) } }
+            var members: [Int: [Int]] = [:]
+            for i in 0..<runs.count { members[root(i), default: []].append(i) }
+            func size(_ ix: [Int]) -> (Int, Int, Int) { (Set(ix.map { runs[$0].host }).count, ix.count, ix.filter { runs[$0].about }.count) }
+            if let main = members.values.max(by: { size($0) < size($1) }), main.count >= 2, main.count < runs.count {
+                let keep = Set(main.flatMap { runs[$0].items })
+                runs = main.sorted().map { runs[$0] }
+                order = order.filter { keep.contains($0) }
+            }
+        }
         var items: [String]
+        // 哪一串最完整：先比個數；一樣多就看裡面的名字被別的句子提到幾次（只有一個網站講的那串排後面）
+        func fuller(_ xs: [String]) -> Int { xs.count * 100 + xs.reduce(0) { $0 + (count[$1] ?? 0) } }
         let agreed = order.filter { (count[$0] ?? 0) >= 2 }
         if typed {
             items = order.sorted(by: rank)
         } else if agreed.count >= 4 {
             // 好幾個句子都提到的才算（網頁上一次性的雜字不會被重複提到）；再補上講主題最完整的那一串裡的（「Python」可能只在一句裡）
             items = agreed.sorted(by: rank)
-            if let best = runs.filter({ $0.about }).max(by: { $0.items.count < $1.items.count }) {
-                for x in best.items where !items.contains(x) && items.count < 12 { items.append(x) }
+            // 跟這些名字有重疊的其他幾串也是同一種名單，裡面的也補上（最完整的那串先補）
+            for r in runs.filter({ r in r.about && r.items.filter { agreed.contains($0) }.count >= min(2, r.items.count - 1) }).sorted(by: { fuller($0.items) > fuller($1.items) }) {
+                for x in r.items where !items.contains(x) && items.count < 12 { items.append(x) }
             }
-        } else if let best = runs.filter({ $0.about }).max(by: { $0.items.count < $1.items.count }) ?? runs.max(by: { $0.items.count < $1.items.count }),
+        } else if let best = runs.filter({ $0.about }).max(by: { fuller($0.items) < fuller($1.items) }) ?? runs.max(by: { fuller($0.items) < fuller($1.items) }),
                   best.items.count >= 4 {
             items = best.items
         } else { return nil }
@@ -589,7 +670,9 @@ public enum Think {
         items = merged
         // 大部分名字都是同一個字結尾（臺北市、新北市…；基督教、佛教…）：不是這樣結尾的多半是雜字（「文化」）
         if !typed, items.count >= 4, let tail = items.compactMap({ $0.last }).mostCommon(), items.filter({ $0.last == tail }).count * 10 >= items.count * 6 {
-            items = items.filter { $0.last == tail }
+            // 被提到很多次的留著（「東京」沒有「市」字尾，但每個網站都先講它）
+            let top = items.compactMap { count[$0] }.max() ?? 0
+            items = items.filter { $0.last == tail || ((count[$0] ?? 0) >= 2 && (count[$0] ?? 0) * 2 >= top) }
         }
         guard items.count >= (typed || animal != nil ? 3 : 4) else { return nil }
         items = Array(items.prefix(countryList ? 60 : 16))
@@ -654,16 +737,29 @@ public enum Think {
     /// 「相對論是誰提出的」「微軟是誰創立的」：找緊接在動詞前面的名字（「愛因斯坦提出相對論」「由比爾·蓋茲創立」），
     /// 看有幾句都這樣說；職稱（物理學家、工程師）拿掉
     public static func whoDid(question: String, pages: [Understanding.Evidence], subject: String) -> String? {
-        guard let m = Understanding.match(question.replacingOccurrences(of: " ", with: ""), #"是誰(創立|創辦|發明|發現|寫|畫|設計|建立|提出|導演|唱|作曲|成立)"#) else { return nil }
-        let verb = m[1]
+        // 「X 是誰創辦的」和「X 的創辦人是誰」是同一個問題
+        let flat = question.replacingOccurrences(of: " ", with: "")
+        let roles = ["創辦人": "創辦", "創始人": "創立", "創立者": "創立", "發明者": "發明", "發明人": "發明", "發現者": "發現", "提出者": "提出",
+                     "作者": "寫", "設計師": "設計", "設計者": "設計", "導演": "導演", "作曲者": "作曲", "作曲家": "作曲"]
+        var verb = Understanding.match(flat, #"是誰(創立|創辦|發明|發現|寫|畫|設計|建立|提出|導演|唱|作曲|成立)"#)?[1] ?? ""
+        // 問的是稱呼（「作者是誰」）：只認「作者 XXX」這種寫法；「寫」「設計」前面的字不一定是人（「前後共寫了五年」）
+        var roleOnly = false
+        if verb.isEmpty, let r = Understanding.match(flat, #"的(創辦人|創始人|創立者|發明者|發明人|發現者|提出者|作者|設計師|設計者|導演|作曲者|作曲家)是(?:誰|哪位|哪個人|哪一位)"#)?[1] {
+            verb = roles[r] ?? ""
+            roleOnly = !["創辦", "創立", "發明", "提出"].contains(verb)
+        }
+        guard !verb.isEmpty else { return nil }
         let verbs = verb == "創立" || verb == "創辦" || verb == "成立" || verb == "建立" ? "(?:創立|創辦|成立|創建|建立)" : "(?:" + verb + ")"
         let subj = subject.trimmingCharacters(in: .whitespaces)
         guard subj.count >= 2 else { return nil }
-        let pats = [#"由([\p{Han}·．A-Za-z ]{2,14}?)(?:於[^，。]{1,12})?(?:共同|所|一起)?"# + verbs,
-                    #"([\p{Han}·．]{2,10})(?:在|於)?(?:\d{4}年)?(?:首先|最早|共同|一起)?"# + verbs,
-                    #"(?:創辦人|創始人|發明者|發明人|提出者|作者|發現者)(?:是|為|：|:)?\s*([\p{Han}·．]{2,6})"#]
+        let rolePat = #"(?:創辦人|創始人|創立者|發明者|發明人|提出者|作者|發現者|設計師|設計者|導演|作曲者|作曲家)(?:是|為|：|:)?\s*((?:[A-Z]\.\s?){0,3}[\p{Han}·．]{2,6})"#
+        let pats = roleOnly ? [rolePat]
+            : [#"由([\p{Han}·．A-Za-z ]{2,14}?)(?:於[^，。]{1,12})?(?:共同|所|一起)?"# + verbs,
+               #"([\p{Han}·．]{2,10})(?:在|於)?(?:\d{4}年)?(?:首先|最早|共同|一起)?"# + verbs,
+               rolePat]
         let titles = ["好友", "朋友", "同學", "夥伴", "合夥人", "創辦人", "創始人", "物理學家", "科學家", "數學家", "化學家", "生物學家", "發明家", "企業家", "工程師", "作家", "學家", "家", "者", "師", "人", "年", "後來", "當年", "最初", "首先"]
         let bad = ["的", "是", "了", "被", "這", "那", "一", "們", "該", "公司", "團隊", "政府", "共同", "它", "他", "她", "所", "其", "位", "名", "個", "人士", "大家"]
+        let after = ["博士", "先生", "女士", "教授", "表示", "指出", "認為", "曾", "在", "於", "說", "今", "昨", "將", "也", "已", "出席", "接受", "獲", "近日", "日前", "回憶", "談", "與", "宣布", "透露", "受訪", "坦言", "直言", "強調"]
         var votes: [String: Int] = [:], quote: [String: (String, String)] = [:]
         for p in pages {
             for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) where raw.contains(subj) && raw.count <= 220 {
@@ -677,7 +773,9 @@ public enum Think {
                         for t in titles { if let r = n.range(of: t, options: .backwards), r.upperBound < n.endIndex, n.distance(from: r.upperBound, to: n.endIndex) >= 2 { n = String(n[r.upperBound...]) } }
                         // 「比爾·蓋茲與保羅·艾倫」：兩個人都算
                         for one in n.components(separatedBy: CharacterSet(charactersIn: "與和及、")) {
-                            let x = one.trimmingCharacters(in: .whitespaces)
+                            var x = one.trimmingCharacters(in: .whitespaces)
+                            // 「創辦人張忠謀博士表示」→「張忠謀」：名字後面的稱呼、動作不是名字
+                            for stop in after { if let r = x.range(of: stop), x.distance(from: x.startIndex, to: r.lowerBound) >= 2 { x = String(x[..<r.lowerBound]) } }
                             guard (2...12).contains(x.count), !x.contains(subj), !subj.contains(x), !bad.contains(where: { x.contains($0) }),
                                   seen.insert(x).inserted else { continue }
                             votes[x, default: 0] += 1
