@@ -40,6 +40,15 @@ public enum BrainRoute {
             && !asksFortune(text)
     }
 
+    /// 對方在質疑上一個回答（「你確定嗎」「再想一下」「真的嗎？我記得不是這樣」「你再算一次」）：
+    /// 小模型這時候常常憑印象再說一次（錯的還是錯，甚至越講越堅持）。要回頭把上一題重新查一遍，再照查到的確認或更正
+    public static func isChallenge(_ text: String) -> Bool {
+        let t = text.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        guard (2...20).contains(t.count) else { return false }
+        return t.range(of: #"你確定|確定嗎|再想|想清楚|真的嗎|真的假的|對嗎|不對吧|不對喔|不對啊|錯了吧|錯了啦|講錯|說錯|算錯|答錯|弄錯|搞錯|檢查一下|再算一次|再查一次|再確認|記得不是|不是這樣|are you sure|think again|check again|that's wrong|that is wrong|you're wrong"#,
+                       options: .regularExpression) != nil
+    }
+
     /// 要查了才知道的事實（一個數字、人名、地名、時間、一份名單）：小模型憑記憶常常答錯，
     /// 先上網查、推理出答案，再讓大腦照著說。聊天、意見、建議、心情不用查
     public static func needsLookup(_ text: String) -> Bool {

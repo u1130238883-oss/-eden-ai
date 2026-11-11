@@ -548,6 +548,14 @@ final class LocalBrain {
                 : "\n（先從壞的方面想：這是不是常見的詐騙、陷阱，或沒有根據的誇大說法？像的話，第一句就直接說「這很可能是詐騙（或騙人的），不要付錢、不要買、不要照做」，再講一兩個看得出來的破綻，最後說該怎麼做：錢的事打 165 反詐騙專線查證，身體的事問醫生。不要順著說可以。）")
     }
 
+    /// 對方質疑上一個回答（「你確定嗎」「再想一下」）：App 會回頭把上一題重新查一遍，查到的放在資料裡。
+    /// 提醒大腦照資料確認或更正，不要憑印象再說一次、也不要硬拗（只給模型看）
+    static func recheckQuestion(_ challenge: String, previous: String, lang: String) -> String {
+        challenge + (["en", "es", "it"].contains(lang)
+            ? "\n(They doubt your last answer to \"\(previous)\". Check it against the facts above: if the facts differ from what you said, admit plainly that you got it wrong and give the right answer; if they match, calmly repeat it with the reason. With no facts, think it through again and say so if you're not sure. Don't dig in.)"
+            : "\n（對方在懷疑你上一題「\(previous)」的回答。先對照上面查到的資料：跟你剛剛說的不一樣，就直接承認「我剛剛講錯了」，照資料說出正確的答案；一樣，就冷靜地再說一次並講理由。沒有資料時自己重新想一遍，不確定就老實說不確定。不要硬拗。）")
+    }
+
     /// 一般聊天的問題交給大腦前：算數要一步一步算、好到不像真的先想陷阱、有爭議的要兩邊都想
     static func chatQuestion(_ text: String, lang: String) -> String {
         if isTooGood(text) { return waryQuestion(text, lang: lang) }
@@ -576,7 +584,7 @@ final class LocalBrain {
 
     /// 大陸用語 → 台灣用語（只換不會換錯意思的）
     static let twWords: [(String, String)] = [
-        ("軟件", "軟體"), ("硬件", "硬體"), ("視頻", "影片"), ("信息", "資訊"), ("網絡", "網路"), ("互聯網", "網際網路"), ("默認", "預設"),
+        ("軟件", "軟體"), ("硬件", "硬體"), ("堪培拉", "坎培拉"), ("悉尼", "雪梨"), ("新西蘭", "紐西蘭"), ("意大利", "義大利"), ("視頻", "影片"), ("信息", "資訊"), ("網絡", "網路"), ("互聯網", "網際網路"), ("默認", "預設"),
         ("屏幕", "螢幕"), ("鼠標", "滑鼠"), ("打印", "列印"), ("搜索", "搜尋"), ("用戶", "使用者"), ("短信", "簡訊"), ("博客", "部落格"),
         ("出租車", "計程車"), ("自行車", "腳踏車"), ("公交車", "公車"), ("西紅柿", "番茄"), ("酸奶", "優格"), ("牛油果", "酪梨"),
         ("菠蘿", "鳳梨"), ("獼猴桃", "奇異果"), ("方便麵", "泡麵"), ("激活", "啟用"), ("程序員", "程式設計師"), ("數據庫", "資料庫"),

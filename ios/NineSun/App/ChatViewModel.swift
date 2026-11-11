@@ -380,6 +380,12 @@ final class ChatViewModel: ObservableObject {
     private func think(_ text: String, _ reply: EchoEngine.Reply, brain: String) -> Bool {
         let L = reply.lang
         let fallback: (String) -> Void = { _ in self.play(text: reply.turn.text, final: reply.turn) }
+        // 對方在質疑上一個回答（「你確定嗎」「再想一下」）：不讓大腦憑印象再說一次，回頭把上一題重新查一遍，照查到的確認或更正
+        if BrainRoute.isChallenge(text), reply.turn.speak == nil,
+           let prev = turns.dropLast().last(where: { $0.role == .user })?.text, prev.count >= 4, !BrainRoute.isChallenge(prev) {
+            recheck(prev, challenge: text, L, brain: brain, onFail: fallback)
+            return true
+        }
         // 翻譯（「我喜歡你用西班牙語和義大利語怎麼說」）：引擎的逐字翻譯常常翻錯、翻一半，交給大腦詳細回答
         // （翻譯、念法、用法、語氣）；用問的人說的語言回答，不是翻成的語言
         if reply.turn.speak != nil {
@@ -420,6 +426,34 @@ final class ChatViewModel: ObservableObject {
             brainChat(text, L, brain: brain, onFail: fallback)
         }
         return true
+    }
+
+    /// 回頭查上一題：引擎自己知道的（算得出來、常識、知識庫）直接當資料；引擎不知道的上網查。查到的交給大腦對照
+    private func recheck(_ previous: String, challenge: String, _ L: Lang, brain: String, onFail: @escaping (String) -> Void) {
+        let asked = LocalBrain.recheckQuestion(challenge, previous: previous, lang: L.rawValue)
+        guard let engine else {
+            brainAnswer(asked, mode: .chat, lang: L, brain: brain, onFail: onFail)
+            return
+        }
+        let ctx = EchoEngine.Context(profile: profile, rules: rules, now: Date(), language: language, autoDetect: autoDetect,
+                                     allowSwearing: trashTalk)
+        let kb = L == .zh ? BrainRoute.lookup(previous, in: engine.knowledge[.zh]).facts : ""
+        queue.async {
+            let again = engine.reply(to: previous, history: [], context: ctx)
+            DispatchQueue.main.async {
+                var facts: [String] = []
+                if again.webQuery == nil, again.profile == nil, again.rules == nil, again.turn.source == .tool || again.turn.source == .knowledge,
+                   again.turn.text.count >= 6, !BrainRoute.needsBirthday(again.turn.text) { facts.append(again.turn.text) }
+                if !kb.isEmpty { facts.append(kb) }
+                if !facts.isEmpty {
+                    self.brainAnswer(asked, facts: String(facts.joined(separator: "\n").prefix(600)), mode: .grounded, lang: L, brain: brain, onFail: onFail)
+                } else if let q = again.webQuery {
+                    self.lookupWeb(q, L, brain: brain, asked: asked)
+                } else {
+                    self.brainAnswer(asked, mode: .chat, lang: L, brain: brain, onFail: onFail)
+                }
+            }
+        }
     }
 
     /// 一般問題交給大腦：先查 NineSun 的知識庫（疾病、急救、國家、元素、動物、命理名詞……），

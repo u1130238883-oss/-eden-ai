@@ -562,7 +562,7 @@ public enum Think {
                // 那句話要在講問的東西（「台灣的四大族群」不是在講直轄市）
                noun.isEmpty ? (subj.count >= 2 && s.text.contains(subj)) : s.text.contains(noun) {
                 // 「十大城市依次是…」是排名前十，不是「一共只有十個」
-                if counted.isEmpty { countedIsTop = m[2] == "大" && ["最多", "最大", "排名", "依次", "前"].contains(where: { s.text.contains($0) }) }
+                if counted.isEmpty { countedIsTop = m[2] == "大" && expectedCount(subj) == nil && ["最多", "最大", "排名", "依次", "前十", "前五", "前三"].contains(where: { s.text.contains($0) }) }
                 counted.append((names, s.host))
             }
             for n in names {
@@ -770,22 +770,38 @@ public enum Think {
             roleOnly = !["創辦", "創立", "發明", "提出"].contains(verb)
         }
         guard !verb.isEmpty else { return nil }
-        let verbs = verb == "創立" || verb == "創辦" || verb == "成立" || verb == "建立" ? "(?:創立|創辦|成立|創建|建立)" : "(?:" + verb + ")"
+        let verbs = verb == "創立" || verb == "創辦" || verb == "成立" || verb == "建立" ? "(?:創立|創辦|成立|創建|建立)"
+            // 理論、學說：「提出」「創立」「發表」「建立」講的是同一件事（「相對論主要由愛因斯坦創立」）
+            : verb == "提出" ? "(?:提出|創立|創建|建立|發表|發展出)" : "(?:" + verb + ")"
         let subj = subject.trimmingCharacters(in: .whitespaces)
         guard subj.count >= 2 else { return nil }
         let rolePat = #"(?:創辦人|創始人|創立者|發明者|發明人|提出者|作者|發現者|設計師|設計者|導演|作曲者|作曲家)(?:是|為|：|:)?\s*((?:[A-Z]\.\s?){0,3}[\p{Han}·．]{2,6})"#
+        // 「愛因斯坦的相對論」：誰的理論、誰的發明（「偉大的相對論」「著名的…」是形容詞，下面會濾掉）
+        let ownerPat = #"([\p{Han}·．]{2,8})的"# + NSRegularExpression.escapedPattern(for: subj)
         let pats = roleOnly ? [rolePat]
+            : ["提出", "發明", "發現"].contains(verb) ? [#"由([\p{Han}·．A-Za-z ]{2,14}?)(?:於[^，。]{1,12})?(?:共同|所|一起)?"# + verbs,
+               #"([\p{Han}·．]{2,10})(?:在|於)?(?:\d{4}年)?(?:首先|最早|共同|一起)?"# + verbs,
+               rolePat, ownerPat]
             : [#"由([\p{Han}·．A-Za-z ]{2,14}?)(?:於[^，。]{1,12})?(?:共同|所|一起)?"# + verbs,
                #"([\p{Han}·．]{2,10})(?:在|於)?(?:\d{4}年)?(?:首先|最早|共同|一起)?"# + verbs,
                rolePat]
         let titles = ["好友", "朋友", "同學", "夥伴", "合夥人", "創辦人", "創始人", "物理學家", "科學家", "數學家", "化學家", "生物學家", "發明家", "企業家", "工程師", "作家", "學家", "家", "者", "師", "人", "年", "後來", "當年", "最初", "首先"]
-        let bad = ["的", "是", "了", "被", "這", "那", "一", "們", "該", "公司", "團隊", "政府", "共同", "它", "他", "她", "所", "其", "位", "名", "個", "人士", "大家"]
+        let bad = ["的", "是", "了", "被", "這", "那", "一", "們", "該", "公司", "團隊", "政府", "共同", "它", "他", "她", "所", "其", "位", "名", "個", "人士", "大家",
+                   "著名", "偉大", "所謂", "知名", "有名", "重要", "經典", "傳統", "現代", "古典", "深奧", "複雜", "完整", "整個", "不僅", "主要", "什麼", "關於", "不同", "狹義", "廣義", "簡單", "基本", "最"]
         let after = ["博士", "先生", "女士", "教授", "表示", "指出", "認為", "曾", "在", "於", "說", "今", "昨", "將", "也", "已", "出席", "接受", "獲", "近日", "日前", "回憶", "談", "與", "宣布", "透露", "受訪", "坦言", "直言", "強調", "出生", "生於", "出身", "本人", "筆下", "原名", "本名", "從", "把", "寫", "創作"]
         var votes: [String: Int] = [:], quote: [String: (String, String)] = [:]
+        // 「愛因斯坦的相對論」這種寫法前面可能黏著別的字（「帶你秒懂愛因斯坦的相對論」），只拿來幫已經找到的名字加票
+        var owners: [String] = []
         for p in pages {
             for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) where raw.contains(subj) && raw.count <= 220 {
                 var seen = Set<String>()
                 for pat in pats {
+                    if pat == ownerPat {
+                        guard let re = try? NSRegularExpression(pattern: pat) else { continue }
+                        let ns = raw as NSString
+                        if let mm = re.firstMatch(in: raw, range: NSRange(location: 0, length: ns.length)) { owners.append(ns.substring(with: mm.range(at: 1))) }
+                        continue
+                    }
                     guard let re = try? NSRegularExpression(pattern: pat) else { continue }
                     let ns = raw as NSString
                     for mm in re.matches(in: raw, range: NSRange(location: 0, length: ns.length)) {
@@ -807,13 +823,19 @@ public enum Think {
             }
         }
         // 「J.K.羅琳」和「羅琳」、「史蒂夫·賈伯斯」和「賈伯斯」是同一個人：票加在一起，用完整的那個名字
-        for long in votes.keys.sorted(by: { $0.count > $1.count }) {
-            for short in votes.keys where short != long && short.count >= 2 && long.hasSuffix(short) && (votes[short] ?? 0) > 0 && (votes[long] ?? 0) > 0 {
+        // （中間要有「·」「.」隔開才算同一個人的全名；「帶你秒懂愛因斯坦」不是愛因斯坦的全名）
+        for long in votes.keys.sorted(by: { $0.count != $1.count ? $0.count > $1.count : $0 < $1 }) {
+            for short in votes.keys.sorted() where short != long && short.count >= 2 && long.hasSuffix(short) && (votes[short] ?? 0) > 0 && (votes[long] ?? 0) > 0 {
+                guard let sep = long.dropLast(short.count).last, "·．. ".contains(sep) else { continue }
                 votes[long, default: 0] += votes[short] ?? 0
                 votes[short] = 0
             }
         }
         votes = votes.filter { $0.value > 0 }
+        for name in votes.keys { votes[name, default: 0] += owners.filter { $0.hasSuffix(name) }.count }
+        if ProcessInfo.processInfo.environment["NINESUN_LIST_TRACE"] != nil {
+            FileHandle.standardError.write(Data("TRACE whoDid verb=\(verb) subj=\(subj) votes=\(votes.sorted { $0.key < $1.key }) owners=\(owners.count)\n".utf8))
+        }
         let ranked = votes.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key.count != $1.key.count ? $0.key.count > $1.key.count : $0.key < $1.key }
         guard let top = ranked.first, top.value >= 2 || ranked.count == 1 else { return nil }
         // 一起創立的（票數接近的第二個人）也說出來

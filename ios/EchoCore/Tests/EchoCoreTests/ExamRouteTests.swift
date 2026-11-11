@@ -19,6 +19,19 @@ final class ExamRouteTests: XCTestCase {
                   let q = item["q"] as? String else { continue }
             let hist = (item["history"] as? [[String]] ?? []).map { ChatTurn(role: $0[0] == "user" ? .user : .echo, text: $0[1]) }
             var route = Self.route(q, item: item, history: hist, engine: engine)
+            // App 的 recheck：對方質疑上一個回答（「你確定嗎」）→ 回頭把上一題交給引擎重查，查到的當資料交給大腦
+            // （App 裡引擎不知道的會上網查；考試不能上網，就只提醒大腦重新想）
+            if route.route == "chat" || route.route == "grounded", item["facts"] == nil, BrainRoute.isChallenge(q),
+               let prev = hist.last(where: { $0.role == .user })?.text, prev.count >= 4, !BrainRoute.isChallenge(prev) {
+                item["recheck"] = prev
+                let again = engine.reply(to: prev, history: [], context: EchoEngine.Context())
+                var facts: [String] = []
+                if again.webQuery == nil, again.profile == nil, again.rules == nil, again.turn.source == .tool || again.turn.source == .knowledge,
+                   again.turn.text.count >= 6, !BrainRoute.needsBirthday(again.turn.text) { facts.append(again.turn.text) }
+                let kb = BrainRoute.lookup(prev, in: engine.knowledge[.zh]).facts
+                if !kb.isEmpty { facts.append(kb) }
+                if !facts.isEmpty { item["facts"] = String(facts.joined(separator: "\n").prefix(600)); route.route = "grounded" }
+            }
             // App 的 brainChat：一般問題先查知識庫，查到的當資料（大腦照著回答）、情緒類的當參考
             if route.route == "chat", route.lang == "zh" || route.lang == nil {
                 let found = BrainRoute.lookup(q, in: engine.knowledge[.zh])

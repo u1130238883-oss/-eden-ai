@@ -68,13 +68,14 @@ for (i, line) in lines.enumerated() where i % shards == shard {
     case "grounded":
         mode = .grounded
         let math = it["notes"] != nil && LocalBrain.isArithmetic(q)
-        user = LocalBrain.userMessage(question: math ? LocalBrain.mathQuestion(q, lang: lang) : LocalBrain.isTooGood(q) ? LocalBrain.waryQuestion(q, lang: lang) : q, facts: it["facts"] as? String ?? "", evidence: it["evidence"] as? [String] ?? [],
+        let prev = it["recheck"] as? String
+        user = LocalBrain.userMessage(question: prev != nil ? LocalBrain.recheckQuestion(q, previous: prev!, lang: lang) : math ? LocalBrain.mathQuestion(q, lang: lang) : LocalBrain.isTooGood(q) ? LocalBrain.waryQuestion(q, lang: lang) : q, facts: it["facts"] as? String ?? "", evidence: it["evidence"] as? [String] ?? [],
                                       hint: it["hint"] as? String ?? "", notes: it["notes"] as? String ?? "", lang: lang)
     default:
         // App 的 brainChat：算數的應用題用比較穩的設定、一步一步算
         let math = LocalBrain.isArithmetic(q)
         mode = math ? .grounded : .chat
-        user = LocalBrain.userMessage(question: math ? LocalBrain.mathQuestion(q, lang: lang) : LocalBrain.isTooGood(q) ? LocalBrain.waryQuestion(q, lang: lang) : low ? q : LocalBrain.chatQuestion(q, lang: lang), hint: it["hint"] as? String ?? "", lang: lang)
+        user = LocalBrain.userMessage(question: (it["recheck"] as? String).map { LocalBrain.recheckQuestion(q, previous: $0, lang: lang) } ?? (math ? LocalBrain.mathQuestion(q, lang: lang) : LocalBrain.isTooGood(q) ? LocalBrain.waryQuestion(q, lang: lang) : low ? q : LocalBrain.chatQuestion(q, lang: lang)), hint: it["hint"] as? String ?? "", lang: lang)
     }
     let (temp, most) = LocalBrain.settings(mode)
     var rec: [String: Any] = ["id": id]

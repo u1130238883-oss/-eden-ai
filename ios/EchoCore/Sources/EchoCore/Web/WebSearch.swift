@@ -26,6 +26,8 @@ public enum WebSearch {
         public var hits: [Hit]
         /// 每個來源找到幾筆（診斷用）
         public var engines: [String: Int]
+        /// 不讀的網站（維基百科）在搜尋結果裡的那一兩句摘要：不拿來讀網頁、不當直接答案，只當佐證的句子
+        public var asides: [Hit]? = nil
     }
 
     static let mobileUA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"
@@ -53,7 +55,9 @@ public enum WebSearch {
         let wikiLead = a.leadSource.map(isWiki) ?? false
         var engines = a.engines
         engines["wikipedia"] = nil
-        return Answer(lead: wikiLead ? nil : a.lead, leadSource: wikiLead ? nil : a.leadSource, hits: a.hits.filter { !isWiki($0.url) }, engines: engines)
+        var out = Answer(lead: wikiLead ? nil : a.lead, leadSource: wikiLead ? nil : a.leadSource, hits: a.hits.filter { !isWiki($0.url) }, engines: engines)
+        out.asides = Array(a.hits.filter { isWiki($0.url) && $0.snippet.count >= 20 }.prefix(4))
+        return out
     }
 
     /// 同時問所有來源，合併去重

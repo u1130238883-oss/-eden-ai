@@ -323,6 +323,12 @@ public enum WebAgent {
         for (tag, a) in answers {
             if lead == nil, let l = a.lead { lead = l; leadSource = a.leadSource }
             for (k, v) in a.engines { engines[k, default: 0] += v }
+            // 維基百科的摘要：只當佐證的句子（跟主題有關、沒重複的才留）
+            for raw in a.asides ?? [] where dupSnips.count < 12 {
+                let snip = zh ? WebStrategy.toTraditional(raw.snippet) : raw.snippet
+                guard score(snip, terms) >= need, !dupSnips.contains(where: { $0.hit.snippet == snip }) else { continue }
+                dupSnips.append((tag, WebSearch.Hit(title: zh ? WebStrategy.toTraditional(raw.title) : raw.title, snippet: snip, url: raw.url, engine: raw.engine)))
+            }
             for raw in a.hits {
                 // 網路上很多是簡體，先轉成繁體再判斷有沒有關係
                 let h = zh ? WebSearch.Hit(title: WebStrategy.toTraditional(raw.title), snippet: WebStrategy.toTraditional(raw.snippet),
@@ -747,7 +753,7 @@ public enum WebAgent {
             default: lead = ""
             }
             if lead != "", let syn = Synthesize.compose(question: question, subject: fr.subject, want: fr.want, pages: texts, lead: lead,
-                                                         extra: (hits + dupSnips).map { (host: WebSearch.host($0.hit.url), text: $0.hit.snippet) }) {
+                                                         extra: (hits + dupSnips).map { (host: WebSearch.host($0.hit.url), text: $0.hit.title + "\n" + $0.hit.snippet) }) {
                 answer = syn
                 synthesized = true
             } else if case .steps = fr.want, !numberedSteps, !Synthesize.actionable(answer) || Synthesize.isMeta(answer) {

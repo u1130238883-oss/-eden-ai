@@ -277,7 +277,10 @@ public enum Synthesize {
         // 主題最後那個詞（「奧運的五環」→「五環」）
         let tail = (subject.components(separatedBy: "的").last ?? subject).trimmingCharacters(in: .whitespaces)
         guard tail.count >= 2 else { return nil }
-        let pat = NSRegularExpression.escapedPattern(for: tail) + #"[^，。；！？\n]{0,10}?(?:代表著?|象徵著?|寓意著?|意味著)\s*(?:的是|了)?([^，。；！？\n]{2,40})"#
+        let pat = NSRegularExpression.escapedPattern(for: tail) + #"[^，。；！？\n]{0,10}?，?(?:分別)?(?:代表著?|象徵著?|寓意著?|意味著)\s*(?:的是|了)?([^，。；！？\n]{2,40})"#
+        if ProcessInfo.processInfo.environment["NINESUN_LIST_TRACE"] != nil {
+            FileHandle.standardError.write(Data("TRACE meaning tail=\(tail) pages=\(pages.count) with=\(pages.filter { $0.text.contains(tail) && ($0.text.contains("象徵") || $0.text.contains("代表")) }.count)\n".utf8))
+        }
         guard let re = try? NSRegularExpression(pattern: pat) else { return nil }
         var cands: [(text: String, host: String, obj: Set<String>)] = []
         for p in pages {
@@ -286,10 +289,24 @@ public enum Synthesize {
                 guard let m = re.firstMatch(in: raw, range: NSRange(location: 0, length: ns.length)) else { continue }
                 let whole = ns.substring(with: m.range), obj = ns.substring(with: m.range(at: 1))
                 if ["並非", "不是", "並不", "沒有", "什麼", "甚麼", "？", "?"].contains(where: { whole.contains($0) }) { continue }
-                let text = clean(raw).replacingOccurrences(of: #"^\d{4}年[^：:]{0,30}(指出|表示|寫道)[：:]\s*"#, with: "", options: .regularExpression)
+                // 句子很長時（「…於 1913 年由…設計，有著將近 110 年的歷史，由五種顏色組成之五環白底標誌，象徵著全世界的五大洲，…」）
+                // 只取講「代表什麼」的那一段：往前到上一個逗號、往後多帶一個子句
+                var piece = raw
+                if raw.count > 60, let r = Range(m.range, in: raw) {
+                    var lo = r.lowerBound, hi = r.upperBound
+                    if let c = raw[..<lo].lastIndex(where: { "，,".contains($0) }) { lo = raw.index(after: c) } else { lo = raw.startIndex }
+                    let rest = raw[hi...]
+                    if let c = rest.dropFirst().firstIndex(where: { "，,".contains($0) }), rest.distance(from: rest.startIndex, to: c) <= 40 { hi = c } else if rest.count <= 40 { hi = raw.endIndex }
+                    piece = String(raw[lo..<hi])
+                }
+                let text = clean(piece).replacingOccurrences(of: #"^\d{4}年[^：:]{0,30}(指出|表示|寫道)[：:]\s*"#, with: "", options: .regularExpression)
+                    .replacingOccurrences(of: #"^\d{4}年\d{1,2}月\d{1,2}日\s*[·・]\s*"#, with: "", options: .regularExpression)
                 guard text.count >= 8 else { continue }
                 cands.append((text, p.host, grams(obj)))
             }
+        }
+        if ProcessInfo.processInfo.environment["NINESUN_LIST_TRACE"] != nil {
+            for c in cands { FileHandle.standardError.write(Data("TRACE meaning cand [\(c.host)] \(c.text.prefix(90)) obj=\(c.obj.sorted().prefix(6))\n".utf8)) }
         }
         guard !cands.isEmpty else { return nil }
         func support(_ c: (text: String, host: String, obj: Set<String>)) -> [String] {
@@ -326,7 +343,7 @@ public enum Synthesize {
             }
         }
         let ranked = votes.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
-        guard let top = ranked.first, top.value >= 3, ranked.count < 2 || top.value >= ranked[1].value * 2 else { return nil }
+        guard let top = ranked.first, top.value >= 3, ranked.count < 2 || top.value * 2 >= ranked[1].value * 3 else { return nil }
         return top.key
     }
 
@@ -379,8 +396,9 @@ public enum Synthesize {
                 search: for p in pages + extra {
                     for raw in p.text.components(separatedBy: sentenceEnd) {
                         let t = clean(raw)
-                        guard (12...140).contains(t.count), t.contains(name), t.localizedCaseInsensitiveContains(subject), !isMeta(t),
-                              ["是", "指", "為", "簡稱", "衡量"].contains(where: { t.contains($0) }) else { continue }
+                        guard (16...140).contains(t.count), t.contains(name), t.localizedCaseInsensitiveContains(subject), !isMeta(t),
+                              !t.hasPrefix("什麼是"), !t.hasPrefix("何謂"), !t.hasPrefix("認識"), !t.contains("一篇看懂"), !t.contains("一次看懂"),
+                              ["是指", "是衡量", "是一", "指的是", "簡稱", "衡量", "是用來", "代表"].contains(where: { t.contains($0) }) else { continue }
                         pts.insert(Point(text: t, hosts: [p.host], score: first.score + 1, grams: grams(t), head: grams(firstClause(t))), at: 0)
                         break search
                     }
