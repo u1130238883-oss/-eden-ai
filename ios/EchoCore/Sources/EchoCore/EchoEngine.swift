@@ -150,6 +150,15 @@ public final class EchoEngine {
                 r.turn = ChatTurn(role: .echo, text: t.joined(separator: "\n"), source: .tool)
             }
         }
+        // 好到不像真的、要先給錢的事（保證獲利、中獎先付運費、把錢轉到安全帳戶）：引擎自己先提醒，不拿命理或一般閒聊回
+        // （大腦開著時這則會交給大腦，它會先從壞的方面想再回答）；算出來的結果、使用者的規則、危機的回應不動
+        if r.profile == nil, r.rules == nil, r.turn.role == .echo, r.turn.source != .tool, r.turn.source != .rule,
+           !Safety.isCrisis(message), ScamCheck.looks(message) {
+            r.turn = ChatTurn(role: .echo, text: ScamCheck.warning(zh: r.lang == .zh), source: .knowledge)
+            r.webQuery = nil
+            r.webAugment = []
+            return r
+        }
         // 帶著感受回答：對方開心就替他開心、難過就先心疼、罵我就先道歉——回答本來就有這種語氣、或是一般的問題就不加
         // 說想死的時候不加（「我想結束自己，哈哈」不能回「你真有趣😆」）
         if r.lang == .zh, r.turn.role == .echo, !r.turn.text.isEmpty, !Safety.isCrisis(message) {

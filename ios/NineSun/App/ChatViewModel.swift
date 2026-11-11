@@ -429,7 +429,9 @@ final class ChatViewModel: ObservableObject {
         // 算數的應用題：用比較穩的設定、一步一步算
         let math = LocalBrain.isArithmetic(text)
         // 有爭議的問題（「該不該」「要不要」）：提醒大腦兩邊都想過再選邊；心情不好的時候不用（先陪他）
+        // 好到不像真的、要先給錢的事：不管有沒有查到資料，都提醒大腦先從壞的方面想
         let asked = math ? LocalBrain.mathQuestion(text, lang: L.rawValue)
+            : LocalBrain.isTooGood(text) ? LocalBrain.waryQuestion(text, lang: L.rawValue)
             : found.facts.isEmpty && !BrainRoute.feelingLow(text) ? LocalBrain.chatQuestion(text, lang: L.rawValue) : text
         brainAnswer(asked, hint: found.hint, notes: found.facts,
                     mode: found.facts.isEmpty && !math ? .chat : .grounded, lang: L, brain: brain, onFail: onFail)
