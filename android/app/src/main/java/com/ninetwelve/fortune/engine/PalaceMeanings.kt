@@ -77,12 +77,12 @@ object Palace {
         ),
         // 宮 2
         listOf(
-            "食物", "物質", "我的錢", "清秀的人", "開銷", "正財", "價值觀", "認知", "動力", "口腔"
+            "食物", "物質", "我的錢", "清秀的人", "開銷", "正財", "價值觀", "認知", "動力"
         ),
         // 宮 3
         listOf(
             "交流", "交談", "思考", "思想", "思維活躍", "學習", "語言", "年齡比本人小的人", "同輩", "同事", "同學", "同胞",
-            "鄰居", "兄弟姐妹", "出門", "學業", "靈活", "好動", "離開", "分離", "走了", "活力", "新鮮感", "精神", "甲狀腺"
+            "鄰居", "兄弟姐妹", "出門", "學業", "靈活", "好動", "離開", "分離", "走了", "活力", "新鮮感", "精神"
         ),
         // 宮 4
         listOf(
@@ -143,7 +143,7 @@ object Palace {
         listOf(
             "Food", "Material things", "My own money", "Fair, refined-looking people",
             "Spending", "Direct Wealth (steady, earned income)", "Values", "Cognition",
-            "Motivation", "The mouth"
+            "Motivation"
         ),
         // 宮 3
         listOf(
@@ -151,7 +151,7 @@ object Palace {
             "Learning", "Language", "People younger than oneself", "Peers", "Colleagues",
             "Classmates", "Compatriots", "Neighbours", "Siblings", "Going out", "Studies",
             "Nimbleness", "Being on the move", "Leaving", "Separation", "Having gone away",
-            "Liveliness", "A sense of novelty", "Spirit", "The thyroid"
+            "Liveliness", "A sense of novelty", "Spirit"
         ),
         // 宮 4
         listOf(
@@ -234,7 +234,7 @@ object Palace {
             "Comida", "Bienes materiales", "Mi propio dinero",
             "Personas de aspecto fino y agraciado", "Gastos",
             "Riqueza directa (ingresos estables y ganados)", "Valores", "Cognición",
-            "Motivación", "La boca"
+            "Motivación"
         ),
         // 宮 3
         listOf(
@@ -242,7 +242,7 @@ object Palace {
             "Aprendizaje", "Lenguaje", "Personas más jóvenes que uno", "Iguales", "Colegas",
             "Compañeros de clase", "Compatriotas", "Vecinos", "Hermanos", "Salir", "Estudios",
             "Agilidad", "Estar en movimiento", "Marcharse", "Separación", "Haberse ido",
-            "Vivacidad", "Sensación de novedad", "Ánimo", "La tiroides"
+            "Vivacidad", "Sensación de novedad", "Ánimo"
         ),
         // 宮 4
         listOf(
@@ -327,7 +327,7 @@ object Palace {
         listOf(
             "Cibo", "Beni materiali", "Il mio denaro", "Persone dall'aspetto fine e grazioso",
             "Spese", "Ricchezza diretta (reddito stabile e guadagnato)", "Valori",
-            "Cognizione", "Motivazione", "La bocca"
+            "Cognizione", "Motivazione"
         ),
         // 宮 3
         listOf(
@@ -335,7 +335,7 @@ object Palace {
             "Apprendimento", "Linguaggio", "Persone più giovani di sé", "Coetanei", "Colleghi",
             "Compagni di classe", "Connazionali", "Vicini", "Fratelli e sorelle", "Uscire",
             "Studi", "Agilità", "Essere in movimento", "Andarsene", "Separazione",
-            "Essere andato via", "Vivacità", "Senso di novità", "Spirito", "La tiroide"
+            "Essere andato via", "Vivacità", "Senso di novità", "Spirito"
         ),
         // 宮 4
         listOf(

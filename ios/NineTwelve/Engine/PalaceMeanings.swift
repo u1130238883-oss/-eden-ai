@@ -66,10 +66,10 @@ public struct Palace {
         // 1宮
         ["自己", "煩躁", "躁動", "情緒化", "沖動", "生氣", "上火", "激動", "傷害"],
         // 2宮
-        ["食物", "物質", "我的錢", "清秀的人", "開銷", "正財", "價值觀", "認知", "動力", "口腔"],
+        ["食物", "物質", "我的錢", "清秀的人", "開銷", "正財", "價值觀", "認知", "動力"],
         // 3宮
         ["交流", "交談", "思考", "思想", "思維活躍", "學習", "語言", "年齡比本人小的人", "同輩", "同事", "同學", "同胞", "鄰居",
-         "兄弟姐妹", "出門", "學業", "靈活", "好動", "離開", "分離", "走了", "活力", "新鮮感", "精神", "甲狀腺"],
+         "兄弟姐妹", "出門", "學業", "靈活", "好動", "離開", "分離", "走了", "活力", "新鮮感", "精神"],
         // 4宮
         ["家庭", "安全感", "敏感", "焦慮", "脆弱", "空落", "擔心", "擔憂", "內省", "內耗", "居住環境", "原生家庭", "出生環境",
          "出生國家", "女性", "母親"],
@@ -106,14 +106,13 @@ public struct Palace {
          "Anger", "Flaring temper", "Agitation", "Harm"],
         // 2宮
         ["Food", "Material things", "My own money", "Fair, refined-looking people", "Spending",
-         "Direct Wealth (steady, earned income)", "Values", "Cognition", "Motivation",
-         "The mouth"],
+         "Direct Wealth (steady, earned income)", "Values", "Cognition", "Motivation"],
         // 3宮
         ["Communication", "Conversation", "Thinking", "Mindset", "An active mind", "Learning",
          "Language", "People younger than oneself", "Peers", "Colleagues", "Classmates",
          "Compatriots", "Neighbours", "Siblings", "Going out", "Studies", "Nimbleness",
          "Being on the move", "Leaving", "Separation", "Having gone away", "Liveliness",
-         "A sense of novelty", "Spirit", "The thyroid"],
+         "A sense of novelty", "Spirit"],
         // 4宮
         ["Home", "Sense of security", "Sensitivity", "Anxiety", "Fragility", "Hollowness",
          "Worry", "Apprehension", "Introspection", "Inner depletion", "Living environment",
@@ -173,14 +172,13 @@ public struct Palace {
         // 2宮
         ["Comida", "Bienes materiales", "Mi propio dinero",
          "Personas de aspecto fino y agraciado", "Gastos",
-         "Riqueza directa (ingresos estables y ganados)", "Valores", "Cognición", "Motivación",
-         "La boca"],
+         "Riqueza directa (ingresos estables y ganados)", "Valores", "Cognición", "Motivación"],
         // 3宮
         ["Comunicación", "Conversación", "Pensamiento", "Mentalidad", "Mente ágil",
          "Aprendizaje", "Lenguaje", "Personas más jóvenes que uno", "Iguales", "Colegas",
          "Compañeros de clase", "Compatriotas", "Vecinos", "Hermanos", "Salir", "Estudios",
          "Agilidad", "Estar en movimiento", "Marcharse", "Separación", "Haberse ido",
-         "Vivacidad", "Sensación de novedad", "Ánimo", "La tiroides"],
+         "Vivacidad", "Sensación de novedad", "Ánimo"],
         // 4宮
         ["Hogar", "Sensación de seguridad", "Sensibilidad", "Ansiedad", "Fragilidad",
          "Vacío interior", "Preocupación", "Inquietud", "Introspección", "Desgaste interior",
@@ -243,13 +241,13 @@ public struct Palace {
         // 2宮
         ["Cibo", "Beni materiali", "Il mio denaro", "Persone dall'aspetto fine e grazioso",
          "Spese", "Ricchezza diretta (reddito stabile e guadagnato)", "Valori", "Cognizione",
-         "Motivazione", "La bocca"],
+         "Motivazione"],
         // 3宮
         ["Comunicazione", "Conversazione", "Pensiero", "Mentalità", "Mente vivace",
          "Apprendimento", "Linguaggio", "Persone più giovani di sé", "Coetanei", "Colleghi",
          "Compagni di classe", "Connazionali", "Vicini", "Fratelli e sorelle", "Uscire",
          "Studi", "Agilità", "Essere in movimento", "Andarsene", "Separazione",
-         "Essere andato via", "Vivacità", "Senso di novità", "Spirito", "La tiroide"],
+         "Essere andato via", "Vivacità", "Senso di novità", "Spirito"],
         // 4宮
         ["Casa", "Senso di sicurezza", "Sensibilità", "Ansia", "Fragilità", "Vuoto interiore",
          "Preoccupazione", "Apprensione", "Introspezione", "Logoramento interiore",

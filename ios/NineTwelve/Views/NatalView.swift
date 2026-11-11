@@ -39,13 +39,6 @@ struct NatalView: View {
                                               value: destiny.triple.day)
                                 }
                                 Divider()
-                                LabeledLine(
-                                    label: t("三柱相加（九進制）", "Sum of the three (base 9)",
-    "Suma de los tres (base 9)",
-    "Somma dei tre (base 9)"),
-                                    value: "\(destiny.triple.year) + \(destiny.triple.month) + \(destiny.triple.day)"
-                                        + " = \(destiny.triple.year + destiny.triple.month + destiny.triple.day)"
-                                        + " → \(t.lifeNumber) \(destiny.lifeNumber)")
                                 LabeledLine(label: t.lifePalace,
                                             value: t.palaceNamed(destiny.lifeNumber))
                             }
@@ -60,7 +53,6 @@ struct NatalView: View {
     "I dodici palazzi"))
                             ChartTable(rows: destiny.natalChart,
                                        lang: state.lang,
-                                       highlightIndex: 0,
                                        triggersFor: { .natalPalace(destiny.natalChart[$0].palace, in: destiny) },
                                        chipTap: .triggers)
                             Text(t("點任一列可看詳細。", "Tap any row for detail.",

@@ -15,8 +15,8 @@ SHORT = {
 KEYWORDS = {
     'zh': [
         ['自己', '煩躁', '躁動', '情緒化', '沖動', '生氣', '上火', '激動', '傷害'],
-        ['食物', '物質', '我的錢', '清秀的人', '開銷', '正財', '價值觀', '認知', '動力', '口腔'],
-        ['交流', '交談', '思考', '思想', '思維活躍', '學習', '語言', '年齡比本人小的人', '同輩', '同事', '同學', '同胞', '鄰居', '兄弟姐妹', '出門', '學業', '靈活', '好動', '離開', '分離', '走了', '活力', '新鮮感', '精神', '甲狀腺'],
+        ['食物', '物質', '我的錢', '清秀的人', '開銷', '正財', '價值觀', '認知', '動力'],
+        ['交流', '交談', '思考', '思想', '思維活躍', '學習', '語言', '年齡比本人小的人', '同輩', '同事', '同學', '同胞', '鄰居', '兄弟姐妹', '出門', '學業', '靈活', '好動', '離開', '分離', '走了', '活力', '新鮮感', '精神'],
         ['家庭', '安全感', '敏感', '焦慮', '脆弱', '空落', '擔心', '擔憂', '內省', '內耗', '居住環境', '原生家庭', '出生環境', '出生國家', '女性', '母親'],
         ['受人關注', '娛樂', '享樂', '快樂', '桃花', '吸引力', '性', '引人矚目', '戀愛', '男性', '被看見', '父親'],
         ['勞碌', '忙碌', '思緒混亂無序', '心累', '勞累', '緊張', '議論', '日常的事物', '勞動', '想得多', '社交', '交際', '想法', '聚焦', '執念', '重複的事情', '注意力', '反覆'],
@@ -29,8 +29,8 @@ KEYWORDS = {
     ],
     'en': [
         ['The self', 'Irritability', 'Restlessness', 'Emotional volatility', 'Impulsiveness', 'Anger', 'Flaring temper', 'Agitation', 'Harm'],
-        ['Food', 'Material things', 'My own money', 'Fair, refined-looking people', 'Spending', 'Direct Wealth (steady, earned income)', 'Values', 'Cognition', 'Motivation', 'The mouth'],
-        ['Communication', 'Conversation', 'Thinking', 'Mindset', 'An active mind', 'Learning', 'Language', 'People younger than oneself', 'Peers', 'Colleagues', 'Classmates', 'Compatriots', 'Neighbours', 'Siblings', 'Going out', 'Studies', 'Nimbleness', 'Being on the move', 'Leaving', 'Separation', 'Having gone away', 'Liveliness', 'A sense of novelty', 'Spirit', 'The thyroid'],
+        ['Food', 'Material things', 'My own money', 'Fair, refined-looking people', 'Spending', 'Direct Wealth (steady, earned income)', 'Values', 'Cognition', 'Motivation'],
+        ['Communication', 'Conversation', 'Thinking', 'Mindset', 'An active mind', 'Learning', 'Language', 'People younger than oneself', 'Peers', 'Colleagues', 'Classmates', 'Compatriots', 'Neighbours', 'Siblings', 'Going out', 'Studies', 'Nimbleness', 'Being on the move', 'Leaving', 'Separation', 'Having gone away', 'Liveliness', 'A sense of novelty', 'Spirit'],
         ['Home', 'Sense of security', 'Sensitivity', 'Anxiety', 'Fragility', 'Hollowness', 'Worry', 'Apprehension', 'Introspection', 'Inner depletion', 'Living environment', 'Family of origin', 'The environment one was born into', 'Country of birth', 'Women', 'Mother'],
         ['Being noticed', 'Entertainment', 'Enjoyment', 'Happiness', 'Peach Blossom (romantic attraction, people drawn to you)', 'Allure', 'Sex', 'Standing out', 'Romance', 'Men', 'Being seen', 'Father'],
         ['Drudgery', 'Busyness', 'Scattered, disordered thoughts', 'Mental exhaustion', 'Weariness', 'Tension', 'Being talked about', 'Everyday matters', 'Labour', 'Overthinking', 'Socialising', 'Social dealings', 'Ideas', 'Focus', 'Fixation', 'Repetitive matters', 'Attention', 'Going back and forth'],
@@ -43,8 +43,8 @@ KEYWORDS = {
     ],
     'es': [
         ['El yo', 'Irritabilidad', 'Inquietud', 'Volatilidad emocional', 'Impulsividad', 'Ira', 'Arrebato de temperamento', 'Agitación', 'Daño'],
-        ['Comida', 'Bienes materiales', 'Mi propio dinero', 'Personas de aspecto fino y agraciado', 'Gastos', 'Riqueza directa (ingresos estables y ganados)', 'Valores', 'Cognición', 'Motivación', 'La boca'],
-        ['Comunicación', 'Conversación', 'Pensamiento', 'Mentalidad', 'Mente ágil', 'Aprendizaje', 'Lenguaje', 'Personas más jóvenes que uno', 'Iguales', 'Colegas', 'Compañeros de clase', 'Compatriotas', 'Vecinos', 'Hermanos', 'Salir', 'Estudios', 'Agilidad', 'Estar en movimiento', 'Marcharse', 'Separación', 'Haberse ido', 'Vivacidad', 'Sensación de novedad', 'Ánimo', 'La tiroides'],
+        ['Comida', 'Bienes materiales', 'Mi propio dinero', 'Personas de aspecto fino y agraciado', 'Gastos', 'Riqueza directa (ingresos estables y ganados)', 'Valores', 'Cognición', 'Motivación'],
+        ['Comunicación', 'Conversación', 'Pensamiento', 'Mentalidad', 'Mente ágil', 'Aprendizaje', 'Lenguaje', 'Personas más jóvenes que uno', 'Iguales', 'Colegas', 'Compañeros de clase', 'Compatriotas', 'Vecinos', 'Hermanos', 'Salir', 'Estudios', 'Agilidad', 'Estar en movimiento', 'Marcharse', 'Separación', 'Haberse ido', 'Vivacidad', 'Sensación de novedad', 'Ánimo'],
         ['Hogar', 'Sensación de seguridad', 'Sensibilidad', 'Ansiedad', 'Fragilidad', 'Vacío interior', 'Preocupación', 'Inquietud', 'Introspección', 'Desgaste interior', 'Entorno donde se vive', 'Familia de origen', 'El entorno en que se nació', 'País de nacimiento', 'Mujeres', 'Madre'],
         ['Ser notado', 'Entretenimiento', 'Disfrute', 'Alegría', 'Flor de Durazno (atracción amorosa, quienes se sienten atraídos por ti)', 'Encanto', 'Sexo', 'Destacar', 'Romance', 'Hombres', 'Ser visto', 'Padre'],
         ['Trabajo penoso', 'Ajetreo', 'Pensamientos dispersos y desordenados', 'Agotamiento mental', 'Cansancio', 'Tensión', 'Ser objeto de comentarios', 'Asuntos cotidianos', 'Labor', 'Darle demasiadas vueltas', 'Socializar', 'Trato social', 'Ideas', 'Concentración', 'Obsesión', 'Asuntos repetitivos', 'Atención', 'Idas y vueltas'],
@@ -57,8 +57,8 @@ KEYWORDS = {
     ],
     'it': [
         ["L'io", 'Irritabilità', 'Irrequietezza', 'Instabilità emotiva', 'Impulsività', 'Rabbia', "Scatto d'ira", 'Agitazione', 'Danno'],
-        ['Cibo', 'Beni materiali', 'Il mio denaro', "Persone dall'aspetto fine e grazioso", 'Spese', 'Ricchezza diretta (reddito stabile e guadagnato)', 'Valori', 'Cognizione', 'Motivazione', 'La bocca'],
-        ['Comunicazione', 'Conversazione', 'Pensiero', 'Mentalità', 'Mente vivace', 'Apprendimento', 'Linguaggio', 'Persone più giovani di sé', 'Coetanei', 'Colleghi', 'Compagni di classe', 'Connazionali', 'Vicini', 'Fratelli e sorelle', 'Uscire', 'Studi', 'Agilità', 'Essere in movimento', 'Andarsene', 'Separazione', 'Essere andato via', 'Vivacità', 'Senso di novità', 'Spirito', 'La tiroide'],
+        ['Cibo', 'Beni materiali', 'Il mio denaro', "Persone dall'aspetto fine e grazioso", 'Spese', 'Ricchezza diretta (reddito stabile e guadagnato)', 'Valori', 'Cognizione', 'Motivazione'],
+        ['Comunicazione', 'Conversazione', 'Pensiero', 'Mentalità', 'Mente vivace', 'Apprendimento', 'Linguaggio', 'Persone più giovani di sé', 'Coetanei', 'Colleghi', 'Compagni di classe', 'Connazionali', 'Vicini', 'Fratelli e sorelle', 'Uscire', 'Studi', 'Agilità', 'Essere in movimento', 'Andarsene', 'Separazione', 'Essere andato via', 'Vivacità', 'Senso di novità', 'Spirito'],
         ['Casa', 'Senso di sicurezza', 'Sensibilità', 'Ansia', 'Fragilità', 'Vuoto interiore', 'Preoccupazione', 'Apprensione', 'Introspezione', 'Logoramento interiore', 'Ambiente in cui si vive', "Famiglia d'origine", "L'ambiente in cui si è nati", 'Paese di nascita', 'Donne', 'Madre'],
         ['Essere notati', 'Divertimento', 'Piacere', 'Gioia', 'Fiore di Pesco (attrazione amorosa, chi si sente attratto da te)', 'Fascino', 'Sesso', 'Distinguersi', 'Amore', 'Uomini', 'Essere visti', 'Padre'],
         ['Lavoro gravoso', 'Affaccendamento', 'Pensieri sparsi e disordinati', 'Esaurimento mentale', 'Stanchezza', 'Tensione', 'Essere oggetto di chiacchiere', 'Faccende quotidiane', 'Fatica', 'Rimuginare', 'Socializzare', 'Rapporti sociali', 'Idee', 'Concentrazione', 'Fissazione', 'Cose ripetitive', 'Attenzione', 'Andirivieni'],
