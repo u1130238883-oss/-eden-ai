@@ -57,6 +57,14 @@ final class WebTapeTests: XCTestCase {
             }
             let w = await WebAgent.run(wq, lang: .zh)
             out += "[題型 \(w.want ?? "-")] \n" + w.text + "\n\n"
+            // NINESUN_TAPE_JSONL：把引擎查到的結果（答案、證據、有沒有把握）存成一行一題，拿來出「引擎查＋大腦說」的考題
+            if let jp = ProcessInfo.processInfo.environment["NINESUN_TAPE_JSONL"] {
+                let row: [String: Any] = ["q": q, "text": WebAgent.plain(w.text), "evidence": w.evidence, "answered": w.answered, "confident": w.confident,
+                                          "found": w.found, "want": w.want ?? "", "asis": WebAgent.showAsIs(w)]
+                if let d = try? JSONSerialization.data(withJSONObject: row, options: [.sortedKeys]), let h = FileHandle(forWritingAtPath: jp) ?? { FileManager.default.createFile(atPath: jp, contents: nil); return FileHandle(forWritingAtPath: jp) }() {
+                    h.seekToEndOfFile(); h.write(d); h.write("\n".data(using: .utf8)!); h.closeFile()
+                }
+            }
             if ProcessInfo.processInfo.environment["NINESUN_TAPE_DEBUG"] != nil { out += "DEBUG " + Understanding.lastListDebug + "\n\n" }
         }
         out += "TAPE searches=\(tape.counts.searches) pages=\(tape.counts.pages) misses=\(tape.misses.count)\n"

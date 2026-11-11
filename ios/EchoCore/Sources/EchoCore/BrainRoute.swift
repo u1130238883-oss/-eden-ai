@@ -40,6 +40,18 @@ public enum BrainRoute {
             && !asksFortune(text)
     }
 
+    /// 要查了才知道的事實（一個數字、人名、地名、時間、一份名單）：小模型憑記憶常常答錯，
+    /// 先上網查、推理出答案，再讓大腦照著說。聊天、意見、建議、心情不用查
+    public static func needsLookup(_ text: String) -> Bool {
+        guard !asksFortune(text), text.count <= 40 else { return false }
+        // 問大腦自己或問使用者自己的事（「你喜歡哪些歌」「我有多少時間」）不是查資料
+        if text.contains("你") || text.contains("我") { return false }
+        switch Understanding.frame(text).want {
+        case .number, .person, .place, .time, .list: return true
+        default: return false
+        }
+    }
+
     /// 引擎的回答只是在要生日（「我還不知道你的生日…例如：我的生日是2000年1月1日」）
     public static func needsBirthday(_ reply: String) -> Bool {
         ["我的生日是2000", "我是2000年1月1日", "my birthday is 2000", "mi cumpleaños es 2000", "il mio compleanno è 2000"]

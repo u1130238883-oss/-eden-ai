@@ -387,8 +387,9 @@ final class ChatViewModel: ObservableObject {
             return true
         }
         if let q = reply.webQuery {
-            // 問現在、最新的事：大腦記得的可能過時，先上網查，再讓大腦照查到的整理回答
-            if BrainRoute.timeSensitive(text) {
+            // 問現在、最新的事（大腦記得的可能過時），或要查了才知道的事實（數字、人名、地名、時間、名單——小模型憑記憶常答錯）：
+            // 先上網查、推理出答案，再讓大腦照查到的說
+            if BrainRoute.timeSensitive(text) || BrainRoute.needsLookup(text) {
                 lookupWeb(q, L, brain: brain, asked: text)
                 return true
             }
@@ -655,12 +656,26 @@ final class ChatViewModel: ObservableObject {
             // 有大腦：網路上查到的交給大腦讀、整理成回答；沒查到（或被擋）就用它自己知道的回答，並老實說
             if let brain {
                 let got = r.found && !r.text.contains("擋住")
+                // 引擎已經整理好的長名單、步驟：直接給（大腦重寫長名單會抄錯）
+                if got, WebAgent.showAsIs(r) {
+                    var turn = ChatTurn(role: .echo, text: book.enforce(r.text), source: .knowledge, card: r.card, tokens: [])
+                    turn.query = q
+                    await MainActor.run {
+                        self.saveFile(SelfTuning.shared.state, Self.tuningURL)
+                        self.streaming = ""
+                        self.play(text: turn.text, final: turn)
+                    }
+                    return
+                }
                 var evidence = got ? r.evidence : []
                 if got, r.answered, evidence.isEmpty { evidence = [String(r.text.prefix(800))] }
-                let note = evidence.isEmpty ? "\n\n（這次網路上沒查到資料，上面是我自己知道的，僅供參考。）" : ""
+                // 引擎有把握的答案（比對過好幾個網站、推理出來的）：當成查到的資料交給大腦，照著它的結論用自己的話說
+                let facts = got && r.answered && r.confident ? String(WebAgent.plain(r.text).prefix(700)) : ""
+                let note = evidence.isEmpty && facts.isEmpty ? "\n\n（這次網路上沒查到資料，上面是我自己知道的，僅供參考。）" : ""
                 await MainActor.run {
                     self.saveFile(SelfTuning.shared.state, Self.tuningURL)
-                    self.brainAnswer(asked ?? q, evidence: evidence, mode: evidence.isEmpty ? .chat : .grounded, lang: L, brain: brain,
+                    self.brainAnswer(asked ?? q, facts: facts, evidence: facts.isEmpty ? evidence : Array(evidence.prefix(3)),
+                                     mode: evidence.isEmpty && facts.isEmpty ? .chat : .grounded, lang: L, brain: brain,
                                      card: got ? r.card : nil, query: q, note: note) { _ in
                         var turn = ChatTurn(role: .echo, text: book.enforce(r.text), source: .knowledge, card: r.card, tokens: [])
                         turn.query = q

@@ -102,6 +102,25 @@ public enum WebAgent {
         return Plan(kind: kind, keywords: kw, core: core, queries: qs.filter { !$0.isEmpty && seen.insert($0).inserted }, numeric: numeric)
     }
 
+    /// 引擎回答裡給人看的裝飾（📌 回答、💬 你可能還想知道、來源）拿掉，只留內容——交給大腦當「查到的資料」
+    public static func plain(_ text: String) -> String {
+        var lines: [String] = []
+        for l in text.components(separatedBy: "\n") {
+            let t = l.trimmingCharacters(in: .whitespaces)
+            if t == "📌 回答" || t.hasPrefix("💬") || t.hasPrefix("來源：") || t.hasPrefix("📒") { continue }
+            lines.append(l)
+        }
+        return lines.joined(separator: "\n").replacingOccurrences(of: #"\n{3,}"#, with: "\n\n", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// 引擎已經整理好的長名單、步驟（98 個免簽國家、六個步驟）：直接給使用者看，不讓大腦重寫（小模型抄長名單會抄錯、漏掉）
+    public static func showAsIs(_ r: Result) -> Bool {
+        guard r.found, r.answered, r.confident, let w = r.want, w == "list" || w == "steps" else { return false }
+        let p = plain(r.text)
+        return p.count >= 120 || p.components(separatedBy: "、").count >= 9
+    }
+
     /// 去社群平台找什麼：
     /// - 最新的事（現在、最新、最近、今年、新聞）→ X（消息最快，官方帳號、記者第一手）
     /// - 大家的看法、經驗（推薦、好不好、值不值得、為什麼、怎麼辦、比較）→ 知乎（中文問答）
