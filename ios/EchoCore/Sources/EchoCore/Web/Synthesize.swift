@@ -249,14 +249,23 @@ public enum Synthesize {
         }
         scored.sort { $0.1 > $1.1 }
         var pts: [Point] = []
+        // 同一個重點的不同寫法各有幾個網站這樣寫：最後用最多網站寫的那個版本
+        // （一個網站把 GDP 寫成「國民生產毛額」，三個網站寫「國內生產毛額」→ 用三個網站的）
+        var wording: [[String: Set<String>]] = []
         for (u, s) in scored.prefix(200) {
             let text = clean(dropEcho(u.text, question: qg))
             let g = grams(text), h = grams(firstClause(text))
             if let k = pts.firstIndex(where: { same($0, g, h) }) {
                 if !pts[k].hosts.contains(u.host) { pts[k].hosts.append(u.host); pts[k].score += 2 }
+                wording[k][text, default: []].insert(u.host)
                 continue
             }
             pts.append(Point(text: text, hosts: [u.host], score: s, grams: g, head: h))
+            wording.append([text: [u.host]])
+        }
+        for k in pts.indices {
+            let mine = wording[k][pts[k].text]?.count ?? 1
+            if let best = wording[k].max(by: { $0.value.count < $1.value.count }), best.value.count > mine, best.key.count >= 8 { pts[k].text = best.key }
         }
         return pts.filter { $0.text.count >= 8 }.sorted { $0.score > $1.score }
     }

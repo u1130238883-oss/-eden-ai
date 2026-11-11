@@ -783,3 +783,21 @@ acronym definitions, breed checks (cats need …貓; dogs only drop sizes/jobs/t
 - Exam: `webbrain` (46 items) built by `gen_webbrain.py` from tape dumps (`NINESUN_TAPE_JSONL` in WebTapeTests), graded with the web keywords.
 - Live web exam round 4 (run 17): 98/104 = 94.2% (rounds 1–3: 82.7 / 89.4 / 86.5). IPA build 262 sent.
 - Numbers ignore historical measurements (珠峰 8839 → 8848.86); work lists keep only the stated count (四大名著 → 4).
+
+## Round 17 (commit 06305c0, answers hash c8a6b925ad) — 2907/2984 = 97.4% (old questions 2869/2938 = 97.7%; IPA build 264)
+webbrain 38/46: the brain followed the facts; misses were the engine's (張忠 cut short, junk dog list, no 五大洲) or the grader's
+(299,792,458 vs 299792, 致病原). think/negative 5/8: told the user to pay the "prize shipping fee" and the job "deposit".
+Scores move ±0.3% between runs with identical prompts (sampling), so compare categories, not single items.
+
+## Round 18 changes
+- Brain: `LocalBrain.isTooGood` (guaranteed profit, pay-first fees, strangers asking for money, fake police/bank, codes/cards, miracle cures)
+  → `waryQuestion` hint: say it's likely a scam in the first sentence, name a giveaway, say what to do (165 / doctor).
+  `followFormat`: 簡短/長話短說 keeps ≤60 chars; "給我三個…" keeps the first sentence of each item when over 200 chars.
+- Web engine (all compared old-vs-new on the four recorded rounds with `$S/wxcmp.sh <run> <build> <tag>`; replays vary ±1 question):
+  whole names (張忠 → 張忠謀: same next character every time), "X的創辦人是誰" → `whoDid` (作者/導演… only accept "作者 XXX"),
+  numbered headings as a list (1.吉娃娃 2.博美犬; repeated sub-headings ignored), list continued from the previous sentence,
+  "A、B 和 C", overlapping runs cluster and unrelated runs are dropped (用途 vs 程式語言), strongly supported names survive the
+  common-ending filter (東京 among …市), ranked tables capped at 12 for 大城市/主要/著名, `Synthesize.meaning` for "X 代表什麼"
+  (also reads raw snippets; a page found by two searches keeps both snippets in `dupSnips`), recipes up to 12 steps,
+  "推薦什麼方法" → advice, merged points use the wording most sites share (國內生產毛額, not one site's 國民生產毛額).
+- Replay, old → new: run 17 94.2 → 97.1, run 14 87.5 → 90.4, run 3 92.3 → 95.2, run 1 93.3 → 93.3.
