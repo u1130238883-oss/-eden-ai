@@ -759,7 +759,7 @@ public enum Think {
                rolePat]
         let titles = ["好友", "朋友", "同學", "夥伴", "合夥人", "創辦人", "創始人", "物理學家", "科學家", "數學家", "化學家", "生物學家", "發明家", "企業家", "工程師", "作家", "學家", "家", "者", "師", "人", "年", "後來", "當年", "最初", "首先"]
         let bad = ["的", "是", "了", "被", "這", "那", "一", "們", "該", "公司", "團隊", "政府", "共同", "它", "他", "她", "所", "其", "位", "名", "個", "人士", "大家"]
-        let after = ["博士", "先生", "女士", "教授", "表示", "指出", "認為", "曾", "在", "於", "說", "今", "昨", "將", "也", "已", "出席", "接受", "獲", "近日", "日前", "回憶", "談", "與", "宣布", "透露", "受訪", "坦言", "直言", "強調"]
+        let after = ["博士", "先生", "女士", "教授", "表示", "指出", "認為", "曾", "在", "於", "說", "今", "昨", "將", "也", "已", "出席", "接受", "獲", "近日", "日前", "回憶", "談", "與", "宣布", "透露", "受訪", "坦言", "直言", "強調", "出生", "生於", "出身", "本人", "筆下", "原名", "本名", "從", "把", "寫", "創作"]
         var votes: [String: Int] = [:], quote: [String: (String, String)] = [:]
         for p in pages {
             for raw in p.text.components(separatedBy: CharacterSet(charactersIn: "。！？\n")) where raw.contains(subj) && raw.count <= 220 {
@@ -785,6 +785,14 @@ public enum Think {
                 }
             }
         }
+        // 「J.K.羅琳」和「羅琳」、「史蒂夫·賈伯斯」和「賈伯斯」是同一個人：票加在一起，用完整的那個名字
+        for long in votes.keys.sorted(by: { $0.count > $1.count }) {
+            for short in votes.keys where short != long && short.count >= 2 && long.hasSuffix(short) && (votes[short] ?? 0) > 0 && (votes[long] ?? 0) > 0 {
+                votes[long, default: 0] += votes[short] ?? 0
+                votes[short] = 0
+            }
+        }
+        votes = votes.filter { $0.value > 0 }
         let ranked = votes.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key.count > $1.key.count }
         guard let top = ranked.first, top.value >= 2 || ranked.count == 1 else { return nil }
         // 一起創立的（票數接近的第二個人）也說出來

@@ -332,6 +332,16 @@ public enum Synthesize {
             if acronym, let i = pts.firstIndex(where: { p in p.text.contains(subject) && ["縮寫", "簡稱", "分別", "代表", "英文全稱", "全名"].contains(where: { p.text.contains($0) }) }), i > 0 {
                 let d = pts.remove(at: i); pts.insert(d, at: 0)
             }
+            // 幾句都在下定義時，用最多網站這樣寫的那句（一個網站把 GDP 寫成「國民生產毛額」，三個網站寫「國內生產毛額」）
+            if acronym {
+                let cand = pts.indices.filter { k in
+                    pts[k].text.contains(subject) && (["縮寫", "簡稱", "英文全稱", "全名"].contains(where: { pts[k].text.contains($0) })
+                        || pts[k].text.range(of: defines, options: [.regularExpression, .caseInsensitive]) != nil)
+                }
+                if let best = cand.max(by: { pts[$0].hosts.count < pts[$1].hosts.count }), best > 0, pts[best].hosts.count > pts[0].hosts.count {
+                    let d = pts.remove(at: best); pts.insert(d, at: 0)
+                }
+            }
         }
         // 「X 代表什麼」「象徵什麼」：放最前面的要是說它代表什麼的那句，不是介紹它是誰設計的
         if question.contains("代表") || question.contains("象徵") || question.contains("意義"),
