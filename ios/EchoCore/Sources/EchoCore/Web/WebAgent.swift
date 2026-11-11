@@ -424,7 +424,13 @@ public enum WebAgent {
         }
         findings.removeAll { isQuestionOrFluff($0.text) }
         // 論壇、問答網站、內容農場：別的來源夠多時就不用
-        if findings.filter({ !Cite.isLowQuality($0.host) }).count >= 3 { findings.removeAll { Cite.isLowQuality($0.host) } }
+        // 例外：問的是名單，而那句話本身就是一串名單（「十大城市依次是：東京、橫濱、大阪…」）——留著，
+        // 後面還要跟其他網站比對、數目對不對得上，才會被採用
+        var wantsList = false
+        if case .list = fr?.want { wantsList = true }
+        if findings.filter({ !Cite.isLowQuality($0.host) }).count >= 3 {
+            findings.removeAll { Cite.isLowQuality($0.host) && !(wantsList && $0.text.filter { $0 == "、" }.count >= 3) }
+        }
         var lead2 = lead.map { zh ? WebStrategy.toTraditional($0) : $0 }
         // 百科／DuckDuckGo 的摘要常常是別的條目（問天空卻給「天空色的奇蹟」），不切題就只當一般資料
         let listQ = question.contains("哪些") || question.contains("列表") || question.contains("有什麼")

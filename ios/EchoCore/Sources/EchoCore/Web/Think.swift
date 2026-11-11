@@ -466,6 +466,7 @@ public enum Think {
         let core = noun.isEmpty ? subj : noun
         var seenSent = Set<String>()
         var counted: [(items: [String], host: String)] = []
+        var countedIsTop = false
         // 括號裡的名單（「由11個獨立國家（汶萊、緬甸、柬埔寨…）組成」）也拿出來當一句看，前面接著括號前的話（知道有幾個）
         var expanded: [(text: String, host: String)] = []
         for s in sents {
@@ -477,6 +478,8 @@ public enum Think {
                 expanded.append((String(before.suffix(30)) + "：" + ns.substring(with: m.range(at: 1)), s.host))
             }
         }
+        let trace = ProcessInfo.processInfo.environment["NINESUN_LIST_TRACE"]
+        if let trace { for s in expanded where s.text.contains(trace) { FileHandle.standardError.write(Data("TRACE subj=\(subj) noun=\(noun) about=\(about(s.text)) core=\(s.text.contains(core)) :: \(s.text.prefix(160))\n".utf8)) } }
         for s in expanded where about(s.text) || s.text.contains(core) || continues.contains(s.host + "|" + s.text) {
             // 同一頁重複出現的同一句話（導覽、摘要又印一次）只算一次
             guard seenSent.insert(s.host + "|" + s.text).inserted else { continue }
@@ -505,7 +508,10 @@ public enum Think {
                 }
                 let shortRun = parts.count >= 5 && parts.filter { $0.trimmingCharacters(in: .whitespaces).count <= 2 }.count * 10 >= parts.count * 6
                 for c in cands {
-                    let c1 = c.trimmingCharacters(in: .whitespaces)
+                    var c1 = c.trimmingCharacters(in: .whitespaces)
+                    // 「掌握 Python」「PHP 常見」：英文名字前後黏著的中文字不是名字的一部分
+                    if let m = Understanding.match(c1, #"^[\p{Han}]{1,6}\s+([A-Za-z][A-Za-z0-9+#.\-]{0,14})$"#)
+                        ?? Understanding.match(c1, #"^([A-Za-z][A-Za-z0-9+#.\-]{0,14})\s+[\p{Han}]{1,4}$"#) { c1 = m[1] }
                     if shortRun, c1.count == 1, c1.unicodeScalars.first?.properties.isIdeographic == true, !typed, !"等和及與的是有".contains(c1) {
                         if !names.contains(c1) { names.append(c1) }
                         continue
@@ -551,10 +557,12 @@ public enum Think {
             }
             runs.append((names, s.host, continues.contains(s.host + "|" + s.text) || (subj.count >= 2 ? covers(s.text, subj) : s.text.contains(subj))))
             // 句子自己說有幾個（「由11個獨立國家…組成」），列出來的剛好那麼多：最可信
-            if let m = Understanding.match(s.text, #"([0-9]{1,2}|[一二三四五六七八九十兩]{1,3})(?:個|國|大)"#),
+            if let m = Understanding.match(s.text, #"([0-9]{1,2}|[一二三四五六七八九十兩]{1,3})(個|國|大)"#),
                let n = Int(m[1]) ?? Understanding.smallNumber(m[1]), n == names.count, n >= 3,
                // 那句話要在講問的東西（「台灣的四大族群」不是在講直轄市）
                noun.isEmpty ? (subj.count >= 2 && s.text.contains(subj)) : s.text.contains(noun) {
+                // 「十大城市依次是…」是排名前十，不是「一共只有十個」
+                if counted.isEmpty { countedIsTop = m[2] == "大" && ["最多", "最大", "排名", "依次", "前"].contains(where: { s.text.contains($0) }) }
                 counted.append((names, s.host))
             }
             for n in names {
@@ -599,7 +607,12 @@ public enum Think {
         if let c = counted.first {
             lastItems = c.items
             let hosts = Array(Set(counted.filter { $0.items == c.items }.map(\.host))).sorted()
-            return "\(subj)\(noun.isEmpty || subj.hasSuffix(noun) || noun == "國家" && subj.hasSuffix("國") ? "" : "的" + noun)一共 \(c.items.count) 個：\n" + Countries.lines(c.items)
+            let what = "\(subj)\(noun.isEmpty || subj.hasSuffix(noun) || noun == "國家" && subj.hasSuffix("國") ? "" : "的" + noun)"
+            if countedIsTop {
+                return "\(what)，排在最前面的 \(c.items.count) 個（照資料的順序）：\n" + Countries.lines(c.items)
+                    + "\n（資料寫的是前 \(c.items.count) 名，列出來的也剛好這麼多；整理自 " + hosts.joined(separator: "、") + "）"
+            }
+            return "\(what)一共 \(c.items.count) 個：\n" + Countries.lines(c.items)
                 + "\n（資料自己寫了有 \(c.items.count) 個，列出來的也剛好這麼多；整理自 " + hosts.joined(separator: "、") + "）"
         }
         // 主題自己說了有幾個（「七大洲」「世界三大宗教」「四大名著」）：剛好列出那麼多個的那一串最可信——
