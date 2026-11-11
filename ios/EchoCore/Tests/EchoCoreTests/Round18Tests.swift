@@ -75,6 +75,17 @@ final class Round18Tests: XCTestCase {
         XCTAssertEqual(WebAgent.topOfTable(text, question: "日本有哪些城市"), text)
     }
 
+    /// 一個網站把 GDP 寫成「國民生產毛額」，其他地方都寫「國內生產毛額」：用大家寫的那個
+    func testAcronymNameByAgreement() {
+        let pages = [(host: "a.com", text: "什麼是國內生產毛額（GDP）？一本國家的經濟成績單\n國內生產毛額（Gross Domestic Product），簡稱GDP，是衡量一個國家或地區經濟活動的指標。"),
+                     (host: "b.com", text: "GDP（Gross Domestic Product，國民生產毛額）是用來衡量一個國家生產力的重要總經數據，也代表一個國家的經濟成長率。"),
+                     (host: "c.com", text: "國內生產毛額(GDP)是一定時期內一個地區生產的所有最終商品和服務的市場價值。\n實質國內生產毛額（GDP）扣掉了物價的影響。")]
+        XCTAssertEqual(Synthesize.acronymName("GDP", pages: pages), "國內生產毛額")
+        XCTAssertNil(Synthesize.acronymName("玉山", pages: pages))
+        let a = Synthesize.compose(question: "什麼是GDP", subject: "GDP", want: .definition, pages: pages)
+        XCTAssertTrue(a?.components(separatedBy: "\n").first?.contains("國內生產毛額") ?? false, a ?? "nil")
+    }
+
     /// 「推薦什麼方法」要的是做法，不是幾個字的答案
     func testRecommendMethodIsAdvice() {
         if case .steps = Understanding.frame("學日文推薦什麼方法").want {} else { XCTFail("\(Understanding.frame("學日文推薦什麼方法").want)") }

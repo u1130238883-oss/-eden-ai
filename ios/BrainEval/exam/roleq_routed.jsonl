@@ -1,12 +1,12 @@
-{"cat":"roleplay_q","character":"30 歲的女上司，嚴格但會偷偷照顧人","expect":[["意義","活著","自己","選擇","值得","喜歡"]],"id":"rq-000","lang":"zh","no_narration":true,"q":"活著是為了什麼","route":"roleplay","split":"dev"}
-{"cat":"roleplay_q","character":"28 歲的男生，個性冷淡但其實很在乎我，是我的男朋友","expect":[["意義"]],"id":"rq-001","lang":"zh","no_narration":true,"q":"人生有意義嗎","route":"roleplay","split":"hold"}
-{"cat":"roleplay_q","character":"28 歲的男生，個性冷淡但其實很在乎我，是我的男朋友","expect":[["幸福","快樂"]],"id":"rq-002","lang":"zh","no_narration":true,"q":"什麼是幸福","route":"roleplay","split":"dev"}
-{"cat":"roleplay_q","character":"一個溫柔、有點壞壞的成年戀人（25 歲）","expect":[["玉山"]],"id":"rq-003","lang":"zh","no_narration":true,"q":"台灣最高的山是哪座","route":"roleplay","split":"dev"}
-{"cat":"roleplay_q","character":"30 歲的女上司，嚴格但會偷偷照顧人","expect":[["H2O","H₂O"]],"id":"rq-004","lang":"zh","no_narration":true,"q":"水的化學式是什麼","route":"roleplay","split":"hold"}
-{"cat":"roleplay_q","character":"","expect":[["睡","床","咖啡","手機","放鬆"]],"id":"rq-005","lang":"zh","low":true,"no_narration":true,"q":"我最近失眠怎麼辦","route":"roleplay","split":"hold"}
-{"cat":"roleplay_q","character":"28 歲的男生，個性冷淡但其實很在乎我，是我的男朋友","expect":[["東京"]],"id":"rq-006","lang":"zh","no_narration":true,"q":"日本的首都是哪裡","route":"roleplay","split":"dev"}
-{"cat":"roleplay_q","character":"30 歲的女上司，嚴格但會偷偷照顧人","expect":[["不是","沒用","你"]],"id":"rq-007","lang":"zh","low":true,"no_narration":true,"q":"我是不是很沒用","route":"roleplay","split":"dev"}
-{"cat":"roleplay_q","character":"28 歲的男生，個性冷淡但其實很在乎我，是我的男朋友","expect":[["水","米"]],"id":"rq-008","lang":"zh","no_narration":true,"q":"怎麼煮白飯","route":"roleplay","split":"dev"}
-{"cat":"roleplay_q","character":"30 歲的女上司，嚴格但會偷偷照顧人","expect":[["死","怕"]],"id":"rq-009","lang":"zh","no_narration":true,"q":"死亡可怕嗎","route":"roleplay","split":"dev"}
-{"cat":"roleplay_q","character":"一個溫柔、有點壞壞的成年戀人（25 歲）","expect":[["1000","一千"]],"id":"rq-010","lang":"zh","no_narration":true,"q":"1公斤等於幾公克","route":"roleplay","split":"dev"}
-{"cat":"roleplay_q","character":"","expect":[["工作","辭","你"]],"id":"rq-011","lang":"zh","no_narration":true,"q":"你覺得我該不該辭職","route":"roleplay","split":"dev"}
+{"cat": "roleplay_q", "character": "30 歲的女上司，嚴格但會偷偷照顧人", "expect": [["意義", "活著", "自己", "選擇", "值得", "喜歡"]], "id": "rq-000", "lang": "zh", "no_narration": true, "q": "活著是為了什麼", "route": "roleplay", "split": "dev"}
+{"cat": "roleplay_q", "character": "28 歲的男生，個性冷淡但其實很在乎我，是我的男朋友", "expect": [["意義"]], "id": "rq-001", "lang": "zh", "no_narration": true, "q": "人生有意義嗎", "route": "roleplay", "split": "hold"}
+{"cat": "roleplay_q", "character": "28 歲的男生，個性冷淡但其實很在乎我，是我的男朋友", "expect": [["幸福", "快樂"]], "id": "rq-002", "lang": "zh", "no_narration": true, "q": "什麼是幸福", "route": "roleplay", "split": "dev"}
+{"cat": "roleplay_q", "character": "一個溫柔、有點壞壞的成年戀人（25 歲）", "expect": [["玉山"]], "id": "rq-003", "lang": "zh", "no_narration": true, "q": "台灣最高的山是哪座", "route": "roleplay", "split": "dev"}
+{"cat": "roleplay_q", "character": "30 歲的女上司，嚴格但會偷偷照顧人", "expect": [["H2O", "H₂O"]], "id": "rq-004", "lang": "zh", "no_narration": true, "q": "水的化學式是什麼", "route": "roleplay", "split": "hold"}
+{"cat": "roleplay_q", "character": "", "expect": [["睡", "床", "咖啡", "手機", "放鬆"]], "id": "rq-005", "lang": "zh", "low": true, "no_narration": true, "q": "我最近失眠怎麼辦", "route": "roleplay", "split": "hold"}
+{"cat": "roleplay_q", "character": "28 歲的男生，個性冷淡但其實很在乎我，是我的男朋友", "expect": [["東京"]], "id": "rq-006", "lang": "zh", "no_narration": true, "q": "日本的首都是哪裡", "route": "roleplay", "split": "dev"}
+{"cat": "roleplay_q", "character": "30 歲的女上司，嚴格但會偷偷照顧人", "expect": [["不是", "沒用", "你"]], "id": "rq-007", "lang": "zh", "low": true, "no_narration": true, "q": "我是不是很沒用", "route": "roleplay", "split": "dev"}
+{"cat": "roleplay_q", "character": "28 歲的男生，個性冷淡但其實很在乎我，是我的男朋友", "expect": [["水", "米"]], "id": "rq-008", "lang": "zh", "no_narration": true, "q": "怎麼煮白飯", "route": "roleplay", "split": "dev"}
+{"cat": "roleplay_q", "character": "30 歲的女上司，嚴格但會偷偷照顧人", "expect": [["死", "怕"]], "id": "rq-009", "lang": "zh", "no_narration": true, "q": "死亡可怕嗎", "route": "roleplay", "split": "dev"}
+{"cat": "roleplay_q", "character": "一個溫柔、有點壞壞的成年戀人（25 歲）", "expect": [["1000", "一千"]], "id": "rq-010", "lang": "zh", "no_narration": true, "q": "1公斤等於幾公克", "route": "roleplay", "split": "dev"}
+{"cat": "roleplay_q", "character": "", "expect": [["工作", "辭", "你"]], "id": "rq-011", "lang": "zh", "no_narration": true, "q": "你覺得我該不該辭職", "route": "roleplay", "split": "dev"}

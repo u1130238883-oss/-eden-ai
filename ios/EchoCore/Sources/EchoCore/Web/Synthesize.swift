@@ -304,6 +304,32 @@ public enum Synthesize {
         return (best.text, support(best))
     }
 
+    /// 英文縮寫（GDP、ESG）的中文名稱：看各網站緊接著縮寫寫的名字（「國內生產毛額（GDP）」「國內生產毛額（Gross Domestic Product），簡稱GDP」
+    /// 「GDP（Gross Domestic Product，國內生產毛額）」），最多地方寫、而且比第二名多一倍以上的才算數
+    static func acronymName(_ subject: String, pages: [(host: String, text: String)]) -> String? {
+        guard (2...6).contains(subject.count), subject.allSatisfy({ $0.isASCII && ($0.isUppercase || $0.isNumber) }) else { return nil }
+        let sj = NSRegularExpression.escapedPattern(for: subject)
+        let pats = [#"([\p{Han}]{3,10})\s*[（(]\s*"# + sj + #"\s*[）)]"#,
+                    #"([\p{Han}]{3,10})\s*[（(][A-Za-z ,.\-]{5,60}[）)][，,]?\s*(?:簡稱|縮寫為?|縮寫是)\s*"# + sj,
+                    sj + #"\s*[（(][A-Za-z ,.\-]{5,60}[，,；]\s*([\p{Han}]{3,10})[）)]"#]
+        var votes: [String: Int] = [:]
+        for p in pages {
+            let ns = p.text as NSString
+            for pat in pats {
+                guard let re = try? NSRegularExpression(pattern: pat) else { continue }
+                for m in re.matches(in: p.text, range: NSRange(location: 0, length: ns.length)) {
+                    var n = ns.substring(with: m.range(at: 1))
+                    // 「什麼是國內生產毛額」「實質國內生產毛額」前面多出來的字：別的地方有比較短的同一個名字就用短的
+                    for w in ["什麼是", "所謂的", "所謂", "又稱", "也就是", "即", "是", "的"] { if let r = n.range(of: w, options: .backwards), n.distance(from: r.upperBound, to: n.endIndex) >= 3 { n = String(n[r.upperBound...]) } }
+                    votes[n, default: 0] += 1
+                }
+            }
+        }
+        let ranked = votes.sorted { $0.value > $1.value }
+        guard let top = ranked.first, top.value >= 3, ranked.count < 2 || top.value >= ranked[1].value * 2 else { return nil }
+        return top.key
+    }
+
     /// 寫出整理好的回答；重點不夠（少於兩個）就回 nil，讓原本的方法處理
     /// lead：已經找到的直接答案（原因、定義），放在最前面，下面補其他網站也提到的重點
     /// extra：搜尋結果的摘要原文（網頁沒讀到、摘要裡卻有答案時用得上）
@@ -340,6 +366,24 @@ public enum Synthesize {
                 }
                 if let best = cand.max(by: { pts[$0].hosts.count < pts[$1].hosts.count }), best > 0, pts[best].hosts.count > pts[0].hosts.count {
                     let d = pts.remove(at: best); pts.insert(d, at: 0)
+                }
+            }
+        }
+        // 英文縮寫的中文名稱：各網站怎麼叫它，用最多地方寫的那個。
+        // 放最前面的那句如果寫的是別的名字（一個網站把 GDP 寫成「國民生產毛額」，其他幾十處都寫「國內生產毛額」），換成寫對的那句
+        if shape == .definition, let name = acronymName(subject, pages: pages + extra), let first = pts.first, !first.text.contains(name) {
+            if let i = pts.firstIndex(where: { $0.text.contains(name) && $0.text.localizedCaseInsensitiveContains(subject) }) {
+                let d = pts.remove(at: i); pts.insert(d, at: 0)
+            } else {
+                // 重點裡沒有寫對的那句：直接從網頁找一句有這個名字、又在下定義的
+                search: for p in pages + extra {
+                    for raw in p.text.components(separatedBy: sentenceEnd) {
+                        let t = clean(raw)
+                        guard (12...140).contains(t.count), t.contains(name), t.localizedCaseInsensitiveContains(subject), !isMeta(t),
+                              ["是", "指", "為", "簡稱", "衡量"].contains(where: { t.contains($0) }) else { continue }
+                        pts.insert(Point(text: t, hosts: [p.host], score: first.score + 1, grams: grams(t), head: grams(firstClause(t))), at: 0)
+                        break search
+                    }
                 }
             }
         }
