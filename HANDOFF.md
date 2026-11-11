@@ -800,4 +800,10 @@ Scores move ±0.3% between runs with identical prompts (sampling), so compare ca
   common-ending filter (東京 among …市), ranked tables capped at 12 for 大城市/主要/著名, `Synthesize.meaning` for "X 代表什麼"
   (also reads raw snippets; a page found by two searches keeps both snippets in `dupSnips`), recipes up to 12 steps,
   "推薦什麼方法" → advice, merged points use the wording most sites share (國內生產毛額, not one site's 國民生產毛額).
-- Replay, old → new: run 17 94.2 → 97.1, run 14 87.5 → 90.4, run 3 92.3 → 95.2, run 1 93.3 → 93.3.
+- `ScamCheck` (EchoCore, Foundation-only; BrainEval compiles it with LocalBrain): engine replaces its reply with a warning when the
+  brain is off; the brain gets the wary hint on chat and grounded paths. Tightened against false alarms (see ScamCheckTests).
+- Acronym names by cross-site vote (`Synthesize.acronymName`): 國內生產毛額 ×29 beats one site's 國民生產毛額.
+- Numbered-heading runs are "strong": their cluster wins over repeated colour lists; colour sentences are skipped for any breed question.
+- Replay, old → new: run 17 94.2 → 97.1, run 14 87.5 → 91.3, run 3 92.3 → 95.2, run 1 93.3 → 94.2. Full suite 202 tests, 0 failures.
+- Known: 程式語言 (Python) and 日本大城市 (東京) still vary between replays of the same tape; 學日文 advice is weak.
+- Exam: run.jsonl 2,987 (think 89 with 13 negative; webbrain 44 rebuilt from the new engine's answers).

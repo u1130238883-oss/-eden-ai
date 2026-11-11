@@ -460,6 +460,8 @@ public enum Think {
         let typed = countryList || breedTail != nil
         var count: [String: Int] = [:], hostsOf: [String: Set<String>] = [:], order: [String] = []
         var runs: [(items: [String], host: String, about: Bool)] = []
+        // 編號小標題連起來的那幾串（文章本身就是在一個一個介紹）：最可信
+        var strong = Set<Int>()
         var negative: [String: Int] = [:]
         let core = noun.isEmpty ? subj : noun
         var seenSent = Set<String>()
@@ -528,7 +530,8 @@ public enum Think {
             }
             guard names.count >= (typed ? 2 : 3) else { continue }
             // 問品種：講毛色、花色的一串（「橘貓、虎斑貓、賓士貓」）是顏色，不是品種
-            if breedTail != nil, ["毛色", "花色", "顏色", "米克斯", "混種"].contains(where: { s.text.contains($0) }) { continue }
+            if animal != nil, ["毛色", "花色", "顏色", "常見色", "米克斯", "混種"].contains(where: { s.text.contains($0) }) { continue }
+            if animal != nil, names.filter({ $0.hasSuffix("色") }).count * 2 >= names.count { continue }
             // 別篇文章的標題（「貴賓狗品種全解析：大小、性格、飼養指南與常見問題」）不是名單
             if s.text.count <= 50, ["全解析", "全攻略", "懶人包", "完整指南", "一次看懂", "一次搞懂", "指南與", "大公開", "總整理"].contains(where: { s.text.contains($0) }) { continue }
             // 在講原因的一串（「其中六個由於地震、火災、戰爭而毀壞」）不是名單
@@ -581,6 +584,7 @@ public enum Think {
                     if !names.contains(it) { names.append(it) }
                 }
                 guard next > 5, names.count >= 5 else { continue }
+                strong.insert(runs.count)
                 runs.append((names, p.host, true))
                 for n in names {
                     count[n, default: 0] += 1
@@ -622,8 +626,12 @@ public enum Think {
             for i in 0..<runs.count { for j in (i + 1)..<runs.count where j < runs.count && !Set(runs[i].items).isDisjoint(with: runs[j].items) { group[root(j)] = root(i) } }
             var members: [Int: [Int]] = [:]
             for i in 0..<runs.count { members[root(i), default: []].append(i) }
-            func size(_ ix: [Int]) -> (Int, Int, Int) { (Set(ix.map { runs[$0].host }).count, ix.count, ix.filter { runs[$0].about }.count) }
-            if let main = members.values.max(by: { size($0) < size($1) }), main.count >= 2, main.count < runs.count {
+            // 有編號小標題那串的那一群優先；再比來自幾個網站、有幾串。一樣大就取先出現的（每次結果要一樣）
+            func size(_ ix: [Int]) -> (Int, Int, Int, Int) {
+                (ix.contains(where: strong.contains) ? 1 : 0, Set(ix.map { runs[$0].host }).count, ix.count, -(ix.min() ?? 0))
+            }
+            let groups = members.values.sorted { ($0.min() ?? 0) < ($1.min() ?? 0) }
+            if let main = groups.max(by: { size($0) < size($1) }), main.count < runs.count, main.count >= 2 || main.contains(where: strong.contains) {
                 let keep = Set(main.flatMap { runs[$0].items })
                 runs = main.sorted().map { runs[$0] }
                 order = order.filter { keep.contains($0) }
@@ -793,7 +801,7 @@ public enum Think {
             }
         }
         votes = votes.filter { $0.value > 0 }
-        let ranked = votes.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key.count > $1.key.count }
+        let ranked = votes.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key.count != $1.key.count ? $0.key.count > $1.key.count : $0.key < $1.key }
         guard let top = ranked.first, top.value >= 2 || ranked.count == 1 else { return nil }
         // 一起創立的（票數接近的第二個人）也說出來
         var names = [top.key]

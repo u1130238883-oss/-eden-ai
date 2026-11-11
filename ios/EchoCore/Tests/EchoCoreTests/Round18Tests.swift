@@ -35,12 +35,13 @@ final class Round18Tests: XCTestCase {
     func testNumberedHeadingsAsList() {
         var page = "常見的狗品種介紹\n貴賓狗品種全解析：大小、性格、飼養指南與常見問題\n2025年11月05日\n"
         for (i, n) in ["吉娃娃 (Chihuahua)", "博美犬 (Pomeranian)", "約克夏（Yorkshire Terrier）", "馬爾濟斯 ( Maltese )", "臘腸犬 ( Dachshund )", "柴犬 ( Shiba Inu )"].enumerated() {
-            page += "\(i + 1).\(n)\n原產地：某地\n1. 外貌特徵\n牠們體型小巧。\n2. 個性\n牠們很活潑。\n"
+            // 每一種底下都有一串毛色：這幾串互相重疊，但不是品種
+            page += "\(i + 1).\(n)\n原產地：某地\n1. 外貌特徵\n牠們體型小巧，這種狗品種的常見色為白色、黑色、杏色、灰色\(i % 2 == 0 ? "" : "、米白色")。\n2. 個性\n牠們很活潑。\n"
         }
         let a = Think.plainList(question: "常見的狗品種有哪些", pages: [E(text: page, host: "pets.tw")], subject: "常見的狗品種", noun: "")
         XCTAssertNotNil(a)
         for n in ["吉娃娃", "博美犬", "約克夏", "柴犬"] { XCTAssertTrue(a?.contains(n) ?? false, "\(n)：\(a ?? "nil")") }
-        for n in ["性格", "飼養指南", "外貌特徵", "個性"] { XCTAssertFalse(a?.contains(n) ?? true, "\(n)：\(a ?? "nil")") }
+        for n in ["性格", "飼養指南", "外貌特徵", "個性", "白色", "杏色"] { XCTAssertFalse(a?.contains(n) ?? true, "\(n)：\(a ?? "nil")") }
     }
 
     /// 互相重疊的幾串是同一種名單；跟誰都不重疊的（用途）不是。上一句講主題、這句用「包括」接下去也算

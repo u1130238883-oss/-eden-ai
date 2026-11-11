@@ -325,7 +325,7 @@ public enum Synthesize {
                 }
             }
         }
-        let ranked = votes.sorted { $0.value > $1.value }
+        let ranked = votes.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
         guard let top = ranked.first, top.value >= 3, ranked.count < 2 || top.value >= ranked[1].value * 2 else { return nil }
         return top.key
     }
