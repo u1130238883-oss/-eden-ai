@@ -1,0 +1,9 @@
+{
+  "appId": "com.edenai.app",
+  "appName": "Eden AI",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0f0e13"
+  }
+}
