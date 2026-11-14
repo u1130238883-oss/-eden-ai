@@ -1,0 +1,33 @@
+name: Search probe
+
+# commit 訊息有 [probe] 時：同一批問題用不同的搜尋引擎、不同的寫法查，看哪一種的結果真的跟問題有關，發佈成 release
+on:
+  push:
+    paths:
+      - "ios/**"
+      - ".github/workflows/search-probe.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    if: contains(github.event.head_commit.message, '[probe]') || github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe
+        working-directory: ios/EchoCore
+        run: |
+          NINESUN_PROBE_OUT="$PWD/probe.txt" swift test -c release -Xswiftc -enable-testing --filter SearchProbeTests > probe.log 2>&1 || true
+          tail -5 probe.log
+          cat probe.txt || true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: search-probe-${{ github.run_number }}
+          name: Search probe ${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          files: ios/EchoCore/probe.txt
+          body: 搜尋探針（哪個搜尋引擎、哪種寫法的結果有用）

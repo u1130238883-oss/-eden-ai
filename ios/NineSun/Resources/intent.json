@@ -1,0 +1,1 @@
+{"format": "intent-f32-v1", "labels": ["advice", "chat", "compare", "content", "count", "define", "howto", "items", "opinion", "person", "place", "quantity", "reason", "recommend", "time", "yesno"], "buckets": 32768, "dim": 48, "hidden": 64, "ngram": [1, 2, 3], "enc": 512}

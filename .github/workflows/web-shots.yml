@@ -1,0 +1,40 @@
+name: Web shots
+
+# commit 訊息有 [shots] 時：在 Linux 機器上（私人 repo 的 Mac 分鐘數貴 10 倍）真的上網查
+# web_questions_shots.txt 的題目，把引擎的回答、交給大腦的資料（jsonl）和錄音帶存到分支 tapes/web-shots-N
+on:
+  push:
+    paths:
+      - "ios/**"
+      - ".github/workflows/web-shots.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    if: contains(github.event.head_commit.message, '[shots]') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record
+        working-directory: ios/EchoCore
+        run: |
+          swiftc --version
+          NINESUN_TAPE_SET=shots NINESUN_TAPE_GAP=15 NINESUN_TAPE_JSONL="$PWD/web_rows.jsonl" \
+          NINESUN_TAPE_OUT="$PWD/web_tape.json" NINESUN_TAPE_ANSWERS="$PWD/web_answers.txt" \
+            swift test -c release -Xswiftc -enable-testing --filter WebTapeTests/testRecord > tape.log 2>&1 || true
+          tail -15 tape.log
+          touch web_rows.jsonl web_answers.txt web_tape.json
+          ls -la web_tape.json web_answers.txt web_rows.jsonl
+          gzip -9 -k web_tape.json
+      - name: Save to a branch
+        working-directory: ios/EchoCore
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          D="$RUNNER_TEMP/tape" && mkdir -p "$D" && cp web_tape.json.gz web_answers.txt web_rows.jsonl "$D/" && tail -60 tape.log > "$D/tape.log"
+          cd "$D" && git init -q && git add . && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "web shots ${{ github.run_number }}"
+          git push -q "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/tapes/web-shots-${{ github.run_number }}

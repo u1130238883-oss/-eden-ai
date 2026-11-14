@@ -1,0 +1,492 @@
+import Foundation
+
+/// 整理：像人查資料一樣——打開好幾個網站，先想這題要什麼樣的答案，把每個網站的內容拆成一個一個重點，
+/// 丟掉標題、文章簡介（「這篇文章旨在…」）、hashtag、廣告；再比對：好幾個網站都講到的重點比較可信；
+/// 最後用自己的話寫出來：先講結論，再列幾個重點，不貼別人的標題。
+public enum Synthesize {
+    /// 這題要的答案長什麼樣子
+    public enum Shape: Equatable { case advice, reason, definition, open }
+
+    public struct Point {
+        public var text: String
+        public var hosts: [String]
+        public var score: Double
+        var grams: Set<String>
+        /// 第一個子句（重點常常在這裡：「先觀察對方」「觀察對方的反應」）
+        var head: Set<String>
+    }
+
+    static func shape(_ want: Understanding.Want) -> Shape? {
+        switch want {
+        case .steps: return .advice
+        case .reason: return .reason
+        case .definition: return .definition
+        case .open: return .open
+        default: return nil
+        }
+    }
+
+    // MARK: - 不是內容的句子
+
+    /// 文章簡介、導讀、行銷：講的是「這篇文章」，不是答案本身
+    static let metaWords = ["這篇文章", "本文", "文章將", "文章會", "旨在", "小編", "帶你", "帶大家", "一起來看", "一起來了解", "為你整理", "為大家整理",
+                            "幫你整理", "整理了", "懶人包", "以下將", "以下是", "以下為", "下面將", "下面是", "本篇", "這篇", "今天要", "今天就",
+                            "點擊", "點我", "延伸閱讀", "推薦閱讀", "相關文章", "看更多", "了解更多", "閱讀更多", "繼續閱讀", "立即", "免費",
+                            "下載", "訂閱", "追蹤", "按讚", "分享", "留言", "版權", "廣告", "優惠", "折扣", "客服", "登入", "註冊", "目錄",
+                            "常見問題", "Q&A", "FAQ", "作者", "編輯", "發布", "更新時間", "瀏覽", "人氣", "算命", "運勢#", "加入會員", "預約",
+                            "諮詢", "LINE", "私訊", "報名", "課程", "限時", "活動", "抽獎", "網友", "這裡告訴你", "告訴你", "教你", "秘訣大公開",
+                            "你知道嗎", "你是否", "是不是也", "有沒有過", "相信很多人", "很多人都", "不少人"]
+
+    public static func isMeta(_ s: String) -> Bool {
+        let t = s.trimmingCharacters(in: .whitespaces)
+        if t.filter({ $0 == "#" || $0 == "＃" }).count >= 1 { return true }
+        if metaWords.contains(where: { t.contains($0) }) { return true }
+        if t.hasSuffix("？") || t.hasSuffix("?") { return true }
+        if t.contains("｜") || t.contains(" | ") || t.contains(" - ") || t.contains("—") && t.count < 40 { return true }
+        if t.contains("http") || t.contains("www.") || t.contains(".com") { return true }
+        // 表情符號開頭的多半是標題、行銷文案
+        if let f = t.unicodeScalars.first, f.properties.isEmojiPresentation { return true }
+        return false
+    }
+
+    // MARK: - 清理成乾淨的一句話
+
+    static let leadingFillers = ["首先", "其次", "再來", "再者", "接著", "然後", "最後", "另外", "此外", "還有", "總之", "總而言之", "所以說",
+                                 "其實", "那麼", "因此", "而且", "第一", "第二", "第三", "第四", "第五", "簡單來說", "簡單說", "也就是說"]
+
+    public static func clean(_ raw: String) -> String {
+        var s = raw.trimmingCharacters(in: .whitespaces)
+        // 去掉表情符號、[1] 這類註腳
+        s = String(String.UnicodeScalarView(s.unicodeScalars.filter { !($0.properties.isEmojiPresentation || ($0.properties.isEmoji && $0.value > 0x2000 && $0.value != 0x3001)) }))
+        s = s.replacingOccurrences(of: #"\[\d+\]|\[註\d*\]|\[來源請求\]"#, with: "", options: .regularExpression)
+        // 圖片說明（「Photo Credit: 某某 (某某) 正午陽光…」「圖片來源：…」）
+        s = s.replacingOccurrences(of: #"^(?i)(?:photo credit|圖片來源|圖片提供|圖／|圖/)\s*[:：]?[^，。]*?[)）]\s*"#, with: "", options: .regularExpression)
+        // 編號：「1.」「(2)」「三、」「Step 3：」「第一步，」「• 」
+        let numbering = [#"^[\(（]?\d{1,2}[\)）\.、．:：]\s*"#, #"^[一二三四五六七八九十]{1,3}[、\.．:：]\s*"#, #"^(?i)(step|步驟)\s*\d+\s*[:：\.、]?\s*"#,
+                         #"^第[一二三四五六七八九十\d]{1,3}(步|點|個|招|種)?[，、：:\s]*"#, #"^[•●○◆◇■□▶►★☆✓✔➤→·\-\*＊]+\s*"#]
+        for _ in 0..<2 { for p in numbering { s = s.replacingOccurrences(of: p, with: "", options: .regularExpression) } }
+        for _ in 0..<2 {
+            for f in leadingFillers where s.hasPrefix(f) && s.count > f.count + 6 {
+                s = String(s.dropFirst(f.count)).trimmingCharacters(in: CharacterSet(charactersIn: "，,、：: "))
+            }
+        }
+        // 口語尾巴：「喔」「唷」「啦」「～」「！」
+        s = s.replacingOccurrences(of: #"[喔哦唷呦啦囉耶呢～~！!]+([。]?)$"#, with: "", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression).trimmingCharacters(in: .whitespaces)
+        // 太長：在逗號的地方切，留前面完整的部分（重點通常在前面）
+        if s.count > 80 {
+            let cs = Array(s)
+            var cut = 0
+            for (i, c) in cs.enumerated() where i < 80 && "，；,;".contains(c) { cut = i }
+            s = cut >= 20 ? String(cs[..<cut]) : String(cs[..<78])
+        }
+        s = s.trimmingCharacters(in: CharacterSet(charactersIn: "，,、；;：: "))
+        if let l = s.last, !"。！？.!?」）)".contains(l) { s += "。" }
+        return s
+    }
+
+    // MARK: - 拆成一個一個的重點
+
+    struct Unit { let text: String; let host: String; let item: Bool }
+
+    static let sentenceEnd = CharacterSet(charactersIn: "。！？!?；;\n")
+
+    static func units(_ page: String, host: String) -> [Unit] {
+        var out: [Unit] = []
+        let lines = page.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        var i = 0
+        while i < lines.count {
+            let line = lines[i]
+            let numbered = line.range(of: #"^([\(（]?\d{1,2}[\)）\.、．:：]|[一二三四五六七八九十]{1,3}[、．]|第[一二三四五六七八九十\d]{1,3}[步點招個]|[•●◆■▶►★✓✔➤])"#, options: .regularExpression) != nil
+            let body = clean(line)
+            // 小標題（「1. 保持自信」）後面接一段說明：合成「保持自信：說明的第一句」
+            if numbered, body.count <= 18, i + 1 < lines.count {
+                let next = lines[i + 1]
+                if !isMeta(next), next.count >= 12,
+                   let first = next.components(separatedBy: sentenceEnd).first(where: { $0.count >= 8 }) {
+                    let head = body.trimmingCharacters(in: CharacterSet(charactersIn: "。"))
+                    out.append(Unit(text: head + "：" + first, host: host, item: true))
+                    i += 2
+                    continue
+                }
+            }
+            for part in line.components(separatedBy: sentenceEnd) {
+                var p = part.trimmingCharacters(in: .whitespaces)
+                // 「這篇就把我會給新手的方法寫出來：先用一到兩週搞定五十音，再…」：冒號前面在介紹文章，後面才是內容
+                if let c = p.firstIndex(where: { $0 == "：" || $0 == ":" }) {
+                    let head = String(p[..<c]), tail = String(p[p.index(after: c)...]).trimmingCharacters(in: .whitespaces)
+                    if tail.count >= 12, head.count <= 70, !isMeta(tail),
+                       ["這篇", "本文", "本篇", "整理", "寫出來", "分享", "告訴你", "懶人包"].contains(where: { head.contains($0) }) { p = tail }
+                }
+                guard p.count >= 8, p.count <= 220, !isMeta(p), !WebAgent.looksLikeJunk(p), !Think.looksLikeNoise(p) else { continue }
+                // 判斷這句是不是內容：廣告、文章介紹、留言、標題都不要
+                let v = Judge.check(p, want: .open, subject: "", inContext: true)
+                guard v == .answer else { continue }
+                out.append(Unit(text: p, host: host, item: numbered))
+            }
+            i += 1
+        }
+        return out
+    }
+
+    // MARK: - 比對
+
+    static let stopChars: Set<Character> = Set("的了是在和與及或也都就要會能可以這那你我他她它們個一不有很更最把被讓給對從到為而但如果因為所以")
+
+    static func grams(_ s: String) -> Set<String> {
+        let cs = s.filter { WebAgent.isCJK($0) || $0.isLetter || $0.isNumber }.map { $0 }
+        var g = Set<String>()
+        for i in 0..<max(0, cs.count - 1) where !(stopChars.contains(cs[i]) && stopChars.contains(cs[i + 1])) { g.insert(String(cs[i...i + 1])) }
+        return g
+    }
+
+    /// 兩句話講的是不是同一件事（重疊的雙字組佔短的那句多少）
+    static func same(_ a: Set<String>, _ b: Set<String>) -> Bool {
+        let m = min(a.count, b.count)
+        guard m >= 3 else { return false }
+        return Double(a.intersection(b).count) / Double(m) >= 0.45
+    }
+
+    /// 開頭的重點一樣（「先觀察對方：…」和「觀察對方的反應，…」）也算同一件事
+    static func same(_ a: Point, _ g: Set<String>, _ h: Set<String>) -> Bool {
+        if same(a.grams, g) { return true }
+        let shared = a.head.intersection(h).count
+        return shared >= 3 && Double(shared) / Double(max(1, min(a.head.count, h.count))) >= 0.6
+    }
+
+    static func firstClause(_ s: String) -> String {
+        String(s.prefix { !"，,：:；;。".contains($0) })
+    }
+
+    /// 開頭在重複問題的子句（「當你喜歡一個人時，」）拿掉
+    static func dropEcho(_ s: String, question q: Set<String>) -> String {
+        let c = firstClause(s)
+        guard c.count < s.count - 6 else { return s }
+        let g = grams(c)
+        guard g.count >= 2, Double(g.intersection(q).count) / Double(g.count) >= 0.5 else { return s }
+        return String(s.dropFirst(c.count + 1)).trimmingCharacters(in: .whitespaces)
+    }
+
+    /// 句子裡有沒有「做法」的字眼（可以、建議、先、避免……）
+    /// （「要」「多」「先」太常見，「最主要」「需要」不算做法，這裡不用）
+    public static func actionable(_ s: String) -> Bool {
+        ["可以", "建議", "試著", "試試", "避免", "不要", "記得", "保持", "盡量", "練習", "準備", "應該", "最好", "有助", "改善", "調整", "固定", "減少", "增加"].contains { s.contains($0) }
+    }
+
+    static let actionWords = ["可以", "建議", "試著", "試試", "先", "多", "避免", "不要", "別", "記得", "保持", "給自己", "找", "每天", "盡量", "學會",
+                              "主動", "練習", "注意", "應該", "要", "適度", "減少", "增加", "培養", "接受", "放下", "停止", "設定", "安排", "選擇"]
+    static let reasonWords = ["因為", "由於", "原因", "所以", "導致", "造成", "使得", "是因", "來自", "引起", "刺激", "產生", "散射", "反射", "作用"]
+    static let defineWords = ["是指", "指的是", "是一種", "是一個", "稱為", "是一門", "意思是", "又稱", "簡稱", "定義", "是用來",
+                              "講的是", "說的是", "指的就是", "泛指", "意指", "可以理解為", "可以說是"]
+
+    /// 這句話是在直接說「主題是什麼」：主題開頭（前面可以有「其實」「所謂」），後面緊接著「是、就是、指、講的是、包括、分為…」。
+    /// 「最後他提出一個對時間的界說」「菲莉亞。它指的是友愛」「很多人以為五行是…」都不是——
+    /// 前兩句的主語是別的東西，第三句在講誤解（使用者的截圖：這三種句子被當成「時間／愛／五行是什麼」的回答）
+    static func definesSubject(_ text: String, subject: String) -> Bool {
+        let sj = Understanding.plain(subject)
+        guard !sj.isEmpty else { return false }
+        let t = text.trimmingCharacters(in: CharacterSet(charactersIn: "「『“\" 　"))
+        if misconception(t) { return false }
+        let p = #"^(?:其實|所謂的?|簡單來說，?|簡單說，?|一般來說，?|基本上，?)?[「『]?"# + NSRegularExpression.escapedPattern(for: sj)
+            + #"[」』]?\s*(?:[（(][^）)]{0,40}[）)])?\s*(?:，)?(?:其實|本身|這個詞|一詞|的意思|的概念|的定義)?(?:就是|是指|指的是|講的是|說的是|是一|是由|是用|是|指|即|為|意指|泛指|又稱|包括|包含|分為|可以分為|代表)"#
+        return t.range(of: p, options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    /// 在講誤解、鋪陳（「很多人第一次聽到五行，以為是…」）：這句話說的是「不是什麼」，不能當成定義
+    static func misconception(_ t: String) -> Bool {
+        t.range(of: #"以為|誤以為|誤認|誤解|常被當成|常被認為是|並不是|並非|不只是|不是指|不等於"#, options: .regularExpression) != nil
+    }
+
+    /// 主語是代名詞、或接著前一句講的（「最後他提出…」「它指的是友愛」「另一方面，對佛教來說…」）：單獨拿出來看不懂在講誰
+    static func dangling(_ text: String) -> Bool {
+        let t = text.trimmingCharacters(in: CharacterSet(charactersIn: "「『“\" 　"))
+        return t.range(of: #"^(?:最後|後來|接著|然後|於是|因此|所以|但是?|不過|然而|另一方面|另外|此外|同時|而且|並且)?[，,]?(?:他|她|它|牠|其|此|該|這|那|前者|後者|上述)"#, options: .regularExpression) != nil
+            || t.range(of: #"^(?:另一方面|相反地|相對地|除此之外|也就是說|換句話說|同樣地|如上所述)"#, options: .regularExpression) != nil
+    }
+
+    /// 寫得好不好：口語、部落格腔扣分；完整、正式、有根據的句子加分
+    static let casual = ["我覺得", "我自己", "小編", "XD", "哈哈", "啦", "喔", "欸", "超級", "真的很", "網友", "大家好", "哈囉", "不囉嗦", "必看", "神器", "懶人包", "爆"]
+    static let formal = ["研究", "指出", "根據", "專家", "醫師", "心理師", "因此", "此外", "有助於", "能夠", "建議", "顯示", "發現", "原則", "關鍵"]
+    static func style(_ s: String) -> Double {
+        -1.5 * Double(casual.filter { s.contains($0) }.count) + min(1.5, 0.5 * Double(formal.filter { s.contains($0) }.count))
+    }
+
+    /// 一句話對這題有多好用
+    /// pred：「為什麼」問的是主題的哪一點（「天空為什麼是藍色的」→ 藍色）；原因句要講到這一點，只提到天空不算
+    static func score(_ u: Unit, shape: Shape, topic: Set<String>, question: Set<String>, pred: Set<String> = [], subject: String = "") -> Double {
+        let g = grams(u.text)
+        // 跟問題幾乎一樣的句子是標題（「喜歡一個人該怎麼辦？」），不是答案
+        if !question.isEmpty, Double(g.intersection(question).count) / Double(max(1, g.count)) > 0.7 { return -1 }
+        var rel = Double(g.intersection(topic).count)
+        // 主題只有一兩個字（「愛」「五行」「時間」）：湊不出幾個雙字詞，句子裡直接有這個主題就算講到了
+        if !subject.isEmpty, subject.count <= 2, u.text.contains(subject) { rel = max(rel, 2) }
+        var s = min(rel, 3) + style(u.text) + (Cite.isProfessional(u.host) && !u.host.contains("wikipedia") ? 1.5 : 0)
+        let n = u.text.count
+        s += n >= 14 && n <= 90 ? 1 : (n > 140 ? -1 : 0)
+        switch shape {
+        case .advice:
+            let act = actionWords.filter { u.text.contains($0) }.count
+            s += Double(min(act, 2)) + (u.item ? 1.5 : 0)
+            // 沒講到主題、也不是那篇文章裡列出來的一點：大概是別的話題
+            if rel == 0 && !u.item { s -= 2 }
+            // 名詞解釋（「咽喉痛是指…」）不是做法
+            if defineWords.contains(where: { u.text.contains($0) }) || u.text.contains("是指") { s -= 3 }
+        case .reason:
+            // 真的在說因果（因為、使得、導致）≠ 只提到「原因」「原理」這兩個字；歷史（西元、論文、諾貝爾）是背景，不是原因
+            let strong = ["因為", "由於", "導致", "造成", "使得", "所以", "因此", "引起", "產生", "是因"].contains { u.text.contains($0) }
+            let why = strong || reasonWords.contains { u.text.contains($0) }
+            s += strong ? 3 : (why ? 0.5 : -2)
+            s += ["散射", "波長", "吸收", "反射", "分子", "作用", "機制", "結構", "壓力", "溫度"].contains { u.text.contains($0) } ? 1 : 0
+            if ["西元", "年起", "論文", "諾貝爾", "年前", "世紀", "歷史上"].contains(where: { u.text.contains($0) }) { s -= 2 }
+            // 「依然」「仍然」是在回答接下來的疑問（為什麼不是紫色），是補充，不是主要的原因
+            if ["依然", "仍然", "還是會"].contains(where: { u.text.contains($0) }) { s -= 1.5 }
+            if rel == 0 { s -= 2 }
+            // 講到問的那一點（藍色、藍光）才是在回答；只提到主題（天空、雲是白色的）不算
+            if !pred.isEmpty { s += pred.contains(where: { u.text.contains($0) }) ? (why ? 2 : 1) : -3 }
+            // 「並無法解釋…」是文章的鋪陳，說的是「這樣解釋不通」，不是答案
+            if ["無法解釋", "不能解釋", "解釋不了", "並不能說明"].contains(where: { u.text.contains($0) }) { s -= 3 }
+        case .definition:
+            if defineWords.contains(where: { u.text.contains($0) }) { s += 3 }
+            if rel == 0 { s -= 2 }
+            // 直接說「主題是什麼」的句子最好；講誤解的、主語是「他／它」接著上一句講的，單獨看不懂，不能當定義
+            if definesSubject(u.text, subject: subject) { s += 3 }
+            else if misconception(u.text) || dangling(u.text) { return -1 }
+            // 只說「了解它很重要」，沒說它是什麼（「對許多人來說，瞭解…至關重要」）：不是內容
+            if u.text.range(of: #"(至關重要|非常重要|相當重要|十分重要|不可不知|一定要知道|值得了解|值得瞭解)[。！]?$"#, options: .regularExpression) != nil { return -1 }
+        case .open:
+            if rel == 0 { s -= 1.5 }
+        }
+        return s
+    }
+
+    /// 把各網站的句子分群：講同一件事的放一起，記下有幾個網站都這樣說
+    public static func points(question: String, subject: String, shape: Shape, pages: [(host: String, text: String)], pred: String = "") -> [Point] {
+        let topic = grams(Understanding.plain(subject))
+        // 「為什麼」問的那一點：述語的雙字詞去掉主題的、去掉「是」「的」這種虛字組成的
+        // 用關鍵的字（「藍」）而不是詞：網頁會寫「藍光」「藍天」「變藍」
+        let topicChars = Set(Understanding.plain(subject))
+        let filler: Set<Character> = ["是", "的", "會", "很", "麼", "什", "為", "了", "在", "這", "那", "有", "要", "能", "可", "以", "都", "也", "就", "一", "個", "色"]
+        let predG = Set(Understanding.plain(pred).filter { !topicChars.contains($0) && !filler.contains($0) && !$0.isPunctuation }.map(String.init))
+        let qg = grams(question)
+        var scored: [(Unit, Double)] = []
+        for p in pages {
+            // 百科只有名詞解釋和作品劇情，沒有「怎麼做」：建議題不用它
+            if shape == .advice, p.host.contains("wikipedia") || p.host.contains("baike") || p.host.contains("wikiwand") { continue }
+            // 整頁都沒講到主題（問「喜歡一個人」卻是水果去皮的小技巧）：整頁不用
+            if topic.count >= 2, Double(grams(p.text).intersection(topic).count) / Double(topic.count) < 0.5 { continue }
+            var seen = Set<String>()
+            for u in units(p.text, host: p.host) where seen.insert(String(u.text.prefix(12))).inserted {
+                let s = score(u, shape: shape, topic: topic, question: qg, pred: predG, subject: Understanding.plain(subject))
+                if s >= (shape == .advice ? 2.5 : 3) { scored.append((u, s)) }
+            }
+        }
+        scored.sort { $0.1 > $1.1 }
+        var pts: [Point] = []
+        // 同一個重點的不同寫法各有幾個網站這樣寫：最後用最多網站寫的那個版本
+        // （一個網站把 GDP 寫成「國民生產毛額」，三個網站寫「國內生產毛額」→ 用三個網站的）
+        var wording: [[String: Set<String>]] = []
+        for (u, s) in scored.prefix(200) {
+            let text = clean(dropEcho(u.text, question: qg))
+            let g = grams(text), h = grams(firstClause(text))
+            if let k = pts.firstIndex(where: { same($0, g, h) }) {
+                if !pts[k].hosts.contains(u.host) { pts[k].hosts.append(u.host); pts[k].score += 2 }
+                wording[k][text, default: []].insert(u.host)
+                continue
+            }
+            pts.append(Point(text: text, hosts: [u.host], score: s, grams: g, head: h))
+            wording.append([text: [u.host]])
+        }
+        for k in pts.indices {
+            let mine = wording[k][pts[k].text]?.count ?? 1
+            if let best = wording[k].max(by: { $0.value.count < $1.value.count }), best.value.count > mine, best.key.count >= 8 { pts[k].text = best.key }
+        }
+        return pts.filter { $0.text.count >= 8 }.sorted { $0.score > $1.score }
+    }
+
+    /// 「奧運的五環代表什麼」：直接找「五環象徵五大洲的團結」這種句子——主題後面緊接著「代表、象徵」的那句。
+    /// 好幾個網站說的意思一樣的排前面；「並非由…所代表」這種否定句不算
+    static func meaning(question: String, subject: String, pages: [(host: String, text: String)]) -> (text: String, hosts: [String])? {
+        guard question.range(of: #"(代表|象徵|寓意)(什麼|甚麼|著什麼|了什麼|的是什麼|哪)"#, options: .regularExpression) != nil else { return nil }
+        // 主題最後那個詞（「奧運的五環」→「五環」）
+        let tail = (subject.components(separatedBy: "的").last ?? subject).trimmingCharacters(in: .whitespaces)
+        guard tail.count >= 2 else { return nil }
+        let pat = NSRegularExpression.escapedPattern(for: tail) + #"[^，。；！？\n]{0,10}?，?(?:分別)?(?:代表著?|象徵著?|寓意著?|意味著)\s*(?:的是|了)?([^，。；！？\n]{2,40})"#
+        if ProcessInfo.processInfo.environment["NINESUN_LIST_TRACE"] != nil {
+            FileHandle.standardError.write(Data("TRACE meaning tail=\(tail) pages=\(pages.count) with=\(pages.filter { $0.text.contains(tail) && ($0.text.contains("象徵") || $0.text.contains("代表")) }.count)\n".utf8))
+        }
+        guard let re = try? NSRegularExpression(pattern: pat) else { return nil }
+        var cands: [(text: String, host: String, obj: Set<String>)] = []
+        for p in pages {
+            for raw in p.text.components(separatedBy: sentenceEnd) where raw.count <= 160 && raw.contains(tail) {
+                let ns = raw as NSString
+                guard let m = re.firstMatch(in: raw, range: NSRange(location: 0, length: ns.length)) else { continue }
+                let whole = ns.substring(with: m.range), obj = ns.substring(with: m.range(at: 1))
+                if ["並非", "不是", "並不", "沒有", "什麼", "甚麼", "？", "?"].contains(where: { whole.contains($0) }) { continue }
+                // 句子很長時（「…於 1913 年由…設計，有著將近 110 年的歷史，由五種顏色組成之五環白底標誌，象徵著全世界的五大洲，…」）
+                // 只取講「代表什麼」的那一段：往前到上一個逗號、往後多帶一個子句
+                var piece = raw
+                if raw.count > 60, let r = Range(m.range, in: raw) {
+                    var lo = r.lowerBound, hi = r.upperBound
+                    if let c = raw[..<lo].lastIndex(where: { "，,".contains($0) }) { lo = raw.index(after: c) } else { lo = raw.startIndex }
+                    let rest = raw[hi...]
+                    if let c = rest.dropFirst().firstIndex(where: { "，,".contains($0) }), rest.distance(from: rest.startIndex, to: c) <= 40 { hi = c } else if rest.count <= 40 { hi = raw.endIndex }
+                    piece = String(raw[lo..<hi])
+                }
+                let text = clean(piece).replacingOccurrences(of: #"^\d{4}年[^：:]{0,30}(指出|表示|寫道)[：:]\s*"#, with: "", options: .regularExpression)
+                    .replacingOccurrences(of: #"^\d{4}年\d{1,2}月\d{1,2}日\s*[·・]\s*"#, with: "", options: .regularExpression)
+                guard text.count >= 8 else { continue }
+                cands.append((text, p.host, grams(obj)))
+            }
+        }
+        if ProcessInfo.processInfo.environment["NINESUN_LIST_TRACE"] != nil {
+            for c in cands { FileHandle.standardError.write(Data("TRACE meaning cand [\(c.host)] \(c.text.prefix(90)) obj=\(c.obj.sorted().prefix(6))\n".utf8)) }
+        }
+        guard !cands.isEmpty else { return nil }
+        func support(_ c: (text: String, host: String, obj: Set<String>)) -> [String] {
+            var hs = [c.host]
+            for o in cands where !hs.contains(o.host) && o.obj.intersection(c.obj).count >= 2 { hs.append(o.host) }
+            return hs
+        }
+        let best = cands.max { a, b in
+            let sa = support(a).count, sb = support(b).count
+            return sa != sb ? sa < sb : a.text.count > b.text.count
+        }!
+        return (best.text, support(best))
+    }
+
+    /// 英文縮寫（GDP、ESG）的中文名稱：看各網站緊接著縮寫寫的名字（「國內生產毛額（GDP）」「國內生產毛額（Gross Domestic Product），簡稱GDP」
+    /// 「GDP（Gross Domestic Product，國內生產毛額）」），最多地方寫、而且比第二名多一倍以上的才算數
+    static func acronymName(_ subject: String, pages: [(host: String, text: String)]) -> String? {
+        guard (2...6).contains(subject.count), subject.allSatisfy({ $0.isASCII && ($0.isUppercase || $0.isNumber) }) else { return nil }
+        let sj = NSRegularExpression.escapedPattern(for: subject)
+        let pats = [#"([\p{Han}]{3,10})\s*[（(]\s*"# + sj + #"\s*[）)]"#,
+                    #"([\p{Han}]{3,10})\s*[（(][A-Za-z ,.\-]{5,60}[）)][，,]?\s*(?:簡稱|縮寫為?|縮寫是)\s*"# + sj,
+                    sj + #"\s*[（(][A-Za-z ,.\-]{5,60}[，,；]\s*([\p{Han}]{3,10})[）)]"#]
+        var votes: [String: Int] = [:]
+        for p in pages {
+            let ns = p.text as NSString
+            for pat in pats {
+                guard let re = try? NSRegularExpression(pattern: pat) else { continue }
+                for m in re.matches(in: p.text, range: NSRange(location: 0, length: ns.length)) {
+                    var n = ns.substring(with: m.range(at: 1))
+                    // 「什麼是國內生產毛額」「實質國內生產毛額」前面多出來的字：別的地方有比較短的同一個名字就用短的
+                    for w in ["什麼是", "所謂的", "所謂", "又稱", "也就是", "即", "是", "的"] { if let r = n.range(of: w, options: .backwards), n.distance(from: r.upperBound, to: n.endIndex) >= 3 { n = String(n[r.upperBound...]) } }
+                    votes[n, default: 0] += 1
+                }
+            }
+        }
+        let ranked = votes.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }
+        guard let top = ranked.first, top.value >= 3, ranked.count < 2 || top.value * 2 >= ranked[1].value * 3 else { return nil }
+        return top.key
+    }
+
+    /// 寫出整理好的回答；重點不夠（少於兩個）就回 nil，讓原本的方法處理
+    /// lead：已經找到的直接答案（原因、定義），放在最前面，下面補其他網站也提到的重點
+    /// extra：搜尋結果的摘要原文（網頁沒讀到、摘要裡卻有答案時用得上）
+    public static func compose(question: String, subject: String, want: Understanding.Want, pages: [(host: String, text: String)], lead: String? = nil,
+                               extra: [(host: String, text: String)] = []) -> String? {
+        guard let shape = shape(want) else { return nil }
+        var pred = ""
+        if case let .reason(p) = want { pred = p }
+        var pts = points(question: question, subject: subject, shape: shape, pages: pages, pred: pred)
+        var lead = lead
+        // 問「X 是什麼」：原本的直接答案只是一小段引文（「最後他提出一個對時間的界…」），而整理出來的重點裡有一句
+        // 真的在說「X 是…」——用那一句當開頭，重新整理，不用那段引文
+        if shape == .definition, let l = lead, !l.isEmpty, !definesSubject(l, subject: subject),
+           pts.contains(where: { definesSubject($0.text, subject: subject) }) { lead = nil }
+        if let lead {
+            // 已經有直接的答案：只補「別的網站也這樣說」的重點，同一個網站的零散句子不補
+            let lg = grams(lead)
+            pts.removeAll { same($0.grams, lg) || $0.hosts.count < 2 && lead.contains($0.hosts[0]) }
+        }
+        // 網頁摘要開頭的日期（「2021年11月10日 · 」）不是內容
+        for i in pts.indices { pts[i].text = pts[i].text.replacingOccurrences(of: #"^\d{4}年\d{1,2}月\d{1,2}日\s*[·・]\s*"#, with: "", options: .regularExpression) }
+        // 問「什麼是 X」：最前面要放真的在下定義的那句（「ESG 是指環境、社會、公司治理」），不是順帶提到 X 的句子（「和 ESG 容易搞混的是 CSR」）
+        if shape == .definition, !subject.isEmpty {
+            let sj = NSRegularExpression.escapedPattern(for: subject)
+            let defines = #"^[「『]?"# + sj + #"[」』]?\s*(?:[（(][^）)]{0,40}[）)])?\s*(?:就是|是指|指的是|是一種|是一個|是|指|為|意指|又稱|即)"#
+            if let i = pts.firstIndex(where: { $0.text.range(of: defines, options: [.regularExpression, .caseInsensitive]) != nil && !misconception($0.text) })
+                ?? pts.firstIndex(where: { definesSubject($0.text, subject: subject) }), i > 0 {
+                let d = pts.remove(at: i); pts.insert(d, at: 0)
+            }
+            // 英文縮寫（ESG、GDP）：最好的定義是把每個字母講出來的那句（「環境（E）、社會（S）、公司治理（G）的縮寫」「國內生產毛額」）
+            let acronym = subject.count <= 6 && subject.allSatisfy { $0.isASCII && ($0.isUppercase || $0.isNumber) }
+            if acronym, let i = pts.firstIndex(where: { p in p.text.contains(subject) && ["縮寫", "簡稱", "分別", "代表", "英文全稱", "全名"].contains(where: { p.text.contains($0) }) }), i > 0 {
+                let d = pts.remove(at: i); pts.insert(d, at: 0)
+            }
+            // 幾句都在下定義時，用最多網站這樣寫的那句（一個網站把 GDP 寫成「國民生產毛額」，三個網站寫「國內生產毛額」）
+            if acronym {
+                let cand = pts.indices.filter { k in
+                    pts[k].text.contains(subject) && (["縮寫", "簡稱", "英文全稱", "全名"].contains(where: { pts[k].text.contains($0) })
+                        || pts[k].text.range(of: defines, options: [.regularExpression, .caseInsensitive]) != nil)
+                }
+                if let best = cand.max(by: { pts[$0].hosts.count < pts[$1].hosts.count }), best > 0, pts[best].hosts.count > pts[0].hosts.count {
+                    let d = pts.remove(at: best); pts.insert(d, at: 0)
+                }
+            }
+        }
+        // 英文縮寫的中文名稱：各網站怎麼叫它，用最多地方寫的那個。
+        // 放最前面的那句如果寫的是別的名字（一個網站把 GDP 寫成「國民生產毛額」，其他幾十處都寫「國內生產毛額」），換成寫對的那句
+        if shape == .definition, let name = acronymName(subject, pages: pages + extra), let first = pts.first, !first.text.contains(name) {
+            if let i = pts.firstIndex(where: { $0.text.contains(name) && $0.text.localizedCaseInsensitiveContains(subject) }) {
+                let d = pts.remove(at: i); pts.insert(d, at: 0)
+            } else {
+                // 重點裡沒有寫對的那句：直接從網頁找一句有這個名字、又在下定義的
+                search: for p in pages + extra {
+                    for raw in p.text.components(separatedBy: sentenceEnd) {
+                        let t = clean(raw)
+                        guard (16...140).contains(t.count), t.contains(name), t.localizedCaseInsensitiveContains(subject), !isMeta(t),
+                              !t.hasPrefix("什麼是"), !t.hasPrefix("何謂"), !t.hasPrefix("認識"), !t.contains("一篇看懂"), !t.contains("一次看懂"),
+                              ["是指", "是衡量", "是一", "指的是", "簡稱", "衡量", "是用來", "代表"].contains(where: { t.contains($0) }) else { continue }
+                        pts.insert(Point(text: t, hosts: [p.host], score: first.score + 1, grams: grams(t), head: grams(firstClause(t))), at: 0)
+                        break search
+                    }
+                }
+            }
+        }
+        // 「X 代表什麼」「象徵什麼」：放最前面的要是說它代表什麼的那句，不是介紹它是誰設計的
+        if question.contains("代表") || question.contains("象徵") || question.contains("意義"),
+           let i = pts.firstIndex(where: { p in ["代表", "象徵", "意味", "意義是"].contains(where: { p.text.contains($0) }) }), i > 0 {
+            let d = pts.remove(at: i); pts.insert(d, at: 0)
+        }
+        let n = shape == .advice ? 5 : (shape == .reason ? 3 : 4)
+        let chosen = Array(pts.prefix(n))
+        // 只有一個重點時：它真的在說「X 是什麼」就夠了（一句清楚的定義，比兩段看不懂的引文好）
+        let oneDefinition = shape == .definition && chosen.count == 1 && definesSubject(chosen[0].text, subject: subject)
+        guard chosen.count >= (lead == nil && !oneDefinition ? 2 : 1) else { return nil }
+        var allHosts: [String] = []
+        for h in chosen.flatMap(\.hosts) where !allHosts.contains(h) { allHosts.append(h) }
+        let marks = ["①", "②", "③", "④", "⑤"]
+        func line(_ i: Int, _ p: Point) -> String { marks[i] + " " + p.text + (p.hosts.count >= 2 ? "（\(p.hosts.count) 個網站都提到）" : "") }
+        var t = ""
+        let means = meaning(question: question, subject: subject, pages: pages + extra)
+        if let means { for h in means.hosts where !allHosts.contains(h) { allHosts.insert(h, at: 0) } }
+        if let lead {
+            // 只留直接答案那一段（後面零散的補充不要）
+            var head = lead.components(separatedBy: "\n\n").first ?? lead
+            // 問「代表什麼」：先說它代表什麼，原本那句介紹退到後面當補充
+            if let means, !head.contains(means.text.prefix(12)) {
+                head = "簡單說：" + means.text + (means.hosts.count >= 2 ? "（\(means.hosts.count) 個網站都這樣說）" : "")
+                    + "\n\n補充：" + (head.hasPrefix("簡單說：") ? String(head.dropFirst(4)) : head)
+            }
+            t = head + "\n\n其他網站也提到：\n" + chosen.enumerated().map { line($0.offset, $0.element) }.joined(separator: "\n")
+        } else {
+            let n = allHosts.count
+            switch shape {
+            case .advice:
+                t = (n >= 2 ? "綜合 \(n) 個網站的建議，可以這樣做：\n" : "可以這樣做：\n")
+            case .reason:
+                t = "簡單說：" + chosen[0].text + "\n\n其他原因：\n"
+            case .definition:
+                t = "簡單說：" + (means.map { $0.text + "\n\n補充：" } ?? "") + chosen[0].text + "\n\n重點：\n"
+            case .open:
+                t = (n >= 2 ? "綜合 \(n) 個網站的資料，重點如下：\n" : "重點如下：\n")
+            }
+            let rest = (shape == .reason || shape == .definition) ? Array(chosen.dropFirst()) : chosen
+            t += rest.enumerated().map { line($0.offset, $0.element) }.joined(separator: "\n")
+            if rest.isEmpty { t = t.replacingOccurrences(of: "\n\n其他原因：\n", with: "").replacingOccurrences(of: "\n\n重點：\n", with: "") }
+        }
+        t += "\n（參考：" + allHosts.prefix(4).joined(separator: "、") + "）"
+        return t
+    }
+}

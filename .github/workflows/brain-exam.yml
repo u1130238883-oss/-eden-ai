@@ -1,0 +1,131 @@
+name: Brain exam
+
+# NineSun 的大腦考試：真的讀進 Gemma 4 E4B Mahou，用 App 一模一樣的提示（LocalBrain.swift）回答 ios/BrainEval/exam/run.jsonl
+# （常識、算數、推理、語文、閱讀、翻譯、英文、記性、角色扮演、壓力測試、命理、醫學、情緒、世界理解……）。
+# Mac 機器常常排不到，改用 Linux（llama.cpp 和 Swift 都能跑），分 12 台同時考。
+# 回答存到分支 evals/exam-<題目雜湊>-<機器>（同一份題目再跑會接著考；ios/BrainEval/exam/score.py 改分）。
+# commit 訊息有 [exam] 或手動執行。
+# commit 訊息有 [exam-mini]：只考小考 ios/BrainEval/exam/mini.jsonl（截圖裡的錯和最敏感的類別，約 400 題、4 台機器、半小時）。
+on:
+  push:
+    paths:
+      - ".github/workflows/brain-exam.yml"
+      - "ios/BrainEval/**"
+      - "ios/NineSun/Brain/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  exam:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[exam]') || contains(github.event.head_commit.message, '[exam-mini]') || contains(github.event.head_commit.message, '[exam-new]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      # 考哪一份：整份（12 台）或小考（4 台；其餘 8 台直接結束）
+      - name: Pick exam
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          if echo "$MSG" | grep -qF '[exam-new]'; then EXAM=new.jsonl; N=2; elif echo "$MSG" | grep -qF '[exam-mini]'; then EXAM=mini.jsonl; N=4; else EXAM=run.jsonl; N=12; fi
+          echo "EXAM=ios/BrainEval/exam/$EXAM" >> "$GITHUB_ENV"; echo "N=$N" >> "$GITHUB_ENV"
+          if [ "${{ matrix.shard }}" -ge "$N" ]; then echo "SKIP=1" >> "$GITHUB_ENV"; fi
+
+      - uses: actions/checkout@v4
+        if: env.SKIP != '1'
+
+      - name: Cache llama.cpp
+        if: env.SKIP != '1'
+        id: llama
+        uses: actions/cache@v4
+        with:
+          path: ~/llama-linux
+          key: llama-linux-${{ hashFiles('ios/llama-version.txt') }}
+
+      - name: Build llama.cpp (shared library)
+        if: env.SKIP != '1' && steps.llama.outputs.cache-hit != 'true'
+        run: |
+          LLAMA_TAG=$(cat ios/llama-version.txt)
+          git clone -q --depth 1 --branch "$LLAMA_TAG" https://github.com/ggml-org/llama.cpp "$RUNNER_TEMP/llama.cpp"
+          cd "$RUNNER_TEMP/llama.cpp"
+          cmake -B build -DBUILD_SHARED_LIBS=ON -DLLAMA_CURL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF \
+            -DLLAMA_BUILD_TOOLS=OFF -DLLAMA_BUILD_SERVER=OFF -DGGML_NATIVE=OFF -DCMAKE_BUILD_TYPE=Release > /dev/null
+          cmake --build build -j"$(nproc)" --target llama 2>&1 | tail -2
+          mkdir -p ~/llama-linux/lib ~/llama-linux/include
+          cp -P build/bin/*.so* ~/llama-linux/lib/
+          cp include/llama.h ggml/include/*.h ~/llama-linux/include/
+
+      - name: Compile exam
+        if: env.SKIP != '1'
+        run: |
+          which swiftc && swiftc --version
+          L=~/llama-linux
+          printf 'module llama {\n  header "%s/include/llama.h"\n  export *\n}\n' "$L" > "$L/include/module.modulemap"
+          swiftc -O -I "$L/include" -Xcc -I"$L/include" -L "$L/lib" -lllama -Xlinker -rpath -Xlinker "$L/lib" \
+            ios/NineSun/Brain/LlamaRunner.swift ios/NineSun/Brain/LocalBrain.swift ios/EchoCore/Sources/EchoCore/ScamCheck.swift ios/EchoCore/Sources/EchoCore/Dilemma.swift ios/BrainEval/main.swift -o brain-eval
+
+      - name: Download model
+        if: env.SKIP != '1'
+        run: |
+          curl -fsSL --retry 3 -o model.gguf "https://huggingface.co/mradermacher/gemma4-e4b-mahou-nsfw-GGUF/resolve/main/gemma4-e4b-mahou-nsfw.Q4_K_M.gguf"
+          ls -la model.gguf
+
+      # 同一份題目、同一套提示之前考到一半（取消、超時）：接著考，不重考已經答過的
+      # （雜湊包含提示和考試程式：提示改了就重考）
+      - name: Resume earlier answers
+        if: env.SKIP != '1'
+        run: |
+          H=$(cat "$EXAM" ios/NineSun/Brain/LocalBrain.swift ios/EchoCore/Sources/EchoCore/ScamCheck.swift ios/EchoCore/Sources/EchoCore/Dilemma.swift ios/BrainEval/main.swift | sha1sum | cut -c1-10)
+          echo "H=$H" >> "$GITHUB_ENV"
+          if git fetch -q origin "evals/exam-$H-${{ matrix.shard }}" 2>/dev/null; then
+            git show FETCH_HEAD:answers-${{ matrix.shard }}.jsonl > answers-${{ matrix.shard }}.jsonl 2>/dev/null || rm -f answers-${{ matrix.shard }}.jsonl
+            wc -l answers-${{ matrix.shard }}.jsonl 2>/dev/null || true
+          fi
+          true
+
+      # 每 15 分鐘把答到的（和紀錄）存到分支一次（中途就能看成績）；考試本身在前景跑
+      - name: Exam
+        if: env.SKIP != '1'
+        env:
+          NSUnbufferedIO: "YES"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat > save.sh <<'SH'
+          #!/bin/bash
+          cd "$GITHUB_WORKSPACE"
+          A=answers-$1.jsonl
+          [ -f "$A" ] || [ -f exam.log ] || exit 0
+          D=$(mktemp -d)
+          cp "$A" exam.log "$D/" 2>/dev/null
+          cd "$D" && git init -q && git add . \
+            && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Exam $H shard $1" \
+            && git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/evals/exam-$H-$1
+          SH
+          chmod +x save.sh
+          ( while sleep 900; do ./save.sh ${{ matrix.shard }} || true; done ) &
+          SAVER=$!
+          set +e
+          # libllama 需要的 libggml 要從這裡找（快取裡沒有原本的編譯資料夾）
+          export LD_LIBRARY_PATH="$HOME/llama-linux/lib:${LD_LIBRARY_PATH:-}"
+          ./brain-eval dry "$EXAM" /dev/null limit=1 >> exam.log 2>&1 || echo "dry 失敗" >> exam.log
+          timeout 320m ./brain-eval model.gguf "$EXAM" answers-${{ matrix.shard }}.jsonl shard=${{ matrix.shard }}/$N >> exam.log 2>&1
+          echo "brain-eval 結束，代碼 $?" >> exam.log
+          kill $SAVER 2>/dev/null
+          tail -40 exam.log
+          true
+
+      - name: Score this shard
+        if: always() && env.SKIP != '1'
+        run: python3 ios/BrainEval/exam/score.py "$EXAM" answers-${{ matrix.shard }}.jsonl --fails 40 || true
+
+      - name: Save answers to a branch
+        if: always() && env.SKIP != '1'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for i in 1 2 3; do ./save.sh ${{ matrix.shard }} && break; sleep 5; done

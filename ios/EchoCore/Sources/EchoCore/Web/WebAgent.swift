@@ -1,0 +1,1240 @@
+import Foundation
+
+/// NineSun 的思考方式（查資料、解問題時都照這個順序，每次都即時上網，不存舊答案）：
+///
+///   ① 釐清：這是哪一類問題？真正要問的是什麼？口語、簡稱換成正式名稱。
+///   ② 拆解：一個大問題拆成幾個小問題（疾病 → 是什麼／症狀／原因／治療／照顧；
+///      法律 → 規定／後果／怎麼做／權益），每個小問題分開查。
+///   ③ 蒐集：同時問好幾個搜尋來源（Bing、DuckDuckGo、維基百科、新聞、天氣、匯率、股市），都不需要金鑰。
+///   ④ 閱讀：打開最相關的網頁，只留下真的在回答那個小問題的句子；跟主題無關的結果直接丟掉。
+///   ⑤ 查證：官方、醫院、法院、百科這類來源優先；好幾個來源都這樣說才算可信。
+///   ⑥ 反思：來源夠不夠？有沒有互相矛盾？哪裡還不確定？老實說出把握程度。
+///   ⑦ 回答：先給結論，再分段說明，附上來源；最後建議下一步（該看哪一科、該問誰、還可以再問什麼）。
+public enum WebAgent {
+    public enum Kind { case define, reason, method, compare, recommend, news, weather, person, health, legal, fortune, general }
+
+    public struct Plan {
+        public let kind: Kind
+        public let keywords: String
+        /// 去掉「多高」「怎麼煮」這類問法之後的主題（「台北101」「紅燒肉」）
+        public let core: String
+        public let queries: [String]
+        /// 問的是數量（多高、多少、幾歲……），答案裡要有數字
+        public let numeric: Bool
+    }
+    public struct Finding {
+        public let text: String
+        public let host: String
+        public let url: String
+        /// 屬於哪一個小問題（-1：整體）
+        public var angle: Int = -1
+        /// 是不是可信的來源（官方、醫院、法院、百科）
+        public var trusted: Bool = false
+    }
+    public struct Result {
+        public var text: String
+        public let card: FortuneCard?
+        /// 有沒有真的查到東西
+        public let found: Bool
+        /// 每個來源找到幾筆（診斷用）
+        public let engines: [String: Int]
+        /// 除錯：被丟掉的搜尋結果標題、判斷用的詞
+        public var debug: String = ""
+        /// 每一步花了多久（找出慢在哪裡用）
+        public var timing: String = ""
+        /// 找到的東西有沒有真的回答問題（沒有的話，補充時就不要再貼上來）
+        public var answered: Bool = true
+        /// 有沒有把握：有答到，而且把握程度不是「低」（沒把握時才去問其他 AI）
+        public var confident: Bool = false
+        /// 簡短的答案（「答案：X」的 X），拿來跟其他 AI 的說法對照
+        public var shortAnswer: String?
+        /// 網路上讀到、最相關的幾句話（附網站），拿來查證其他 AI 的說法
+        public var evidence: [String] = []
+        /// 問題要的是什麼（number、reason、steps、compare、open……）
+        public var want: String?
+    }
+
+    static let kindName: [Kind: String] = [
+        .define: "「是什麼」", .reason: "「為什麼」", .method: "「怎麼做」", .compare: "「比較」", .recommend: "「推薦」",
+        .news: "「最新消息」", .weather: "「天氣」", .person: "「人物」", .health: "「健康／疾病」", .legal: "「法律」",
+        .fortune: "命理", .general: "一般",
+    ]
+
+    // MARK: - ① 釐清問題 ② 規劃搜尋
+
+    public static func understand(_ question: String, L: Lang, fortune: Bool) -> Plan {
+        let q = question.lowercased()
+        func has(_ ws: [String]) -> Bool { ws.contains { q.contains($0) } }
+        let kind: Kind
+        if fortune { kind = .fortune }
+        else if WebSearch.wantsWeather(q) { kind = .weather }
+        // 「現在ai有哪些最新模型」：要的是一份名單，不是新聞標題
+        else if has(["新聞", "最新", "最近發生", "今天發生", "消息", "股價", "股市", "台股", "美股", "大盤", "匯率", "油價", "金價", "比分",
+                     "latest", "news", "noticias", "notizie", "stock market", "exchange rate"])
+                    && !(has(["哪些", "有什麼", "有啥", "哪幾"]) && !has(["新聞", "消息"])) { kind = .news }
+        else if WebStrategy.isLegal(q) { kind = .legal }
+        // 「怎麼克服拖延症」「如何改善失眠」：問的是自己可以怎麼做，不是疾病介紹
+        else if WebStrategy.isHealth(q) && q.range(of: "(怎麼|如何|怎樣)(才能|可以)?(克服|戒|改善|擺脫|提升|培養|養成|讓|改掉|減少)", options: .regularExpression) == nil { kind = .health }
+        // 「比較快」「比較好」不是在比較兩樣東西；要有兩邊（和、跟、還是）才算
+        else if has(["差別", "區別", "哪個好", "哪一個好", " vs", "difference", "better than", "diferencia", "differenza"])
+                    || q.contains("比較") && has(["和", "跟", "與", "還是"]) { kind = .compare }
+        else if has(["為什麼", "為何", "原因", "why", "por qué", "perché"]) { kind = .reason }
+        else if has(["怎麼", "如何", "方法", "步驟", "教我", "how to", "how do", "how can", "cómo", "come si"]) { kind = .method }
+        else if has(["推薦", "哪裡好玩", "哪裡好吃", "去哪裡玩", "recommend", "best ", "recomienda", "consiglia"]) { kind = .recommend }
+        else if has(["是誰", "誰是", "who is", "quién es", "chi è"]) { kind = .person }
+        else if has(["是什麼", "什麼是", "什麼意思", "定義", "what is", "what are", "meaning", "qué es", "cos'è"]) { kind = .define }
+        else { kind = .general }
+
+        let kw = keywords(question)
+        let core = coreTopic(kw)
+        let numeric = has(["多高", "多大", "多遠", "多久", "多長", "多重", "多少", "幾歲", "幾年", "幾點", "幾個", "幾公", "匯率", "價格", "股價", "人口",
+                           "how many", "how much", "how tall", "how far", "how long", "how old", "when did", "when was", "population", "price"])
+        var qs = [kw]
+        let extra: [Kind: String] = L == .zh
+            ? [.define: " 是什麼", .reason: " 原因", .method: " 方法", .compare: " 差別", .recommend: " 推薦", .person: " 簡介"]
+            : [.define: " meaning", .reason: " reason", .method: " how to", .compare: " difference", .recommend: " best", .person: " biography"]
+        if let e = extra[kind], !kw.hasSuffix(e.trimmingCharacters(in: .whitespaces)) { qs.append(core + e) }
+        if core != kw && kind != .weather && kind != .news { qs.append(core) }
+        // 原句本身也是很好的搜尋詞（搜尋引擎看得懂自然語言）
+        let raw = question.trimmingCharacters(in: .whitespacesAndNewlines)
+        if raw.count <= 40 { qs.append(raw) }
+        var seen = Set<String>()
+        return Plan(kind: kind, keywords: kw, core: core, queries: qs.filter { !$0.isEmpty && seen.insert($0).inserted }, numeric: numeric)
+    }
+
+    /// 引擎回答裡給人看的裝飾（📌 回答、💬 你可能還想知道、來源）拿掉，只留內容——交給大腦當「查到的資料」
+    public static func plain(_ text: String) -> String {
+        var lines: [String] = []
+        for l in text.components(separatedBy: "\n") {
+            let t = l.trimmingCharacters(in: .whitespaces)
+            if t == "📌 回答" || t.hasPrefix("💬") || t.hasPrefix("來源：") || t.hasPrefix("📒") { continue }
+            lines.append(l)
+        }
+        return lines.joined(separator: "\n").replacingOccurrences(of: #"\n{3,}"#, with: "\n\n", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// 引擎已經整理好的長名單、步驟（98 個免簽國家、六個步驟）：直接給使用者看，不讓大腦重寫（小模型抄長名單會抄錯、漏掉）
+    public static func showAsIs(_ r: Result) -> Bool {
+        guard r.found, r.answered, r.confident, let w = r.want, w == "list" || w == "steps" else { return false }
+        let p = plain(r.text)
+        return p.count >= 120 || p.components(separatedBy: "、").count >= 9
+    }
+
+    /// 去社群平台找什麼：
+    /// - 最新的事（現在、最新、最近、今年、新聞）→ X（消息最快，官方帳號、記者第一手）
+    /// - 大家的看法、經驗（推薦、好不好、值不值得、為什麼、怎麼辦、比較）→ 知乎（中文問答）
+    /// - 主題有英文名字（AI、iPhone、Gemini）→ Reddit（英文社群討論最多）
+    /// - 中文的新消息、看法 → Threads（台灣使用者多）
+    /// 一題最多三個平台，查詢加上 site: 讓搜尋引擎只回那個平台的貼文
+    public static func socialQueries(_ question: String, kind: Kind, core: String, zh: Bool) -> [String] {
+        let q = question.lowercased()
+        let topic = core.trimmingCharacters(in: .whitespaces)
+        guard topic.count >= 2 else { return [] }
+        let fresh = kind == .news || ["現在", "最新", "最近", "今年", "目前", "剛剛", "新出", "latest", "newest", "recent", "now", "this year"].contains { q.contains($0) }
+        let opinion = [.recommend, .compare, .reason, .method].contains(kind)
+            || ["推薦", "好不好", "值不值得", "值得", "怎麼看", "評價", "心得", "體驗", "好用", "建議", "哪個好", "worth", "best", "review", "opinion"].contains { q.contains($0) }
+        let latin = topic.contains { $0.isASCII && $0.isLetter }
+        var out: [String] = []
+        if fresh { out.append("site:x.com " + topic) }
+        // Threads：台灣的使用者很多，新消息和大家的看法都有
+        if zh && (fresh || opinion) { out.append("site:threads.com " + topic) }
+        if opinion && zh { out.append("site:zhihu.com " + topic) }
+        if latin && (fresh || opinion) { out.append("site:reddit.com " + topic) }
+        if fresh && zh && !opinion { out.append("site:zhihu.com " + topic) }
+        return Array(out.prefix(3))
+    }
+
+    /// 把口語問句整理成關鍵字
+    public static func keywords(_ raw: String) -> String {
+        var q = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if q.hasPrefix("請") && !q.hasPrefix("請問") { q.removeFirst() }
+        for w in ["請問", "請你", "請幫我", "幫我上網查", "上網查一下", "上網查", "上網搜尋", "上網找", "幫我查一下", "幫我查", "幫我搜尋", "搜尋一下", "搜尋",
+                  "查一下", "幫我", "可以告訴我", "告訴我", "你知道", "我想知道", "想問", "一下",
+                  "是什麼意思", "什麼意思", "是什麼", "什麼是", "為什麼", "怎麼樣", "如何", "有哪些", "是誰", "誰是",
+                  "呀", "啊", "呢", "吧", "嗎", "？", "?", "！", "!", "。", "，", ","] {
+            q = q.replacingOccurrences(of: w, with: " ")
+        }
+        for p in ["search for ", "search ", "look up ", "google ", "busca ", "cerca "] where q.lowercased().hasPrefix(p) {
+            q = String(q.dropFirst(p.count))
+        }
+        if q.hasPrefix("查") { q.removeFirst() }
+        let parts = q.split(separator: " ").map(String.init).filter { !$0.isEmpty }
+        let out = parts.joined(separator: " ")
+        return out.isEmpty ? raw : out
+    }
+
+    /// 主題詞：去掉問法（「台北101有多高」→「台北101」、「紅燒肉怎麼煮」→「紅燒肉」）
+    public static func coreTopic(_ kw: String) -> String {
+        var t = kw
+        for w in ["有多高", "多高", "有多大", "多大", "有多遠", "多遠", "要多久", "多久", "有多長", "多長", "有多重", "多重", "多少錢", "是多少", "有多少", "多少",
+                  "幾歲", "幾點", "怎麼煮", "怎麼做", "怎麼去", "怎麼用", "怎麼辦", "怎麼樣", "怎樣", "是哪一座", "是哪一個", "是哪個", "是哪裡", "在哪裡",
+                  "哪一座", "哪一個", "哪個", "哪裡", "的由來", "的原因", "的意思", "的差別", "的方法", "介紹", "的歷史", "的原理", "會怎樣", "會不會",
+                  "要注意什麼", "注意什麼", "該注意", "吃什麼", "有什麼症狀", "的症狀", "症狀", "會被罰", "犯法嗎", "違法嗎", "合法嗎", "犯法", "違法", "合法",
+                  "我有", "我得了", "我媽", "我爸", "我", "得了", "有沒有"] {
+            t = t.replacingOccurrences(of: w, with: " ")
+        }
+        let out = t.split(separator: " ").map(String.init).filter { !$0.isEmpty }.joined(separator: " ")
+        return out.count >= 2 ? out : kw
+    }
+
+    // MARK: - 主流程
+
+    /// also：命理時同一張盤還要一起查的其他組合
+    /// 訊息裡的第一個網址
+    public static func firstURL(_ text: String) -> String? {
+        guard let re = try? NSRegularExpression(pattern: #"https?://[^\s，。、「」（）]+"#),
+              let m = re.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
+              let r = Range(m.range, in: text) else { return nil }
+        return String(text[r])
+    }
+
+    /// 讀使用者給的網頁：說它在講什麼、重點是什麼（引文少於 15 字、只引一句，其餘用關鍵詞和數字整理）
+    static func readLink(_ url: String, lang L: Lang) async -> Result {
+        let host = WebSearch.host(url)
+        guard let page = await within(10, { await WebSearch.pageText(url, L) }) ?? nil, !page.isEmpty else {
+            return Result(text: "這個網頁我打不開（可能需要登入、被擋，或網址有誤）。你可以把重點內容貼給我，我再幫你整理。", card: nil, found: false, engines: [:])
+        }
+        let text = L == .zh ? WebStrategy.toTraditional(page) : page
+        let lines = text.components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let title = lines.first(where: { $0.count >= 4 && $0.count <= 40 }) ?? host
+        let sents = sentences(text)
+        // 最常出現的詞＝這頁的主題
+        let findings = sents.map { Finding(text: $0, host: host, url: url) }
+        let topics = consensus(findings, exclude: "", cjkOnly: L == .zh).prefix(6)
+        // 數字、日期這類具體資料
+        let facts = sents.filter { $0.contains(where: \.isNumber) && topics.contains(where: $0.contains) }.prefix(3)
+        let central = sents.max(by: { score($0, Set(topics)) < score($1, Set(topics)) })
+        var t = "📄 這個網頁（\(host)）的標題是「\(Cite.fragment(title, focus: []))」。"
+        if !topics.isEmpty { t += "\n主要在講：" + topics.joined(separator: "、") + "。" }
+        if let c = central { t += "\n最核心的一句提到" + Cite.quote(c, host: host, focus: Array(topics)) + "。" }
+        if !facts.isEmpty {
+            t += "\n裡面的具體數字：" + facts.map { Cite.fragment($0, focus: Array(topics)) }.joined(separator: "；") + "。"
+        }
+        t += "\n\n要我針對哪一部分說明、或幫你查證裡面的說法嗎？\n來源：\(host)"
+        let card = FortuneCard(title: "讀網頁", headline: host, details: Array(topics).map { "• " + $0 }, link: url)
+        return Result(text: t, card: card, found: true, engines: [:])
+    }
+
+    /// avoid：上次答錯時用過的網站（反思後這次避開）；reflect：被指正後重查，先用備用查法
+    /// asker：問問題的人的九型（從他的生日算出來），用他在意的方式交代重點
+    public static func run(_ question: String, facts: String? = nil, also: [String] = [], lang L: Lang,
+                           avoid: [String] = [], reflect: Bool = false, asker: Int? = nil, spellChecked: Bool = false, briefOnly: Bool = false,
+                           progress: (@Sendable (String) -> Void)? = nil) async -> Result {
+        // 使用者給了網址：直接讀那個網頁
+        if facts == nil, let url = firstURL(question), url.count >= question.count - 2 { return await readLink(url, lang: L) }
+        let fortune = facts != nil
+        // 「台北101比玉山高多少」：拆成兩個小問題分別查，再換算、相減（查不到兩個數字就照一般的方法查）
+        if L == .zh, !fortune, let ms = MultiStep.parse(question), let r = await MultiStep.solve(ms, lang: L, progress: progress) {
+            return r
+        }
+        let t0 = Date()
+        var clock: [(String, Date)] = []
+        let plan = understand(question, L: L, fortune: fortune)
+        let zh = L == .zh
+        let strat = !zh ? WebStrategy.Strategy(angles: [], trusted: [], note: nil)
+            : fortune ? WebFortune.strategy(question) : WebStrategy.strategy(plan.kind, question: question)
+        let canon = zh && !fortune ? WebStrategy.canonical(plan.core) : nil
+        let topic = fortune ? WebFortune.base(question) : (canon ?? plan.core)
+        let chart = facts.map(WebFortune.parse)
+        // ① 先想清楚要什麼樣的答案（數字、名單、原因、做法……），照這個決定怎麼查、怎麼挑
+        let fr = zh && !fortune ? Understanding.withRecency(Understanding.frame(question), question: question) : nil
+        // 讓使用者看到思考的步驟（不會覺得卡住）
+        progress?("① 先想清楚你要的是什麼" + (fr.map { "：" + $0.restated } ?? "…"))
+
+        // 維基百科的開頭摘要（作品再加劇情那一節）：問「X 是什麼」「X 在講什麼」、或只丟一個名字時先去拿。
+        // 拿到了就直接整理成回答（一兩秒，不用等搜尋引擎、也不怕被搜尋引擎擋）；拿不到再照一般的方法查
+        let briefWork = zh && !fortune && (Understanding.workTitle(question) != nil || EchoEngine.namedWork(question))
+        let briefTerm: String? = {
+            guard zh, !fortune, let fr else { return nil }
+            if let t = Understanding.workTitle(question) { return t }
+            // 只在「X 是什麼」「X 在講什麼」、或只丟一個作品名時用；問作者、年份、名單的照原本的方法查
+            // （把百科開頭當成一般網頁混進去，「紅樓夢的作者是誰」反而答成「中國古典章回小」）
+            if EchoEngine.bareTitle(Understanding.clean(question)) || fr.want == .definition { return fr.subject.count >= 1 && fr.subject.count <= 20 ? fr.subject : nil }
+            return nil
+        }()
+        var brief: (title: String, text: String, url: String)?
+        if let t = briefTerm {
+            let prefer = ["小說", "書"].contains { question.contains($0) } ? ["小說", "書"]
+                : ["電影", "這部片", "影片"].contains { question.contains($0) } ? ["電影"]
+                : question.contains("動畫") ? ["動畫", "電影"] : ["影集", "電視劇", "連續劇"].contains { question.contains($0) } ? ["劇"] : []
+            progress?("② 先看百科怎麼介紹「\(t)」…")
+            brief = await within(7) { await WebSearch.wikiBrief(t, L, work: briefWork, prefer: prefer) } ?? nil
+            if let b = brief {
+                let asksWhat = Understanding.workTitle(question) != nil || EchoEngine.bareTitle(Understanding.clean(question))
+                let direct = fr?.want == .definition && !asksWhat ? WikiAnswer.define(subject: t, brief: b)
+                    : asksWhat ? WikiAnswer.work(title: t, brief: b) : nil
+                if let direct {
+                    var r = Result(text: direct.text, card: nil, found: true, engines: ["wikibrief": 1])
+                    r.answered = true; r.confident = true; r.evidence = direct.evidence
+                    r.want = fr.map { SelfTuning.kind($0.want) }
+                    return r
+                }
+            }
+            if briefOnly, brief == nil { return Result(text: Loc.s("webFail", L, plan.keywords), card: nil, found: false, engines: [:]) }
+        }
+
+        // ②③ 拆成幾組關鍵字，同時上網查（tag -1：整體；0…：各個小問題）
+        var jobs: [(tag: Int, q: String, full: Bool)] = []
+        // 一般問題查 2 組就夠（原句＋換個說法），太多組只會變慢
+        // 自我升級：從過去的經驗決定查法
+        let tuneKind = fr.map { SelfTuning.kind($0.want) }
+        let tuning = SelfTuning.shared
+        var learnedNotes: [String] = []
+        var firstQs: [String] = fr.map { Understanding.uniq(Array($0.searches.prefix(strat.angles.isEmpty ? 2 : 1)) + (strat.angles.isEmpty ? [plan.queries.first ?? ""] : [])) }
+            ?? Array(plan.queries.prefix(strat.angles.isEmpty ? (canon == nil ? 2 : 1) : 1))
+        if reflect, let fr {
+            // 被指正：這次先換個查法
+            firstQs = Understanding.uniq(Array(fr.retry.prefix(2)) + firstQs)
+        } else if let fr, let k = tuneKind, tuning.startWithRetry(kind: k), let extra = fr.retry.first, !firstQs.contains(extra) {
+            firstQs.append(extra)
+            learnedNotes.append("過去這類問題第一輪常常查不到，這次一開始就多查「\(extra)」")
+        }
+        // 查詢要短、而且每一組要跟前一組實質不同（換詞、換角度），重複的措辭不用再查
+        if zh && !fortune { firstQs = Cite.distinct(firstQs) }
+        for (i, q) in firstQs.enumerated() { jobs.append((-1, q, i == 0 || strat.angles.isEmpty)) }
+        if let canon { jobs.append((-1, canon, true)) }
+        for q in also.prefix(2) where !jobs.contains(where: { $0.q == q }) { jobs.append((-1, q, true)) }
+        // 指定去這個領域的專業網站找（健康：國健署、康健、Heho；職場：經理人、天下；書：博客來、Openbook……）
+        if zh, !fortune, let pq = Cite.proQuery(fr?.subject ?? plan.core, question: question) { jobs.append((-1, pq, false)) }
+        // 社群平台（X、知乎、Reddit）：搜尋引擎收錄的貼文摘要也拿來當資料（不用登入、不直接抓平台的網頁）
+        if !fortune {
+            for q in socialQueries(question, kind: plan.kind, core: fr?.subject ?? plan.core, zh: zh) where !jobs.contains(where: { $0.q == q }) {
+                jobs.append((-1, q, false))
+            }
+        }
+        for (i, a) in strat.angles.enumerated() { jobs.append((i, topic + a.suffix, false)) }
+        // 完整的搜尋一次最多兩組，查完再查下一批（太密集會被搜尋引擎當成機器人，回一堆無關的結果）；
+        // 小問題的輕量搜尋（Bing＋維基）跟第一批一起查，不用多等一輪
+        let fullJobs = Array(jobs.enumerated().filter { $0.element.full })
+        let lightJobs = Array(jobs.enumerated().filter { !$0.element.full })
+        var got: [(Int, Int, WebSearch.Answer)] = []
+        var start = 0
+        repeat {
+            let batch = Array(fullJobs[min(start, fullJobs.count)..<min(fullJobs.count, start + 2)]) + (start == 0 ? lightJobs : [])
+            let batchAnswers = await withTaskGroup(of: (Int, Int, WebSearch.Answer).self) { g -> [(Int, Int, WebSearch.Answer)] in
+                for (n, j) in batch {
+                    g.addTask {
+                        let a = await within(9) { await WebSearch.search(j.q, lang: L, news: plan.kind == .news && n == 0, light: !j.full) }
+                        return (n, j.tag, a ?? WebSearch.Answer(lead: nil, leadSource: nil, hits: [], engines: [:]))
+                    }
+                }
+                var out: [(Int, Int, WebSearch.Answer)] = []
+                for await a in g { out.append(a) }
+                return out
+            }
+            got += batchAnswers
+            start += 2
+        } while start < fullJobs.count
+        let answers: [(Int, WebSearch.Answer)] = got.sorted { $0.0 < $1.0 }.map { ($0.1, $0.2) }
+        // 錯字：問「少年懷特的煩惱」，搜尋結果的標題幾乎都是「少年維特的煩惱」——照正確的名稱重新查一次，並告訴使用者
+        if zh, !fortune, !spellChecked, let fr,
+           let fix = Understanding.spellFix(fr.subject, titles: answers.flatMap { $0.1.hits.map { WebStrategy.toTraditional($0.title) } }) {
+            let q2 = question.replacingOccurrences(of: fr.subject, with: fix)
+            if q2 != question {
+                var r = await run(q2, facts: facts, also: also, lang: L, avoid: avoid, reflect: reflect, asker: asker, spellChecked: true, progress: progress)
+                r.text = "（你寫的是「\(fr.subject)」，我想你指的是「\(fix)」，以下照「\(fix)」查。）\n\n" + r.text
+                return r
+            }
+        }
+        clock.append(("查詢\(jobs.count)組", Date()))
+        progress?("② 用 \(jobs.count) 組關鍵字上網搜尋，找到 \(answers.reduce(0) { $0 + $1.1.hits.count }) 筆結果，挑可信的來讀…")
+
+        // ④ 只留下跟主題有關的結果
+        var terms = termSet(plan.core)
+        if let canon { terms.formUnion(termSet(canon)) }
+        if let fr, fr.subject.count >= 2 { terms.formUnion(termSet(fr.subject)) }
+        if fortune { terms = termSet(topic); for q in also { terms.formUnion(termSet(WebFortune.base(q))) } }
+        let need = max(1, min(2, ((fortune ? terms.count : termSet(plan.core).count) + 1) / 3))
+        var hits: [(tag: Int, hit: WebSearch.Hit)] = []
+        var dupSnips: [(tag: Int, hit: WebSearch.Hit)] = []
+        var lead: String?, leadSource: String?
+        var engines: [String: Int] = [:]
+        var seenURL = Set<String>()
+        var dropped: [String] = []
+        for (tag, a) in answers {
+            if lead == nil, let l = a.lead { lead = l; leadSource = a.leadSource }
+            for (k, v) in a.engines { engines[k, default: 0] += v }
+            // 維基百科的摘要：只當佐證的句子（跟主題有關、沒重複的才留）
+            for raw in a.asides ?? [] where dupSnips.count < 12 {
+                let snip = zh ? WebStrategy.toTraditional(raw.snippet) : raw.snippet
+                guard score(snip, terms) >= need, !dupSnips.contains(where: { $0.hit.snippet == snip }) else { continue }
+                dupSnips.append((tag, WebSearch.Hit(title: zh ? WebStrategy.toTraditional(raw.title) : raw.title, snippet: snip, url: raw.url, engine: raw.engine)))
+            }
+            for raw in a.hits {
+                // 網路上很多是簡體，先轉成繁體再判斷有沒有關係
+                let h = zh ? WebSearch.Hit(title: WebStrategy.toTraditional(raw.title), snippet: WebStrategy.toTraditional(raw.snippet),
+                                           url: raw.url, engine: raw.engine) : raw
+                // 反思：上次答錯時用過的網站，這次不用
+                if avoid.contains(WebSearch.host(h.url)) { continue }
+                guard score(h.title + " " + h.snippet, terms) >= need || h.engine == "Google 新聞" else {
+                    if dropped.count < 6 { dropped.append("[\(tag)] " + String(h.title.prefix(40))) }
+                    continue
+                }
+                if seenURL.insert(WebSearch.normURL(h.url)).inserted {
+                    hits.append((tag, h))
+                } else if let old = hits.first(where: { WebSearch.normURL($0.hit.url) == WebSearch.normURL(h.url) })?.hit,
+                          h.snippet.count >= 20, dupSnips.count < 12,
+                          !old.snippet.contains(h.snippet.prefix(30)) || !old.snippet.contains(h.snippet.suffix(30)) {
+                    // 同一個網頁被不同的搜尋找到，摘要是不同的段落（一個講它是什麼、一個講它代表什麼）：
+                    // 第二段也留著當資料（不影響要讀哪些網頁）
+                    dupSnips.append((tag, h))
+                }
+            }
+        }
+        if hits.isEmpty && lead == nil {
+            // 搜尋引擎把我們當成機器人擋住了：老實說，請使用者等一下再問（不是網路上沒有資料）
+            var r = Result(text: WebSearch.resting ? Loc.s("webBlocked", L) : Loc.s("webFail", L, plan.keywords), card: nil, found: false, engines: engines)
+            r.debug = "core=\(plan.core) topic=\(topic) need=\(need) terms=\(terms.sorted()) jobs=\(jobs.map(\.q)) dropped=\(dropped)"
+            return r
+        }
+        func isTrusted(_ url: String) -> Bool { strat.trusted.contains { url.lowercased().contains($0) } }
+
+        // ④ 閱讀網頁：整體挑 2 個、每個小問題挑 1 個（可信的來源優先），同時打開
+        let howTo: Bool = { if let fr, case .steps = fr.want { return true }; return false }()
+        func sourceQuality(_ h: WebSearch.Hit) -> Int {
+            let host = WebSearch.host(h.url)
+            let low = Cite.isLowQuality(host) ? 5 : 0
+            // 做法題：百科沒有一步一步的做法，食譜、教學網站優先
+            if howTo {
+                let page = h.title + h.snippet
+                // 搜尋結果頁、分類頁（「/search/白飯」）是一堆食譜的卡片，不是一份做法
+                let listing: Int = ["/search", "/tag", "/category", "/categories", "?q=", "/list"].contains { h.url.lowercased().contains($0) } ? 3 : 0
+                // 百科只有名詞解釋（問「怎麼早起」它講「晨型人被比喻為百靈鳥」），做法、建議題排最後
+                let wiki: Int = host.contains("wikipedia") || host.contains("baike") ? 5 : 0
+                let recipe: Int = ["做法", "作法", "食譜", "步驟", "教學", "怎麼做", "怎麼煮", "方法", "技巧", "建議", "怎麼", "如何", "秘訣", "訣竅", "注意"].contains { page.contains($0) } ? 2 : 0
+                return recipe - wiki - listing - low + (Cite.isProfessional(host) && !host.contains("wikipedia") ? 2 : 0)
+            }
+            // 原始來源（官方、政府、學術、百科）、有編輯把關的專業平台優先；問答網站、論壇、內容農場放最後
+            return (Cite.isPrimary(host) ? 3 : 0) + (Cite.isProfessional(host) ? 2 : 0) - low
+        }
+        func pick(_ tag: Int, _ n: Int) -> [WebSearch.Hit] {
+            hits.filter { $0.tag == tag && !$0.hit.url.contains("news.google.com") }.map(\.hit)
+                .sorted { a, b in
+                    // 可信來源加分；過去對這類問題常有答案的網站再加分，常給垃圾的扣分
+                    let ea = tuneKind.map { tuning.bonus(WebSearch.host(a.url), kind: $0) } ?? 0
+                    let eb = tuneKind.map { tuning.bonus(WebSearch.host(b.url), kind: $0) } ?? 0
+                    return (score(a.title + a.snippet, terms) + (isTrusted(a.url) ? 3 : 0) + ea + sourceQuality(a))
+                        > (score(b.title + b.snippet, terms) + (isTrusted(b.url) ? 3 : 0) + eb + sourceQuality(b))
+                }
+                .prefix(n).map { $0 }
+        }
+        // 不讀維基百科（WebSearch.isWiki）：條目太長，抓不到重點
+        var toRead: [WebSearch.Hit] = []
+        toRead += pick(-1, strat.angles.isEmpty ? 3 : 2).filter { h in !toRead.contains { $0.url == h.url } }
+        for i in strat.angles.indices { for h in pick(i, 1) where !toRead.contains(where: { $0.url == h.url }) { toRead.append(h) } }
+        let fetched = await withTaskGroup(of: (WebSearch.Hit, String?).self) { g -> [(WebSearch.Hit, String)] in
+            // 最多打開幾個網頁，每個最多等 6 秒（慢的網站就跳過，不讓使用者一直等）
+            for h in toRead.prefix(strat.angles.isEmpty ? 3 : 5) { g.addTask { (h, await within(6) { await WebSearch.pageText(h.url, L) } ?? nil) } }
+            var out: [(WebSearch.Hit, String)] = []
+            for await (h, t) in g { if let t { out.append((h, t)) } }
+            return out
+        }
+        let pages = fetched
+        var readPages = pages
+        clock.append(("讀\(pages.count)頁", Date()))
+        progress?("③ 讀了 \(pages.count) 個網頁，一段一段判斷哪些真的在回答你的問題…")
+
+        // 每一句都判斷：在回答哪一個小問題
+        func angleOf(_ s: String, default d: Int) -> Int {
+            var best = d, bestN = 0
+            for (i, a) in strat.angles.enumerated() {
+                let n = a.cues.filter { s.contains($0) }.count
+                if n > bestN { best = i; bestN = n }
+            }
+            return best
+        }
+        var findings: [Finding] = []
+        for (h, page) in pages {
+            let text = zh ? WebStrategy.toTraditional(page) : page
+            let ss = best(sentences(text), terms: terms, numeric: plan.numeric, core: plan.core, n: strat.angles.isEmpty ? 3 : 8)
+            for s in ss {
+                findings.append(Finding(text: s, host: WebSearch.host(h.url), url: h.url, angle: angleOf(s, default: -1), trusted: isTrusted(h.url)))
+            }
+        }
+        for (tag, h) in hits + dupSnips where !h.snippet.isEmpty {
+            let whole = zh ? WebStrategy.toTraditional(h.snippet) : h.snippet
+            // 摘要也要拆成一句一句，才不會把「你知道…嗎？」這種開場白當成答案
+            let parts = sentences(whole)
+            for s in (parts.isEmpty ? [whole] : parts) where !isQuestionOrFluff(s) {
+                let a = angleOf(s, default: -1)
+                findings.append(Finding(text: s, host: WebSearch.host(h.url), url: h.url, angle: a == -1 && tag >= 0 ? -1 : a, trusted: isTrusted(h.url)))
+            }
+        }
+        findings.removeAll { isQuestionOrFluff($0.text) }
+        // 論壇、問答網站、內容農場：別的來源夠多時就不用
+        // 例外：問的是名單，而那句話本身就是一串名單（「十大城市依次是：東京、橫濱、大阪…」）——留著，
+        // 後面還要跟其他網站比對、數目對不對得上，才會被採用
+        var wantsList = false
+        if case .list = fr?.want { wantsList = true }
+        if findings.filter({ !Cite.isLowQuality($0.host) }).count >= 3 {
+            findings.removeAll { Cite.isLowQuality($0.host) && !(wantsList && $0.text.filter { $0 == "、" }.count >= 3) }
+        }
+        var lead2 = lead.map { zh ? WebStrategy.toTraditional($0) : $0 }
+        // 百科／DuckDuckGo 的摘要常常是別的條目（問天空卻給「天空色的奇蹟」），不切題就只當一般資料
+        let listQ = question.contains("哪些") || question.contains("列表") || question.contains("有什麼")
+        if let l = lead2, leadSource != nil, !leadFits(l, plan: plan, list: listQ, question: question) {
+            findings.append(Finding(text: l, host: leadSource ?? "", url: "", angle: -1, trusted: false))
+            lead2 = nil
+        }
+
+        // ⑥ 檢查：挑到的東西有沒有真的回答問題？沒有就換個查法再查一輪
+        var solved: (text: String, ok: Bool)?
+        var brainNote = ""
+        var brainAnswered = false
+        // 已經照題目的結構整理好的答案（作品：它是什麼→講什麼→想表達什麼；代表作；比較）：不要再被「綜合重點」蓋掉
+        var digested = false
+        var checkNote = ""
+        var pagesRead = pages.count
+        var firstRoundOK = false
+        var readHosts = pages.map { WebSearch.host($0.0.url) }
+        if let fr {
+            func ev(_ ps: [(WebSearch.Hit, String)]) -> [Understanding.Evidence] {
+                ps.map { .init(text: zh ? WebStrategy.toTraditional($0.1) : $0.1, host: WebSearch.host($0.0.url)) }
+            }
+            var snips = findings.map { Understanding.Evidence(text: $0.text, host: $0.host) }
+            // 先讓大腦讀：每一段都由它判斷有沒有在回答問題、答案是什麼；它沒把握才用舊的規則
+            // 檢查答案像不像這題要的東西（像人回答前會先想：問距離，答案要有公里）
+            let accept: ((String) -> Bool)? = {
+                switch fr.want {
+                case let .number(_, units):
+                    return { a in a.contains(where: \.isNumber) && units.contains { a.contains($0) } || a.contains(where: \.isNumber) && units.isEmpty }
+                case .time:
+                    return { a in a.contains(where: \.isNumber) || ["年", "月", "日", "世紀", "朝"].contains { a.contains($0) } }
+                case .person, .place:
+                    return { a in a.count <= 16 && !a.contains(where: \.isNumber) }
+                case .list:
+                    // 問名單：答案要是好幾個名字（「丹麥、瑞典、芬蘭」），不是一句描述
+                    return { a in a.components(separatedBy: "、").count >= 3 }
+                default: return nil
+                }
+            }()
+            // 要特定形式答案的題目（數字、地名、人名、時間、名單、原因、步驟）：先用跨來源投票、讀表格的方法，
+            // 它找不到才讓大腦讀；開放的題目（「X 在講什麼」「X 是什麼」、比較）由大腦主導
+            let typedQ: Bool = {
+                switch fr.want {
+                case .number, .place, .person, .time, .list, .reason, .steps: return true
+                default: return false
+                }
+            }()
+            func judge(_ ps: [Understanding.Evidence], _ sn: [Understanding.Evidence]) -> (text: String, ok: Bool) {
+                // 「X的書都講了什麼」：拆成兩步想——他有哪些代表作、每一部在講什麼
+                if let d = Think.worksDigest(question: question, pages: ps + sn) {
+                    brainNote = "先找出最常被提到的代表作，再找每一部在講什麼的句子。"
+                    brainAnswered = true
+                    digested = true
+                    return (d, true)
+                }
+                // 「格林童話有什麼故事」：要的是一份清單——列出最常被提到的幾個、各在講什麼，不是「有 200 多個」。
+                // 規則認得的問法，或 NineSun 自己訓練的理解模型判斷是在問「有哪些」
+                let asksItems = Understanding.itemsAsk(question) != nil
+                    || (Intent.shared?.top(question)).map { $0.label == "items" && $0.p >= 0.6 } ?? false
+                if asksItems, let d = Think.itemsDigest(question: question, pages: ps + sn, subject: fr.subject) {
+                    brainNote = "這題要的是一份清單：先找出最常被提到的幾個，再說每一個在講什麼。"
+                    brainAnswered = true
+                    digested = true
+                    return (d, true)
+                }
+                // 「X 是誰提出／創立的」：緊接在動詞前面的名字，好幾句都這樣說才算
+                if case .person = fr.want, let d = Think.whoDid(question: question, pages: ps + sn, subject: fr.subject) {
+                    brainNote = "找緊接在「提出、創立、發明」前面的名字，看有幾句都這樣說。"
+                    brainAnswered = true
+                    return (d, true)
+                }
+                // 一般的名單（國家、水果、品種……）：好幾個網站都提到的排前面
+                var listNoun: String? = nil
+                // 只有真的在問名單才用（「感冒和流感有什麼差別」是比較題，理解模型可能誤判成要清單）
+                let notNames = ["差別", "區別", "不同", "差異", "意思", "好處", "壞處", "優點", "缺點", "原因", "影響", "特色", "症狀", "方法", "技巧", "建議"]
+                if case let .list(n) = fr.want { listNoun = n } else if let ia = Understanding.itemsAsk(question), !notNames.contains(where: { ia.kind.contains($0) }) { listNoun = ia.kind }
+                if let n = listNoun {
+                    // 產品（AI 模型、手機…）：照上下文認出真的被「發布、推出」的名字，不拿評測項目、分類充數
+                    if Think.isProductNoun(n), let r = Think.releases(pages: ps + sn, noun: n) {
+                        brainNote = "問的是產品：只算網頁上說「發布、推出」或叫它「\(n)」的名字，評測項目、分類不算。"
+                        brainAnswered = true
+                        digested = true
+                        return ("網路上最近提到、有發布或推出的\(n)（越多地方提到的排越前面）：\n" + r.items.map { "• " + $0 }.joined(separator: "\n")
+                                + "\n（整理自 " + r.hosts.joined(separator: "、") + "；這類東西更新很快，以官方公布為準）", true)
+                    }
+                    let old = solve(fr, pages: ps, snippets: sn)
+                    let how = Understanding.lastListDebug
+                    // 網頁上照分類列好的簽證名單、句子自己說有幾個而且數目對得上的名單：最可靠，直接用
+                    if old.ok && !old.text.isEmpty && (how.hasPrefix("sectioned") || how.hasPrefix("counted")) { brainAnswered = false; return old }
+                    // 其他情況：一張表可能是別的東西（「從沒當過安理會成員的國家」），好幾個網站都列到的名字比較可信
+                    let subj = Understanding.itemsAsk(question)?.subject ?? fr.subject
+                    Think.lastItems = []
+                    if let d = Think.plainList(question: question, pages: ps + sn, subject: subj, noun: n) {
+                        // 表格抓到的名單比較完整、而且包含了大部分各網站都提到的名字（「北歐五國」的表格 vs 句子裡只提到三國）：用表格的
+                        let ext = Understanding.extractList(ps, noun: n, subject: fr.subject).items
+                            .map { Countries.canonical($0) ?? $0 }
+                        let plain = Think.lastItems
+                        if old.ok, ext.count > plain.count, plain.allSatisfy({ ext.contains($0) }) {
+                            brainAnswered = false
+                            return (WebAgent.topOfTable(old.text, question: question), old.ok)
+                        }
+                        brainNote = "這題要的是一份名單：把各網站列出來的名字放在一起比，越多地方提到的排越前面。"
+                        brainAnswered = true
+                        digested = true
+                        return (d, true)
+                    }
+                    if old.ok && !old.text.isEmpty { brainAnswered = false; return (WebAgent.topOfTable(old.text, question: question), old.ok) }
+                }
+                // 「金閣寺在講什麼」：有這部作品就講它的內容（同名的寺廟、改編的電影不算）
+                let asksContent = (Intent.shared?.top(question)).map { $0.label == "content" && $0.p >= 0.6 } ?? false
+                if let d = Think.aboutWork(question: question, pages: ps + sn, subject: asksContent ? fr.subject : nil) {
+                    brainNote = "資料裡有這部作品，先說它是什麼，再說講了什麼故事、想表達什麼。"
+                    brainAnswered = true
+                    digested = true
+                    return (d, true)
+                }
+                let old = solve(fr, pages: ps, snippets: sn)
+                let oldOK = old.ok && !old.text.isEmpty
+                // 比較題：找不到同時講兩邊的句子時，分開找兩邊的優缺點再並排
+                if case let .compare(a, b) = fr.want, !oldOK, let d = Think.compareDigest(a, b, pages: ps + sn) {
+                    brainNote = "很少有資料同時講兩邊，所以分開找各自的優缺點再並排比較。"
+                    brainAnswered = true
+                    digested = true
+                    return (d, true)
+                }
+                // 要一段說明的題目（在講什麼、怎麼辦、為什麼、X是什麼）：大腦給整句，不切幾個字
+                var explain = Think.wantsSentences(question)
+                if case .definition = fr.want { explain = true }
+                guard let brain = Brain.shared,
+                      let c = Think.conclude(question: question, pages: ps, snippets: sn, brain: brain, accept: accept, explain: explain) else {
+                    brainAnswered = false
+                    return old
+                }
+                brainNote = "用大腦讀了 \(c.read) 段文字，判斷其中 \(c.relevant) 段在回答問題" + (c.hosts.isEmpty ? "" : "（來自 \(c.hosts.count) 個網站）") + "。"
+                let brainSure = c.confident && !c.unsure
+                // 原因：大腦很有把握時，用它挑的整句話（它讀懂哪一句在回答「為什麼」，規則只會找有「因為」的句子）
+                if case .reason = fr.want, brainSure {
+                    brainNote += "大腦挑出最在回答「為什麼」的句子。"
+                    brainAnswered = true
+                    return (c.text, true)
+                }
+                // 名單、步驟、原因：大腦一次只挑一段，交給會整理的方法
+                let needsAssembly: Bool = { switch fr.want { case .list, .steps, .reason: return true; default: return false } }()
+                if needsAssembly && oldOK { brainAnswered = false; return old }
+                // 兩邊互相檢查：投票的方法和大腦各提一個答案
+                if typedQ && oldOK && brainSure {
+                    let oldAns = Think.key(Understanding.match(old.text, #"答案：([^（。\n]+)"#)?[1] ?? "")
+                    let brainAns = Think.key(c.answer)
+                    if !oldAns.isEmpty && !brainAns.isEmpty && (oldAns.contains(brainAns) || brainAns.contains(oldAns)) {
+                        brainNote += "兩種方法得到同一個答案，互相印證。"
+                        brainAnswered = false
+                        return old
+                    }
+                    // 說法不同：大腦很有把握、而且不只一段文字支持時採用大腦的，否則用投票的；另一個說法也列出來
+                    if c.topScore >= 4 && c.support >= 2 || oldAns.isEmpty {
+                        brainNote += "投票的方法得到「\(oldAns)」，但大腦讀到更多、更有把握的說法，採用大腦的。"
+                        brainAnswered = true
+                        return (c.text + (oldAns.isEmpty ? "" : "\n⚠️ 也有資料指向「\(oldAns)」，兩者不一致，建議再確認。"), true)
+                    }
+                    brainNote += "大腦讀到的是「\(c.answer)」，和投票結果不同，但把握不夠，採用投票的。"
+                    brainAnswered = false
+                    // 只有一段文字這樣說的（「26塊」可能在講腳的骨頭）不算真的有爭議，不用嚇使用者
+                    guard c.support >= 2 else { return old }
+                    return (old.text + "\n⚠️ 也有資料指向「\(c.answer)」，兩者不一致，建議再確認。", true)
+                }
+                if typedQ && oldOK { brainAnswered = false; return old }
+                if brainSure { brainAnswered = true; return (c.text, true) }
+                if oldOK { brainAnswered = false; return old }
+                if c.confident { brainAnswered = true; return (c.text, true) }
+                brainAnswered = false
+                return old
+            }
+            var s = judge(ev(pages), snips)
+            clock.append(("思考", Date()))
+            firstRoundOK = s.ok
+            if !s.ok, !fr.retry.isEmpty {
+                progress?("④ 第一輪沒找到清楚的答案，換個查法再查一次…")
+                let retryQs = Array(Cite.distinct(fr.retry).filter { r in !jobs.contains { Cite.similar($0.q, r) } }.prefix(2))
+                let got = await withTaskGroup(of: WebSearch.Answer?.self) { g -> [WebSearch.Answer] in
+                    for q in retryQs { g.addTask { await within(8) { await WebSearch.search(q, lang: L, news: false, light: true) } ?? nil } }
+                    var out: [WebSearch.Answer] = []
+                    for await a in g { if let a { out.append(a) } }
+                    return out
+                }
+                var newHits: [WebSearch.Hit] = []
+                for a in got {
+                    for raw in a.hits {
+                        let h = WebSearch.Hit(title: WebStrategy.toTraditional(raw.title), snippet: WebStrategy.toTraditional(raw.snippet), url: raw.url, engine: raw.engine)
+                        guard score(h.title + " " + h.snippet, terms) >= need, seenURL.insert(WebSearch.normURL(h.url)).inserted else { continue }
+                        newHits.append(h)
+                        for x in sentences(h.snippet) { snips.append(.init(text: x, host: WebSearch.host(h.url))) }
+                    }
+                }
+                let reread = Array(newHits.prefix(3))
+                let more = await withTaskGroup(of: (WebSearch.Hit, String?).self) { g -> [(WebSearch.Hit, String)] in
+                    for h in reread { g.addTask { (h, await within(6) { await WebSearch.pageText(h.url, L) } ?? nil) } }
+                    var out: [(WebSearch.Hit, String)] = []
+                    for await (h, t) in g { if let t { out.append((h, t)) } }
+                    return out
+                }
+                pagesRead += more.count
+                readPages += more
+                readHosts += more.map { WebSearch.host($0.0.url) }
+                s = judge(ev(pages + more), snips)
+                checkNote = (s.ok ? "第一輪的資料沒有直接回答，改查「" : "第一輪沒有直接回答，改查「") + retryQs.joined(separator: "」「")
+                    + (s.ok ? "」後找到了。" : "」還是沒找到能直接回答的內容。")
+            } else {
+                checkNote = s.ok ? "找到的內容有直接回答問題。" : "找到的內容沒有直接回答問題。"
+            }
+            solved = s
+        }
+
+        // ⑤ 查證：交叉比對
+        let common = consensus(findings.filter { score($0.text, terms) > 0 }, exclude: plan.keywords + topic, cjkOnly: zh)
+        let sources = orderedUnique(findings.map(\.host) + (leadSource.map { [$0] } ?? []))
+        let trustedHosts = orderedUnique(findings.filter(\.trusted).map(\.host))
+
+        // ⑦ 組回答
+        let focusWords = zh ? focus(question, plan: plan) : []
+        let ranked = rank(findings, terms: terms, common: common, numeric: plan.numeric, core: plan.core, list: listQ)
+            .filter { quality($0.text, terms: terms, numeric: plan.numeric, core: plan.core, list: listQ) > 0 }
+            // 沒講到真正在問的東西（問「發光」卻在講月亮神話、問「綠豆湯」卻在講綠豆餅）就不要
+            .filter { f in focusWords.isEmpty || focusWords.contains { f.text.contains($0) } }
+        // 引用的焦點：主題詞（引文只取包含主題的那一小段）
+        let qFocus = [fr?.subject ?? plan.core] + plan.core.split(separator: " ").map(String.init)
+        var answer = ""
+        if let lead2 { answer = zh ? Cite.quote(lead2, host: leadSource ?? "", focus: qFocus) : lead2 }
+        else if let first = (strat.angles.isEmpty ? ranked : ranked.filter { $0.angle <= 0 }).first(where: { $0.text.count >= 30 }) ?? ranked.first {
+            answer = zh ? Cite.quote(first.text, host: first.host, focus: qFocus) : WebSearch.clip(first.text, 240) + "（\(first.host)）"
+        }
+        // 問為什麼：開頭那句要真的在講原因；問做法：要真的有步驟。找不到就老實說，不拿不相關的句子充數
+        if lead2 == nil, plan.kind == .reason || plan.kind == .method {
+            let markers = plan.kind == .reason ? ["因為", "由於", "原因", "所以", "導致", "造成", "散射", "是因"]
+                                               : ["步驟", "先", "再", "然後", "接著", "最後", "分鐘", "加入", "放入", "倒入", "按下"]
+            if let f = ranked.first(where: { r in markers.contains { r.text.contains($0) } }) {
+                answer = zh ? Cite.quote(f.text, host: f.host, focus: qFocus) : WebSearch.clip(f.text, 240) + "（\(f.host)）"
+            } else if zh {
+                answer = plan.kind == .reason ? "我在網路上沒找到把原因講清楚的資料，下面是找到的相關內容，僅供參考。"
+                                              : "我在網路上沒找到清楚的步驟，下面是找到的相關內容，僅供參考；你也可以把問題講得更具體一點，我再查一次。"
+            }
+        }
+        // 問「有哪些」：答案要是一份名單，不是介紹文；找不到名單就老實說
+        if listQ, lead2 == nil {
+            func items(_ s: String) -> Int { s.components(separatedBy: "、").count - 1 }
+            if let best = ranked.filter({ items($0.text) >= 4 }).max(by: { items($0.text) < items($1.text) }) {
+                answer = WebSearch.clip(best.text, 420) + "（\(best.host)）"
+            } else if zh {
+                answer = "我在網路上沒找到一份完整的名單，下面是找到的相關資料，你可以換個更具體的問法（例如「北歐有哪些國家」）我再查一次。"
+                    + (answer.isEmpty ? "" : "\n" + answer)
+            }
+        }
+        // 問數量：直接答案裡沒有數字，就改用有數字、最相關的那句
+        if plan.numeric, plan.kind != .weather, !hasNumber(answer, besides: plan.core),
+           let withNum = ranked.first(where: { hasNumber($0.text, besides: plan.core) }) {
+            answer = (zh ? Cite.quote(withNum.text, host: withNum.host, focus: qFocus) : WebSearch.clip(withNum.text, 240) + "（\(withNum.host)）")
+        }
+        // 問數量：看各來源說的數字，多數決，並說明為什麼會有不同說法
+        if plan.numeric, plan.kind != .weather, lead2 == nil, let vote = numberVote(ranked, core: plan.core) {
+            var head = "多數來源的說法是 \(vote.best)（\(vote.bestCount) 個來源）"
+            if !vote.others.isEmpty { head += "；也有 " + vote.others.joined(separator: "、") + " 的說法，通常是計算標準不同" }
+            head += "。"
+            if let s = ranked.first(where: { $0.text.contains(vote.best) }) {
+                answer = head + "\n依據：" + Cite.quote(s.text, host: s.host, focus: [vote.best])
+            } else {
+                answer = head + (answer.isEmpty ? "" : "\n" + answer)
+            }
+        }
+        // 問多遠、多高、多重：答案裡要有對應的單位，不然就是答非所問
+        if plan.numeric, zh, let units = [("多遠", ["公里", "km", "英里", "光年", "公尺", "天文單位"]), ("多高", ["公尺", "米"]),
+                                            ("多重", ["公斤", "噸", "克", "kg"]), ("多深", ["公尺", "米"]), ("多長", ["公里", "公尺", "米"])]
+            .first(where: { question.contains($0.0) })?.1, !units.contains(where: { answer.contains($0) }) {
+            if let f = ranked.first(where: { r in units.contains { r.text.contains($0) } && hasNumber(r.text, besides: plan.core) }) {
+                answer = zh ? Cite.quote(f.text, host: f.host, focus: qFocus) : WebSearch.clip(f.text, 240) + "（\(f.host)）"
+            } else {
+                answer = "我在網路上沒找到確切的數字，下面是找到的相關資料，建議再確認。"
+            }
+        }
+        // 一般問題：開頭那句至少要講到主題（問感冒卻回咖啡豆保存法的，換成真的講到主題的句子）
+        if let fr, case .open = fr.want, zh, !answer.isEmpty {
+            let key = termSet(Understanding.plain(fr.subject)).filter { $0.contains(where: isCJK) }
+            let mentions = { (t: String) in key.isEmpty || score(t, key) >= max(1, key.count / 3) }
+            if !mentions(answer) {
+                if let f = ranked.first(where: { mentions($0.text) && $0.text.count >= 20 }) { answer = zh ? Cite.quote(f.text, host: f.host, focus: qFocus) : WebSearch.clip(f.text, 240) + "（\(f.host)）" }
+                else { answer = "我找到的資料跟你問的主題對不太上，下面是比較接近的內容，僅供參考。" }
+            }
+        }
+        if let fr, let s = solved {
+            if s.ok && !s.text.isEmpty { answer = s.text }
+            else if !s.ok {
+                switch fr.want {
+                case .number: answer = "我查了兩輪，沒找到可靠的數字，下面是找到的相關資料，建議再確認。"
+                case .list: answer = "我查了兩輪，沒找到一份完整的名單，下面是找到的相關資料。"
+                case .reason: answer = "我查了兩輪，沒找到把原因講清楚的資料，下面是找到的相關內容，僅供參考。"
+                case .steps: answer = "我查了兩輪，沒找到清楚的步驟，下面是找到的相關內容；你也可以講得更具體一點，我再查一次。"
+                case .open where fr.restated.contains("明確的名稱"):
+                    answer = "我查了兩輪，沒找到直接回答「\(fr.subject)是哪一個」的資料，下面是找到的相關內容；你也可以換個說法再問我一次。"
+                case let .compare(a, b): answer = "我查了兩輪，沒找到把「\(a)」和「\(b)」直接放在一起比較的可靠資料。比較這類東西，可以看價格、耐用度、使用習慣、跟你已有的東西合不合；告訴我你的預算和用途，我再幫你查得更準。"
+                default: break
+                }
+            }
+        }
+        // ⑦-1 整理：好幾個網站的內容拆成重點、互相比對，用自己的話寫出來（不貼標題、不貼文章簡介）
+        var synthesized = false
+        if zh, !fortune, !digested, let fr {
+            let texts = readPages.map { (host: WebSearch.host($0.0.url), text: WebStrategy.toTraditional($0.1)) }
+                + findings.map { (host: $0.host, text: $0.text) }
+            let ok = solved?.ok == true && !answer.isEmpty && !Synthesize.isMeta(answer.components(separatedBy: "\n").first ?? "")
+            // 步驟題：已經從一份教學／食譜整理出有順序的步驟就用它（不同網站的步驟混在一起順序會亂）
+            let numberedSteps = answer.components(separatedBy: "\n").filter { $0.range(of: #"^\s*(\d+[\.、]|[①②③④⑤⑥⑦⑧⑨])"#, options: .regularExpression) != nil }.count >= 3
+            var lead: String? = nil
+            switch fr.want {
+            case .steps: if ok && numberedSteps { lead = "" }
+            case .reason, .definition, .open: if ok { lead = answer }
+            default: lead = ""
+            }
+            if lead != "", let syn = Synthesize.compose(question: question, subject: fr.subject, want: fr.want, pages: texts, lead: lead,
+                                                         extra: (hits + dupSnips).map { (host: WebSearch.host($0.hit.url), text: $0.hit.title + "\n" + $0.hit.snippet) }) {
+                answer = syn
+                synthesized = true
+            } else if case .steps = fr.want, !numberedSteps, !Synthesize.actionable(answer) || Synthesize.isMeta(answer) {
+                // 問做法，讀到的卻不是做法（「早起偏好者被比喻為百靈鳥」）：老實說，不拿不相關的句子充數
+                answer = "我讀了幾個網站，沒找到清楚、可以照著做的方法；你可以講得更具體一點（例如什麼情況、想達到什麼），我再查一次。"
+                solved = (answer, false)
+            }
+        }
+        var used: [String] = [answer]
+        // 每個網站最多引一句（回答裡已經引過的網站，補充就不再引它）
+        var quotedHosts = Set(SelfTuning.hosts(in: answer))
+        func take(_ fs: [Finding], _ n: Int) -> [String] {
+            var out: [String] = []
+            for f in fs where out.count < n {
+                let key = String(f.text.prefix(14))
+                if used.contains(where: { $0.contains(key) }) { continue }
+                if zh {
+                    guard quotedHosts.insert(f.host).inserted else { continue }
+                    let q = Cite.quote(f.text, host: f.host, focus: qFocus)
+                    guard !q.isEmpty else { continue }
+                    used.append(f.text)
+                    out.append(q)
+                } else {
+                    let s = WebSearch.clip(f.text, 150)
+                    used.append(s)
+                    out.append(s + "（\(f.host)）")
+                }
+            }
+            return out
+        }
+        var sections: [(String, [String])] = []
+        // 已經有完整的答案（步驟、名單、數字……）就不再附零散的引文
+        let structured: Bool = {
+            guard let fr, solved?.ok == true else { return false }
+            if digested { return true }
+            switch fr.want { case .steps, .list, .number, .time, .place, .person: return true; default: return false }
+        }()
+        if !strat.angles.isEmpty && !synthesized && !structured {
+            for (i, a) in strat.angles.enumerated() {
+                // 小問題的補充也要講到主題、不能是網頁雜訊（「上面是兩處疑似是農田的位置」不算在講天空）
+                let angleTopic: Set<String> = fr.map { termSet(Understanding.plain($0.subject)).filter { $0.contains(where: isCJK) } } ?? []
+                let fs = ranked.filter { $0.angle == i && !Think.looksLikeNoise($0.text) && (angleTopic.isEmpty || score($0.text, angleTopic) >= 1)
+                    && Judge.check($0.text, want: .open, subject: "", inContext: true) == .answer }
+                    .sorted { ($0.trusted ? 1 : 0) > ($1.trusted ? 1 : 0) }
+                let pts = take(fs, i == 0 ? 2 : 3)
+                if !pts.isEmpty { sections.append((a.title, pts)) }
+            }
+        } else if plan.kind == .news {
+            let heads = hits.filter { $0.hit.engine == "Google 新聞" }.prefix(6).map { WebStrategy.toTraditional($0.hit.snippet) }
+            if !heads.isEmpty { sections.append(("最新消息", Array(heads))) }
+            if lead2 == nil && !heads.isEmpty { answer = zh ? "我找到這些最新的相關新聞：" : "Latest related news:" }
+        } else if synthesized {
+            // 已經把各網站的重點比對、整理好了，不用再附零散的句子
+        } else if brainAnswered {
+            // 大腦已經把各網站的說法比對、整理好了，不用再附零散的句子
+        } else if let fr, solved?.ok == true, { if case .list = fr.want { return true }; if case .steps = fr.want { return true }; return false }() {
+            // 名單、步驟已經是完整的答案，不用再附一堆零散的句子
+        } else if !(plan.kind == .weather && lead != nil) {
+            // 分主次：回答是主要的；補充只留真的講到主題的，當作次要
+            let topicTerms: Set<String> = fr.map { termSet(Understanding.plain($0.subject)).filter { $0.contains(where: isCJK) } } ?? []
+            let side = topicTerms.isEmpty ? ranked : ranked.filter { score($0.text, topicTerms) >= 1 }
+            let pts = take(side, fr != nil && solved?.ok == true ? 2 : 3)
+            if !pts.isEmpty { sections.append((plan.kind == .method ? "步驟／做法" : (fr != nil ? "次要・補充" : "重點"), pts)) }
+        }
+        // 長度看問題：簡單的事實題（數字、地點、人、時間）答到就好，不附一堆補充；大題目才展開
+        var simpleFact = false
+        if let fr, solved?.ok == true {
+            switch fr.want {
+            case .number, .place, .person, .time: simpleFact = true
+            default: break
+            }
+        }
+        if simpleFact { sections.removeAll() }
+        // 反過來想：找爭議、誤解、轉折的說法（簡單的事實題不用）
+        if zh, !simpleFact, !synthesized, !digested, let fr, !fortune, plan.kind != .news, plan.kind != .weather {
+            let topicTerms = termSet(Understanding.plain(fr.subject)).filter { $0.contains(where: isCJK) }
+            let other = Mind.otherSide(findings.map { ($0.text, $0.host) }, topic: topicTerms, exclude: used)
+            if !other.isEmpty { sections.append(("換個角度（也有這些說法）", other)) }
+        }
+
+        // ④ 命理：逐句對照你的盤
+        var fortuneBlock = ""
+        if let chart, zh {
+            var ok: [String] = [], bad: [String] = []
+            var seenJ = Set<String>()
+            var total = 0
+            for f in ranked.prefix(24) where seenJ.insert(String(f.text.prefix(14))).inserted {
+                total += 1
+                let (v, why) = WebFortune.judge(f.text, chart)
+                let line = "• " + Cite.quote(f.text, host: f.host, focus: qFocus) + "\n  → " + why
+                if v == .fits && ok.count < 4 { ok.append(line) }
+                if v == .conflicts && bad.count < 3 { bad.append(line) }
+            }
+            fortuneBlock = "🧭 對照你的盤"
+            fortuneBlock += ok.isEmpty ? "\n✅ 跟你的盤對得上的：這次沒有找到直接講到你盤上關鍵（喜忌、身強弱、命宮主星）的說法。" : "\n✅ 跟你的盤對得上的：\n" + ok.joined(separator: "\n")
+            if !bad.isEmpty { fortuneBlock += "\n⚠️ 不適用在你身上的：\n" + bad.joined(separator: "\n") }
+            fortuneBlock += "\n\n" + WebFortune.conclude(chart, fits: ok.count, conflicts: bad.count, total: total, facts: facts ?? "")
+        }
+
+        // ⑥ 反思：把握程度與還不確定的地方
+        let covered = sections.count
+        var confidence: String
+        if sources.count >= 3 && (common.count >= 2 || trustedHosts.count >= 1) { confidence = zh ? "高（\(sources.count) 個來源，說法大致一致）" : "high (\(sources.count) sources mostly agree)" }
+        else if sources.count >= 2 { confidence = zh ? "中（\(sources.count) 個來源，可以參考）" : "medium (\(sources.count) sources)" }
+        else { confidence = zh ? "低（來源少，建議再確認）" : "low (few sources, double-check)" }
+        var gaps: [String] = []
+        if !strat.angles.isEmpty {
+            let missing = strat.angles.indices.filter { i in !sections.contains { $0.0 == strat.angles[i].title } }.map { strat.angles[$0].title }
+            if !missing.isEmpty { gaps.append("「" + missing.joined(separator: "、") + "」這部分網路上沒找到清楚的說法") }
+        }
+        if trustedHosts.isEmpty && !strat.trusted.isEmpty { gaps.append("這次沒有查到官方或專業機構的資料") }
+        if !gaps.isEmpty && confidence.hasPrefix("高") { confidence = "中（" + gaps.joined(separator: "；") + "）" }
+
+        // 自我升級：記下這次哪些網站真的有用、第一輪有沒有答到（只記數字，不記答案）
+        if let k = tuneKind {
+            let usedHosts = SelfTuning.hosts(in: answer)
+            let known = tuning.trusted(kind: k, among: Array(Set(readHosts)))
+            if !known.isEmpty { learnedNotes.append("根據過去的經驗，先讀了 " + known.prefix(3).joined(separator: "、") + "（這類問題常在這裡找到答案）") }
+            tuning.record(kind: k, firstRoundOK: firstRoundOK, answered: solved?.ok ?? !answer.isEmpty, read: readHosts, used: usedHosts)
+        }
+        var t = ""
+        if zh && reflect {
+            t += "🔁 反思：你說上次的答案不對。" + (avoid.isEmpty ? "" : "我上次主要用了 " + avoid.prefix(3).joined(separator: "、") + " 的資料，可能不可靠或跟你問的對不上，")
+                + "這次避開它們、換個查法重新查。\n\n"
+        }
+        if zh {
+            // 手機上先給答案，不重述問題、不寒暄；思路放最後、精簡成幾行
+            // 聽起來在擔心：先接住，再講重點
+            if !fortune && Mind.worried(question) { t += "💛 聽起來你有點擔心，我先把查到的重點講清楚：\n\n" }
+            t += "📌 " + (fortune ? "網路上的說法" : "回答") + "\n" + answer
+            // 收集知識：有把握的答案記進筆記本；以前記過的拿來對照（筆記不直接拿來回答，每次都重新查證）
+            if !fortune, let fr, solved?.ok == true, let short = Understanding.match(answer, #"答案：([^（。\n⚠]+)"#)?[1],
+               let line = Notebook.shared.compare(question, answer: short, hosts: SelfTuning.hosts(in: answer), recent: fr.recent) {
+                t += "\n" + line
+            }
+            for (title, pts) in sections {
+                let numbered = plan.kind == .method || title == "可以怎麼做" || title == "步驟"
+                t += "\n\n【\(title)】\n" + pts.enumerated().map { numbered ? "\($0.offset + 1). \($0.element)" : "• \($0.element)" }.joined(separator: "\n")
+            }
+            if let note = strat.note { t += "\n\n" + note }
+            if !fortune, let warn = Cite.skepticNote(question) { t += "\n\n" + warn }
+            if !fortuneBlock.isEmpty { t += "\n\n" + fortuneBlock }
+            // 只留重點：答案、一個最可能的下一步、來源。看法、思路、把握程度這些說明拿掉（使用者覺得多餘）；
+            // 沒把握時只用一句話提醒
+            if let fr, !fortune, let more = Mind.followUps(fr).first { t += "\n\n💬 你可能還想知道：" + more }
+            if facts != nil { t += "\n（對照方式：把每一句網路說法放到你的盤上檢查——喜忌、身強身弱、命宮主星、化忌宮位對不對得上，對不上的就排除。）" }
+            if covered == 0 && lead == nil && solved?.ok != true {
+                t += "\n（這題網路上的資料跟你問的不太對得上，可以換個說法或講得更具體一點，我再查一次。）"
+            } else if confidence.hasPrefix("低") {
+                t += "\n（資料來源不多，重要的事建議再確認。）"
+            }
+            _ = (brainNote, checkNote, learnedNotes, gaps, trustedHosts, asker)
+            // 來源清單：只列真的引用到的網站
+            let cited = SelfTuning.hosts(in: t)
+            t += "\n來源：" + (cited.isEmpty ? Array(sources.prefix(3)) : cited).joined(separator: "、")
+        } else {
+            t += Loc.s("webResult", L, plan.keywords) + "\n\n" + answer
+            for (_, pts) in sections { t += "\n\n" + pts.map { "• " + $0 }.joined(separator: "\n") }
+            t += "\n\n" + Loc.s("webSources", L) + ": " + sources.prefix(5).joined(separator: ", ") + " · " + confidence
+        }
+
+        let links = orderedUnique(ranked.filter(\.trusted).map(\.url) + ranked.map(\.url) + hits.map(\.hit.url))
+        let card = FortuneCard(title: fortune ? (zh ? "網路資料對照" : "Web check") : (zh ? "上網查到的資料" : "From the web"),
+                               headline: canon ?? plan.keywords,
+                               details: Array(links.prefix(5)).map { WebSearch.host($0) + "  " + WebSearch.clip(readablePath($0), 40) },
+                               link: links.first)
+        var res = Result(text: t, card: card, found: true, engines: engines)
+        if let fr, case .list = fr.want {
+            // 除錯：讀了哪些網頁（有幾行表格、前兩行表格長什麼樣）、找到哪些名單
+            var parts: [String] = []
+            for p in pages {
+                let lines: [String] = p.1.components(separatedBy: "\n")
+                let rows: [String] = lines.filter { $0.contains("｜") }
+                let head: String = String(rows.prefix(2).joined(separator: " // ").prefix(160))
+                let url: String = String(p.0.url.suffix(30))
+                parts.append(WebSearch.host(p.0.url) + "[" + url + "] lines=\(lines.count) table=\(rows.count) head=" + head)
+            }
+            res.debug = String(("pages=" + parts.joined(separator: " || ") + " LIST " + Understanding.lastListDebug).prefix(2500))
+        }
+        if let fr, case .number = fr.want { res.debug = "NUM " + Understanding.lastNumberDebug }
+        clock.append(("整理", Date()))
+        var last = t0
+        res.timing = clock.map { name, t in defer { last = t }; return name + String(format: " %.1fs", t.timeIntervalSince(last)) }.joined(separator: " · ")
+        res.answered = solved?.ok ?? true
+        res.confident = (solved?.ok ?? !answer.isEmpty) && !confidence.hasPrefix("低") && !confidence.hasPrefix("low")
+            && !answer.hasPrefix("（我讀到的資料沒有直接講明")
+        res.shortAnswer = Understanding.match(answer, #"答案：([^（。\n⚠]+)"#)?[1].trimmingCharacters(in: .whitespaces)
+        res.evidence = Array(ranked.prefix(8).map { WebSearch.clip($0.text, 160) + "（\($0.host)）" })
+        res.want = fr.map { SelfTuning.kind($0.want) }
+        return res
+    }
+
+    // MARK: - 時間限制
+
+    /// 在 seconds 秒內做完就回傳結果，超過就放棄（回傳 nil）
+    static func within<T>(_ seconds: Double, _ work: @escaping () async -> T) async -> T? {
+        await withTaskGroup(of: T?.self) { g in
+            g.addTask { await work() }
+            g.addTask { try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000)); return nil }
+            let first = await g.next() ?? nil
+            g.cancelAll()
+            return first
+        }
+    }
+
+    /// 網址看得懂的部分（解碼中文、去掉 https://）
+    static func readablePath(_ url: String) -> String {
+        var u = url.removingPercentEncoding ?? url
+        for p in ["https://", "http://", "www."] where u.hasPrefix(p) { u.removeFirst(p.count) }
+        if let slash = u.firstIndex(of: "/") { u = String(u[u.index(after: slash)...]) }
+        return u.isEmpty ? url : u
+    }
+
+    /// 反問句、開場白（「你知道歐洲有多少個國家嗎？」「大家都知道……」）不能當答案
+    static func isQuestionOrFluff(_ s: String) -> Bool {
+        let t = s.trimmingCharacters(in: .whitespaces)
+        if t.hasSuffix("？") || t.hasSuffix("?") || t.hasSuffix("嗎") { return true }
+        let fluff = ["你知道", "您知道", "大家都知道", "相信大家", "想必", "各位", "你是否", "有沒有想過", "今天就來", "今天要來", "本文", "這篇文章", "小編",
+                     "帶你", "一次看懂", "讓我們", "接下來", "下面就", "以下將", "快來看"]
+        if fluff.contains(where: { t.hasPrefix($0) }) { return true }
+        // 「本文將透過…帶你詳細瞭解…」這種介紹文章在講什麼、卻沒有內容的句子
+        if t.contains("#") || t.contains("＃") { return true }
+        return ["帶你詳細", "帶你了解", "帶你瞭解", "帶大家", "一起來看", "告訴你", "整理給你", "旨在", "這篇文章", "本篇文章", "懶人包", "延伸閱讀", "推薦閱讀", "免費算命"].contains { t.contains($0) }
+    }
+
+    /// 各來源說的數字（「46 個」「約 50 個」），一個來源一票
+    static func numberVote(_ fs: [Finding], core: String) -> (best: String, bestCount: Int, others: [String])? {
+        guard let re = try? NSRegularExpression(pattern: #"(\d[\d,\.]*)\s*(個|座|公尺|米|公里|歲|年|人|萬|億|%|度|天|小時|分鐘|公斤|元)"#) else { return nil }
+        var votes: [String: Set<String>] = [:]
+        for f in fs.prefix(20) {
+            let t = f.text.replacingOccurrences(of: core, with: "")
+            for m in re.matches(in: t, range: NSRange(t.startIndex..., in: t)) {
+                guard let r = Range(m.range, in: t) else { continue }
+                let v = String(t[r]).replacingOccurrences(of: " ", with: "")
+                votes[v, default: []].insert(f.host)
+            }
+        }
+        let sorted = votes.map { ($0.key, $0.value.count) }.sorted { $0.1 != $1.1 ? $0.1 > $1.1 : $0.0 < $1.0 }
+        guard let top = sorted.first, top.1 >= 2 || sorted.count == 1 else { return nil }
+        let unit = top.0.drop { $0.isNumber || $0 == "," || $0 == "." }
+        let others = sorted.dropFirst().filter { $0.1 >= 1 && $0.0.hasSuffix(unit) }.prefix(2).map { $0.0 }
+        return (top.0, top.1, Array(others))
+    }
+
+    // MARK: - 挑句子
+
+    /// 問「大城市、主要的、有名的…」卻拿到一張八十個的表：表通常照大小排，只列前面 12 個，說清楚表上一共幾個
+    static func topOfTable(_ text: String, question: String) -> String {
+        guard ["大城市", "大都市", "主要", "重要", "著名", "知名", "有名", "熱門", "常見", "最大"].contains(where: { question.contains($0) }),
+              let m = Understanding.match(text, #"^一共找到 (\d+) 個([^：\n]*)：\n"#), let n = Int(m[1]), n > 20,
+              let end = text.range(of: "\n（") else { return text }
+        let bodyStart = text.index(text.startIndex, offsetBy: m[0].count)
+        guard bodyStart < end.lowerBound else { return text }
+        let items = text[bodyStart..<end.lowerBound].components(separatedBy: CharacterSet(charactersIn: "、\n"))
+            .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        guard items.count >= 12 else { return text }
+        return "\(m[2])排在前面的 12 個（表上一共 \(n) 個）：\n" + Countries.lines(Array(items.prefix(12))) + String(text[end.lowerBound...])
+    }
+
+    static func sentences(_ s: String) -> [String] {
+        var out: [String] = [], cur = ""
+        for ch in s {
+            if ch == "\n" {
+                let t = cur.trimmingCharacters(in: .whitespaces)
+                if t.count >= 12 && t.count <= 220 { out.append(t) }
+                cur = ""
+                continue
+            }
+            cur.append(ch)
+            if "。！？!?；".contains(ch) || (ch == "." && cur.count > 40) {
+                let t = cur.trimmingCharacters(in: .whitespaces)
+                if t.count >= 12 && t.count <= 220 { out.append(t) }
+                cur = ""
+            }
+        }
+        // 從括號中間切開的半句（「93,000,000英里）被定義為…」）：去掉前面那段殘句
+        let fixed = out.map { t -> String in
+            guard let close = t.firstIndex(where: { $0 == "）" || $0 == ")" }),
+                  !t[..<close].contains(where: { $0 == "（" || $0 == "(" }) else { return t }
+            return String(t[t.index(after: close)...]).trimmingCharacters(in: .whitespaces)
+        }
+        return fixed.filter { $0.count >= 12 && !looksLikeJunk($0) }
+    }
+
+    /// 問題真正在問的東西：「月亮為什麼會發光」→ 發光；「日本有哪些縣」→ 縣；「怎麼煮綠豆湯」→ 綠豆湯
+    static func focus(_ q: String, plan: Plan) -> [String] {
+        let t = q.filter { $0.isLetter || $0.isNumber }
+        func after(_ m: String) -> String? {
+            guard let r = t.range(of: m) else { return nil }
+            var rest = String(t[r.upperBound...])
+            for w in ["會", "是", "要", "都", "呢", "嗎", "的", "有"] where rest.hasPrefix(w) { rest.removeFirst(w.count) }
+            for w in ["呢", "嗎", "啊"] where rest.hasSuffix(w) { rest.removeLast(w.count) }
+            return rest.isEmpty ? nil : rest
+        }
+        if let p = after("為什麼") ?? after("為何") {
+            let c = Array(p)
+            return c.count <= 2 ? [p] : (0..<(c.count - 1)).map { String(c[$0...$0 + 1]) }
+        }
+        if let n = after("哪些") { return [n] }
+        if plan.kind == .method { let c = plan.core.filter { $0.isLetter || $0.isNumber }; return c.count >= 2 ? [c] : [] }
+        return []
+    }
+
+    /// 直接摘要切不切題：主題的字詞要大多出現；問原因、做法的，摘要裡要真的有原因或做法；問數量的要有數字
+    static func leadFits(_ lead: String, plan: Plan, list: Bool = false, question: String? = nil) -> Bool {
+        if plan.kind == .weather || plan.kind == .news { return true }
+        if isQuestionOrFluff(lead) { return false }
+        if let q = question, case let f = focus(q, plan: plan), !f.isEmpty, !f.contains(where: { lead.contains($0) }) { return false }
+        // 問「有哪些」：摘要本身要真的列出好幾個
+        if list && lead.components(separatedBy: "、").count < 4 { return false }
+        let t = termSet(plan.core)
+        if !t.isEmpty, Double(score(lead, t)) / Double(t.count) < 0.6 { return false }
+        switch plan.kind {
+        case .reason:
+            if !["因為", "由於", "原因", "所以", "導致", "造成", "because", "due to"].contains(where: { lead.lowercased().contains($0) }) { return false }
+        case .method:
+            if !["步驟", "方法", "首先", "先", "再", "然後", "可以"].contains(where: { lead.contains($0) }) { return false }
+        case .compare:
+            if !["比", "較", "差別", "不同", "優點", "缺點", "相比"].contains(where: { lead.contains($0) }) { return false }
+        default: break
+        }
+        if plan.numeric {
+            let bare = lead.replacingOccurrences(of: #"\[\d+\]"#, with: "", options: .regularExpression)
+            if !hasNumber(bare, besides: plan.core) { return false }
+        }
+        return true
+    }
+
+    /// 選單、版權、Cookie 提示之類的句子
+    static func looksLikeJunk(_ s: String) -> Bool {
+        let l = s.lowercased()
+        let junk = ["cookie", "copyright", "版權所有", "all rights reserved", "登入", "註冊", "訂閱", "javascript", "隱私權", "privacy policy",
+                    "點擊", "下載app", "分享到", "上一篇", "下一篇", "sign in", "subscribe", "廣告",
+                    "oldid=", "title=", "index.php", "維基百科，自由的百科全書", "自由的百科全書", "[編輯]", "編輯原始碼", "取自「", "本頁面最後修訂",
+                    "跳轉到", "跳到導覽", "跳至導覽", "wikipedia, the free encyclopedia", "retrieved from", "&action=",
+                    "頁面存檔備份", "網際網路檔案館", "存檔副本", "原始內容存檔", "isbn", "doi:"]
+        if junk.contains(where: { l.contains($0) }) { return true }
+        // 參考資料那一段：「^ 1.0 1.1 某某醫院. 標題. 天下雜誌.」
+        let trimmed = s.trimmingCharacters(in: .whitespaces)
+        if trimmed.hasPrefix("^") || trimmed.hasPrefix("↑") { return true }
+        let letters = s.filter { $0.isLetter }.count
+        return Double(letters) / Double(max(1, s.count)) < 0.5
+    }
+
+    /// 問題的關鍵單位：中文用雙字組、外文用單字
+    static func termSet(_ kw: String) -> Set<String> {
+        var out = Set<String>()
+        let l = kw.lowercased()
+        for w in l.split(whereSeparator: { !$0.isLetter && !$0.isNumber }) {
+            let c = Array(w)
+            if c.contains(where: isCJK) {
+                if c.count == 1 { out.insert(String(c)) }
+                for i in 0..<max(0, c.count - 1) { out.insert(String(c[i...i + 1])) }
+            } else if w.count >= 2 {
+                out.insert(String(w))
+            }
+        }
+        return out
+    }
+
+    static func score(_ s: String, _ terms: Set<String>) -> Int {
+        let l = s.lowercased()
+        return terms.filter { l.contains($0) }.count
+    }
+
+    /// 一句話適不適合當答案：跟主題的重疊、問數量時有沒有數字，扣掉列表、清單式的句子
+    /// 除了主題本身（「台北101」的 101）以外，還有沒有數字
+    static func hasNumber(_ s: String, besides core: String) -> Bool {
+        s.replacingOccurrences(of: core, with: "").contains(where: \.isNumber)
+    }
+
+    static func quality(_ s: String, terms: Set<String>, numeric: Bool, core: String = "", list: Bool = false) -> Int {
+        let hit = score(s, terms)
+        guard hit > 0 else { return 0 }
+        var q = hit * 4
+        if hit * 2 >= terms.count { q += 4 }
+        if numeric && hasNumber(s, besides: core) { q += 6 }
+        let listy = s.components(separatedBy: "｜").count + s.components(separatedBy: "|").count - 2
+            + (s.range(of: #"\d+\.\s*\D+\s*\d+\.\s"#, options: .regularExpression) != nil ? 3 : 0)
+            + s.components(separatedBy: "、").count / 6
+        // 問「有哪些」的時候，列出很多項目的句子反而是好答案
+        q += list ? min(8, s.components(separatedBy: "、").count - 1) : -listy * 3
+        if s.count > 160 { q -= 2 }
+        if s.count < 20 { q -= 2 }
+        if s.hasSuffix("?") || s.hasSuffix("？") { q -= 6 }
+        if s.hasSuffix("：") || s.hasSuffix(":") { q -= 8 }        // 「以下是常見症狀：」這種開場白
+        if s.count < 30 && !s.contains("。") { q -= 3 }         // 太短、像標題
+        if s.contains(" - ") && s.count < 60 { q -= 3 }   // 網頁標題
+        return q
+    }
+
+    /// 和問題最相關的幾句
+    static func best(_ ss: [String], terms: Set<String>, numeric: Bool, core: String, n: Int) -> [String] {
+        let need = max(1, (terms.count + 1) / 3)
+        var seen = Set<String>()
+        return ss.filter { score($0, terms) >= need && seen.insert(String($0.prefix(20))).inserted }
+            .map { ($0, quality($0, terms: terms, numeric: numeric, core: core)) }
+            .filter { $0.1 > 0 }
+            .sorted { $0.1 > $1.1 }.prefix(n).map { $0.0 }
+    }
+
+    static func rank(_ fs: [Finding], terms: Set<String>, common: [String], numeric: Bool, core: String, list: Bool = false) -> [Finding] {
+        fs.map { f -> (Finding, Int) in
+            (f, quality(f.text, terms: terms, numeric: numeric, core: core, list: list) * 2 + common.filter { f.text.contains($0) }.count * 2)
+        }.sorted { $0.1 > $1.1 }.map { $0.0 }
+    }
+
+    static func orderedUnique(_ xs: [String]) -> [String] {
+        var seen = Set<String>()
+        return xs.filter { !$0.isEmpty && seen.insert($0).inserted }
+    }
+
+    // MARK: - 交叉比對：好幾個來源都出現的詞
+
+    static func consensus(_ fs: [Finding], exclude: String, cjkOnly: Bool) -> [String] {
+        var bySource: [String: Set<String>] = [:]
+        for f in fs {
+            var grams = Set<String>()
+            let chars = Array(f.text)
+            for n in 2...4 where chars.count >= n {
+                for i in 0...(chars.count - n) {
+                    let g = chars[i..<(i + n)]
+                    if g.allSatisfy(isCJK) { grams.insert(String(g)) }
+                }
+            }
+            for w in f.text.lowercased().split(whereSeparator: { !$0.isLetter }) where !cjkOnly && w.count >= 5 && w.allSatisfy({ $0.isASCII }) {
+                grams.insert(String(w))
+            }
+            bySource[f.host, default: []].formUnion(grams)
+        }
+        var count: [String: Int] = [:]
+        for (_, g) in bySource { for x in g { count[x, default: 0] += 1 } }
+        let stop: Set<String> = ["什麼", "一個", "可以", "我們", "你的", "自己", "這個", "就是", "因為", "所以", "如果", "還是", "沒有", "他們",
+                                 "以及", "其實", "如何", "這些", "非常", "需要", "時候", "大家", "的人", "是一", "the", "which", "their",
+                                 "about", "there", "these", "would", "other", "could", "should"]
+        let ex = exclude.lowercased()
+        let cands = count.filter { $0.value >= 2 && !stop.contains($0.key) && !ex.contains($0.key) }
+            .sorted { $0.value != $1.value ? $0.value > $1.value : $0.key.count > $1.key.count }
+        var out: [String] = []
+        for (g, _) in cands {
+            if out.contains(where: { $0.contains(g) || g.contains($0) }) { continue }
+            out.append(g)
+            if out.count >= 5 { break }
+        }
+        return out
+    }
+
+    static func isCJK(_ c: Character) -> Bool {
+        c.unicodeScalars.allSatisfy { (0x4E00...0x9FFF).contains($0.value) }
+    }
+}

@@ -1,0 +1,888 @@
+import EchoCore
+import SwiftUI
+import UIKit
+
+/// 所有 @Published 狀態只在主執行緒修改；推理在背景佇列執行。
+final class ChatViewModel: ObservableObject {
+    enum Phase { case booting, ready, failed(String) }
+
+    @Published var phase: Phase = .booting
+    @Published var turns: [ChatTurn] = []
+    @Published var streaming: String?
+    @Published var thinking = false
+    /// 請其他 AI 幫忙：金鑰存在鑰匙圈，其他設定存在 UserDefaults
+    @Published var openRouterKey = KeyStore.get("openrouter") { didSet { KeyStore.set("openrouter", openRouterKey.trimmingCharacters(in: .whitespacesAndNewlines)) } }
+    @Published var geminiKey = KeyStore.get("gemini") { didSet { KeyStore.set("gemini", geminiKey.trimmingCharacters(in: .whitespacesAndNewlines)) } }
+    /// 各家 AI 的金鑰，一行一把（Gemini、Claude、ChatGPT、Grok、DeepSeek、Groq、OpenRouter 都可以，照開頭自動認）
+    @Published var aiKeys: String = ChatViewModel.initialKeys() { didSet { KeyStore.set("aikeys", aiKeys.trimmingCharacters(in: .whitespacesAndNewlines)) } }
+    /// 舊版分開存的 Gemini、OpenRouter 金鑰搬過來
+    static func initialKeys() -> String {
+        let k = KeyStore.get("aikeys")
+        if !k.isEmpty { return k }
+        return [KeyStore.get("gemini"), KeyStore.get("openrouter")].filter { !$0.isEmpty }.joined(separator: "\n")
+    }
+    @Published var aiAuto = true { didSet { save(aiAuto, "aiAuto") } }
+    @Published var aiModels = "" { didSet { save(aiModels, "aiModels") } }
+    /// 打開：日常問題、翻譯、沒把握的題目都用 AI 的 API 回答；關掉：完全不呼叫 AI 的 API，NineSun 自己（本地引擎＋自己上網查）回答
+    @Published var useAPI = true { didSet { save(useAPI, "useAPI") } }
+    /// 翻譯模式：輸入框上的語言按鈕亮著時，打的每一句都直接翻成這個語言
+    @Published var translateOn = false { didSet { save(translateOn, "translateOn") } }
+    @Published var translateTarget = "en" { didSet { save(translateTarget, "translateTarget") } }
+    /// 翻譯模式可選的四種語言
+    struct TranslateLang: Hashable { let code: String; let short: String; let name: String }
+    static let translateLangs: [TranslateLang] = [
+        .init(code: "zh-Hant", short: "中", name: "中文"), .init(code: "en", short: "EN", name: "English"),
+        .init(code: "es", short: "ES", name: "Español"), .init(code: "it", short: "IT", name: "Italiano"),
+    ]
+    /// 翻好後自動念出來
+    @Published var speakTranslation = true { didSet { save(speakTranslation, "speakTranslation") } }
+    /// 設定頁「測試連線」的結果
+    @Published var aiTestResult = ""
+    @Published var aiTesting = false
+    func testAI() {
+        let cfg = aiConfig
+        aiTesting = true
+        aiTestResult = "測試中…（最多約一分鐘）"
+        Task { [self] in
+            let r = await AskAIs.test(config: cfg)
+            await MainActor.run { self.aiTestResult = r; self.aiTesting = false }
+        }
+    }
+    var aiConfig: AskAIs.Config {
+        AskAIs.Config(keys: aiKeys.components(separatedBy: CharacterSet(charactersIn: "\n ,，")))
+    }
+    @Published var options = SamplingOptions() { didSet { save(options, "options"); applyOptions() } }
+    @Published var profile = UserProfile() { didSet { save(profile, "profile") } }
+    @Published var rules = RuleBook() { didSet { save(rules, "rules") } }
+    /// 介面語言；autoDetect 開啟時回覆語言跟隨每則訊息
+    @Published var language: Lang = UILang.systemDefault { didSet { UILang.current = language; save(language, "language") } }
+    @Published var autoDetect = true { didSet { save(autoDetect, "autoDetect") } }
+    @Published private(set) var evolution: Evolution?
+    @Published private(set) var coreSnapshot: PalaceCore.Snapshot?
+
+    private(set) var modelInfo: (params: Int, layers: Int, heads: Int, embd: Int, ctx: Int, vocab: Int) = (0, 0, 0, 0, 0, 0)
+    private(set) var knowledgeBases: [Lang: KnowledgeBase] = [:]
+    /// 目前介面語言的資料庫
+    var knowledge: KnowledgeBase? { knowledgeBases[language] ?? knowledgeBases[.zh] }
+    private var engine: EchoEngine?
+    /// 多語系的命盤資料（命盤畫面用）
+    var i18n: I18N? { engine?.i18n }
+    private let queue = DispatchQueue(label: "ninesun.inference", qos: .userInitiated)
+
+    private static let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    private static let historyURL = docs.appendingPathComponent("ninesun-history.json")
+    private static let evolutionURL = docs.appendingPathComponent("ninesun-evolution.json")
+    private static let coreURL = docs.appendingPathComponent("ninesun-core.json")
+    /// 自我升級的經驗（哪些網站、哪種查法有用），只有幾 KB，不存答案
+    private static let tuningURL = docs.appendingPathComponent("ninesun-selftuning.json")
+    /// 知識筆記本：查證過的答案（拿來對照，不直接拿來回答）
+    private static let notebookURL = docs.appendingPathComponent("ninesun-notebook.json")
+    /// 上一個上網查的問題（「繼續查」用）
+    private var lastWebQuestion: String?
+    /// 沒設定其他 AI 時，提醒過一次就好
+    private var aiHintShown = false
+    /// 上一次翻譯（「那西班牙文呢？」接著翻同一句）
+    private var lastTranslation: Translate.Request?
+    /// 設定裡有開 API、也有金鑰
+    var apiOn: Bool { useAPI && aiConfig.enabled }
+
+    /// NineSun 的大腦（手機上跑的大型語言模型，不用網路、不用 API）：下載好了又開著就用它思考
+    @Published var useBrain = true { didSet { save(useBrain, "useBrain") } }
+    /// 成人模式（18+）：大腦照設定的角色做成人角色扮演；預設關，要確認滿 18 歲才能打開
+    @Published var adultMode = false { didSet { save(adultMode, "adultMode") } }
+    @Published var roleCharacter = "" { didSet { save(roleCharacter, "roleCharacter") } }
+    /// NineSun 的個性：會罵人、會吐槽（內建，不是開關；底線照樣守）
+    let trashTalk = true
+    @Published var brainTestResult = ""
+    @Published var brainTesting = false
+    var brainPath: String? {
+        guard useBrain, let m = ModelStore.shared.readyModel else { return nil }
+        return ModelStore.shared.path(m).path
+    }
+
+    init() {
+        options = load("options") ?? SamplingOptions()
+        profile = load("profile") ?? UserProfile()
+        rules = load("rules") ?? RuleBook()
+        language = load("language") ?? UILang.systemDefault
+        autoDetect = load("autoDetect") ?? true
+        aiAuto = load("aiAuto") ?? true
+        aiModels = load("aiModels") ?? ""
+        useAPI = load("useAPI") ?? true
+        speakTranslation = load("speakTranslation") ?? true
+        translateOn = load("translateOn") ?? false
+        translateTarget = load("translateTarget") ?? "en"
+        useBrain = load("useBrain") ?? true
+        if !UserDefaults.standard.bool(forKey: "ninesun.brainOnV215") {
+            UserDefaults.standard.set(true, forKey: "ninesun.brainOnV215")
+            useBrain = true
+        }
+        adultMode = load("adultMode") ?? false
+        roleCharacter = load("roleCharacter") ?? ""
+        UILang.current = language
+        // 記憶體不夠時先放掉大腦（下次用到再讀進來），不要讓系統把 App 關掉
+        NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification, object: nil, queue: .main) { _ in
+            LocalBrain.shared.unload()
+        }
+        // 以前的版本會把上網查過的答案存在手機裡；現在每次都即時上網查，舊檔刪掉
+        try? FileManager.default.removeItem(at: Self.docs.appendingPathComponent("ninesun-webmemory.json"))
+        if let d = try? Data(contentsOf: Self.tuningURL), let st = try? JSONDecoder().decode(SelfTuning.State.self, from: d) {
+            SelfTuning.shared.state = st
+        }
+        if let d = try? Data(contentsOf: Self.notebookURL), let st = try? JSONDecoder().decode(Notebook.State.self, from: d) {
+            Notebook.shared.state = st
+        }
+        if let data = try? Data(contentsOf: Self.historyURL),
+           let saved = try? JSONDecoder().decode([ChatTurn].self, from: data) {
+            turns = saved
+        }
+    }
+
+    // MARK: - 開機
+
+    func boot() {
+        guard engine == nil else { return }
+        let started = Date()
+        queue.async {
+            do {
+                let model = try EchoModel(bundle: .main)
+                let engine = EchoEngine(model: model)
+                for L in Lang.allCases { engine.knowledge[L] = try? KnowledgeBase(bundle: .main, lang: L) }
+                engine.i18n = try? I18N(bundle: .main)
+                // 大腦（閱讀理解模型）：上網查到的每段文字都由它來讀懂、判斷
+                Brain.shared = try? Brain(bundle: .main)
+                // 理解問題（自己訓練的模型）：看懂這句話要的是什麼——列出有哪些、在講什麼、有幾個……
+                Intent.shared = try? Intent(bundle: .main)
+                let core = try PalaceCore(bundle: .main)
+                if let d = try? Data(contentsOf: Self.coreURL), let s = try? JSONDecoder().decode(PalaceCore.Snapshot.self, from: d) {
+                    core.restore(s)
+                }
+                engine.core = core
+                if let d = try? Data(contentsOf: Self.evolutionURL), let e = try? JSONDecoder().decode(Evolution.self, from: d),
+                   e.bias.count == model.config.vocab_size {
+                    engine.evolution = e
+                }
+                let c = model.config
+                let wait = max(0, 1.4 - Date().timeIntervalSince(started))
+                DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
+                    self.engine = engine
+                    self.knowledgeBases = engine.knowledge
+                    self.evolution = engine.evolution
+                    self.coreSnapshot = core.snapshot
+                    self.modelInfo = (model.numParams, c.n_layer, c.n_head, c.n_embd, c.n_ctx, c.vocab_size)
+                    self.applyOptions()
+                    if self.turns.isEmpty {
+                        let hello = self.profile.birthday == nil
+                            ? T("訊號接通！我是 NineSun，底層是九型十二宮。告訴我你的生日和出生時間，例如「我是2000年1月1日早上8點出生的女生」，我就能用十二宮、八字、紫微讀懂你。",
+                                "Signal connected! I'm NineSun, built on the Nine & Twelve system. Tell me your birthday and birth time, e.g. “I was born on 2000-01-01 at 8am, I'm a woman”, and I'll read you through the twelve palaces, BaZi and Zi Wei. I speak 繁體中文, English, Español and Italiano.",
+                                "¡Señal conectada! Soy NineSun, basado en el sistema Nueve y Doce. Dime tu cumpleaños y hora de nacimiento, p. ej. «nací el 2000-01-01 a las 8, soy mujer», y te leeré con los doce palacios, BaZi y Zi Wei.",
+                                "Segnale connesso! Sono NineSun, basato sul sistema Nove e Dodici. Dimmi il tuo compleanno e l'ora di nascita, es. «sono nata il 2000-01-01 alle 8, sono una donna», e ti leggerò con i dodici palazzi, BaZi e Zi Wei.")
+                            : T("訊號接通！歡迎回來。要看今天運勢、排八字紫微、算一卦，還是隨便聊聊？",
+                                "Signal connected! Welcome back. Today's fortune, BaZi, Zi Wei, a hexagram, or just a chat?",
+                                "¡Señal conectada! Bienvenido de nuevo. ¿Suerte de hoy, BaZi, Zi Wei, un hexagrama o charlar?",
+                                "Segnale connesso! Bentornato. Fortuna di oggi, BaZi, Zi Wei, un esagramma o due chiacchiere?")
+                        self.turns.append(ChatTurn(role: .echo, text: self.rules.enforce(hello), source: .tool))
+                    }
+                    // 大腦下載好了：先讀進記憶體，第一個問題就不用等
+                    if let brain = self.brainPath { LocalBrain.shared.preload(modelPath: brain) }
+                    // 還沒有大腦：說一次怎麼讓 NineSun 變聰明
+                    if ModelStore.shared.readyModel == nil, !UserDefaults.standard.bool(forKey: "ninesun.brainTipShown") {
+                        UserDefaults.standard.set(true, forKey: "ninesun.brainTipShown")
+                        self.turns.append(ChatTurn(role: .echo, text: T(
+                            "💡 想讓我更聰明嗎？到右上角「調頻台」→「NineSun 的大腦」按下載（大約 5 GB，建議接 Wi-Fi）。下載好之後我會在手機裡自己思考，不用網路、不用 API。",
+                            "💡 Want me smarter? Go to Tuning → NineSun's brain and tap Download (about 5 GB, Wi-Fi recommended). Then I think on your phone, offline, no API.",
+                            "💡 ¿Quieres que sea más inteligente? Ve a Ajustes → Cerebro de NineSun y toca Descargar (unos 5 GB, mejor con Wi-Fi).",
+                            "💡 Vuoi che sia più intelligente? Vai su Sintonia → Cervello di NineSun e tocca Scarica (circa 5 GB, meglio con Wi-Fi)."), source: .tool))
+                    }
+                    withAnimation(.easeOut(duration: 0.35)) { self.phase = .ready }
+                }
+            } catch {
+                DispatchQueue.main.async { self.phase = .failed("\(error)") }
+            }
+        }
+    }
+
+    var canSend: Bool { engine != nil && !thinking }
+
+    // MARK: - 對話
+
+    func send(_ raw: String) {
+        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, engine != nil, !thinking else { return }
+        turns.append(ChatTurn(role: .user, text: text))
+        thinking = true
+        streaming = ""
+
+        // 「重新查…」：直接上網查最新的
+        if text.hasPrefix("重新查") || text.lowercased().hasPrefix("search again") {
+            let q = text.replacingOccurrences(of: "重新查", with: "").replacingOccurrences(of: "search again", with: "", options: .caseInsensitive)
+                .trimmingCharacters(in: .whitespaces)
+            lookupWeb(q.isEmpty ? text : q, autoDetect ? Lang.detect(text, fallback: language) : language)
+            return
+        }
+
+        // 「測試AI」：馬上試每一把金鑰，把真正的錯誤原因講出來
+        if ["測試ai", "測試 ai", "test ai"].contains(text.trimmingCharacters(in: .whitespaces).lowercased()) {
+            let cfg = aiConfig
+            thinking = true
+            Task { [self] in
+                let r = await AskAIs.test(config: cfg)
+                await MainActor.run { self.finish(ChatTurn(role: .echo, text: "其他 AI 的連線測試：\n" + r, source: .tool)) }
+            }
+            return
+        }
+
+        // 「問AI …」：一定要問其他 AI（先自己上網查，再同時問幾家、整理、查證）
+        if let q = askAIQuestion(text) {
+            let L = autoDetect ? Lang.detect(q, fallback: language) : language
+            if !useAPI {
+                finish(ChatTurn(role: .echo, text: "設定裡的「用 AI API 回答」現在是關的，所以我不會去問其他 AI，由我自己回答。要問 AI 的話，到設定頁把它打開。", source: .tool))
+            } else if aiConfig.enabled {
+                lookupWeb(q, L, forceAI: true)
+            } else {
+                finish(ChatTurn(role: .echo, text: "還沒設定 AI 的金鑰：到設定頁的「請其他 AI 幫忙」填入 AI 金鑰（Gemini、Claude、ChatGPT、Grok 等都可以），我就能問它們、整理後給你。", source: .tool))
+            }
+            return
+        }
+
+        // 知識筆記：看看它學到了什麼
+        if ["知識筆記", "你的筆記", "你學到了什麼", "你學到什麼"].contains(where: { text.contains($0) }) {
+            finish(ChatTurn(role: .echo, text: Notebook.shared.summary(), source: .tool))
+            return
+        }
+
+        // 不放棄：「繼續查」→ 換個方向把上一題再查一次
+        if ["繼續查", "再查一次", "再查查", "繼續研究"].contains(text), let q = lastWebQuestion {
+            lookupWeb(q, autoDetect ? Lang.detect(q, fallback: language) : language, reflect: true)
+            return
+        }
+
+        // 知錯能改：剛剛上網查的答案被說「不對」→ 反省用過的來源、扣分，避開它們換個查法重查
+        if Mind.isCorrection(text), let last = turns.dropLast().suffix(3).last(where: { $0.role == .echo && $0.query != nil }), let q = last.query {
+            let hosts = SelfTuning.hosts(in: last.text)
+            SelfTuning.shared.feedback(kind: SelfTuning.kind(Understanding.frame(q).want), hosts: hosts, positive: false)
+            // 記進筆記：這題被說不對（有說正確答案的話也記下來，下次查證）
+            Notebook.shared.dispute(q, userSaid: Mind.claim(text))
+            saveFile(Notebook.shared.state, Self.notebookURL)
+            lookupWeb(q, autoDetect ? Lang.detect(q, fallback: language) : language, avoid: hosts, reflect: true)
+            return
+        }
+
+        // 翻譯模式開著：直接翻成選好的語言（本來就是那個語言的話：翻成中文；選中文的話翻成英文）
+        if translateOn, let target = Translate.Code(rawValue: translateTarget) {
+            translate(Translate.Request(text: text, source: nil, target: target))
+            return
+        }
+
+        // 翻譯：「蘋果用西班牙文怎麼說」「把這句翻成英文：…」「gracias 是什麼意思」
+        // 大腦下載好了：讓大腦詳細回答（每種語言的說法、念法、什麼時候用）；大腦答不出來才用翻譯
+        if let req = Translate.parse(text) {
+            if !apiOn, let brain = brainPath {
+                brainTranslate(text, brain: brain) { _ in self.translate(req) }
+            } else {
+                translate(req)
+            }
+            return
+        }
+        // 剛翻完接著問「那義大利文呢？」：同一句換一種語言
+        if let last = turns.dropLast().last, last.role == .echo, last.speak != nil,
+           let req = Translate.followUp(text, last: lastTranslation) {
+            translate(req)
+            return
+        }
+
+        // 成人模式：照設定的角色聊（說想死的話還是先接住；命理、規則照常）
+        // 大腦關著或還沒下載：不擋人，照一般的方式由 NineSun 的引擎回答
+        if adultMode, brainPath != nil, RuleBook.parse(text) == nil, !Self.isReading(text) || Solace.isFeeling(text) {
+            let L = autoDetect ? Lang.detect(text, fallback: language) : language
+            if let care = Safety.crisisReply(text, L) {
+                finish(ChatTurn(role: .echo, text: care, source: .tool))
+                return
+            }
+            // 底線寫死在程式裡：提到未成年就不寫
+            if AdultGuard.crosses(text) || AdultGuard.crosses(roleCharacter) {
+                finish(ChatTurn(role: .echo, text: AdultGuard.refusal(L), source: .tool))
+                return
+            }
+            roleplay(text, L, brain: brainPath!)
+            return
+        }
+
+        // 大腦下載好了（而且沒開雲端 AI）：NineSun 的引擎先算、先查，再交給大腦想怎麼回答；設定生日、規則還是引擎自己處理
+        if !apiOn, let brain = brainPath, RuleBook.parse(text) == nil {
+            localReply(text, brain: brain)
+            return
+        }
+
+        // 開著「用 AI API 回答」又有金鑰：一律用 AI 回答。
+        // 命盤、運勢、心情先由 NineSun 的九型十二宮引擎算出來，再交給 AI 用這些結果回答（AI 自己算不出你的盤）；
+        // 設定生日、規則這種會改資料的話還是 NineSun 自己處理。關掉：全部由 NineSun 自己回答
+        if apiOn {
+            if RuleBook.parse(text) != nil {
+                localReply(text)
+            } else if Self.isReading(text) || Self.fortuneWords(text) {
+                localReply(text, viaAI: true)
+            } else {
+                aiChat(text, autoDetect ? Lang.detect(text, fallback: language) : language)
+            }
+            return
+        }
+
+        localReply(text)
+    }
+
+    /// NineSun 自己回答（本地的引擎；需要時上網查）
+    /// viaAI：算好之後交給 AI，用這些結果回答（開著 API 時的命理問題）
+    private func localReply(_ text: String, viaAI: Bool = false, brain: String? = nil) {
+        guard let engine else { return }
+        let history = turns
+        let ctx = EchoEngine.Context(profile: profile, rules: rules, now: Date(), language: language, autoDetect: autoDetect,
+                                     allowSwearing: trashTalk)
+        queue.async {
+            let reply = engine.reply(to: text, history: history, context: ctx)
+            let snap = engine.core?.snapshot
+            DispatchQueue.main.async {
+                if let p = reply.profile { self.profile = p }
+                if let r = reply.rules { self.rules = r }
+                self.coreSnapshot = snap
+                if let s = snap { self.saveFile(s, Self.coreURL) }
+                if let brain, reply.profile == nil, reply.rules == nil, self.think(text, reply, brain: brain) { return }
+                if viaAI, reply.profile == nil, reply.rules == nil, reply.webQuery == nil {
+                    self.aiChat(text, reply.lang, chart: reply.turn.text + (reply.augmentFacts.isEmpty ? "" : "\n" + reply.augmentFacts))
+                    return
+                }
+                if let q = reply.webQuery {
+                    var tx = Transaction()
+                    tx.disablesAnimations = true
+                    withTransaction(tx) {
+                        self.turns.append(reply.turn)
+                        self.streaming = nil
+                    }
+                    // 已經先給了思路庫的答案，網路只是補充：沒查到就不要再跳一則「查不到」
+                    // 已經先給了一段像樣的回答（思路庫、建議）時，網路只是補充：沒查到相關的就不要再跳一則
+                    self.lookupWeb(q, reply.lang, quietIfNothing: reply.turn.source == .neural || reply.turn.text.count > 40)
+                    return
+                }
+                if let term = reply.webAugment.first {
+                    // 先給盤面解讀，再上網查這幾個組合的說法，逐句對照你的盤分析
+                    let facts = reply.augmentFacts, L = reply.lang, also = Array(reply.webAugment.dropFirst())
+                    self.play(text: reply.turn.text, final: reply.turn) { self.augmentWeb(term, also: also, facts: facts, L) }
+                    return
+                }
+                self.play(text: reply.turn.text, final: reply.turn)
+            }
+        }
+    }
+
+    // MARK: - 大腦
+
+    /// 大腦直接回答（不上網、不先查資料，最快）。回傳 false：這種回答照引擎的就好（時間、計算、換算、規則、要你給生日）
+    private func think(_ text: String, _ reply: EchoEngine.Reply, brain: String) -> Bool {
+        let L = reply.lang
+        let fallback: (String) -> Void = { _ in self.play(text: reply.turn.text, final: reply.turn) }
+        // 對方在質疑上一個回答（「你確定嗎」「再想一下」）：不讓大腦憑印象再說一次，回頭把上一題重新查一遍，照查到的確認或更正
+        if BrainRoute.isChallenge(text), reply.turn.speak == nil,
+           let prev = turns.dropLast().last(where: { $0.role == .user })?.text, prev.count >= 4, !BrainRoute.isChallenge(prev) {
+            recheck(prev, challenge: text, L, brain: brain, onFail: fallback)
+            return true
+        }
+        // 翻譯（「我喜歡你用西班牙語和義大利語怎麼說」）：引擎的逐字翻譯常常翻錯、翻一半，交給大腦詳細回答
+        // （翻譯、念法、用法、語氣）；用問的人說的語言回答，不是翻成的語言
+        if reply.turn.speak != nil {
+            brainTranslate(text, brain: brain, onFail: fallback)
+            return true
+        }
+        if let q = reply.webQuery {
+            // 問現在、最新的事（大腦記得的可能過時），或要查了才知道的事實（數字、人名、地名、時間、名單——小模型憑記憶常答錯）：
+            // 先上網查、推理出答案，再讓大腦照查到的說
+            // 問一部有名字的作品在講什麼：小模型憑印象講劇情常常張冠李戴，也先查再說
+            if BrainRoute.timeSensitive(text) || BrainRoute.needsLookup(text) || BrainRoute.namedWork(text) {
+                lookupWeb(q, L, brain: brain, asked: text)
+                return true
+            }
+            // 「五行是什麼」：先看百科開頭怎麼定義（一兩秒），交給大腦用自己的話講；百科沒有這個條目就讓大腦自己答
+            if BrainRoute.definition(text) {
+                lookupWeb(q, L, brain: brain, asked: text, briefOnly: true)
+                return true
+            }
+            // 大腦寫不出來才用原本的上網查
+            brainChat(text, L, brain: brain) { _ in self.lookupWeb(q, L) }
+            return true
+        }
+        // 引擎把「媽媽的媽媽叫什麼」「我在哪個城市讀書」當成在問命盤的某一宮（或跟你要生日）：
+        // 這句話根本沒提到命理，就讓大腦直接回答
+        let fortune = BrainRoute.asksFortune(text)
+        switch reply.turn.source {
+        case .tool, .rule:
+            if !fortune, BrainRoute.needsBirthday(reply.turn.text) {
+                brainChat(text, L, brain: brain, onFail: fallback)
+                return true
+            }
+            return false
+        case .reader, .grounded, .corrected:
+            if !fortune {
+                brainChat(text, L, brain: brain, onFail: fallback)
+                return true
+            }
+            // 命盤推算的結果：只有引擎算得出你的盤，大腦用白話回答
+            if reply.turn.card == nil && reply.turn.text.count < 60 { return false }
+            let reading = reply.turn.text + (reply.augmentFacts.isEmpty ? "" : "\n" + reply.augmentFacts)
+            brainAnswer(text, reading: reading, mode: .reading, lang: L, brain: brain, card: reply.turn.card, onFail: fallback)
+        case .knowledge, .neural:
+            brainChat(text, L, brain: brain, onFail: fallback)
+        }
+        return true
+    }
+
+    /// 回頭查上一題：引擎自己知道的（算得出來、常識、知識庫）直接當資料；引擎不知道的上網查。查到的交給大腦對照
+    private func recheck(_ previous: String, challenge: String, _ L: Lang, brain: String, onFail: @escaping (String) -> Void) {
+        let asked = LocalBrain.recheckQuestion(challenge, previous: previous, lang: L.rawValue)
+        guard let engine else {
+            brainAnswer(asked, mode: .chat, lang: L, brain: brain, onFail: onFail)
+            return
+        }
+        let ctx = EchoEngine.Context(profile: profile, rules: rules, now: Date(), language: language, autoDetect: autoDetect,
+                                     allowSwearing: trashTalk)
+        let kb = L == .zh ? BrainRoute.lookup(previous, in: engine.knowledge[.zh]).facts : ""
+        queue.async {
+            let again = engine.reply(to: previous, history: [], context: ctx)
+            DispatchQueue.main.async {
+                var facts: [String] = []
+                if again.webQuery == nil, again.profile == nil, again.rules == nil, again.turn.source == .tool || again.turn.source == .knowledge,
+                   again.turn.text.count >= 6, !BrainRoute.needsBirthday(again.turn.text) { facts.append(again.turn.text) }
+                if !kb.isEmpty { facts.append(kb) }
+                if !facts.isEmpty {
+                    self.brainAnswer(asked, facts: String(facts.joined(separator: "\n").prefix(600)), mode: .grounded, lang: L, brain: brain, onFail: onFail)
+                } else if let q = again.webQuery {
+                    self.lookupWeb(q, L, brain: brain, asked: asked)
+                } else {
+                    self.brainAnswer(asked, mode: .chat, lang: L, brain: brain, onFail: onFail)
+                }
+            }
+        }
+    }
+
+    /// 一般問題交給大腦：先查 NineSun 的知識庫（疾病、急救、國家、元素、動物、命理名詞……），
+    /// 查到的當成資料交給大腦照著回答；情緒類的當參考，還是用聊天的語氣
+    private func brainChat(_ text: String, _ L: Lang, brain: String, onFail: @escaping (String) -> Void) {
+        let found = L == .zh ? BrainRoute.lookup(text, in: engine?.knowledge[.zh]) : (facts: "", hint: "")
+        // 算數的應用題：用比較穩的設定、一步一步算
+        let math = LocalBrain.isArithmetic(text)
+        // 有爭議的問題（「該不該」「要不要」）：提醒大腦兩邊都想過再選邊；心情不好的時候不用（先陪他）
+        // 好到不像真的、要先給錢的事：不管有沒有查到資料，都提醒大腦先從壞的方面想
+        let asked = math ? LocalBrain.mathQuestion(text, lang: L.rawValue)
+            : LocalBrain.isTooGood(text) ? LocalBrain.waryQuestion(text, lang: L.rawValue)
+            : found.facts.isEmpty && !BrainRoute.feelingLow(text) ? LocalBrain.chatQuestion(text, lang: L.rawValue) : text
+        brainAnswer(asked, hint: found.hint, notes: found.facts,
+                    mode: found.facts.isEmpty && !math ? .chat : .grounded, lang: L, brain: brain, onFail: onFail)
+    }
+
+    /// 翻譯的問題交給大腦：用問的人說的語言回答，不是翻成的語言
+    private func brainTranslate(_ text: String, brain: String, onFail: @escaping (String) -> Void) {
+        let asked = Lang.detect(text, fallback: language)
+        brainAnswer(LocalBrain.translateQuestion(text, lang: asked.rawValue), mode: .grounded, lang: asked, brain: brain, onFail: onFail)
+    }
+
+    /// 問大腦，一邊寫一邊顯示；寫不出來（模型讀不進來、記憶體不夠）就用 onFail（引擎原本的回答）
+    private func brainAnswer(_ question: String, facts: String = "", evidence: [String] = [], reading: String = "", hint: String = "",
+                             notes: String = "", mode: LocalBrain.Mode, lang L: Lang, brain: String, card: FortuneCard? = nil, query: String? = nil,
+                             note: String = "", onFail: @escaping (String) -> Void) {
+        thinking = true
+        streaming = LocalBrain.shared.isLoaded ? "🧠 想一想…" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
+        let past = turns.dropLast().suffix(6).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
+        // 對方心情低落：不用嘴砲的個性，溫柔地安慰
+        let prevUser = turns.dropLast().last(where: { $0.role == .user })?.text
+        let low = BrainRoute.feelingLow(question, previous: prevUser)
+        let system = LocalBrain.system(lang: L.rawValue, swear: trashTalk && !low)
+        let user = LocalBrain.userMessage(question: question, facts: facts, evidence: evidence, reading: reading, hint: hint, notes: notes,
+                                          lang: L.rawValue)
+        let book = rules
+        // 切到別的 App 也繼續寫
+        let work = BackgroundWork.start()
+        LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: user, mode: mode, lang: L.rawValue,
+                              onText: { t in work.tick(t.count); DispatchQueue.main.async { if !t.isEmpty { self.streaming = LocalBrain.noKiss(t) } } },
+                              done: { result in
+            work.end()
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let r) where !r.text.isEmpty:
+                    // 一般聊天不讓大腦說髒話
+                    let formatted = LocalBrain.followFormat(question: question, answer: r.text)
+                    let raw = low ? LocalBrain.soften(formatted) : formatted
+                    let said = self.trashTalk ? Composure.clean(raw) : Composure.rude(raw) ? Composure.calm : raw
+                    var turn = ChatTurn(role: .echo, text: book.enforce(said + note), source: .neural, card: card, tokens: query == nil ? nil : [])
+                    turn.query = query
+                    self.finish(turn)
+                case .success:
+                    self.streaming = ""
+                    onFail("沒有寫出東西")
+                case .failure(let e):
+                    self.streaming = ""
+                    onFail("\(e)")
+                }
+            }
+        })
+    }
+
+    /// 成人模式的角色扮演：前面的對話一起給大腦，接著劇情寫
+    private func roleplay(_ text: String, _ L: Lang, brain: String) {
+        thinking = true
+        streaming = LocalBrain.shared.isLoaded ? "…" : "🧠 NineSun 的大腦醒來中…（第一次要幾秒）"
+        let past = turns.dropLast().suffix(12).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
+        let system = LocalBrain.roleplaySystem(character: roleCharacter, lang: L.rawValue, swear: trashTalk)
+        // 小模型聊久了會忘記角色：每一句都附上角色設定提醒它（只給模型看，對話裡不會出現）
+        let user = LocalBrain.roleplayUser(text, character: roleCharacter, lang: L.rawValue)
+        let work = BackgroundWork.start()
+        LocalBrain.shared.ask(modelPath: brain, system: system, history: Array(past), user: user, mode: .roleplay, lang: L.rawValue,
+                              onText: { t in
+            work.tick(t.count)
+            // 大腦寫到未成年的內容：馬上停、不顯示
+            if AdultGuard.crosses(t) { LocalBrain.shared.cancel(); return }
+            let shown = LocalBrain.dropNarration(t, question: text, partial: true)
+            DispatchQueue.main.async { if !t.isEmpty { self.streaming = LocalBrain.noKiss(shown) } }
+        },
+                              done: { result in
+            work.end()
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let r) where AdultGuard.crosses(r.text):
+                    self.finish(ChatTurn(role: .echo, text: AdultGuard.refusal(L), source: .tool))
+                case .success(let r) where !r.text.isEmpty:
+                    let said = LocalBrain.dropNarration(r.text, question: text)
+                    self.finish(ChatTurn(role: .echo, text: self.trashTalk ? Composure.clean(said) : said, source: .neural))
+                case .success:
+                    self.finish(ChatTurn(role: .echo, text: "（大腦這次沒有寫出東西，再說一次試試。）", source: .tool))
+                case .failure(let e):
+                    self.finish(ChatTurn(role: .echo, text: "（大腦這次沒有回答：\(e)）", source: .tool))
+                }
+            }
+        })
+    }
+
+    /// 設定頁的「測試大腦」：真的問它一句，看速度
+    func testBrain() {
+        guard let m = ModelStore.shared.readyModel else { brainTestResult = "還沒下載大腦。"; return }
+        brainTesting = true
+        brainTestResult = LocalBrain.shared.isLoaded ? "測試中…" : "讀進記憶體中（第一次要幾秒）…"
+        // 成人模式打開：用使用者寫的角色設定測，看角色有沒有照設定演
+        let role = adultMode
+        let system = role ? LocalBrain.roleplaySystem(character: roleCharacter, lang: "zh") : LocalBrain.system(lang: "zh")
+        let user = role ? "跟我打個招呼，用兩三句話介紹你自己：你是誰、喜歡什麼樣的人。"
+                        : LocalBrain.userMessage(question: "用兩句話介紹你自己，再說一個你覺得有趣的冷知識。")
+        LocalBrain.shared.ask(modelPath: ModelStore.shared.path(m).path, system: system, history: [], user: user, mode: role ? .roleplay : .chat, lang: "zh",
+                              onText: { t in DispatchQueue.main.async { self.brainTestResult = t } },
+                              done: { result in
+            DispatchQueue.main.async {
+                self.brainTesting = false
+                switch result {
+                case .success(let r):
+                    self.brainTestResult = r.text + String(format: "\n\n✓ %@，每秒 %.1f 個字詞（token）", m.name, r.tokensPerSecond)
+                case .failure(let e):
+                    self.brainTestResult = "✗ 大腦沒有回答：\(e)。可以換「輕量」的模型試試。"
+                }
+            }
+        })
+    }
+
+    /// 留在 NineSun 自己的系統裡的：命理、心情、規則、叫它上網查、跟它打招呼
+    static func staysLocal(_ text: String) -> Bool {
+        isReading(text) || fortuneWords(text) || RuleBook.parse(text) != nil || EchoEngine.explicitSearch(text) != nil
+            || Companion.isSmallTalk(text)
+    }
+
+    /// 明確在問運勢的字（「今天」「如何」這種一般字不算）
+    static func fortuneWords(_ text: String) -> Bool { BrainRoute.fortuneWords(text) }
+
+    /// 要 NineSun 自己的命理引擎算的（運勢、命盤、八字、紫微、九型、生日…）
+    static func isReading(_ text: String) -> Bool { BrainRoute.isReading(text) }
+
+    /// 日常問題交給 AI：用 NineSun 的個性回答、照你的九型調整說話方式（Gemini 要最新資料時會自己用 Google 搜尋）；好幾家 AI 時融合成一個答案
+    /// chart：NineSun 的九型十二宮引擎算出來的結果（AI 只能用它，不能改）
+    private func aiChat(_ text: String, _ L: Lang, chart: String = "") {
+        let cfg = aiConfig
+        let past = turns.dropLast().suffix(10).compactMap { t -> AskAIs.Turn? in
+            t.text.isEmpty ? nil : AskAIs.Turn(fromUser: t.role == .user, text: t.text)
+        }
+        // NineSun 自己的個性；有生日時照你的九型調整說話方式
+        var persona = AskAIs.persona(type: profile.birthday.map { Destiny($0).type }, lang: L)
+        if !chart.isEmpty {
+            persona += "\n\n【NineSun 用九型十二宮算出來的結果】（這是精確推算，宮位、數字、好正壞、年份一個都不能改，也不要自己另外算）\n" + chart
+                + "\n\n用上面的結果回答對方的問題：先講結論，再用白話說為什麼（起因 → 落在哪個領域 → 呈現出來的樣子 → 心裡的感受），最後給一個具體可做的建議。"
+        }
+        streaming = cfg.names.count > 1 ? "🤖 同時問 " + cfg.names.joined(separator: "、") + "，再融合成我的看法…" : "🤖 思考中…"
+        Task { [self] in
+            let reply = await AskAIs.chat(text, history: past, evidence: [], lang: L, config: cfg, persona: persona)
+            await MainActor.run {
+                guard reply.error == nil else {
+                    // AI 回答不了（額度用完、忙線…）：不卡住、不報錯，NineSun 自己回答
+                    self.streaming = ""
+                    self.localReply(text)
+                    return
+                }
+                self.streaming = ""
+                self.play(text: reply.text, final: ChatTurn(role: .echo, text: reply.text, source: .neural))
+            }
+        }
+    }
+
+    /// 翻譯：道地說法表 → AI（設定有開 API 時）→ Google 翻譯 → MyMemory；
+    /// 翻好後念出來。App 裡不存字典。
+    private func translate(_ req0: Translate.Request) {
+        let cfg = aiConfig, api = apiOn, speak = speakTranslation
+        // 先認清楚原文是什麼語言（手機內建的語言辨識）；本來就是目標語言的話換個方向翻
+        let src = req0.source ?? LangID.detect(req0.text)
+        var target = req0.target
+        if src.lex != nil, src.lex == target.lex { target = target == .zh ? .en : .zh }
+        let req = Translate.Request(text: req0.text, source: src, target: target)
+        lastTranslation = req
+        streaming = "🌐 翻譯成\(req.target.name)…"
+        Task { [self] in
+            // 常用口語：直接用母語人士真的會說的（「加油」→ You've got this!）
+            var res: Translate.Result? = Native.lookup(req)
+            // 開著 API：請 AI 用道地的說法翻
+            if res == nil, api {
+                let r = await AskAIs.chat(Translate.aiPrompt(req), history: [], evidence: [], lang: .zh, config: cfg)
+                if r.error == nil, !r.text.isEmpty {
+                    res = Translate.Result(text: r.text.trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "\"「」“”")),
+                                           source: req.source ?? Translate.detect(req.text),
+                                           via: "請 " + cfg.names.joined(separator: "、") + " 翻譯")
+                }
+            }
+            // 不用蘋果內建翻譯：它隨時可能跳出系統畫面（下載語言包、翻譯面板），直接用 Google 翻譯
+            if res == nil { res = await Translate.google(req) }
+            if res == nil { res = await Translate.online(req) }
+            let text = res.map { Translate.reply(req, $0) }
+                ?? "這句我現在翻不出來：Google 翻譯連不上。請確認手機有連上網路，再試一次。"
+            var turn = ChatTurn(role: .echo, text: text, source: .tool)
+            if let r = res {
+                turn.speak = r.text
+                turn.speakLang = req.target.voice
+                if speak { Speaker.shared.say(r.text, lang: req.target.voice) }
+            }
+            let final = turn
+            await MainActor.run {
+                self.streaming = ""
+                self.play(text: text, final: final)
+            }
+        }
+    }
+
+    /// 「問AI 量子電腦是什麼」→ 要問的問題（沒說的話用上一個問題）
+    private func askAIQuestion(_ text: String) -> String? {
+        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lower = t.lowercased()
+        let prefixes = ["問其他ai", "問其他 ai", "問別的ai", "問別的 ai", "問ai", "問 ai", "ask other ais", "ask other ai", "ask ai"]
+        guard let p = prefixes.first(where: { lower.hasPrefix($0) }) else { return nil }
+        var rest = String(t.dropFirst(p.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+        for w in ["：", ":", "，", ","] where rest.hasPrefix(w) { rest.removeFirst(w.count) }
+        rest = rest.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !rest.isEmpty { return rest }
+        if let q = lastWebQuestion { return q }
+        return turns.dropLast().last(where: { $0.role == .user })?.text
+    }
+
+    /// 問題交給 NineSun 自己上網找（理解 → 搜尋 → 讀網頁 → 比對 → 回答），每次都即時查
+    /// forceAI：「問AI …」——不管自己有沒有把握，都同時問其他 AI
+    private func lookupWeb(_ q: String, _ L: Lang, quietIfNothing: Bool = false, avoid: [String] = [], reflect: Bool = false,
+                           forceAI: Bool = false, brain: String? = nil, asked: String? = nil, briefOnly: Bool = false) {
+        let book = rules
+        thinking = true
+        lastWebQuestion = q
+        let asker = profile.birthday.map { Destiny($0).type }
+        let cfg = aiConfig, auto = aiAuto, api = useAPI
+        let offerAI = api && !cfg.enabled && !aiHintShown
+        // 查資料時一步一步顯示在想什麼（理解問題 → 搜尋 → 閱讀 → 比對），不會像卡住
+        let show: @Sendable (String) -> Void = { [weak self] step in DispatchQueue.main.async { self?.streaming = step } }
+        Task { [self] in
+            let r = await WebAgent.run(q, facts: nil, lang: L, avoid: avoid, reflect: reflect, asker: asker, briefOnly: briefOnly, progress: quietIfNothing ? nil : show)
+            // 有大腦：網路上查到的交給大腦讀、整理成回答；沒查到（或被擋）就用它自己知道的回答，並老實說
+            if let brain {
+                let got = r.found && !r.text.contains("擋住")
+                if briefOnly, !got {
+                    await MainActor.run { self.brainChat(asked ?? q, L, brain: brain) { _ in self.lookupWeb(q, L) } }
+                    return
+                }
+                // 引擎已經整理好的長名單、步驟：直接給（大腦重寫長名單會抄錯）
+                if got, WebAgent.showAsIs(r) {
+                    var turn = ChatTurn(role: .echo, text: book.enforce(r.text), source: .knowledge, card: r.card, tokens: [])
+                    turn.query = q
+                    await MainActor.run {
+                        self.saveFile(SelfTuning.shared.state, Self.tuningURL)
+                        self.streaming = ""
+                        self.play(text: turn.text, final: turn)
+                    }
+                    return
+                }
+                var evidence = got ? r.evidence : []
+                if got, r.answered, evidence.isEmpty { evidence = [String(r.text.prefix(800))] }
+                // 引擎有把握的答案（比對過好幾個網站、推理出來的）：當成查到的資料交給大腦，照著它的結論用自己的話說
+                var facts = got && r.answered && r.confident ? String(WebAgent.plain(r.text).prefix(700)) : ""
+                // 百科的摘要和劇情：整段就是資料，直接給大腦讀（不用再附一份引擎摘出來的句子，工作區放不下兩份）
+                if got, r.confident, r.engines["wikibrief"] != nil, !r.evidence.isEmpty {
+                    facts = String(r.evidence.joined(separator: "\n").prefix(1000)) + "\n（資料來源：維基百科）"
+                    evidence = []
+                }
+                let note = evidence.isEmpty && facts.isEmpty ? "\n\n（這次網路上沒查到資料，上面是我自己知道的，僅供參考。）" : ""
+                await MainActor.run {
+                    self.saveFile(SelfTuning.shared.state, Self.tuningURL)
+                    let has = !(evidence.isEmpty && facts.isEmpty)
+                    let ask = has ? LocalBrain.lookedUpQuestion(asked ?? q, work: BrainRoute.namedWork(asked ?? q), lang: L.rawValue) : (asked ?? q)
+                    self.brainAnswer(ask, facts: facts, evidence: facts.isEmpty ? evidence : Array(evidence.prefix(3)),
+                                     mode: evidence.isEmpty && facts.isEmpty ? .chat : .grounded, lang: L, brain: brain,
+                                     card: got ? r.card : nil, query: q, note: note) { _ in
+                        var turn = ChatTurn(role: .echo, text: book.enforce(r.text), source: .knowledge, card: r.card, tokens: [])
+                        turn.query = q
+                        self.play(text: turn.text, final: turn)
+                    }
+                }
+                return
+            }
+            if quietIfNothing && (!r.found || !r.answered) {
+                await MainActor.run { self.saveFile(SelfTuning.shared.state, Self.tuningURL); self.thinking = false; self.streaming = nil; self.saveHistory() }
+                return
+            }
+            var text = quietIfNothing ? "我再上網查了一下，補充幾個資料：\n\n" + r.text : r.text
+            // 沒把握或要推理的題目：同時問其他 AI，整理各家說法、拿網路資料查證後給結論（要先設定金鑰）
+            if !quietIfNothing, api, cfg.enabled, forceAI || (auto && AskAIs.shouldAsk(r)) {
+                await MainActor.run { self.streaming = "🤖 正在同時問其他 AI，整理、查證中…" }
+                let replies = await AskAIs.ask(q, evidence: r.evidence, lang: L, config: cfg)
+                let summary = AskAIs.summarize(question: q, replies: replies, web: r)
+                text = r.confident ? text + "\n\n" + summary : summary + "\n\n———\n📌 我自己在網路上查到的：\n\n" + text
+            }
+            // 沒設定其他 AI、這題又沒把握：說一次可以怎麼讓答案更可靠（一次就好，不一直講）
+            var hinted = false
+            if !quietIfNothing, offerAI, !r.confident, AskAIs.shouldAsk(r) {
+                text += "\n\n💡 這題我沒什麼把握。到設定頁「請其他 AI 幫忙」填 AI 金鑰（Gemini 可以免費申請；Claude、ChatGPT、Grok 也行），以後遇到沒把握的題目，我會問它們、查證後把結論給你。"
+                hinted = true
+            }
+            // tokens 設成空的，泡泡才會出現 👍／👎；query 記下問題，回饋時知道是哪一類問題
+            var turn = ChatTurn(role: .echo, text: book.enforce(text), source: .knowledge, card: r.card, tokens: [])
+            turn.query = q
+            let didHint = hinted
+            await MainActor.run {
+                if didHint { self.aiHintShown = true }
+                self.saveFile(SelfTuning.shared.state, Self.tuningURL)
+                self.saveFile(Notebook.shared.state, Self.notebookURL)
+                // 答案一段一段打出來，比一下子跳出一大段順
+                self.streaming = ""
+                self.play(text: turn.text, final: turn)
+            }
+        }
+    }
+
+    /// 八字／紫微解讀之後：上網查這個組合的說法，再對照盤面
+    private func augmentWeb(_ term: String, also: [String], facts: String, _ L: Lang) {
+        let book = rules
+        thinking = true
+        streaming = ""
+        Task { [self] in
+            let r = await WebAgent.run(term, facts: facts, also: also, lang: L)
+            let text = r.text.hasPrefix("🔎") ? "我再上網查了網路上對你盤上這些組合的說法，一句一句拿來對照你的盤：\n\n" + r.text : r.text
+            let turn = ChatTurn(role: .echo, text: book.enforce(text), source: .knowledge, card: r.card)
+            await MainActor.run { self.finish(turn) }
+        }
+    }
+
+    /// 打字的泡泡換成正式的訊息：同一瞬間換掉、不做淡入動畫。
+    /// （以前先拿掉打字泡泡、再用動畫淡入新訊息，中間那一下是空的，畫面會閃黑一下、捲動位置也會跳）
+    private func finish(_ turn: ChatTurn) {
+        var turn = turn
+        if turn.role == .echo { turn.text = LocalBrain.noKiss(turn.text) }
+        var tx = Transaction()
+        tx.disablesAnimations = true
+        withTransaction(tx) {
+            turns.append(turn)
+            streaming = nil
+            thinking = false
+        }
+        saveHistory()
+    }
+
+    /// 打字機效果（then：打完之後接著做的事）
+    private func play(text: String, final: ChatTurn, then: (() -> Void)? = nil) {
+        let chars = LocalBrain.noKiss(text).map(String.init)
+        var i = 0
+        let step = max(1, chars.count / 60)
+        func tick() {
+            guard i < chars.count else { self.finish(final); then?(); return }
+            self.streaming = (self.streaming ?? "") + chars[i..<min(chars.count, i + step)].joined()
+            i += step
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.018) { tick() }
+        }
+        tick()
+    }
+
+    // MARK: - 演化回饋
+
+    func feedback(_ turn: ChatTurn, positive: Bool) {
+        guard let idx = turns.firstIndex(where: { $0.id == turn.id }), turns[idx].liked == nil else { return }
+        // 上網查的答案：👍／👎 調整「這類問題該信哪些網站」的經驗
+        if let q = turn.query {
+            turns[idx].liked = positive
+            SelfTuning.shared.feedback(kind: SelfTuning.kind(Understanding.frame(q).want), hosts: SelfTuning.hosts(in: turn.text), positive: positive)
+            saveFile(SelfTuning.shared.state, Self.tuningURL)
+            saveHistory()
+            return
+        }
+        guard let toks = turn.tokens, let engine else { return }
+        turns[idx].liked = positive
+        queue.async {
+            if let v = turn.variant {
+                engine.evolution.feedback(reply: v, positive: positive)
+            } else {
+                engine.evolution.feedback(tokens: toks, positive: positive)
+            }
+            let evo = engine.evolution
+            DispatchQueue.main.async {
+                self.evolution = evo
+                self.saveFile(evo, Self.evolutionURL)
+                self.saveHistory()
+            }
+        }
+    }
+
+    func resetEvolution() {
+        guard let engine else { return }
+        queue.async {
+            engine.evolution = Evolution(vocab: engine.model.config.vocab_size)
+            engine.core?.resetMemory()
+            let evo = engine.evolution, snap = engine.core?.snapshot
+            DispatchQueue.main.async {
+                self.evolution = evo
+                self.coreSnapshot = snap
+                self.saveFile(evo, Self.evolutionURL)
+                if let snap { self.saveFile(snap, Self.coreURL) }
+            }
+        }
+    }
+
+    func deleteRule(at i: Int) { _ = rules.apply(.delete(i + 1), language) }
+
+
+    func clear() {
+        turns = [ChatTurn(role: .echo, text: T("記憶體已清空，訊號重新開始。", "Memory cleared, signal restarted.",
+                                                "Memoria borrada, la señal reinicia.", "Memoria cancellata, il segnale riparte."), source: .tool)]
+        saveHistory()
+    }
+
+    // MARK: - 儲存
+
+    private func applyOptions() { engine?.options = options }
+
+    private func saveHistory() {
+        saveFile(Array(turns.suffix(200)), Self.historyURL)
+    }
+
+    private func saveFile<T: Encodable>(_ v: T, _ url: URL) {
+        if let data = try? JSONEncoder().encode(v) { try? data.write(to: url, options: .atomic) }
+    }
+
+    private func save<T: Encodable>(_ v: T, _ key: String) {
+        UserDefaults.standard.set(try? JSONEncoder().encode(v), forKey: "ninesun.\(key)")
+    }
+
+    private func load<T: Decodable>(_ key: String) -> T? {
+        guard let d = UserDefaults.standard.data(forKey: "ninesun.\(key)") else { return nil }
+        return try? JSONDecoder().decode(T.self, from: d)
+    }
+}

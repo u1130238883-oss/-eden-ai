@@ -1,0 +1,28 @@
+name: List model files
+
+# 在 Hugging Face 上找模型、列出 GGUF 檔名和大小（選大腦模型用；這台機器連得到 Hugging Face）
+on:
+  push:
+    paths:
+      - ".github/workflows/model-list.yml"
+  workflow_dispatch:
+
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Core ML image models
+        run: |
+          for r in coreml-community/coreml-URPM-v13 darkmaniac7/TokForge-epiCRealism-CoreML-6bit darkmaniac7/TokForge-CyberRealistic-V9-CoreML-6bit mahmudplx/coreml-epicrealism-6bit; do
+            echo "== $r"
+            curl -s "https://huggingface.co/api/models/$r/tree/main?recursive=1" | python3 -c '
+          import json, sys
+          try:
+              d = json.load(sys.stdin)
+              if isinstance(d, dict): print("   ", d.get("error"))
+              else:
+                  for f in d:
+                      p = f.get("path","")
+                      if f.get("type") == "file" and (p.endswith(".zip") or p.endswith("README.md")): print("   ", p, f.get("size"))
+          except Exception as e: print("   (no listing)", e)' | head -30
+          done

@@ -1,0 +1,178 @@
+import Foundation
+
+/// 引用規則：
+///   • 引文少於 15 個字，每個來源最多一句引文，其他用自己的話說，不照搬原文的句子結構。
+///     例外：「在講什麼／怎麼辦／為什麼」這類要一段說明的題目，主要回答可以引一整句（最多 80 字，見 Think）。
+///   • 引文沒講完就被切斷時，結尾加「…」，看得出是節錄。
+///   • 每個來自網路的說法都附上來源標記（「……」（網站）），結尾列出真的用到的來源。
+///   • 原始來源（官方、政府、學術、百科）優先；問答網站、論壇、內容農場放最後，除非沒有別的資料。
+public enum Cite {
+    public static let maxQuote = 14
+
+    /// 從一句話裡取出最重要的一小段（包含關鍵詞的那一段，最多 14 個字）
+    public static func fragment(_ sentence: String, focus: [String]) -> String {
+        var s = sentence.replacingOccurrences(of: #"\[[^\]]*\]|（[^）]*）|\([^)]*\)"#, with: "", options: .regularExpression)
+        s = s.trimmingCharacters(in: .whitespaces)
+        let chars = Array(s)
+        guard !chars.isEmpty else { return "" }
+        // 關鍵詞出現的位置
+        var pos = 0, focusLen = 0
+        for f in focus where !f.isEmpty {
+            if let r = s.range(of: f) { pos = s.distance(from: s.startIndex, to: r.lowerBound); focusLen = f.count; break }
+        }
+        // 從關鍵詞所在的子句開頭取起
+        // 往前找到子句開頭；子句開頭離關鍵詞不遠（10 字內）就從開頭取，名字才不會被切掉（「珠穆朗瑪峰…」）
+        var clause = pos
+        while clause > 0 && !"，；：。、,;:".contains(chars[clause - 1]) { clause -= 1 }
+        var start = pos - clause <= 10 ? clause : pos - 6
+        // 關鍵詞本身一定要完整（「508公尺」不能變成「508公」）；留一個字給結尾的「…」
+        if focusLen < maxQuote { start = max(start, pos + focusLen - (maxQuote - 1)) }
+        // 數字的一部分（「1,234,567」的「890」）：不要從數字中間開始
+        func inNumber(_ k: Int) -> Bool { k >= 0 && k < chars.count && (chars[k].isNumber || chars[k] == "," || chars[k] == ".") }
+        while start > 0, start < pos, inNumber(start - 1), inNumber(start) { start += 1 }
+        var out = ""
+        var i = start
+        while i < chars.count && out.count < maxQuote {
+            let c = chars[i]
+            if "。；！？!?".contains(c) { break }
+            // 「149,597,870」裡的逗號不是子句的分隔
+            if "，,".contains(c) && out.count >= 6 && !(c == "," && inNumber(i - 1) && inNumber(i + 1)) { break }
+            out.append(c)
+            i += 1
+        }
+        let trimmed = out.trimmingCharacters(in: CharacterSet(charactersIn: "，、：:；,. "))
+        // 字數到了、句子還沒講完：加「…」，不要讓人以為原文就是這樣（「瑞利散…」）；連「…」在內不超過 14 個字
+        if out.count >= maxQuote, i < chars.count, !"。；！？!?，,、".contains(chars[i]) {
+            var cut = String(out.prefix(maxQuote - 1))
+            // 拿掉的那個字還是數字：不要停在數字中間（「1,234,5…」），整個數字一起拿掉
+            if let dropped = out.last, dropped.isNumber || dropped == "," || dropped == "." {
+                while let l = cut.last, l.isNumber || l == "," || l == ".", cut.count > 6 { cut.removeLast() }
+            }
+            return cut.trimmingCharacters(in: CharacterSet(charactersIn: "，、：:；,. ")) + "…"
+        }
+        return trimmed
+    }
+
+    /// 「短引文」（網站）
+    public static func quote(_ sentence: String, host: String, focus: [String]) -> String {
+        let f = fragment(sentence, focus: focus)
+        return f.isEmpty ? "" : "「\(f)」（\(host)）"
+    }
+
+    /// 說明題的主要回答：引一整句（最多 limit 字，被切斷時加「…」），去掉「[4]」這類註腳
+    public static func whole(_ sentence: String, host: String, limit: Int = 80) -> String {
+        let s = sentence.replacingOccurrences(of: #"\[[^\]]{1,8}\]"#, with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return s.isEmpty ? "" : "「\(WebSearch.clip(s, limit))」（\(host)）"
+    }
+
+    /// 做法的一步：看得懂的一整個動作（「綠豆洗淨，泡水 2 小時。」），太長的取到前一個「，」，再長才切並加「…」
+    public static func step(_ s: String, limit: Int = 40) -> String {
+        let t = s.replacingOccurrences(of: #"\[[^\]]{1,8}\]"#, with: "", options: .regularExpression).trimmingCharacters(in: .whitespaces)
+        guard t.count > limit else { return t }
+        let head = String(t.prefix(limit))
+        if let cut = head.lastIndex(where: { "，。；,;".contains($0) }), head.distance(from: head.startIndex, to: cut) >= 8 {
+            return String(head[..<cut]) + "…"
+        }
+        return head + "…"
+    }
+
+    /// 問答網站、論壇、內容農場、轉貼站：除非沒有別的資料，不然不用
+    static let lowQuality = ["zhidao.baidu", "wenwen.sogou", "answers.com", "answers.yahoo", "commentcamarche", "quora.com", "reddit.com",
+                             "ptt.cc", "dcard.tw", "mobile01", "kknews", "toutiao", "163.com", "sohu.com", "read01", "twgreatdaily",
+                             "pinterest", "ifuun", "iask", "xuehua", "360doc", "docin", "doc88", "wenku.baidu", "jingyan.baidu",
+                             // 影片、社群、購物、股價頁：沒有可以讀的說明文字
+                             "youtube.com", "youtu.be", "facebook.com", "instagram.com", "tiktok.com", "douyin.com", "bilibili.com", "ixigua.com",
+                             "weibo.com", "threads.net", "shopee", "momoshop", "ruten.com", "tw.stock.yahoo", "finance.yahoo", "cmoney.tw",
+                             "wantgoo.com", "baijiahao.baidu", "jianshu.com", "zhihu.com", "bomb01", "buzzhand", "teepr.com"]
+    /// 原始來源：官方、政府、學術、百科
+    static let primary = [".gov", ".edu", "gov.tw", "gov.cn", "go.jp", "who.int", "un.org", "nature.com", "science.org",
+                          "sciencedirect", "springer", "nih.gov", "arxiv.org", "sec.gov", "cdc.gov", "moe.gov", "cwa.gov"]
+
+    public static func isLowQuality(_ host: String) -> Bool { lowQuality.contains { host.lowercased().contains($0) } }
+
+    /// 專業、有編輯把關的中文知識平台（依領域）：查的時候指定去這些網站找，挑資料時也優先
+    public enum Field { case science, health, mind, work, money, law, culture, general }
+    static let professional: [Field: [String]] = [
+        .science: ["pansci.asia", "research.sinica.edu.tw", "scitechvista.nat.gov.tw", "case.ntu.edu.tw", "sciam.com.tw", "highscope.ch.ntu.edu.tw", "natgeomedia.com"],
+        .health: ["hpa.gov.tw", "cdc.gov.tw", "mohw.gov.tw", "commonhealth.com.tw", "heho.com.tw", "health.udn.com", "msdmanuals.com", "cgmh.org.tw", "ntuh.gov.tw", "mmh.org.tw", "vghtpe.gov.tw", "kingnet.com.tw"],
+        .mind: ["womany.net", "heho.com.tw", "commonhealth.com.tw", "cheers.com.tw", "parenting.com.tw", "psychologies.com.tw", "mindfulness.org.tw", "thenewslens.com"],
+        .work: ["managertoday.com.tw", "cw.com.tw", "gvm.com.tw", "businessweekly.com.tw", "cheers.com.tw", "bnext.com.tw", "104.com.tw", "1111.com.tw", "yourator.co"],
+        .money: ["fsc.gov.tw", "twse.com.tw", "moneydj.com", "businessweekly.com.tw", "cw.com.tw", "wealth.com.tw", "smart.businessweekly.com.tw"],
+        .law: ["law.moj.gov.tw", "mol.gov.tw", "judicial.gov.tw", "lawbank.com.tw", "laf.org.tw", "legis-pedia.com"],
+        .culture: ["books.com.tw", "openbook.org.tw", "readmoo.com", "okapi.books.com.tw", "readingoutpost.com", "eslite.com", "taaze.tw",
+                   "kingstone.com.tw", "sanmin.com.tw", "movies.yahoo.com.tw", "atmovies.com.tw", "imdb.com", "douban.com", "vocus.cc"],
+        .general: ["pedia.cloud.edu.tw", "terms.naer.edu.tw", "britannica.com", "pansci.asia", "cw.com.tw"],
+    ]
+    public static func isProfessional(_ host: String) -> Bool {
+        let h = host.lowercased()
+        return professional.values.contains { $0.contains { h.contains($0) } }
+    }
+
+    /// 這題屬於哪個領域（決定去哪些專業網站找）
+    public static func field(_ q: String) -> Field {
+        func has(_ ws: [String]) -> Bool { ws.contains { q.contains($0) } }
+        if has(["書", "小說", "電影", "劇", "動畫", "漫畫", "歌", "作品", "作者", "導演", "在講什麼", "講了什麼", "劇情", "好看", "詩", "畫"]) { return .culture }
+        if WebStrategy.isLegal(q) || has(["法律", "違法", "罰", "合約", "勞基法", "權益"]) { return .law }
+        if WebStrategy.isHealth(q) || has(["失眠", "減肥", "飲食", "營養", "運動", "睡眠", "健康"]) { return .health }
+        if has(["焦慮", "壓力", "自信", "情緒", "感情", "喜歡", "告白", "朋友", "溝通", "人際", "拖延", "專注", "心理", "戀愛", "分手"]) { return .mind }
+        if has(["工作", "面試", "履歷", "主管", "老闆", "加薪", "職場", "離職", "同事", "升遷", "創業"]) { return .work }
+        if has(["存錢", "理財", "投資", "股票", "基金", "ETF", "保險", "貸款", "利率", "通膨", "複利"]) { return .money }
+        if has(["為什麼", "原理", "科學", "宇宙", "物理", "化學", "生物", "地球", "太陽", "月亮", "黑洞", "量子", "演化", "天空"]) { return .science }
+        return .general
+    }
+
+    /// 指定去專業網站找的查詢（搜尋引擎的 site: 語法；一次最多 4 個網站，太長會被忽略）
+    public static func proQuery(_ topic: String, question: String) -> String? {
+        let f = field(question)
+        guard f != .general, let sites = professional[f] else { return nil }
+        var picks = Array(sites.prefix(4))
+        // 作品：電影、劇、動畫去影評網站找；書去書店、書評網站找
+        if f == .culture {
+            let screen = ["電影", "片", "劇", "動畫", "影集", "卡通", "動漫"].contains { question.contains($0) }
+            picks = screen ? ["movies.yahoo.com.tw", "atmovies.com.tw", "imdb.com", "douban.com"] : ["books.com.tw", "readmoo.com", "openbook.org.tw", "readingoutpost.com"]
+        }
+        return topic + " (" + picks.map { "site:" + $0 }.joined(separator: " OR ") + ")"
+    }
+    public static func isPrimary(_ host: String) -> Bool { primary.contains { host.lowercased().contains($0) } }
+
+    /// 查詢要短（中文最多 16 個字）
+    public static func shortQuery(_ q: String) -> String {
+        let parts = q.split(separator: " ").map(String.init).filter { !$0.isEmpty }
+        var out: [String] = []
+        var len = 0
+        for p in parts where len + p.count <= 16 && out.count < 6 { out.append(p); len += p.count }
+        let s = out.joined(separator: " ")
+        return s.isEmpty ? String(q.prefix(16)) : s
+    }
+
+    /// 兩個查詢是不是差不多（換湯不換藥的不用再查一次）
+    public static func similar(_ a: String, _ b: String) -> Bool {
+        func grams(_ s: String) -> Set<String> {
+            let c = Array(s.filter { !$0.isWhitespace })
+            guard c.count >= 2 else { return [String(c)] }
+            return Set((0..<(c.count - 1)).map { String(c[$0...$0 + 1]) })
+        }
+        let x = grams(a), y = grams(b)
+        guard !x.isEmpty, !y.isEmpty else { return a == b }
+        return Double(x.intersection(y).count) / Double(x.union(y).count) >= 0.7
+    }
+
+    /// 去掉太像的查詢，而且每個都變短
+    public static func distinct(_ qs: [String]) -> [String] {
+        var out: [String] = []
+        for q in qs.map(shortQuery) where !q.isEmpty && !out.contains(where: { similar($0, q) }) { out.append(q) }
+        return out
+    }
+
+    /// 需要特別小心的領域：偽科學、偏方、產品推薦（充斥廣告）
+    public static func skepticNote(_ question: String) -> String? {
+        if ["偏方", "根治", "神奇", "秘方", "排毒", "抗癌食物", "包治", "量子能量"].contains(where: { question.contains($0) }) {
+            return "⚠️ 這類說法網路上常有誇大或沒有科學根據的內容，我只採用有醫療或學術來源支持的部分；身體的問題請以醫師的判斷為準。"
+        }
+        if ["推薦", "哪個牌子", "哪款", "買哪", "排行", "評比", "開箱"].contains(where: { question.contains($0) }) {
+            return "⚠️ 產品推薦的網頁很多是業配或廣告，我盡量看比較客觀的來源；買之前最好再看看實際使用者的評價。"
+        }
+        return nil
+    }
+}

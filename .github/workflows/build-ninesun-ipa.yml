@@ -1,0 +1,111 @@
+name: Build NineSun IPA
+
+on:
+  push:
+    paths:
+      - "ios/**"
+      - "ai/**"
+      - ".github/workflows/build-ninesun-ipa.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    # 這個 repo 是私人的，Mac 機器的分鐘數很貴（算 10 倍）：只有要出 IPA 時才跑（commit 訊息有 [ipa]，或在 Actions 頁面手動執行）。
+    # 引擎的測試改在 Linux 上跑（見 HANDOFF.md），這裡只編譯、打包。
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[ipa]')
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # 用最新的 Xcode 26 編譯
+      - name: Use Xcode 26
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$X" ]; then echo "這台機器沒有 Xcode 26："; ls -d /Applications/Xcode*.app; exit 1; fi
+          sudo xcode-select -s "$X"
+          xcodebuild -version
+
+      # NineSun 的大腦（手機上的語言模型）用 llama.cpp 跑：照 ios/llama-version.txt 的版本編成 iOS 的 framework
+      - name: Build llama.cpp (iOS framework)
+        run: |
+          LLAMA_TAG=$(cat ios/llama-version.txt)
+          git clone --depth 1 --branch "$LLAMA_TAG" https://github.com/ggml-org/llama.cpp "$RUNNER_TEMP/llama.cpp"
+          cd "$RUNNER_TEMP/llama.cpp" && ./build-xcframework.sh ios-device 2>&1 | tail -15
+          mkdir -p "$GITHUB_WORKSPACE/ios/Frameworks"
+          cp -R build-apple/llama.xcframework "$GITHUB_WORKSPACE/ios/Frameworks/"
+          ls "$GITHUB_WORKSPACE/ios/Frameworks/llama.xcframework"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: ios
+        run: xcodegen generate
+
+      - name: Build app (unsigned)
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project NineSun.xcodeproj \
+            -scheme NineSun \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tee xcodebuild.log | grep -E "error:|BUILD" || true
+          # 編譯失敗時 .app 資料夾還是會有（只有資源檔），一定要檢查主程式在不在，不然會發出裝不了的 IPA
+          if grep -q "BUILD FAILED" xcodebuild.log || ! test -f build/Build/Products/Release-iphoneos/NineSun.app/NineSun; then
+            grep -B2 -A6 "error:" xcodebuild.log | head -150; tail -80 xcodebuild.log; exit 1
+          fi
+
+      - name: Package IPA
+        working-directory: ios
+        run: |
+          rm -rf Payload && mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/NineSun.app Payload/
+          ls -la Payload/NineSun.app | head -30
+          test -f Payload/NineSun.app/ninesun.bin
+          test -f Payload/NineSun.app/NineSun
+          # 大腦的 llama.cpp 要真的包進去，不然一打開就閃退
+          test -d Payload/NineSun.app/Frameworks/llama.framework
+          otool -L Payload/NineSun.app/NineSun | grep -i llama
+          mkdir -p ../dist
+          zip -qry ../dist/NineSun.ipa Payload
+          ls -la ../dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NineSun-ipa
+          path: dist/NineSun.ipa
+
+      # 只在要出 IPA 時才發佈（commit 訊息裡有 [ipa]，或在 Actions 頁面手動執行）；平常只跑測試、確認能編譯
+      # 發佈成 release 有時會被 GitHub 擋（403）：IPA 另外放到分支 ninesun-ipa/build-N，
+      # 手機下載：https://github.com/<repo>/raw/ninesun-ipa/build-N/NineSun.ipa
+      - name: Save IPA to a branch
+        if: contains(github.event.head_commit.message, '[ipa]') || github.event_name == 'workflow_dispatch'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          D="$RUNNER_TEMP/ipa" && mkdir -p "$D" && cp dist/NineSun.ipa "$D/"
+          cd "$D" && git init -q && git add . && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "NineSun build ${{ github.run_number }}"
+          git push -q "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}" HEAD:refs/heads/ninesun-ipa/build-${{ github.run_number }}
+          echo "下載：https://github.com/${GITHUB_REPOSITORY}/raw/ninesun-ipa/build-${{ github.run_number }}/NineSun.ipa"
+
+      - name: Publish release
+        if: contains(github.event.head_commit.message, '[ipa]') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ninesun-build-${{ github.run_number }}
+          name: NineSun build ${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          files: dist/NineSun.ipa
+          body: |
+            NineSun 未簽名 IPA（九型十二宮 AI）。
+            用 Sideloadly / AltStore / TrollStore 自行簽名安裝。
