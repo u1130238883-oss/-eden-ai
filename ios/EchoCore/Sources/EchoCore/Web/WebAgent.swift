@@ -254,6 +254,15 @@ public enum WebAgent {
             return nil
         }()
         var brief: (title: String, text: String, url: String)?
+        // NineSun 自己知道這部作品（works.txt）：百科拿不到、或拿錯條目（「鐵達尼號」拿到船）時就用自己知道的
+        let offlineWork = zh && !fortune ? Library.workAnswer(question) : nil
+        func offline() -> Result? {
+            guard let text = offlineWork else { return nil }
+            var r = Result(text: "📌 回答\n" + text, card: nil, found: true, engines: ["library": 1])
+            r.answered = true; r.confident = true; r.evidence = [text]
+            r.want = fr.map { SelfTuning.kind($0.want) }
+            return r
+        }
         if let t = briefTerm {
             let prefer = ["小說", "書"].contains { question.contains($0) } ? ["小說", "書"]
                 : ["電影", "這部片", "影片"].contains { question.contains($0) } ? ["電影"]
@@ -264,6 +273,8 @@ public enum WebAgent {
                 let asksWhat = Understanding.workTitle(question) != nil || EchoEngine.bareTitle(Understanding.clean(question))
                 let direct = fr?.want == .definition && !asksWhat ? WikiAnswer.define(subject: t, brief: b)
                     : asksWhat ? WikiAnswer.work(title: t, brief: b) : nil
+                // 自己知道這部作品，百科卻沒給故事（拿到的是同名的船、地名）：用自己知道的
+                if offlineWork != nil, direct.map({ !$0.text.contains("📖") }) ?? true, let r = offline() { return r }
                 if let direct {
                     var r = Result(text: direct.text, card: nil, found: true, engines: ["wikibrief": 1])
                     r.answered = true; r.confident = true; r.evidence = direct.evidence
@@ -271,8 +282,11 @@ public enum WebAgent {
                     return r
                 }
             }
+            if brief == nil, let r = offline() { return r }
             if briefOnly, brief == nil { return Result(text: Loc.s("webFail", L, plan.keywords), card: nil, found: false, engines: [:]) }
         }
+        // 自己知道的作品，百科又沒查到：不用再去問搜尋引擎（常被擋），直接說
+        if let r = offline() { return r }
 
         // ②③ 拆成幾組關鍵字，同時上網查（tag -1：整體；0…：各個小問題）
         var jobs: [(tag: Int, q: String, full: Bool)] = []

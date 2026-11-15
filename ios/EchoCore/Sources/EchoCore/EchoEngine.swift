@@ -389,6 +389,12 @@ public final class EchoEngine {
         if L == .zh, let a = Everyday.answer(text, now: ctx.now) { return done(a, .tool) }
         if L == .zh, let a = EchoEngine.aboutMe(text, now: ctx.now) { return done(a, .knowledge) }
         if L == .zh, let a = Commonsense.react(text) { return done(a, .neural) }
+        // 作品的作者、常見的清單（八大行星、四大名著）、一類作品（有名的西方文學作品）：自己知道的就直接回答
+        if L == .zh, let a = Library.answer(text) {
+            lastWebQuery = EchoEngine.searchQuery(text)
+            lastWebTurn = history.count
+            return done(a, .knowledge)
+        }
         if L == .zh, let a = Commonsense.answer(text, now: ctx.now) {
             // 自己答的也算上一題的主題：追問「那這些省都是哪些省」要接得上
             lastWebQuery = EchoEngine.searchQuery(text)
@@ -537,7 +543,7 @@ public final class EchoEngine {
         }
         // 6.54) 明顯是在問知識、新聞、天氣、疾病、法律……（不是在問自己的命）：上網查
         if EchoEngine.strongInfo(text) || EchoEngine.healthOrLegal(text) {
-            if let kb = knowledge[.zh], let e = kb.answer(text) {
+            if let kb = knowledge[.zh], let e = kb.answer(text), EchoEngine.kbFits(e, text) {
                 return done("\(e.title)：\(e.body)", .knowledge,
                             card: FortuneCard(title: "資料庫 · \(e.cat)", headline: e.title, details: [e.body]), web: EchoEngine.searchQuery(text))
             }
@@ -585,7 +591,7 @@ public final class EchoEngine {
         let askSearch = text.hasPrefix("查") || text.hasPrefix("搜尋") || text.contains("幫我查")
             || text.contains("是誰") || text.contains("維基")
         let askKnow = askSearch || FortuneRouter.knowledgeMarkers.contains { text.contains($0) }
-        if askKnow, !askSearch, let kb = knowledge[.zh], let e = kb.answer(text) {
+        if askKnow, !askSearch, let kb = knowledge[.zh], let e = kb.answer(text), EchoEngine.kbFits(e, text) {
             // 本地資料庫先回答，接著上網查更多說法
             return done("\(e.title)：\(e.body)", .knowledge,
                         card: FortuneCard(title: "資料庫 · \(e.cat)", headline: e.title, details: [e.body]), web: EchoEngine.searchQuery(text))
@@ -1054,6 +1060,11 @@ public final class EchoEngine {
         let palace = core?.perceive(text, lang: L)
         if let p = palace { core?.remember(p) }
         return chatReply(text, L, ctx: ctx, palace: palace, turns: history.count) { t, src, pal in done(t, src, nil, pal, nil, nil, nil, nil) }
+    }
+
+    /// 資料庫的條目真的是在講問的那個東西：問「五行是什麼」不能答「五行局」（名字要整個出現在問題裡）
+    static func kbFits(_ e: KnowledgeBase.Entry, _ text: String) -> Bool {
+        ([e.title] + e.aliases).contains { $0.count >= 2 && text.contains($0) }
     }
 
     /// 用別人的生日推算，稱呼換成「你老公」「你媽媽」……
