@@ -88,6 +88,7 @@ struct MessageBubble: View {
     }
 
     private var badge: (String, Color, Color)? {
+        if let m = turn.model { return (m, Theme.signal, Theme.ink) }
         switch turn.source {
         case .grounded: return (T("命理核 ✓", "ENGINE ✓", "MOTOR ✓", "MOTORE ✓"), Theme.hazard, Theme.ink)
         case .corrected: return (T("引擎校正", "CORRECTED", "CORREGIDO", "CORRETTO"), Theme.orange, Theme.ink)

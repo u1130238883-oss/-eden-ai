@@ -443,7 +443,8 @@ final class ChatViewModel: ObservableObject {
 
     /// 直接問開源模型：只給前面的對話和這句話，沒有系統指示；回答原樣顯示（只拿掉模型的思考過程和控制字）
     private func rawBrain(_ text: String, brain: String) {
-        streaming = LocalBrain.shared.isLoaded ? "🧠 …" : "🧠 模型讀取中…（第一次要幾秒）"
+        let model = ModelStore.shared.readyModel?.name ?? "開源模型"
+        streaming = LocalBrain.shared.isLoaded ? "🧠 \(model)…" : "🧠 \(model) 讀取中…（第一次要幾秒）"
         let past = turns.dropLast().suffix(6).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
         let work = BackgroundWork.start()
         LocalBrain.shared.ask(modelPath: brain, system: "", history: Array(past), user: text, mode: .chat, lang: "raw",
@@ -453,7 +454,9 @@ final class ChatViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let r) where !r.text.isEmpty:
-                    self.finish(ChatTurn(role: .echo, text: r.text, source: .neural))
+                    var turn = ChatTurn(role: .echo, text: r.text, source: .neural)
+                    turn.model = model
+                    self.finish(turn)
                 case .success:
                     self.finish(ChatTurn(role: .echo, text: "（模型沒有回答）", source: .tool))
                 case .failure(let e):

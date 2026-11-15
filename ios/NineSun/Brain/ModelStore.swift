@@ -15,8 +15,13 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         let urls: [String]
     }
 
-    /// 只留使用者選定的 Gemma 4 E4B Mahou NSFW（其他模型拿掉了，手機裡的舊檔打開 App 時會刪掉）
+    /// Google 官方原版的 Gemma 4 E4B（沒有被別人微調過）放第一個、預設用它；Mahou NSFW 留著給要用的人
+    /// （其他模型拿掉了，手機裡的舊檔打開 App 時會刪掉）
     static let models: [Model] = [
+        Model(id: "gemma4-e4b-it", name: "Gemma 4 E4B",
+              file: "gemma-4-E4B-it-Q4_K_M.gguf", bytes: 4_977_171_584,
+              urls: ["https://huggingface.co/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q4_K_M.gguf",
+                     "https://hf-mirror.com/unsloth/gemma-4-E4B-it-GGUF/resolve/main/gemma-4-E4B-it-Q4_K_M.gguf"]),
         Model(id: "gemma4-e4b-mahou", name: "Gemma 4 E4B Mahou NSFW",
               file: "gemma4-e4b-mahou-nsfw.Q4_K_M.gguf", bytes: 5_302_273_152,
               urls: ["https://huggingface.co/mradermacher/gemma4-e4b-mahou-nsfw-GGUF/resolve/main/gemma4-e4b-mahou-nsfw.Q4_K_M.gguf",
@@ -60,6 +65,11 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         session = URLSession(configuration: cfg, delegate: self, delegateQueue: nil)
         // 以前選的模型已經拿掉了：改選清單上的（不然下載好了還顯示「用這個」）
         if !Self.models.contains(where: { $0.id == selectedID }) { selectedID = Self.models[0].id }
+        // 這一版起預設改用官方原版的 Gemma 4（只改一次；之後使用者自己選的照舊）
+        if !UserDefaults.standard.bool(forKey: "ninesun.officialGemmaV1") {
+            UserDefaults.standard.set(true, forKey: "ninesun.officialGemmaV1")
+            selectedID = Self.models[0].id
+        }
         for m in Self.models { states[m.id] = isReady(m) ? .ready : .absent }
         // 拿掉的舊模型還留在手機裡：刪掉，空出空間
         let keep = Set(Self.models.map(\.file))

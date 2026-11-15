@@ -32,6 +32,8 @@ public struct ChatTurn: Codable, Equatable, Identifiable {
     /// 翻譯的譯文和語音語言（泡泡上的 🔊 再念一次）
     public var speak: String?
     public var speakLang: String?
+    /// 直接由開源模型回答時：模型的名字（泡泡上顯示，看得出是誰回答的）
+    public var model: String?
 
     public init(role: Role, text: String, source: Source = .neural, card: FortuneCard? = nil,
                 palace: Int? = nil, tokens: [Int]? = nil) {
