@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tiles</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0D0F08; font-family: 'Bungee', sans-serif">
+<div style="position: absolute; left: 20px; right: 20px; top: 250px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<div style="height: 110px; border-radius: 16px; background: {{accent}}; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="50" height="50" viewBox="0 0 50 50"><path d="M25 5 L30 20 L45 25 L30 30 L25 45 L20 30 L5 25 L20 20 Z" fill="#0D0F08"></path></svg></div>
+<div style="height: 110px; border-radius: 16px; background: #26300F; display: flex; align-items: center; justify-content: center; font-size: 40px; color: {{accent}}">A</div>
+<div style="height: 110px; border-radius: 55px; background: #F5FF5A"></div>
+<div style="height: 110px; border-radius: 16px; background: #26300F; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="20" fill="none" stroke="#C6FF1A" stroke-width="6"></circle><circle cx="28" cy="28" r="7" fill="#C6FF1A"></circle></svg></div>
+<div style="height: 110px; border-radius: 16px; background: #F5FF5A; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #0D0F08">M</div>
+<div style="height: 110px; border-radius: 16px; background: {{accent}}; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="50" height="50" viewBox="0 0 50 50"><path d="M8 25 H42 M28 11 L42 25 L28 39" fill="none" stroke="#0D0F08" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+<div style="height: 110px; border-radius: 55px 16px 16px 16px; background: #5DB800"></div>
+<div style="height: 110px; border-radius: 16px; background: {{accent}}; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #0D0F08">Y</div>
+<div style="height: 110px; border-radius: 16px; background: #26300F; display: flex; align-items: center; justify-content: center"><svg aria-hidden="true" width="50" height="50" viewBox="0 0 50 50"><rect x="9" y="9" width="32" height="32" fill="none" stroke="#F5FF5A" stroke-width="6" transform="rotate(45 25 25)"></rect></svg></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#C6FF1A"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#C6FF1A' };
+}
+}
+</script>
+</body>
+</html>

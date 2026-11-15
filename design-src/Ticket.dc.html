@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Arcade Ticket</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Space+Mono:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+.bar{background:repeating-linear-gradient(90deg,#141414 0 3px,transparent 3px 5px,#141414 5px 6px,transparent 6px 10px,#141414 10px 14px,transparent 14px 16px)}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #1C1040; font-family: 'Anton', sans-serif">
+<div style="position: absolute; left: -80px; top: -80px; width: 300px; height: 300px; border-radius: 50%; background: #FF5A36; opacity: 0.55"></div>
+<div style="position: absolute; left: 60px; top: 200px; width: 270px; height: 560px; background: {{accent}}; border-radius: 16px; transform: rotate(-5deg); box-shadow: 14px 14px 0 #0B0620; display: flex; flex-direction: column; align-items: center; padding: 28px 22px; box-sizing: border-box; gap: 10px">
+<span style="font-family: 'Space Mono', monospace; font-size: 12px; color: #141414; letter-spacing: 3px">ADMIT ONE · ARCADE</span>
+<span style="font-size: 92px; line-height: 0.9; color: #141414">HIGH</span>
+<span style="font-size: 92px; line-height: 0.9; color: #FFFFFF; -webkit-text-stroke: 3px #141414">SCORE</span>
+<div style="width: 100%; border-top: 3px dashed #141414; margin-top: 14px"></div>
+<span style="font-family: 'Space Mono', monospace; font-size: 30px; color: #141414">999,990</span>
+<span style="font-family: 'Space Mono', monospace; font-size: 11px; color: #141414">PLAYER 01 · STAGE 09 · NO CONTINUE</span>
+<div class="bar" style="width: 100%; height: 70px; margin-top: auto"></div>
+<span style="font-family: 'Space Mono', monospace; font-size: 11px; color: #141414">0009 2026 1103</span>
+</div>
+<div style="position: absolute; left: 50px; top: 470px; width: 26px; height: 26px; border-radius: 50%; background: #1C1040"></div>
+<div style="position: absolute; left: 318px; top: 446px; width: 26px; height: 26px; border-radius: 50%; background: #1C1040"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFD23F"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#FFD23F' };
+}
+}
+</script>
+</body>
+</html>

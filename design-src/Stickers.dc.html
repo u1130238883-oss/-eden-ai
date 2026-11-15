@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sticker Bomb</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Space+Mono:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #EDE8DC; font-family: 'Bungee', sans-serif">
+<div style="position: absolute; left: 20px; top: 210px; padding: 18px 22px; background: #121212; color: {{accent}}; font-size: 44px; border: 5px solid #FFFFFF; border-radius: 14px; transform: rotate(-9deg); box-shadow: 0 6px 14px rgba(0,0,0,0.25)">STAY ODD</div>
+<div style="position: absolute; right: 18px; top: 300px; width: 130px; height: 130px; border-radius: 50%; background: #FF4D2E; color: #FFFFFF; border: 5px solid #FFFFFF; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 22px; line-height: 1.05; transform: rotate(12deg); box-shadow: 0 6px 14px rgba(0,0,0,0.25)">100%<br>LEGIT</div>
+<div style="position: absolute; left: 34px; top: 380px; padding: 14px 18px; background: #2E5BFF; color: #FFFFFF; font-size: 30px; border: 5px solid #FFFFFF; transform: rotate(5deg); box-shadow: 0 6px 14px rgba(0,0,0,0.25)">MILANO ↔ 廣州</div>
+<div style="position: absolute; left: 60px; top: 480px; width: 170px; height: 170px; background: {{accent}}; border: 5px solid #FFFFFF; border-radius: 30px; transform: rotate(-14deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 14px rgba(0,0,0,0.25)">
+<svg aria-hidden="true" width="110" height="110" viewBox="0 0 110 110"><circle cx="55" cy="55" r="46" fill="none" stroke="#121212" stroke-width="8"></circle><circle cx="38" cy="45" r="7" fill="#121212"></circle><circle cx="72" cy="45" r="7" fill="#121212"></circle><path d="M32 68 Q55 90 78 68" fill="none" stroke="#121212" stroke-width="8" stroke-linecap="round"></path></svg>
+</div>
+<div style="position: absolute; right: 26px; top: 520px; padding: 10px 14px; background: #FFFFFF; color: #121212; font-family: 'Space Mono', monospace; font-size: 14px; border: 3px dashed #121212; transform: rotate(-6deg)">PROPERTY OF<br>NO ONE</div>
+<div style="position: absolute; left: 150px; top: 640px; padding: 12px 18px; background: #8A3FFC; color: #FFFFFF; font-size: 34px; border: 5px solid #FFFFFF; border-radius: 40px; transform: rotate(8deg); box-shadow: 0 6px 14px rgba(0,0,0,0.25)">LVL UP</div>
+<div style="position: absolute; left: 24px; top: 720px; padding: 8px 14px; background: #121212; color: #FFFFFF; font-family: 'Space Mono', monospace; font-size: 13px; transform: rotate(-3deg)">#09 / LIMITED</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#D7FF3D"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#D7FF3D' };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Equalizer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Space+Mono:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+.seg{background:repeating-linear-gradient(0deg,#C2FF3D 0 10px,transparent 10px 14px)}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #12160A; font-family: 'Anton', sans-serif">
+<div style="position: absolute; left: 24px; right: 24px; top: 320px; height: 340px; display: flex; align-items: flex-end; gap: 8px">
+<div class="seg" style="flex: 1; height: 120px"></div>
+<div class="seg" style="flex: 1; height: 210px"></div>
+<div class="seg" style="flex: 1; height: 300px"></div>
+<div class="seg" style="flex: 1; height: 260px"></div>
+<div class="seg" style="flex: 1; height: 340px; opacity: 0.95"></div>
+<div class="seg" style="flex: 1; height: 180px"></div>
+<div class="seg" style="flex: 1; height: 240px"></div>
+<div class="seg" style="flex: 1; height: 140px"></div>
+<div class="seg" style="flex: 1; height: 200px"></div>
+<div class="seg" style="flex: 1; height: 90px"></div>
+</div>
+<div style="position: absolute; left: 24px; top: 690px; font-size: 64px; line-height: 1; color: {{accent}}">BASS BOOST</div>
+<div style="position: absolute; left: 24px; top: 770px; font-family: 'Space Mono', monospace; font-size: 11px; color: #8FA866; letter-spacing: 2px">TRACK 09 · 128 BPM · ▶ ■ ▶▶</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#F2FF4A"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#F2FF4A' };
+}
+}
+</script>
+</body>
+</html>

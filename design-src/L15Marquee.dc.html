@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Marquee</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0D0F08; font-family: 'Archivo Black', sans-serif">
+<div style="position: absolute; left: -80px; top: 200px; width: 560px; display: flex; flex-direction: column; gap: 0; transform: rotate(-12deg); font-size: 62px; line-height: 1.05; white-space: nowrap">
+<span style="color: {{accent}}">GO GO GO GO GO GO</span>
+<span style="color: transparent; -webkit-text-stroke: 2px {{accent}}">GO GO GO GO GO GO</span>
+<span style="color: #0D0F08; background: {{accent}}; padding-left: 40px">GO GO GO GO GO GO</span>
+<span style="color: transparent; -webkit-text-stroke: 2px {{accent}}">GO GO GO GO GO GO</span>
+<span style="color: {{accent}}">GO GO GO GO GO GO</span>
+<span style="color: transparent; -webkit-text-stroke: 2px #F5FF6A">GO GO GO GO GO GO</span>
+<span style="color: #F5FF6A">GO GO GO GO GO GO</span>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#B6FF00"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#B6FF00' };
+}
+}
+</script>
+</body>
+</html>

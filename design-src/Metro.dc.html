@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Metro Lines</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&amp;family=Space+Mono:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+.grid{background-image:linear-gradient(rgba(255,255,255,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.05) 1px,transparent 1px);background-size:26px 26px}
+</style>
+</helmet>
+<div class="grid" style="width: 390px; height: 844px; position: relative; overflow: hidden; background-color: #101018; font-family: 'Space Grotesk', sans-serif">
+<svg aria-hidden="true" style="position: absolute; left: 0; top: 0" width="390" height="844" viewBox="0 0 390 844">
+<path d="M-10 300 L120 300 L200 380 L200 560 L300 660 L400 660" fill="none" stroke="#FF3D5A" stroke-width="12" stroke-linejoin="round"></path>
+<path d="M90 -10 L90 420 L180 510 L400 510" fill="none" stroke="#2EC4FF" stroke-width="12" stroke-linejoin="round"></path>
+<path d="M400 250 L290 250 L200 340 L200 460 L60 600 L60 860" fill="none" stroke="#FFC93A" stroke-width="12" stroke-linejoin="round"></path>
+<circle cx="200" cy="460" r="18" fill="#101018" stroke="#FFFFFF" stroke-width="7"></circle>
+<circle cx="90" cy="300" r="12" fill="#101018" stroke="#FFFFFF" stroke-width="6"></circle>
+<circle cx="200" cy="380" r="12" fill="#101018" stroke="#FFFFFF" stroke-width="6"></circle>
+<circle cx="300" cy="660" r="12" fill="#101018" stroke="#FFFFFF" stroke-width="6"></circle>
+<circle cx="290" cy="510" r="12" fill="#101018" stroke="#FFFFFF" stroke-width="6"></circle>
+<circle cx="60" cy="720" r="12" fill="#101018" stroke="#FFFFFF" stroke-width="6"></circle>
+</svg>
+<div style="position: absolute; left: 226px; top: 440px; padding: 6px 10px; background: #FFFFFF; color: #101018; font-size: 16px">INTERCHANGE</div>
+<div style="position: absolute; left: 24px; bottom: 44px; display: flex; gap: 8px; font-family: 'Space Mono', monospace; font-size: 12px; color: #101018">
+<span style="padding: 6px 10px; background: #FF3D5A">L1</span>
+<span style="padding: 6px 10px; background: #2EC4FF">L2</span>
+<span style="padding: 6px 10px; background: #FFC93A">L3</span>
+<span style="padding: 6px 10px; background: {{accent}}; color: #FFFFFF">LAST TRAIN 00:42</span>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7A4DFF"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#7A4DFF' };
+}
+}
+</script>
+</body>
+</html>

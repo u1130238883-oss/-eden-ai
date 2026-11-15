@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Radar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0A1206; font-family: 'Space Mono', monospace">
+<svg aria-hidden="true" style="position: absolute; left: 15px; top: 260px" width="360" height="360" viewBox="0 0 360 360">
+<defs><linearGradient id="sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B8FF2E" stop-opacity="0"></stop><stop offset="1" stop-color="#B8FF2E" stop-opacity="0.55"></stop></linearGradient></defs>
+<circle cx="180" cy="180" r="170" fill="none" stroke="#B8FF2E" stroke-opacity="0.5" stroke-width="2"></circle>
+<circle cx="180" cy="180" r="120" fill="none" stroke="#B8FF2E" stroke-opacity="0.35" stroke-width="2"></circle>
+<circle cx="180" cy="180" r="70" fill="none" stroke="#B8FF2E" stroke-opacity="0.25" stroke-width="2"></circle>
+<path d="M10 180 H350 M180 10 V350" stroke="#B8FF2E" stroke-opacity="0.25" stroke-width="2"></path>
+<path d="M180 180 L180 10 A170 170 0 0 1 327 95 Z" fill="url(#sw)"></path>
+<circle cx="262" cy="96" r="7" fill="#F2FF5A"></circle>
+<circle cx="110" cy="250" r="5" fill="#F2FF5A" opacity="0.6"></circle>
+<circle cx="180" cy="180" r="6" fill="#B8FF2E"></circle>
+</svg>
+<div style="position: absolute; left: 24px; top: 650px; font-size: 26px; color: {{accent}}">TARGET LOCKED</div>
+<div style="position: absolute; left: 24px; top: 690px; font-size: 12px; line-height: 1.7; color: #7E9A5A">BRG 047° · RNG 1.2 km<br>SCAN 03 / AUTO</div>
+<div style="position: absolute; right: 24px; bottom: 44px; font-size: 11px; color: #7E9A5A">● LIVE</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#B8FF2E"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#B8FF2E' };
+}
+}
+</script>
+</body>
+</html>

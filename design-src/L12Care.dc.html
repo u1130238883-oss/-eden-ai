@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Handle With Care</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Space+Mono:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+.haz{background:repeating-linear-gradient(45deg,#D4FF2A 0 24px,#0E1108 24px 48px)}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0E1108; font-family: 'Bebas Neue', sans-serif">
+<div class="haz" style="position: absolute; left: 0; top: 0; width: 390px; height: 120px"></div>
+<div class="haz" style="position: absolute; left: 0; bottom: 0; width: 390px; height: 120px"></div>
+<div style="position: absolute; left: 28px; top: 280px; display: flex; flex-direction: column; line-height: 0.9">
+<span style="font-size: 108px; color: {{accent}}">HANDLE</span>
+<span style="font-size: 108px; color: transparent; -webkit-text-stroke: 2px {{accent}}">WITH</span>
+<span style="font-size: 108px; color: {{accent}}">CARE</span>
+</div>
+<div style="position: absolute; left: 28px; top: 620px; display: flex; gap: 10px; align-items: center">
+<svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44"><path d="M8 6 H36 L30 22 H14 Z M22 22 V38 M14 38 H30" fill="none" stroke="#D4FF2A" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"></path></svg>
+<svg aria-hidden="true" width="44" height="44" viewBox="0 0 44 44"><path d="M22 38 V8 M10 20 L22 8 L34 20" fill="none" stroke="#D4FF2A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<span style="font-family: 'Space Mono', monospace; font-size: 12px; color: #D4FF2A; letter-spacing: 2px">FRAGILE · THIS SIDE UP</span>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#D4FF2A"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#D4FF2A' };
+}
+}
+</script>
+</body>
+</html>

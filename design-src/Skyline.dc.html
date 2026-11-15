@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rooftop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee+Shade&amp;family=Space+Mono:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+.sky{background:linear-gradient(180deg,#140A2E 0%,#3D1A5C 38%,#FF6A3D 72%,#FFB44A 100%)}
+.win{background-image:linear-gradient(90deg,#FFE58A 0 6px,transparent 6px 14px);background-size:14px 18px;background-position:6px 8px}
+</style>
+</helmet>
+<div class="sky" style="width: 390px; height: 844px; position: relative; overflow: hidden">
+<div style="position: absolute; left: 120px; top: 380px; width: 150px; height: 150px; border-radius: 50%; background: #FFD46A; opacity: 0.9"></div>
+<div style="position: absolute; left: 0; bottom: 0; width: 390px; height: 340px; display: flex; align-items: flex-end; gap: 6px">
+<div class="win" style="width: 64px; height: 230px; background-color: #160B26"></div>
+<div class="win" style="width: 52px; height: 300px; background-color: #1E0F33"></div>
+<div style="width: 80px; height: 180px; background: #160B26; position: relative"><div style="position: absolute; left: -10px; top: -76px; padding: 6px 8px; border: 3px solid {{accent}}; color: {{accent}}; font-family: 'Space Mono', monospace; font-size: 14px; background: #160B26; box-shadow: 0 0 14px {{accent}}">24H 拉麵</div></div>
+<div class="win" style="width: 58px; height: 260px; background-color: #1E0F33"></div>
+<div class="win" style="width: 112px; height: 210px; background-color: #160B26"></div>
+</div>
+<div style="position: absolute; left: 0; bottom: 0; width: 390px; height: 60px; background: #0B0616"></div>
+<div style="position: absolute; left: 26px; top: 210px; font-family: 'Bungee Shade', sans-serif; font-size: 58px; line-height: 1; color: #FFE58A">AFTER<br>HOURS</div>
+<svg aria-hidden="true" style="position: absolute; right: 40px; top: 160px" width="60" height="60" viewBox="0 0 60 60"><path d="M30 4 L34 26 L56 30 L34 34 L30 56 L26 34 L4 30 L26 26 Z" fill="#FFE58A"></path></svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#3DF5FF"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#3DF5FF' };
+}
+}
+</script>
+</body>
+</html>

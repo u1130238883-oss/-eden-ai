@@ -1,0 +1,302 @@
+[
+{
+"id": 33,
+"title": "KARAOKE",
+"tag": "ROOM 09 · ¥500/H",
+"accent": "#D4FF1A"
+},
+{
+"id": 34,
+"title": "NEON RIOT",
+"tag": "STAGE B · 21:30",
+"accent": "#D4FF1A"
+},
+{
+"id": 35,
+"title": "HIGH VOLTAGE",
+"tag": "高壓危險",
+"accent": "#D4FF1A"
+},
+{
+"id": 36,
+"title": "FLOPPY",
+"tag": "SAVE BEFORE YOU QUIT",
+"accent": "#121211"
+},
+{
+"id": 37,
+"title": "BAM",
+"tag": "COMIC SFX",
+"accent": "#EAFF3A"
+},
+{
+"id": 38,
+"title": "NEON AVE",
+"tag": "霓虹大道",
+"accent": "#1A1A18"
+},
+{
+"id": 39,
+"title": "STAY ODD",
+"tag": "LVL 99 · NO SLEEP",
+"accent": "#D4FF1A"
+},
+{
+"id": 40,
+"title": "NO SLEEP",
+"tag": "TYPE POSTER",
+"accent": "#DDFF2A"
+},
+{
+"id": 41,
+"title": "RAIN",
+"tag": "PIXEL CITY",
+"accent": "#D4FF1A"
+},
+{
+"id": 42,
+"title": "CHECKER",
+"tag": "GRAPHIC PATTERN",
+"accent": "#EAFF3A"
+},
+{
+"id": 43,
+"title": "LIVE HOUSE",
+"tag": "TONIGHT · DOORS 21:00",
+"accent": "#EAFF3A"
+},
+{
+"id": 44,
+"title": "LINE 9",
+"tag": "UNLIMITED · 7 DAYS",
+"accent": "#EAFF3A"
+},
+{
+"id": 45,
+"title": "SLIPPERY",
+"tag": "小心地滑",
+"accent": "#EAFF3A"
+},
+{
+"id": 46,
+"title": "PAGER",
+"tag": "CALL ME 0909",
+"accent": "#1A1A1A"
+},
+{
+"id": 47,
+"title": "POW",
+"tag": "COMIC SFX",
+"accent": "#D4FF1A"
+},
+{
+"id": 48,
+"title": "SIXTH ST",
+"tag": "六街",
+"accent": "#0B0B0A"
+},
+{
+"id": 49,
+"title": "GLITCH",
+"tag": "OK! · RUN",
+"accent": "#EAFF3A"
+},
+{
+"id": 50,
+"title": "STAY WILD",
+"tag": "TYPE POSTER",
+"accent": "#111111"
+},
+{
+"id": 51,
+"title": "SNOW",
+"tag": "PIXEL CITY",
+"accent": "#FFFFFF"
+},
+{
+"id": 52,
+"title": "TARGET",
+"tag": "GRAPHIC PATTERN",
+"accent": "#F7FFB3"
+},
+{
+"id": 53,
+"title": "NO VACANCY",
+"tag": "HOTEL ZONE 09",
+"accent": "#DDFF2A"
+},
+{
+"id": 54,
+"title": "ZONE 09",
+"tag": "GATE C7 · SEAT 09A",
+"accent": "#D4FF1A"
+},
+{
+"id": 55,
+"title": "MAGNETIC FIELD",
+"tag": "強磁場",
+"accent": "#DDFF2A"
+},
+{
+"id": 56,
+"title": "WALKMAN",
+"tag": "AUTO REVERSE",
+"accent": "#D4FF1A"
+},
+{
+"id": 57,
+"title": "ZAP",
+"tag": "COMIC SFX",
+"accent": "#F7FFB3"
+},
+{
+"id": 58,
+"title": "MIDNIGHT RD",
+"tag": "午夜路",
+"accent": "#2A2A26"
+},
+{
+"id": 59,
+"title": "BIG MOOD",
+"tag": "NOPE · YES",
+"accent": "#F7FFB3"
+},
+{
+"id": 60,
+"title": "HYPER DRIVE",
+"tag": "TYPE POSTER",
+"accent": "#EAFF3A"
+},
+{
+"id": 61,
+"title": "SUNRISE",
+"tag": "PIXEL CITY",
+"accent": "#F7FFB3"
+},
+{
+"id": 62,
+"title": "STRIPE",
+"tag": "GRAPHIC PATTERN",
+"accent": "#D4FF1A"
+},
+{
+"id": 63,
+"title": "ARCADE",
+"tag": "COIN-OP · 24H",
+"accent": "#F7FFB3"
+},
+{
+"id": 64,
+"title": "1 PLAY",
+"tag": "VALID ALL CABINETS",
+"accent": "#DDFF2A"
+},
+{
+"id": 65,
+"title": "FALLING OBJECTS",
+"tag": "注意落物",
+"accent": "#F7FFB3"
+},
+{
+"id": 66,
+"title": "HANDHELD",
+"tag": "PRESS START",
+"accent": "#D4FF1A"
+},
+{
+"id": 67,
+"title": "WHAM",
+"tag": "COMIC SFX",
+"accent": "#EAFF3A"
+},
+{
+"id": 68,
+"title": "ARCADE LN",
+"tag": "電玩巷",
+"accent": "#1E1E1B"
+},
+{
+"id": 69,
+"title": "COOL",
+"tag": "WOW · ZONE",
+"accent": "#111111"
+},
+{
+"id": 70,
+"title": "VOID MODE",
+"tag": "TYPE POSTER",
+"accent": "#111111"
+},
+{
+"id": 71,
+"title": "LIME NIGHT",
+"tag": "PIXEL CITY",
+"accent": "#EAFF3A"
+},
+{
+"id": 72,
+"title": "WAVE",
+"tag": "GRAPHIC PATTERN",
+"accent": "#EAFF3A"
+},
+{
+"id": 73,
+"title": "BAR 09",
+"tag": "HAPPY HOUR 18-20",
+"accent": "#C2EE14"
+},
+{
+"id": 74,
+"title": "VIP CLUB",
+"tag": "No.000909 · BLACK",
+"accent": "#EAFF3A"
+},
+{
+"id": 75,
+"title": "LASER ZONE",
+"tag": "雷射區域",
+"accent": "#C2EE14"
+},
+{
+"id": 76,
+"title": "RADIO",
+"tag": "FM 90.9 · NIGHT",
+"accent": "#D4FF1A"
+},
+{
+"id": 77,
+"title": "BOOM",
+"tag": "COMIC SFX",
+"accent": "#D4FF1A"
+},
+{
+"id": 78,
+"title": "DOCK 9",
+"tag": "九號碼頭",
+"accent": "#2A2A26"
+},
+{
+"id": 79,
+"title": "CUTE",
+"tag": "BUT · PSYCHO",
+"accent": "#2A2A26"
+},
+{
+"id": 80,
+"title": "LOUD &PROUD",
+"tag": "TYPE POSTER",
+"accent": "#EAFF3A"
+},
+{
+"id": 81,
+"title": "MATRIX",
+"tag": "PIXEL CITY",
+"accent": "#D4FF1A"
+},
+{
+"id": 82,
+"title": "STARS",
+"tag": "GRAPHIC PATTERN",
+"accent": "#EAFF3A"
+}
+]

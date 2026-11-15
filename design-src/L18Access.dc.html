@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Access Card</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Space+Mono:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+.bar{background:repeating-linear-gradient(90deg,#0D0F08 0 2px,transparent 2px 4px,#0D0F08 4px 7px,transparent 7px 9px,#0D0F08 9px 10px,transparent 10px 13px)}
+.dots{background-image:radial-gradient(#C6FF1A 1.4px,transparent 1.6px);background-size:12px 12px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #141A0A; font-family: 'Anton', sans-serif">
+<div class="dots" style="position: absolute; inset: 0; opacity: 0.18"></div>
+<div style="position: absolute; left: 45px; top: 230px; width: 300px; height: 460px; background: {{accent}}; border-radius: 22px; transform: rotate(4deg); box-shadow: -12px 14px 0 #0D0F08; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; font-family: 'Space Mono', monospace; font-size: 11px; color: #0D0F08"><span>ID / 0009</span><span>LV. MAX</span></div>
+<div style="width: 120px; height: 140px; border-radius: 12px; background: #0D0F08; display: flex; align-items: center; justify-content: center">
+<svg aria-hidden="true" width="70" height="70" viewBox="0 0 70 70"><circle cx="35" cy="26" r="14" fill="none" stroke="#C6FF1A" stroke-width="5"></circle><path d="M10 64 C14 46, 56 46, 60 64" fill="none" stroke="#C6FF1A" stroke-width="5" stroke-linecap="round"></path></svg>
+</div>
+<span style="font-size: 54px; line-height: 0.95; color: #0D0F08">ACCESS<br>GRANTED</span>
+<span style="font-family: 'Space Mono', monospace; font-size: 11px; color: #0D0F08">NAME [YOUR NAME] · ALL ZONES</span>
+<div class="bar" style="margin-top: auto; height: 56px"></div>
+</div>
+<div style="position: absolute; left: 165px; top: 200px; width: 70px; height: 18px; border-radius: 9px; background: #0D0F08; transform: rotate(4deg)"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#C6FF1A"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#C6FF1A' };
+}
+}
+</script>
+</body>
+</html>

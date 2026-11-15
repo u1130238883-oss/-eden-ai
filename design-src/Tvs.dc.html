@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CRT Stack</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&amp;display=swap">
+<style>
+body{margin:0}
+.scan{background:repeating-linear-gradient(0deg,rgba(255,255,255,0.08) 0 2px,transparent 2px 5px)}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #0E1A1F; font-family: 'VT323', monospace">
+<div style="position: absolute; left: 24px; right: 24px; top: 250px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<div style="height: 150px; border-radius: 18px; background: #2B2F33; padding: 12px; box-sizing: border-box"><div class="scan" style="height: 100%; border-radius: 12px; background-color: {{accent}}; display: flex; align-items: center; justify-content: center; font-size: 54px; color: #0E1A1F">CH 09</div></div>
+<div style="height: 150px; border-radius: 18px; background: #3A3026; padding: 12px; box-sizing: border-box"><div class="scan" style="height: 100%; border-radius: 12px; background-color: #FF5A36; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #0E1A1F">NO SIGNAL</div></div>
+<div style="height: 150px; border-radius: 18px; background: #3A3026; padding: 12px; box-sizing: border-box"><div class="scan" style="height: 100%; border-radius: 12px; background-color: #1D2A30; display: flex; align-items: center; justify-content: center; font-size: 72px; color: {{accent}}">▶ ▶</div></div>
+<div style="height: 150px; border-radius: 18px; background: #2B2F33; padding: 12px; box-sizing: border-box"><div class="scan" style="height: 100%; border-radius: 12px; background-color: #F2E6C9; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #0E1A1F">REC ●</div></div>
+<div style="height: 150px; border-radius: 18px; background: #2B2F33; padding: 12px; box-sizing: border-box"><div class="scan" style="height: 100%; border-radius: 12px; background-color: #6B4BFF; display: flex; align-items: center; justify-content: center; font-size: 48px; color: #F2E6C9">02:47</div></div>
+<div style="height: 150px; border-radius: 18px; background: #3A3026; padding: 12px; box-sizing: border-box"><div class="scan" style="height: 100%; border-radius: 12px; background-color: {{accent}}; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #0E1A1F">VIDEO SHOP</div></div>
+</div>
+<div style="position: absolute; left: 24px; bottom: 44px; font-size: 22px; color: #6E8A93; letter-spacing: 2px">◀ REWIND · PLAY · REPEAT ▶</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#37F2A6"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#37F2A6' };
+}
+}
+</script>
+</body>
+</html>
