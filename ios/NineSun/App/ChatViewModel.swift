@@ -91,8 +91,8 @@ final class ChatViewModel: ObservableObject {
     /// 成人模式（18+）：大腦照設定的角色做成人角色扮演；預設關，要確認滿 18 歲才能打開
     @Published var adultMode = false { didSet { save(adultMode, "adultMode") } }
     @Published var roleCharacter = "" { didSet { save(roleCharacter, "roleCharacter") } }
-    /// NineSun 的個性：會罵人、會吐槽（內建，不是開關；底線照樣守）
-    let trashTalk = true
+    /// NineSun 的個性：關掉嘴砲和髒話，用友善、有禮貌的語氣（使用者不喜歡罵人的語氣）
+    let trashTalk = false
     @Published var brainTestResult = ""
     @Published var brainTesting = false
     var brainPath: String? {
@@ -493,7 +493,7 @@ final class ChatViewModel: ObservableObject {
         // 對方心情低落：不用嘴砲的個性，溫柔地安慰
         let prevUser = turns.dropLast().last(where: { $0.role == .user })?.text
         let low = BrainRoute.feelingLow(question, previous: prevUser)
-        let system = LocalBrain.system(lang: L.rawValue, swear: trashTalk && !low)
+        let system = LocalBrain.system(lang: L.rawValue, swear: trashTalk && !low, low: low)
         let user = LocalBrain.userMessage(question: question, facts: facts, evidence: evidence, reading: reading, hint: hint, notes: notes,
                                           lang: L.rawValue)
         let book = rules
@@ -508,7 +508,7 @@ final class ChatViewModel: ObservableObject {
                 case .success(let r) where !r.text.isEmpty:
                     // 一般聊天不讓大腦說髒話
                     let formatted = LocalBrain.followFormat(question: question, answer: r.text)
-                    let raw = low ? LocalBrain.soften(formatted) : formatted
+                    let raw = (low || !self.trashTalk) ? LocalBrain.soften(formatted) : formatted
                     let said = self.trashTalk ? Composure.clean(raw) : Composure.rude(raw) ? Composure.calm : raw
                     var turn = ChatTurn(role: .echo, text: book.enforce(said + note), source: .neural, card: card, tokens: query == nil ? nil : [])
                     turn.query = query
