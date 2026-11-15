@@ -1,0 +1,200 @@
+# 更多名詞：家庭生活、日常
+日常生活|daily life|vida diaria|vita quotidiana
+家事|housework|tareas domésticas|faccende domestiche
+房租|rent|alquiler/renta|affitto
+房東|landlord|casero/arrendador|padrone di casa
+房客|tenant|inquilino|inquilino
+鄰居家|neighbor's house|casa del vecino|casa del vicino
+水電費|utility bills|facturas de luz y agua|bollette
+帳單（家用）|bill|factura|bolletta
+購物清單|shopping list|lista de la compra|lista della spesa
+購物車|shopping cart|carrito de compras|carrello
+收銀台|checkout counter|caja|cassa
+試衣間|fitting room|probador|camerino
+尺寸|size|talla/tamaño|taglia/misura
+標籤|label/tag|etiqueta|etichetta
+價錢標籤|price tag|etiqueta de precio|cartellino del prezzo
+零錢|change/coins|cambio/monedas sueltas|spiccioli/resto
+提款機|ATM|cajero automático|bancomat
+排隊號碼|queue number|número de turno|numero di attesa
+預約|appointment|cita|appuntamento
+時間表|schedule|horario|orario/programma
+行程|itinerary|itinerario|itinerario
+待辦事項|to-do list|lista de tareas|lista delle cose da fare
+鬧鐘聲|alarm|alarma|sveglia
+早晨習慣|morning routine|rutina matutina|routine mattutina
+午睡|nap|siesta|pisolino
+夢境|dream|sueño|sogno
+惡夢|nightmare|pesadilla|incubo
+睡眠|sleep|sueño|sonno
+失眠（名詞）|insomnia|insomnio|insonnia
+早起|getting up early|madrugar|alzarsi presto
+晚睡|staying up late|trasnochar|andare a letto tardi
+鑰匙圈|keychain|llavero|portachiavi
+手提包|handbag|bolso de mano|borsetta
+皮夾|wallet|billetera|portafoglio
+名片|business card|tarjeta de visita|biglietto da visita
+身分證|ID card|documento de identidad/DNI|carta d'identità
+駕駛執照|driver's license|carné de conducir|patente di guida
+健保卡|health insurance card|tarjeta sanitaria|tessera sanitaria
+悠遊卡|transit card|tarjeta de transporte|tessera dei trasporti
+會員卡|membership card|tarjeta de socio|tessera associativa
+收音|sound recording|grabación|registrazione
+水壺|water bottle|botella de agua|borraccia
+保溫瓶|thermos|termo|thermos
+便利商店|convenience store|tienda de conveniencia|minimarket
+洗衣店|laundromat/laundry|lavandería|lavanderia
+乾洗店|dry cleaner|tintorería|tintoria
+美容院|beauty salon|salón de belleza|centro estetico
+理髮店|barbershop/hair salon|peluquería|barbiere/parrucchiere
+花店|flower shop|floristería|fioraio
+玩具店|toy store|juguetería|negozio di giocattoli
+鞋店|shoe store|zapatería|negozio di scarpe
+服飾店|clothing store|tienda de ropa|negozio di abbigliamento
+眼鏡行|optician|óptica|ottico
+文具店|stationery store|papelería|cartoleria
+寵物店|pet store|tienda de mascotas|negozio di animali
+五金行|hardware store|ferretería|ferramenta
+珠寶店|jewelry store|joyería|gioielleria
+肉店|butcher shop|carnicería|macelleria
+魚市場|fish market|mercado de pescado|mercato del pesce
+夜市|night market|mercado nocturno|mercato notturno
+早市|morning market|mercado matutino|mercato mattutino
+攤販|street vendor|vendedor ambulante|venditore ambulante
+小吃|street food|comida callejera|cibo di strada
+# 身體與健康（更多）
+身高|height|estatura/altura|altezza/statura
+體重|weight|peso|peso
+血型|blood type|grupo sanguíneo|gruppo sanguigno
+血壓|blood pressure|presión arterial|pressione sanguigna
+心跳|heartbeat|latido|battito cardiaco
+脈搏|pulse|pulso|polso
+呼吸（名詞）|breath/breathing|respiración|respiro/respirazione
+汗|sweat|sudor|sudore
+眼淚水|tears|lágrimas|lacrime
+傷疤|scar|cicatriz|cicatrice
+瘀青|bruise|moretón/moratón|livido
+燒傷|burn|quemadura|ustione/bruciatura
+骨折|fracture|fractura|frattura
+扭傷|sprain|esguince|distorsione/storta
+感染|infection|infección|infezione
+病毒|virus|virus|virus
+細菌|bacteria|bacteria|batteri
+癌症|cancer|cáncer|cancro/tumore
+糖尿病|diabetes|diabetes|diabete
+氣喘|asthma|asma|asma
+憂鬱症|depression|depresión|depressione
+症狀|symptom|síntoma|sintomo
+診斷|diagnosis|diagnóstico|diagnosi
+治療|treatment|tratamiento|cura/trattamento
+檢查（醫）|checkup/examination|revisión/chequeo|controllo/visita
+急診|emergency room|urgencias|pronto soccorso
+病房|ward|sala/habitación de hospital|reparto/corsia
+輪椅|wheelchair|silla de ruedas|sedia a rotelle
+拐杖|crutch/cane|muleta/bastón|stampella/bastone
+針|needle|aguja|ago
+打針|injection|inyección|iniezione
+點滴|IV drip|suero|flebo
+X光|X-ray|radiografía|radiografia
+健康檢查|health checkup|chequeo médico|check-up
+維他命|vitamin|vitamina|vitamina
+營養|nutrition|nutrición|nutrizione
+卡路里|calorie|caloría|caloria
+蛋白質|protein|proteína|proteina
+飲食|diet|dieta/alimentación|dieta/alimentazione
+睡眠不足|lack of sleep|falta de sueño|mancanza di sonno
+# 動物（更多）
+小鳥|little bird|pajarito|uccellino
+燕子|swallow|golondrina|rondine
+麻雀|sparrow|gorrión|passero
+烏鴉|crow|cuervo|corvo
+天鵝|swan|cisne|cigno
+孔雀|peacock|pavo real|pavone
+火烈鳥|flamingo|flamenco|fenicottero
+蜂鳥|hummingbird|colibrí|colibrì
+啄木鳥|woodpecker|pájaro carpintero|picchio
+海鷗|seagull|gaviota|gabbiano
+蝙蝠|bat|murciélago|pipistrello
+刺蝟|hedgehog|erizo|riccio
+浣熊|raccoon|mapache|procione
+水獺|otter|nutria|lontra
+海獺|sea otter|nutria marina|lontra marina
+海豹|seal|foca|foca
+北極熊|polar bear|oso polar|orso polare
+犀牛|rhinoceros|rinoceronte|rinoceronte
+河馬|hippopotamus|hipopótamo|ippopotamo
+豹|leopard|leopardo|leopardo
+獵豹|cheetah|guepardo|ghepardo
+猩猩|gorilla/orangutan|gorila/orangután|gorilla/orango
+黑猩猩|chimpanzee|chimpancé|scimpanzé
+驢子|donkey|burro|asino
+騾子|mule|mula|mulo
+公牛|bull|toro|toro
+小牛|calf|ternero|vitello
+小羊|lamb|cordero|agnello
+小雞|chick|pollito|pulcino
+公雞|rooster|gallo|gallo
+母雞|hen|gallina|gallina
+倉鼠|hamster|hámster|criceto
+天竺鼠|guinea pig|cobaya/conejillo de Indias|porcellino d'India
+金魚|goldfish|pez dorado|pesce rosso
+蝸牛|snail|caracol|lumaca/chiocciola
+蚯蚓|earthworm|lombriz|lombrico
+蟑螂|cockroach|cucaracha|scarafaggio
+蟋蟀|cricket|grillo|grillo
+螢火蟲|firefly|luciérnaga|lucciola
+蜻蜓|dragonfly|libélula|libellula
+瓢蟲|ladybug|mariquita|coccinella
+毛毛蟲|caterpillar|oruga|bruco
+蠍子|scorpion|escorpión|scorpione
+水母|jellyfish|medusa|medusa
+海星|starfish|estrella de mar|stella marina
+珊瑚|coral|coral|corallo
+貝殼|seashell|concha|conchiglia
+巢|nest|nido|nido
+蛋殼|eggshell|cáscara de huevo|guscio d'uovo
+爪子|claw/paw|garra/pata|artiglio/zampa
+角|horn|cuerno|corno
+鱗片|scale|escama|squama
+毛|fur/hair|pelo|pelo/pelliccia
+# 職業（更多）
+保母|nanny|niñera|tata/babysitter
+清潔工|cleaner|limpiador|addetto alle pulizie
+管家|housekeeper/butler|ama de llaves/mayordomo|governante/maggiordomo
+保全|security guard|guardia de seguridad|guardia di sicurezza
+快遞員|courier|mensajero|corriere
+外送員|delivery person|repartidor|fattorino
+櫃台人員|receptionist|recepcionista|receptionist/addetto alla reception
+房仲|real estate agent|agente inmobiliario|agente immobiliare
+銀行員|bank clerk|empleado de banco|impiegato di banca
+公務員|civil servant|funcionario|funzionario/impiegato statale
+外交官|diplomat|diplomático|diplomatico
+政治家|politician|político|politico
+經濟學家|economist|economista|economista
+心理學家|psychologist|psicólogo|psicologo
+社工|social worker|trabajador social|assistente sociale
+編輯|editor|editor/redactor|redattore/editor
+出版社|publisher|editorial|casa editrice
+主持人|host/presenter|presentador|conduttore/presentatore
+模特兒|model|modelo|modello/modella
+網紅|influencer|influencer|influencer
+作曲家|composer|compositor|compositore
+指揮|conductor|director de orquesta|direttore d'orchestra
+雕刻家|sculptor|escultor|scultore
+裁縫|tailor|sastre|sarto
+鐵匠|blacksmith|herrero|fabbro
+礦工|miner|minero|minatore
+獵人|hunter|cazador|cacciatore
+船長|captain|capitán|capitano
+水手|sailor|marinero|marinaio
+機長|captain (pilot)|comandante|comandante
+科技業|tech industry|industria tecnológica|settore tecnologico
+創業家|entrepreneur|emprendedor|imprenditore
+投資人|investor|inversor|investitore
+老闆（店）|shop owner|dueño de la tienda|proprietario del negozio
+實習生|intern|becario/pasante|stagista/tirocinante
+新人|newcomer|recién llegado|nuovo arrivato
+專家|expert|experto|esperto
+初學者|beginner|principiante|principiante
+大師|master|maestro|maestro
+冠軍選手|champion|campeón|campione

@@ -1,0 +1,133 @@
+# 補充：最後一批
+一千|one thousand|mil|mille
+兩千|two thousand|dos mil|duemila
+三千|three thousand|tres mil|tremila
+五千|five thousand|cinco mil|cinquemila
+一萬|ten thousand|diez mil|diecimila
+十萬|one hundred thousand|cien mil|centomila
+第一次|the first time|la primera vez|la prima volta
+最後一次|the last time|la última vez|l'ultima volta
+這次|this time|esta vez|questa volta
+下次|next time|la próxima vez|la prossima volta
+上次|last time|la última vez|l'ultima volta
+每次|every time|cada vez|ogni volta
+有時|at times|a veces|a volte
+一次|once|una vez|una volta
+兩次|twice|dos veces|due volte
+三次|three times|tres veces|tre volte
+幾次|several times|varias veces|diverse volte
+上午|in the morning|por la mañana|di mattina
+下午茶|afternoon tea|merienda/té de la tarde|tè del pomeriggio
+晚飯後|after dinner|después de cenar|dopo cena
+飯前|before meals|antes de comer|prima dei pasti
+飯後|after meals|después de comer|dopo i pasti
+睡前|before bed|antes de dormir|prima di dormire
+放學後|after school|después de la escuela|dopo la scuola
+下班後|after work|después del trabajo|dopo il lavoro
+週一早上|Monday morning|el lunes por la mañana|lunedì mattina
+週五晚上|Friday night|el viernes por la noche|venerdì sera
+週末早上|weekend morning|mañana del fin de semana|mattina del weekend
+年初|beginning of the year|principios de año|inizio dell'anno
+年底|end of the year|finales de año|fine dell'anno
+月初|beginning of the month|principios de mes|inizio del mese
+月底|end of the month|finales de mes|fine del mese
+半年|half a year|medio año|sei mesi/mezzo anno
+一年半|a year and a half|un año y medio|un anno e mezzo
+半小時|half an hour|media hora|mezz'ora
+一刻鐘|a quarter of an hour|un cuarto de hora|un quarto d'ora
+十分鐘|ten minutes|diez minutos|dieci minuti
+兩個小時|two hours|dos horas|due ore
+三天|three days|tres días|tre giorni
+一個星期|one week|una semana|una settimana
+兩個月|two months|dos meses|due mesi
+十年|ten years|diez años|dieci anni
+一百年|one hundred years|cien años|cento anni
+一點鐘|one o'clock|la una|l'una
+兩點|two o'clock|las dos|le due
+三點半|half past three|las tres y media|le tre e mezza
+中午十二點|twelve noon|las doce del mediodía|mezzogiorno
+晚上八點|eight in the evening|las ocho de la noche|le otto di sera
+早上七點|seven in the morning|las siete de la mañana|le sette di mattina
+零度|zero degrees|cero grados|zero gradi
+三十度|thirty degrees|treinta grados|trenta gradi
+一公斤|one kilogram|un kilo|un chilo
+一公升|one liter|un litro|un litro
+一百公尺|one hundred meters|cien metros|cento metri
+十公里|ten kilometers|diez kilómetros|dieci chilometri
+一塊錢|one dollar|un dólar|un dollaro
+十塊錢|ten dollars|diez dólares|dieci dollari
+一百元|one hundred dollars|cien dólares|cento dollari
+一歐元|one euro|un euro|un euro
+五十歐元|fifty euros|cincuenta euros|cinquanta euro
+一半價錢|half price|mitad de precio|metà prezzo
+打八折|20% off|20% de descuento|sconto del 20%
+免費贈品|free gift|regalo gratuito|omaggio
+買一送一|buy one get one free|dos por uno|prendi due paghi uno
+營業中|open|abierto|aperto
+休息中|closed|cerrado|chiuso
+請勿吸菸|no smoking|prohibido fumar|vietato fumare
+禁止停車|no parking|prohibido estacionar|divieto di sosta
+小心地滑|caution wet floor|cuidado, suelo mojado|attenzione pavimento bagnato
+推|push|empujar|spingere
+拉門|pull|tirar|tirare
+入口處|entrance|entrada|ingresso
+出口處|way out|salida|uscita
+廁所在這裡|restrooms here|baños aquí|bagni qui
+售票處|ticket office|taquilla|biglietteria
+服務台|information desk|mostrador de información|banco informazioni
+失物招領|lost and found|objetos perdidos|oggetti smarriti
+行李寄放|luggage storage|consigna de equipaje|deposito bagagli
+候車室|waiting room|sala de espera|sala d'attesa
+吸菸區|smoking area|zona de fumadores|area fumatori
+兒童區|children's area|zona infantil|area bambini
+停車費|parking fee|tarifa de estacionamiento|tariffa di parcheggio
+門票價格|admission price|precio de la entrada|prezzo del biglietto
+營業時間|opening hours|horario de apertura|orario di apertura
+公休日|closing day|día de cierre|giorno di chiusura
+今日特餐|today's special|plato del día|piatto del giorno
+套餐|set meal|menú del día|menù fisso
+自助餐|buffet|bufé|buffet
+飲料單|drinks menu|carta de bebidas|lista delle bevande
+酒單|wine list|carta de vinos|carta dei vini
+甜點單|dessert menu|carta de postres|menù dei dolci
+兒童餐|kids' meal|menú infantil|menù bambini
+素食餐|vegetarian meal|comida vegetariana|pasto vegetariano
+大份|large portion|ración grande|porzione grande
+小份|small portion|ración pequeña|porzione piccola
+中杯|medium cup|vaso mediano|bicchiere medio
+大杯|large cup|vaso grande|bicchiere grande
+少冰|less ice|poco hielo|poco ghiaccio
+去冰|no ice|sin hielo|senza ghiaccio
+無糖|sugar-free|sin azúcar|senza zucchero
+半糖|half sugar|mitad de azúcar|metà zucchero
+加辣|extra spicy|más picante|più piccante
+不要辣|not spicy|sin picante|non piccante
+內用|for here|para tomar aquí|da consumare qui
+帶走|to go|para llevar|da portare via
+結帳處|checkout|caja|cassa
+收據單|receipt slip|ticket|scontrino
+找零|change|cambio/vuelto|resto
+刷卡機|card reader|datáfono/terminal|POS/terminale
+密碼鎖|combination lock|candado de combinación|lucchetto a combinazione
+保險箱|safe|caja fuerte|cassaforte
+貴重物品|valuables|objetos de valor|oggetti di valore
+個人物品|personal belongings|pertenencias|effetti personali
+備用鑰匙|spare key|llave de repuesto|chiave di riserva
+緊急電話|emergency number|número de emergencia|numero di emergenza
+醫療保險|health insurance|seguro médico|assicurazione sanitaria
+旅遊保險|travel insurance|seguro de viaje|assicurazione di viaggio
+入境卡|arrival card|tarjeta de llegada|carta di sbarco
+免稅店|duty-free shop|tienda libre de impuestos|duty free
+轉機|connecting flight|conexión/escala|coincidenza/scalo
+延誤|delay|retraso|ritardo
+取消（航班）|cancellation|cancelación|cancellazione
+登機|boarding|embarque|imbarco
+靠窗座位|window seat|asiento de ventanilla|posto al finestrino
+走道座位|aisle seat|asiento de pasillo|posto lato corridoio
+經濟艙|economy class|clase turista|classe economica
+商務艙|business class|clase business|classe business
+頭等艙|first class|primera clase|prima classe
+手提行李|carry-on luggage|equipaje de mano|bagaglio a mano
+托運行李|checked luggage|equipaje facturado|bagaglio da stiva
+超重|overweight|sobrepeso/exceso de peso|sovrappeso
+安檢|security check|control de seguridad|controllo di sicurezza

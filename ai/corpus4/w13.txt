@@ -1,0 +1,198 @@
+# 日常用語、常見名詞
+好消息|good news|buenas noticias|buone notizie
+壞消息|bad news|malas noticias|brutte notizie
+驚喜|surprise|sorpresa|sorpresa
+禮物盒|gift box|caja de regalo|scatola regalo
+蛋糕蠟燭|birthday candle|vela de cumpleaños|candelina
+派對帽|party hat|gorro de fiesta|cappellino da festa
+願望|wish|deseo|desiderio
+目的地|destination|destino|destinazione
+起點|starting point|punto de partida|punto di partenza
+終點|finish line/end point|meta/punto final|traguardo/punto d'arrivo
+路線|route|ruta|percorso
+捷徑|shortcut|atajo|scorciatoia
+樓上|upstairs|arriba/piso de arriba|al piano di sopra
+樓下|downstairs|abajo/piso de abajo|al piano di sotto
+隔壁|next door|al lado/la casa de al lado|accanto/porta accanto
+角落邊|corner|rincón|angolo
+對岸|opposite shore|orilla opuesta|riva opposta
+附近地區|vicinity|alrededores|dintorni
+邊緣|edge|borde|bordo/margine
+中心|center|centro|centro
+表面|surface|superficie|superficie
+底部|bottom|fondo|fondo
+頂端|top|cima/parte superior|cima/parte superiore
+內部|interior|interior|interno
+外部|exterior|exterior|esterno
+前方|ahead|adelante|avanti
+後方|behind|atrás|dietro
+一部分|part|parte|parte
+整體|whole|conjunto/todo|insieme/tutto
+一對|pair|par|paio/coppia
+一組|set/group|conjunto/grupo|set/gruppo
+一堆|pile|montón|mucchio
+一片|piece/slice|trozo/rebanada|pezzo/fetta
+一點|a little|un poco|un po'
+一些人|some people|algunas personas|alcune persone
+很多人|many people|mucha gente|molte persone
+少數|minority|minoría|minoranza
+多數|majority|mayoría|maggioranza
+男性|male|hombre/varón|maschio/uomo
+女性|female|mujer|femmina/donna
+名字|name|nombre|nome
+姓|surname/last name|apellido|cognome
+暱稱|nickname|apodo|soprannome
+年齡|age|edad|età
+性別|gender|género|genere
+國籍|nationality|nacionalidad|nazionalità
+職稱|job title|cargo|qualifica
+興趣（嗜好）|hobby|afición|hobby
+電話號碼|phone number|número de teléfono|numero di telefono
+電子信箱|email address|correo electrónico|indirizzo email
+郵遞區號|zip code/postal code|código postal|codice postale
+樓號|building number|número de edificio|numero civico
+門牌|house number|número de casa|numero civico
+簡訊|text message|mensaje de texto/SMS|SMS/messaggio
+語音訊息|voice message|mensaje de voz|messaggio vocale
+視訊|video call|videollamada|videochiamata
+來電|incoming call|llamada entrante|chiamata in arrivo
+未接來電|missed call|llamada perdida|chiamata persa
+訊號|signal|señal|segnale
+電量|battery level|batería|livello della batteria
+截圖|screenshot|captura de pantalla|screenshot
+自拍|selfie|selfi|selfie
+追蹤者|follower|seguidor|follower
+按讚|like|me gusta|mi piace
+留言|comment|comentario|commento
+貼文|post|publicación|post
+標籤（網路）|hashtag|etiqueta/hashtag|hashtag
+社群媒體|social media|redes sociales|social media/social network
+直播|livestream|transmisión en vivo|diretta streaming
+頻道|channel|canal|canale
+訂閱|subscription|suscripción|abbonamento/iscrizione
+廣告詞|tagline|eslogan|slogan
+# 天氣與季節活動
+雪人|snowman|muñeco de nieve|pupazzo di neve
+雪球|snowball|bola de nieve|palla di neve
+冰柱|icicle|carámbano|ghiacciolo
+落葉|fallen leaves|hojas caídas|foglie cadute
+春雨|spring rain|lluvia de primavera|pioggia primaverile
+梅雨|rainy season|temporada de lluvias|stagione delle piogge
+熱浪|heat wave|ola de calor|ondata di caldo
+寒流|cold snap|ola de frío|ondata di freddo
+中暑|heatstroke|golpe de calor|colpo di calore
+曬傷|sunburn|quemadura solar|scottatura
+感冒藥|cold medicine|medicina para el resfriado|medicina per il raffreddore
+口香糖|chewing gum|chicle|gomma da masticare
+棒棒糖|lollipop|piruleta/paleta|lecca-lecca
+棉花糖|cotton candy/marshmallow|algodón de azúcar/malvavisco|zucchero filato/marshmallow
+果凍|jelly|gelatina|gelatina
+鬆糕|muffin|magdalena/muffin|muffin
+司康|scone|bollo|scone
+馬芬|muffin|muffin|muffin
+法國麵包|baguette|baguette/barra de pan|baguette
+吐司麵包|sliced bread|pan de molde|pancarré/pane in cassetta
+黑麥麵包|rye bread|pan de centeno|pane di segale
+煎餅|crepe|crep/crepa|crêpe
+肉醬|meat sauce|salsa boloñesa|ragù
+千層麵|lasagna|lasaña|lasagne
+燉飯|risotto|risotto/arroz meloso|risotto
+義式餃子|ravioli|ravioles|ravioli
+火腿起司|ham and cheese|jamón y queso|prosciutto e formaggio
+西班牙海鮮飯|paella|paella|paella
+西班牙蛋餅|Spanish omelette|tortilla española|frittata spagnola
+塔可|taco|taco|taco
+墨西哥捲餅|burrito|burrito|burrito
+酪梨醬|guacamole|guacamole|guacamole
+莎莎醬|salsa|salsa|salsa
+油條|fried dough stick|churro chino|bastoncino di pasta fritta
+吉拿棒|churro|churro|churro
+小籠包|soup dumpling|bollito de sopa|raviolo al vapore
+牛肉麵|beef noodle soup|sopa de fideos con carne|zuppa di noodles al manzo
+珍珠奶茶|bubble tea|té de burbujas|bubble tea
+滷肉飯|braised pork rice|arroz con cerdo estofado|riso con maiale brasato
+臭豆腐|stinky tofu|tofu apestoso|tofu fermentato
+鳳梨酥|pineapple cake|pastel de piña|dolcetto all'ananas
+# 情感表達
+想念|to miss|extrañar/echar de menos|mancare
+在乎|to care about|importar/preocuparse por|tenere a/importare
+珍惜|to cherish|valorar/apreciar|apprezzare/avere a cuore
+後悔|to regret|arrepentirse|pentirsi
+羨慕|to envy/to admire|envidiar|invidiare
+崇拜|to worship/to idolize|adorar/idolatrar|adorare/idolatrare
+欣賞|to appreciate/to admire|apreciar/admirar|apprezzare/ammirare
+期待|to look forward to|esperar con ganas|non vedere l'ora di/aspettarsi
+失望（動詞）|to be disappointed|decepcionarse|rimanere deluso
+放棄|to give up|rendirse/abandonar|arrendersi/rinunciare
+堅持|to persist/to insist|persistir/insistir|insistere/perseverare
+忍受|to endure|soportar/aguantar|sopportare
+忍耐|to be patient|tener paciencia|avere pazienza
+發脾氣|to lose one's temper|perder los estribos|perdere la pazienza/arrabbiarsi
+吵架（動詞）|to argue/to quarrel|pelearse/discutir|litigare
+和好（動詞）|to make up|reconciliarse|fare pace
+分手|to break up|romper/terminar|lasciarsi
+暗戀|to have a crush on|estar enamorado en secreto de|avere una cotta per
+告白|to confess one's love|declararse|dichiararsi
+追求|to pursue/to court|perseguir/cortejar|corteggiare/inseguire
+求婚|to propose|pedir matrimonio|chiedere la mano/fare la proposta
+約|to make an appointment|quedar/citarse|darsi appuntamento
+邀約|to ask out|invitar a salir|invitare a uscire
+安慰|to comfort|consolar|consolare
+鼓舞|to inspire|inspirar|ispirare
+感動|to move/to touch|conmover/emocionar|commuovere
+嚇|to scare|asustar|spaventare
+嚇到|to be startled|asustarse|spaventarsi
+害羞（動詞）|to feel shy|darle vergüenza|vergognarsi
+臉紅|to blush|sonrojarse|arrossire
+發抖|to tremble/to shiver|temblar|tremare
+# 更多日常動詞
+化妝|to put on makeup|maquillarse|truccarsi
+刮鬍子|to shave|afeitarse|radersi/farsi la barba
+梳頭|to comb one's hair|peinarse|pettinarsi
+剪頭髮|to get a haircut|cortarse el pelo|tagliarsi i capelli
+染髮|to dye one's hair|teñirse el pelo|tingersi i capelli
+換衣服|to change clothes|cambiarse de ropa|cambiarsi
+穿鞋|to put on shoes|ponerse los zapatos|mettersi le scarpe
+綁鞋帶|to tie shoelaces|atarse los cordones|allacciarsi le scarpe
+戴|to wear (accessories)|llevar/ponerse|portare/mettersi
+鋪床|to make the bed|hacer la cama|rifare il letto
+關燈|to turn off the light|apagar la luz|spegnere la luce
+開燈|to turn on the light|encender la luz|accendere la luce
+鎖門|to lock the door|cerrar con llave|chiudere a chiave
+倒垃圾|to take out the trash|sacar la basura|portare fuori la spazzatura
+買菜|to buy groceries|hacer la compra|fare la spesa
+做早餐|to make breakfast|preparar el desayuno|preparare la colazione
+吃早餐|to have breakfast|desayunar|fare colazione
+吃午餐|to have lunch|almorzar/comer|pranzare
+吃晚餐|to have dinner|cenar|cenare
+喝咖啡|to drink coffee|tomar café|bere un caffè
+泡茶|to make tea|preparar té|fare il tè
+煮飯|to cook rice|cocinar arroz|cuocere il riso
+叫外送|to order delivery|pedir a domicilio|ordinare a domicilio
+訂餐廳|to book a restaurant|reservar un restaurante|prenotare un ristorante
+寫信|to write a letter|escribir una carta|scrivere una lettera
+看書|to read a book|leer un libro|leggere un libro
+看報紙|to read the newspaper|leer el periódico|leggere il giornale
+看電視|to watch TV|ver la televisión|guardare la televisione
+滑手機|to scroll on one's phone|mirar el móvil|scorrere il telefono
+傳訊息|to send a message|enviar un mensaje|mandare un messaggio
+打遊戲|to play video games|jugar videojuegos|giocare ai videogiochi
+寫作業|to do homework|hacer los deberes|fare i compiti
+上課|to attend class|tener clase/asistir a clase|andare a lezione
+下課（動詞）|to finish class|terminar la clase|finire la lezione
+上台|to go on stage|subir al escenario|salire sul palco
+發言|to speak (in public)|tomar la palabra|prendere la parola
+舉例|to give an example|poner un ejemplo|fare un esempio
+說明|to explain/to illustrate|explicar|spiegare/illustrare
+證明（動詞）|to prove|demostrar/probar|dimostrare/provare
+同情（動詞）|to sympathize|compadecer|compatire
+信任（動詞）|to trust|confiar|fidarsi
+尊重（動詞）|to respect|respetar|rispettare
+忽略|to ignore|ignorar|ignorare
+關心|to care for|preocuparse por|preoccuparsi per/interessarsi
+體諒|to be understanding|comprender/ser comprensivo|essere comprensivo
+原諒（請求）|to excuse|disculpar|scusare
+等待|to await|aguardar/esperar|attendere
+迷|to be crazy about|estar loco por|andare pazzo per
+上癮|to be addicted|ser adicto|essere dipendente
+戒|to quit (a habit)|dejar|smettere

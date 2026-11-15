@@ -68,7 +68,7 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
         // 這一版起預設改用官方原版的 Gemma 4（只改一次；之後使用者自己選的照舊）
         if !UserDefaults.standard.bool(forKey: "ninesun.officialGemmaV1") {
             UserDefaults.standard.set(true, forKey: "ninesun.officialGemmaV1")
-            selectedID = Self.models[0].id
+            if isReady(Self.models[0]) || !Self.models.contains(where: { isReady($0) }) { selectedID = Self.models[0].id }
         }
         for m in Self.models { states[m.id] = isReady(m) ? .ready : .absent }
         // 拿掉的舊模型還留在手機裡：刪掉，空出空間
@@ -96,9 +96,10 @@ final class ModelStore: NSObject, ObservableObject, URLSessionDownloadDelegate {
     var selected: Model { Self.models.first { $0.id == selectedID } ?? Self.models[0] }
 
     /// 要用的模型：選的那個下載好了就用它，不然用任何一個下載好的
+    /// 只用設定頁選的那一個（開關顯示的就是它）：選的還沒下載好就不用大腦，不偷偷改用別的模型
+    /// （使用者截圖：新的預設模型還沒下載、設定頁顯示「已關閉」，App 卻在用舊的 Mahou 回答）
     var readyModel: Model? {
-        if states[selected.id] == .ready { return selected }
-        return Self.models.first { states[$0.id] == .ready }
+        states[selected.id] == .ready ? selected : nil
     }
 
     /// 手機剩下的空間夠不夠（多留 500 MB）

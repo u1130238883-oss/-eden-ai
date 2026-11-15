@@ -1,0 +1,340 @@
+# 動詞
+是|to be|ser/estar|essere
+有|to have|tener/haber|avere
+做|to do/to make|hacer|fare
+去|to go|ir|andare
+來|to come|venir|venire
+回來|to come back|volver/regresar|tornare
+離開|to leave|irse/salir|partire/andarsene
+到達|to arrive|llegar|arrivare
+進來|to come in|entrar|entrare
+出去|to go out|salir|uscire
+走|to walk|caminar/andar|camminare
+跑|to run|correr|correre
+跳|to jump|saltar|saltare
+爬|to climb|subir/escalar|arrampicarsi/salire
+游泳|to swim|nadar|nuotare
+飛|to fly|volar|volare
+開車|to drive|conducir/manejar|guidare
+騎|to ride|montar|andare in/cavalcare
+坐|to sit|sentarse|sedersi
+站|to stand|estar de pie/pararse|stare in piedi
+躺|to lie down|acostarse/tumbarse|sdraiarsi
+睡覺|to sleep|dormir|dormire
+醒來|to wake up|despertarse|svegliarsi
+起床|to get up|levantarse|alzarsi
+休息|to rest|descansar|riposare
+吃|to eat|comer|mangiare
+喝|to drink|beber/tomar|bere
+煮|to cook|cocinar|cucinare
+烤|to bake/to roast|hornear/asar|cuocere al forno/arrostire
+切|to cut|cortar|tagliare
+洗|to wash|lavar|lavare
+洗澡|to take a shower/to bathe|ducharse/bañarse|fare la doccia/fare il bagno
+刷牙|to brush one's teeth|cepillarse los dientes|lavarsi i denti
+穿|to wear/to put on|llevar/ponerse|indossare/mettersi
+脫|to take off|quitarse|togliersi
+打掃|to clean|limpiar|pulire
+整理|to tidy up/to organize|ordenar|mettere in ordine
+看|to look/to see|mirar/ver|guardare/vedere
+看見|to see|ver|vedere
+聽|to listen|escuchar|ascoltare
+聽見|to hear|oír|sentire
+說|to say/to speak|decir/hablar|dire/parlare
+講話|to talk|hablar|parlare
+告訴|to tell|decir/contar|dire/raccontare
+問|to ask|preguntar|chiedere/domandare
+回答|to answer|responder/contestar|rispondere
+叫|to call/to shout|llamar/gritar|chiamare/gridare
+唱歌|to sing|cantar|cantare
+跳舞|to dance|bailar|ballare
+笑|to laugh/to smile|reír/sonreír|ridere/sorridere
+哭|to cry|llorar|piangere
+讀|to read|leer|leggere
+寫|to write|escribir|scrivere
+畫畫|to draw/to paint|dibujar/pintar|disegnare/dipingere
+學習|to learn/to study|aprender/estudiar|imparare/studiare
+教|to teach|enseñar|insegnare
+知道|to know|saber/conocer|sapere/conoscere
+認識|to know/to meet|conocer|conoscere
+了解|to understand|entender/comprender|capire
+想|to think/to want|pensar/querer|pensare/volere
+記得|to remember|recordar|ricordare
+忘記|to forget|olvidar|dimenticare
+相信|to believe|creer|credere
+希望|to hope|esperar|sperare
+夢想|to dream|soñar|sognare
+喜歡|to like|gustar|piacere
+愛|to love|amar/querer|amare
+討厭|to hate|odiar|odiare
+想要|to want|querer|volere
+需要|to need|necesitar|avere bisogno di
+可以|can/may|poder|potere
+必須|must/to have to|deber/tener que|dovere
+試|to try|intentar/probar|provare
+開始|to start/to begin|empezar/comenzar|cominciare/iniziare
+結束|to finish/to end|terminar/acabar|finire
+停止|to stop|parar/detener|fermare/smettere
+繼續|to continue|continuar/seguir|continuare
+等|to wait|esperar|aspettare
+找|to look for|buscar|cercare
+找到|to find|encontrar|trovare
+失去|to lose|perder|perdere
+贏|to win|ganar|vincere
+輸|to lose|perder|perdere
+給|to give|dar|dare
+拿|to take|tomar/coger|prendere
+帶|to bring/to carry|llevar/traer|portare
+送|to send/to give|enviar/regalar|mandare/regalare
+收到|to receive|recibir|ricevere
+借|to borrow/to lend|pedir prestado/prestar|prendere in prestito/prestare
+還|to return/to give back|devolver|restituire
+買|to buy|comprar|comprare
+賣|to sell|vender|vendere
+付錢|to pay|pagar|pagare
+花|to spend|gastar|spendere
+存錢|to save money|ahorrar|risparmiare
+賺錢|to earn money|ganar dinero|guadagnare
+工作|to work|trabajar|lavorare
+幫忙|to help|ayudar|aiutare
+用|to use|usar|usare
+做菜|to cook|cocinar|cucinare
+修理|to repair/to fix|reparar/arreglar|riparare/aggiustare
+打開|to open|abrir|aprire
+關上|to close|cerrar|chiudere
+開|to turn on|encender/prender|accendere
+關|to turn off|apagar|spegnere
+放|to put|poner|mettere
+推|to push|empujar|spingere
+拉|to pull|tirar/jalar|tirare
+丟|to throw|tirar/lanzar|lanciare/buttare
+接|to catch|atrapar|prendere/afferrare
+抓|to grab|agarrar|afferrare
+打|to hit|golpear/pegar|colpire
+踢|to kick|patear|calciare
+玩|to play|jugar|giocare
+彈|to play (an instrument)|tocar|suonare
+拍照|to take a photo|tomar una foto/sacar una foto|fare una foto
+打電話|to call|llamar por teléfono|telefonare
+寄|to mail/to send|enviar/mandar|spedire
+上網|to go online|conectarse a internet|andare su internet
+下載|to download|descargar|scaricare
+上傳|to upload|subir|caricare
+搜尋|to search|buscar|cercare
+選|to choose|elegir/escoger|scegliere
+決定|to decide|decidir|decidere
+計畫|to plan|planear/planificar|pianificare/programmare
+準備|to prepare|preparar|preparare
+參加|to take part/to attend|participar/asistir|partecipare
+邀請|to invite|invitar|invitare
+拜訪|to visit|visitar|visitare
+旅行|to travel|viajar|viaggiare
+搬家|to move (house)|mudarse|traslocare
+住|to live|vivir|vivere/abitare
+出生|to be born|nacer|nascere
+死|to die|morir|morire
+長大|to grow up|crecer|crescere
+結婚|to get married|casarse|sposarsi
+離婚|to get divorced|divorciarse|divorziare
+約會|to date/to go on a date|salir con/tener una cita|uscire con/avere un appuntamento
+親吻|to kiss|besar|baciare
+擁抱|to hug|abrazar|abbracciare
+感覺|to feel|sentir|sentire
+生病|to get sick|enfermarse|ammalarsi
+痛|to hurt|doler|fare male
+擔心|to worry|preocuparse|preoccuparsi
+害怕|to be afraid|tener miedo|avere paura
+生氣|to get angry|enojarse/enfadarse|arrabbiarsi
+原諒|to forgive|perdonar|perdonare
+道歉|to apologize|disculparse/pedir perdón|scusarsi
+感謝|to thank|agradecer|ringraziare
+同意|to agree|estar de acuerdo|essere d'accordo
+拒絕|to refuse|rechazar|rifiutare
+允許|to allow|permitir|permettere
+禁止|to forbid|prohibir|vietare
+保護|to protect|proteger|proteggere
+救|to save/to rescue|salvar/rescatar|salvare
+殺|to kill|matar|uccidere
+偷|to steal|robar|rubare
+騙|to deceive/to lie to|engañar|ingannare
+說謊|to lie|mentir|mentire
+解釋|to explain|explicar|spiegare
+描述|to describe|describir|descrivere
+比較|to compare|comparar|confrontare/paragonare
+改變|to change|cambiar|cambiare
+增加|to increase|aumentar|aumentare
+減少|to decrease/to reduce|disminuir/reducir|diminuire/ridurre
+成長|to grow|crecer|crescere
+建造|to build|construir|costruire
+創造|to create|crear|creare
+發明|to invent|inventar|inventare
+發現|to discover|descubrir|scoprire
+研究|to research/to study|investigar|ricercare/studiare
+測試|to test|probar/poner a prueba|testare/provare
+檢查|to check|revisar/comprobar|controllare
+計算|to calculate|calcular|calcolare
+數|to count|contar|contare
+量|to measure|medir|misurare
+翻譯|to translate|traducir|tradurre
+練習|to practice|practicar|esercitarsi/fare pratica
+贏得|to earn/to gain|ganar|guadagnare/ottenere
+成功|to succeed|tener éxito|avere successo/riuscire
+失敗|to fail|fracasar/fallar|fallire
+發生|to happen|pasar/ocurrir|succedere/accadere
+出現|to appear|aparecer|apparire
+消失|to disappear|desaparecer|scomparire/sparire
+變成|to become|convertirse en/volverse|diventare
+留下|to stay|quedarse|restare/rimanere
+回家|to go home|volver a casa|tornare a casa
+上班|to go to work|ir al trabajo|andare al lavoro
+下班|to get off work|salir del trabajo|staccare dal lavoro
+上學|to go to school|ir a la escuela|andare a scuola
+排隊|to wait in line|hacer cola|fare la fila
+敲門|to knock on the door|llamar a la puerta|bussare alla porta
+迷路|to get lost|perderse|perdersi
+遲到|to be late|llegar tarde|arrivare in ritardo
+抽菸|to smoke|fumar|fumare
+跌倒|to fall down|caerse|cadere
+流汗|to sweat|sudar|sudare
+呼吸|to breathe|respirar|respirare
+咳|to cough|toser|tossire
+打噴嚏|to sneeze|estornudar|starnutire
+微笑|to smile|sonreír|sorridere
+點頭|to nod|asentir|annuire
+揮手|to wave|saludar con la mano|salutare con la mano
+指|to point|señalar|indicare
+聞|to smell|oler|annusare
+嘗|to taste|probar|assaggiare
+摸|to touch|tocar|toccare
+# 形容詞
+好|good|bueno|buono
+壞|bad|malo|cattivo
+大|big|grande|grande
+小|small|pequeño|piccolo
+高|tall/high|alto|alto
+矮|short|bajo|basso
+長|long|largo|lungo
+短|short|corto|corto
+胖|fat|gordo|grasso
+瘦|thin|delgado/flaco|magro
+重|heavy|pesado|pesante
+輕|light|ligero|leggero
+寬|wide|ancho|largo
+窄|narrow|estrecho|stretto
+厚|thick|grueso|spesso
+薄|thin|delgado/fino|sottile
+新|new|nuevo|nuovo
+舊|old|viejo|vecchio
+老|old|viejo/mayor|vecchio/anziano
+年輕|young|joven|giovane
+熱|hot|caliente/caluroso|caldo
+冷|cold|frío|freddo
+溫暖|warm|cálido/templado|caldo/tiepido
+涼爽|cool|fresco|fresco
+快|fast|rápido|veloce
+慢|slow|lento|lento
+早|early|temprano|presto
+晚|late|tarde|tardi
+近|near/close|cerca/cercano|vicino
+遠|far|lejos/lejano|lontano
+容易|easy|fácil|facile
+難|difficult/hard|difícil|difficile
+簡單|simple|sencillo/simple|semplice
+複雜|complicated|complicado|complicato
+便宜|cheap|barato|economico
+貴|expensive|caro|caro
+富有|rich|rico|ricco
+貧窮|poor|pobre|povero
+漂亮|beautiful/pretty|bonito/hermoso|bello/carino
+醜|ugly|feo|brutto
+帥|handsome|guapo|bello
+可愛|cute|lindo/mono|carino
+乾淨|clean|limpio|pulito
+髒|dirty|sucio|sporco
+安靜|quiet|tranquilo/silencioso|tranquillo/silenzioso
+吵|noisy|ruidoso|rumoroso
+忙|busy|ocupado|occupato/impegnato
+閒|free/idle|libre/desocupado|libero
+累|tired|cansado|stanco
+餓|hungry|hambriento|affamato
+渴|thirsty|sediento|assetato
+飽|full|lleno/satisfecho|sazio/pieno
+開心|happy|feliz/contento|felice/contento
+難過|sad|triste|triste
+生氣的|angry|enojado/enfadado|arrabbiato
+緊張|nervous|nervioso|nervoso
+害怕的|scared|asustado|spaventato
+無聊|bored/boring|aburrido|annoiato/noioso
+有趣|interesting/fun|interesante/divertido|interessante/divertente
+好笑|funny|gracioso|divertente/buffo
+奇怪|strange/weird|raro/extraño|strano
+正常|normal|normal|normale
+重要|important|importante|importante
+必要|necessary|necesario|necessario
+可能|possible|posible|possibile
+不可能|impossible|imposible|impossibile
+真的|true/real|verdadero/real|vero/reale
+假的|false/fake|falso|falso
+對|right/correct|correcto|giusto/corretto
+錯|wrong|incorrecto/equivocado|sbagliato
+滿|full|lleno|pieno
+空|empty|vacío|vuoto
+開著|open|abierto|aperto
+關著|closed|cerrado|chiuso
+乾|dry|seco|secco/asciutto
+濕|wet|mojado|bagnato
+軟|soft|blando/suave|morbido
+硬|hard|duro|duro
+甜|sweet|dulce|dolce
+酸|sour|ácido/agrio|acido/aspro
+苦|bitter|amargo|amaro
+辣|spicy|picante|piccante
+鹹|salty|salado|salato
+好吃|delicious|delicioso/rico|delizioso/buono
+新鮮|fresh|fresco|fresco
+健康的|healthy|sano/saludable|sano
+生病的|sick/ill|enfermo|malato
+強壯|strong|fuerte|forte
+虛弱|weak|débil|debole
+聰明|smart/clever|inteligente/listo|intelligente/bravo
+笨|stupid|tonto/estúpido|stupido/sciocco
+善良|kind|amable/bondadoso|gentile/buono
+友善|friendly|amable/simpático|amichevole/simpatico
+有禮貌|polite|educado/cortés|educato/cortese
+粗魯|rude|grosero/maleducado|maleducato/scortese
+勇敢|brave|valiente|coraggioso
+害羞|shy|tímido|timido
+懶惰|lazy|perezoso/flojo|pigro
+努力|hardworking|trabajador/esforzado|laborioso/diligente
+誠實|honest|honesto/sincero|onesto/sincero
+耐心|patient|paciente|paziente
+有名|famous|famoso|famoso
+安全的|safe|seguro|sicuro
+危險的|dangerous|peligroso|pericoloso
+免費|free|gratis/gratuito|gratis/gratuito
+完美|perfect|perfecto|perfetto
+特別|special|especial|speciale
+一般|ordinary/common|común/normal|comune/normale
+相同|same|igual/mismo|uguale/stesso
+不同|different|diferente/distinto|diverso/differente
+第一|first|primero|primo
+最後|last|último|ultimo
+下一個|next|siguiente/próximo|prossimo/successivo
+上一個|previous|anterior|precedente
+全部|all|todo|tutto
+一些|some|algunos|alcuni/qualche
+很多|many/a lot|muchos/mucho|molti/molto
+很少|few/little|pocos/poco|pochi/poco
+每|every|cada|ogni
+其他|other|otro|altro
+明亮|bright|brillante/luminoso|luminoso
+黑暗|dark|oscuro|buio/scuro
+大聲|loud|alto/fuerte|forte/ad alta voce
+自由的|free|libre|libero
+私人|private|privado|privato
+公共|public|público|pubblico
+國際|international|internacional|internazionale
+當地|local|local|locale
+現代|modern|moderno|moderno
+古老|ancient|antiguo|antico
+外國|foreign|extranjero|straniero

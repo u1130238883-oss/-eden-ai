@@ -1,0 +1,193 @@
+# 補充：更多動物、植物、食物
+麋鹿|elk/moose|alce|alce
+羚羊|antelope|antílope|antilope
+野牛|bison|bisonte|bisonte
+海象|walrus|morsa|tricheco
+樹懶|sloth|perezoso|bradipo
+食蟻獸|anteater|oso hormiguero|formichiere
+犰狳|armadillo|armadillo|armadillo
+鼴鼠|mole|topo|talpa
+獾|badger|tejón|tasso
+臭鼬|skunk|mofeta/zorrillo|moffetta
+豪豬|porcupine|puercoespín|porcospino
+駝鳥|ostrich|avestruz|struzzo
+禿鷹|vulture|buitre|avvoltoio
+獵鷹|falcon|halcón|falco
+鶴|crane|grulla|gru
+鸛|stork|cigüeña|cicogna
+鵜鶘|pelican|pelícano|pellicano
+翠鳥|kingfisher|martín pescador|martin pescatore
+金絲雀|canary|canario|canarino
+蟒蛇|python|pitón|pitone
+眼鏡蛇|cobra|cobra|cobra
+變色龍|chameleon|camaleón|camaleonte
+蝌蚪|tadpole|renacuajo|girino
+鰻魚|eel|anguila|anguilla
+海馬|seahorse|caballito de mar|cavalluccio marino
+魟魚|stingray|raya|razza
+蝦米|dried shrimp|camarón seco|gamberetto secco
+蘋果樹|apple tree|manzano|melo
+橘子樹|orange tree|naranjo|arancio
+櫻桃樹|cherry tree|cerezo|ciliegio
+橄欖樹|olive tree|olivo|olivo
+柳樹|willow|sauce|salice
+樺樹|birch|abedul|betulla
+杉樹|fir|abeto|abete
+藤蔓|vine|enredadera/vid|rampicante/vite
+蒲公英|dandelion|diente de león|tarassaco/soffione
+三葉草|clover|trébol|trifoglio
+牽牛花|morning glory|campanilla|campanella
+茉莉花|jasmine|jazmín|gelsomino
+牡丹|peony|peonía|peonia
+梅花|plum blossom|flor de ciruelo|fiore di pruno
+桂花|osmanthus|osmanto|osmanto
+芝麻|sesame|sésamo|sesamo
+葵花籽|sunflower seeds|pipas de girasol|semi di girasole
+腰果|cashew|anacardo|anacardo
+開心果|pistachio|pistacho|pistacchio
+榛果|hazelnut|avellana|nocciola
+栗子|chestnut|castaña|castagna
+椰奶|coconut milk|leche de coco|latte di cocco
+楓糖漿|maple syrup|jarabe de arce|sciroppo d'acero
+麥芽|malt|malta|malto
+酵母|yeast|levadura|lievito
+泡打粉|baking powder|polvo de hornear|lievito in polvere
+澱粉|starch|almidón|amido
+奶粉|powdered milk|leche en polvo|latte in polvere
+煉乳|condensed milk|leche condensada|latte condensato
+豬排|pork chop|chuleta de cerdo|braciola di maiale
+雞翅|chicken wing|ala de pollo|ala di pollo
+雞腿|chicken leg|muslo de pollo|coscia di pollo
+雞胸肉|chicken breast|pechuga de pollo|petto di pollo
+肋排|ribs|costillas|costine
+絞肉|ground meat|carne picada|carne macinata
+臘腸|cured sausage|embutido|salame
+燻鮭魚|smoked salmon|salmón ahumado|salmone affumicato
+魚子醬|caviar|caviar|caviale
+松露|truffle|trufa|tartufo
+# 補充：更多日常物品
+指甲剪|nail clipper|cortaúñas|tagliaunghie
+棉花棒|cotton swab|bastoncillo|cotton fioc
+面紙|tissue|pañuelo de papel|fazzoletto di carta
+濕紙巾|wet wipe|toallita húmeda|salvietta umidificata
+牙線|dental floss|hilo dental|filo interdentale
+漱口水|mouthwash|enjuague bucal|collutorio
+沐浴乳|body wash|gel de ducha|bagnoschiuma
+潤髮乳|conditioner|acondicionador|balsamo
+乳液|lotion|loción|lozione/crema
+護唇膏|lip balm|bálsamo labial|burrocacao
+髮夾|hair clip|horquilla|fermaglio per capelli
+髮圈|hair tie|goma del pelo|elastico per capelli
+帽T|hoodie|sudadera con capucha|felpa con cappuccio
+背心|vest/tank top|chaleco/camiseta sin mangas|gilet/canottiera
+吊帶褲|overalls|peto|salopette
+高跟鞋|high heels|tacones|tacchi alti
+皮鞋|leather shoes|zapatos de cuero|scarpe di pelle
+雨鞋|rain boots|botas de lluvia|stivali da pioggia
+襪子一雙|a pair of socks|un par de calcetines|un paio di calzini
+鞋帶|shoelace|cordón|laccio
+領子|collar|cuello|colletto
+袖子|sleeve|manga|manica
+衣領|collar|cuello|colletto
+布料|fabric|tela|tessuto
+花紋|pattern|estampado|motivo/fantasia
+條紋|stripes|rayas|righe
+格子|checks/plaid|cuadros|quadri
+圓點|polka dots|lunares|pois
+# 補充：常見形容與狀態詞
+緊急的|urgent|urgente|urgente
+必要的|essential|esencial|essenziale
+可選的|optional|opcional|facoltativo
+共同|common/shared|común|comune
+個人的|personal|personal|personale
+全國|national|nacional|nazionale
+全球|global|global/mundial|globale/mondiale
+地方性|regional|regional|regionale
+都市的|urban|urbano|urbano
+鄉村的|rural|rural|rurale
+海邊的|seaside|costero/junto al mar|di mare/marittimo
+山上的|mountainous|montañoso|montano
+熱帶|tropical|tropical|tropicale
+寒帶|frigid zone|zona glacial|zona polare
+多元|diverse|diverso|vario/diverso
+單一|single|único|unico/singolo
+雙人|double/for two|doble/para dos|doppio/per due
+多人|multiplayer/for many people|multijugador|multigiocatore
+私密|intimate|íntimo|intimo
+公開|public/open|público/abierto|pubblico/aperto
+秘密的|secret|secreto|segreto
+官方|official|oficial|ufficiale
+非正式|informal|informal|informale
+正確地|correctly|correctamente|correttamente
+清楚地|clearly|claramente|chiaramente
+小心地|carefully|cuidadosamente/con cuidado|attentamente/con attenzione
+安靜地|quietly|en silencio|in silenzio
+大聲地|loudly|en voz alta|ad alta voce
+快速地|quickly|rápidamente|velocemente
+認真地|seriously|en serio|seriamente
+輕輕地|gently|suavemente|delicatamente
+努力地|hard|con esfuerzo|con impegno
+開心地|happily|felizmente|felicemente
+難過地|sadly|tristemente|tristemente
+很好地|well|bien|bene
+不好地|badly|mal|male
+一樣地|equally|igualmente|ugualmente
+單獨|separately|por separado|separatamente
+同時|at the same time|al mismo tiempo|allo stesso tempo
+立刻|at once|de inmediato|immediatamente
+暫時地|temporarily|temporalmente|temporaneamente
+永久|permanently|permanentemente|permanentemente
+很久|for a long time|mucho tiempo|a lungo
+不久|soon/before long|pronto/dentro de poco|tra poco
+從前|once upon a time/formerly|érase una vez/antiguamente|c'era una volta/un tempo
+將來|in the future|en el futuro|in futuro
+目前|currently|actualmente|attualmente
+本來|originally|originalmente|originariamente
+原來|it turns out|resulta que|in realtà/a quanto pare
+居然|unexpectedly|inesperadamente|inaspettatamente
+果然|as expected|como se esperaba|come previsto
+難怪|no wonder|con razón|non c'è da stupirsi
+恐怕|I'm afraid|me temo|temo
+幸好|luckily|por suerte|per fortuna
+可惜|unfortunately|lamentablemente|purtroppo
+畢竟|after all|al fin y al cabo|dopotutto
+反正|anyway|de todos modos|comunque
+至少|at least|al menos|almeno
+最多|at most|como máximo|al massimo
+大約|approximately|aproximadamente|circa
+正好|exactly/just right|justo|proprio/esattamente
+剛好|just in time|justo a tiempo|giusto in tempo
+差一點|almost/nearly|casi|per poco
+越來越|more and more|cada vez más|sempre più
+不再|no longer|ya no|non più
+仍然|still|todavía|ancora
+曾經|once/ever|alguna vez|una volta/mai
+從來沒有|never ever|nunca jamás|mai e poi mai
+一般來說|generally speaking|en general|in generale
+換句話說|in other words|en otras palabras|in altre parole
+順便|by the way|por cierto|a proposito
+另外|in addition|además|inoltre
+接著|next/then|a continuación|poi/dopodiché
+最初|at first|al principio|all'inizio
+起初|initially|inicialmente|inizialmente
+最終|eventually|al final|alla fine
+# 補充：問候與禮貌用語
+早|morning|buenas|buongiorno
+嗨|hi|hola|ciao
+哈囉|hello|hola|ciao
+拜拜|bye-bye|chao|ciao ciao
+多謝|many thanks|muchas gracias|grazie mille
+感恩|grateful/thankful|agradecido|grato
+辛苦了|thanks for your hard work|gracias por tu esfuerzo|grazie per il lavoro
+請問|excuse me (may I ask)|disculpe|scusi
+麻煩你|could you please|¿podrías…?|potresti per favore
+借過|excuse me (let me pass)|con permiso|permesso
+小心點|be careful|ten cuidado|stai attento
+保重|take care|cuídate|abbi cura di te
+晚點見|see you later|hasta luego|a dopo
+明天見|see you tomorrow|hasta mañana|a domani
+週末愉快|have a nice weekend|buen fin de semana|buon fine settimana
+新婚快樂|happy wedding|felicidades por la boda|auguri per il matrimonio
+早日康復|get well soon|que te mejores|guarisci presto
+節哀順變|my condolences|mi más sentido pésame|sentite condoglianze
+祝福你|bless you/best wishes|te deseo lo mejor|ti auguro il meglio

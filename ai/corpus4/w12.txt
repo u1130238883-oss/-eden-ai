@@ -1,0 +1,174 @@
+# 廚房與家用品（更多）
+砧板|cutting board|tabla de cortar|tagliere
+開罐器|can opener|abrelatas|apriscatole
+開瓶器|bottle opener|abrebotellas|apribottiglie
+濾網|strainer|colador|colino
+湯鍋|soup pot|olla|pentola
+蒸籠|steamer|vaporera|vaporiera
+烤盤|baking tray|bandeja de horno|teglia
+保鮮膜|plastic wrap|film transparente|pellicola trasparente
+鋁箔紙|aluminum foil|papel de aluminio|carta stagnola
+餐盒|food container|recipiente|contenitore
+托盤|tray|bandeja|vassoio
+桌巾|tablecloth|mantel|tovaglia
+圍裙|apron|delantal|grembiule
+洗碗精|dish soap|lavavajillas|detersivo per piatti
+海綿|sponge|esponja|spugna
+抹布|cloth/rag|trapo/paño|straccio/strofinaccio
+水桶|bucket|cubo/balde|secchio
+拖把|mop|fregona/trapeador|mocio
+洗衣精|laundry detergent|detergente para ropa|detersivo per bucato
+衣架|hanger|percha/gancho|gruccia/stampella
+曬衣架|drying rack|tendedero|stendibiancheria
+熨衣板|ironing board|tabla de planchar|asse da stiro
+鞋櫃|shoe cabinet|zapatero|scarpiera
+置物架|shelf|estante|scaffale/mensola
+掛鉤|hook|gancho|gancio
+相框|picture frame|marco de fotos|cornice
+時鐘（牆上）|wall clock|reloj de pared|orologio da parete
+桌燈|desk lamp|lámpara de escritorio|lampada da scrivania
+床頭櫃|nightstand|mesita de noche|comodino
+床墊|mattress|colchón|materasso
+蚊帳|mosquito net|mosquitero|zanzariera
+暖爐|heater|calentador/estufa|stufa/termosifone
+除濕機|dehumidifier|deshumidificador|deumidificatore
+空氣清淨機|air purifier|purificador de aire|purificatore d'aria
+滅火器|fire extinguisher|extintor|estintore
+急救箱|first aid kit|botiquín|cassetta del pronto soccorso
+工具箱|toolbox|caja de herramientas|cassetta degli attrezzi
+螺絲|screw|tornillo|vite
+膠帶|tape|cinta adhesiva|nastro adesivo
+電鑽|drill|taladro|trapano
+鋸子|saw|sierra|sega
+油漆|paint|pintura|vernice
+刷子|brush|cepillo/brocha|spazzola/pennello
+水管|water pipe/hose|tubería/manguera|tubo/canna
+水龍頭|faucet/tap|grifo|rubinetto
+馬桶|toilet|inodoro/váter|water/gabinetto
+浴缸|bathtub|bañera/tina|vasca da bagno
+淋浴|shower|ducha|doccia
+洗手台|sink/washbasin|lavabo/lavamanos|lavandino
+排水孔|drain|desagüe|scarico
+# 交通工具零件與道路
+車門|car door|puerta del coche|portiera
+車窗|car window|ventanilla|finestrino
+後照鏡|rearview mirror|espejo retrovisor|specchietto retrovisore
+雨刷|windshield wiper|limpiaparabrisas|tergicristallo
+車燈|headlight|faro|faro
+喇叭（汽車）|horn|claxon/bocina|clacson
+油箱|gas tank|tanque de gasolina|serbatoio
+車牌|license plate|matrícula/placa|targa
+停車位|parking space|plaza de aparcamiento|posto auto
+收費站|toll booth|peaje|casello
+圓環|roundabout|rotonda|rotonda/rotatoria
+高架橋|overpass|paso elevado|cavalcavia
+車道|lane|carril|corsia
+彎道|curve|curva|curva
+路標|road sign|señal de tráfico|cartello stradale
+速限|speed limit|límite de velocidad|limite di velocità
+單行道|one-way street|calle de sentido único|senso unico
+死巷|dead end|callejón sin salida|vicolo cieco
+巷子|alley|callejón|vicolo
+# 學校與兒童
+幼稚園|kindergarten|jardín de infancia/kínder|scuola materna/asilo
+小學|elementary school|escuela primaria|scuola elementare
+國中|junior high school|escuela secundaria|scuola media
+高中|high school|bachillerato/preparatoria|liceo/scuola superiore
+大學生|college student|estudiante universitario|studente universitario
+研究生|graduate student|estudiante de posgrado|studente di specializzazione
+班級|class|clase|classe
+班長|class leader|delegado de clase|capoclasse
+同桌|deskmate|compañero de pupitre|compagno di banco
+鉛筆盒|pencil case|estuche|astuccio
+書包|school bag|mochila escolar|cartella
+白板|whiteboard|pizarra blanca|lavagna bianca
+粉筆|chalk|tiza|gesso
+地球儀|globe|globo terráqueo|mappamondo
+制服（學校）|school uniform|uniforme escolar|divisa scolastica
+午休|lunch break|descanso de mediodía|pausa pranzo
+下課|break between classes|recreo|ricreazione/intervallo
+放學|end of school|salida de clase|fine delle lezioni
+校車|school bus|autobús escolar|scuolabus
+遊樂場|playground|parque infantil|parco giochi
+溜滑梯|slide|tobogán|scivolo
+盪鞦韆|swing|columpio|altalena
+沙坑|sandbox|cajón de arena|sabbiera
+蹺蹺板|seesaw|balancín|altalena a bilico
+積木|building blocks|bloques de construcción|mattoncini
+蠟筆|crayon|crayón|pastello a cera
+貼紙|sticker|pegatina|adesivo
+故事書|storybook|libro de cuentos|libro di fiabe
+繪本|picture book|libro ilustrado|libro illustrato
+# 地理與地形
+大陸|continent|continente|continente
+半島|peninsula|península|penisola
+海灣|bay|bahía|baia/golfo
+海峽|strait|estrecho|stretto
+赤道|equator|ecuador|equatore
+北極|North Pole|Polo Norte|Polo Nord
+南極|South Pole/Antarctica|Polo Sur/Antártida|Polo Sud/Antartide
+經度|longitude|longitud|longitudine
+緯度|latitude|latitud|latitudine
+地平線|horizon|horizonte|orizzonte
+海拔|altitude|altitud|altitudine
+省|province|provincia|provincia
+州|state|estado|stato
+縣|county|condado|contea
+鎮|town|pueblo|cittadina
+首府|capital city|capital|capoluogo
+鄉下|countryside|campo|campagna
+都市|metropolis|metrópoli|metropoli
+港市|port city|ciudad portuaria|città portuale
+運河|canal|canal|canale
+水壩|dam|presa|diga
+燈塔|lighthouse|faro|faro
+碼頭|pier/dock|muelle|molo
+沙灘椅|beach chair|silla de playa|sedia a sdraio
+陽傘|parasol|sombrilla|ombrellone
+防曬乳|sunscreen|protector solar|crema solare
+泳圈|swim ring|flotador|salvagente
+救生衣|life jacket|chaleco salvavidas|giubbotto di salvataggio
+救生員|lifeguard|socorrista/salvavidas|bagnino
+# 情境用詞
+緊急|emergency|emergencia|emergenza
+警報|alarm|alarma|allarme
+火災|fire|incendio|incendio
+停電|power outage|apagón|blackout
+塞住|blockage|atasco/obstrucción|ingorgo/blocco
+排隊（名詞）|line/queue|fila/cola|fila/coda
+人群|crowd|multitud|folla
+遊行|parade|desfile|sfilata/parata
+抗議|protest|protesta|protesta
+罷工|strike|huelga|sciopero
+演唱|singing|canto|canto
+掌聲|applause|aplausos|applausi
+歡呼|cheering|vítores|acclamazioni
+口號|slogan|eslogan|slogan
+標誌|sign/logo|señal/logotipo|segnale/logo
+海報|poster|cartel/póster|poster/manifesto
+傳單|flyer|folleto/volante|volantino
+公告|announcement|anuncio|annuncio/avviso
+通知|notice/notification|aviso/notificación|avviso/notifica
+邀請函|invitation|invitación|invito
+賀卡|greeting card|tarjeta de felicitación|biglietto di auguri
+明信片|postcard|postal|cartolina
+# 時間與頻率（更多）
+黎明|dawn|amanecer/alba|alba
+黃昏|dusk|atardecer/crepúsculo|crepuscolo
+傍晚|early evening|atardecer|tardo pomeriggio
+凌晨|early morning|madrugada|primo mattino
+整天|all day|todo el día|tutto il giorno
+整晚|all night|toda la noche|tutta la notte
+一會兒|a moment|un rato|un momento
+一輩子|a lifetime|toda la vida|tutta la vita
+年代|decade|década|decennio
+千禧年|millennium|milenio|millennio
+童年|childhood|infancia|infanzia
+青春|youth|juventud|gioventù/giovinezza
+中年|middle age|mediana edad|mezza età
+晚年|old age|vejez|vecchiaia
+年紀|age|edad|età
+週年|anniversary|aniversario|anniversario
+期限|deadline|fecha límite/plazo|scadenza
+時刻|moment|momento|momento
+時代|era|época/era|epoca/era

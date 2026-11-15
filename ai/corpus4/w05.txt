@@ -1,0 +1,178 @@
+# 國家、語言、國籍
+台灣|Taiwan|Taiwán|Taiwan
+中國|China|China|Cina
+日本|Japan|Japón|Giappone
+韓國|South Korea/Korea|Corea del Sur/Corea|Corea del Sud/Corea
+美國|United States|Estados Unidos|Stati Uniti
+加拿大|Canada|Canadá|Canada
+墨西哥|Mexico|México|Messico
+巴西|Brazil|Brasil|Brasile
+阿根廷|Argentina|Argentina|Argentina
+智利|Chile|Chile|Cile
+秘魯|Peru|Perú|Perù
+哥倫比亞|Colombia|Colombia|Colombia
+古巴|Cuba|Cuba|Cuba
+英國|United Kingdom/UK|Reino Unido|Regno Unito
+法國|France|Francia|Francia
+德國|Germany|Alemania|Germania
+義大利|Italy|Italia|Italia
+西班牙|Spain|España|Spagna
+葡萄牙|Portugal|Portugal|Portogallo
+荷蘭|Netherlands|Países Bajos|Paesi Bassi
+比利時|Belgium|Bélgica|Belgio
+瑞士|Switzerland|Suiza|Svizzera
+奧地利|Austria|Austria|Austria
+希臘|Greece|Grecia|Grecia
+瑞典|Sweden|Suecia|Svezia
+挪威|Norway|Noruega|Norvegia
+丹麥|Denmark|Dinamarca|Danimarca
+芬蘭|Finland|Finlandia|Finlandia
+波蘭|Poland|Polonia|Polonia
+俄羅斯|Russia|Rusia|Russia
+烏克蘭|Ukraine|Ucrania|Ucraina
+土耳其|Turkey|Turquía|Turchia
+埃及|Egypt|Egipto|Egitto
+南非|South Africa|Sudáfrica|Sudafrica
+印度|India|India|India
+泰國|Thailand|Tailandia|Thailandia
+越南|Vietnam|Vietnam|Vietnam
+新加坡|Singapore|Singapur|Singapore
+馬來西亞|Malaysia|Malasia|Malesia
+印尼|Indonesia|Indonesia|Indonesia
+菲律賓|Philippines|Filipinas|Filippine
+澳洲|Australia|Australia|Australia
+紐西蘭|New Zealand|Nueva Zelanda|Nuova Zelanda
+愛爾蘭|Ireland|Irlanda|Irlanda
+以色列|Israel|Israel|Israele
+沙烏地阿拉伯|Saudi Arabia|Arabia Saudita|Arabia Saudita
+歐洲|Europe|Europa|Europa
+亞洲|Asia|Asia|Asia
+非洲|Africa|África|Africa
+美洲|America/the Americas|América|America
+台北|Taipei|Taipéi|Taipei
+東京|Tokyo|Tokio|Tokyo
+北京|Beijing|Pekín|Pechino
+香港|Hong Kong|Hong Kong|Hong Kong
+紐約|New York|Nueva York|New York
+倫敦|London|Londres|Londra
+巴黎|Paris|París|Parigi
+羅馬|Rome|Roma|Roma
+米蘭|Milan|Milán|Milano
+威尼斯|Venice|Venecia|Venezia
+佛羅倫斯|Florence|Florencia|Firenze
+拿坡里|Naples|Nápoles|Napoli
+馬德里|Madrid|Madrid|Madrid
+巴塞隆納|Barcelona|Barcelona|Barcellona
+柏林|Berlin|Berlín|Berlino
+莫斯科|Moscow|Moscú|Mosca
+雅典|Athens|Atenas|Atene
+里斯本|Lisbon|Lisboa|Lisbona
+中文|Chinese|chino|cinese
+英文|English|inglés|inglese
+西班牙文|Spanish|español|spagnolo
+義大利文|Italian|italiano|italiano
+法文|French|francés|francese
+德文|German|alemán|tedesco
+日文|Japanese|japonés|giapponese
+韓文|Korean|coreano|coreano
+中國人|Chinese person|chino|cinese
+台灣人|Taiwanese|taiwanés|taiwanese
+美國人|American|estadounidense|americano/statunitense
+英國人|British|británico|britannico
+義大利人|Italian|italiano|italiano
+西班牙人|Spaniard/Spanish|español|spagnolo
+法國人|French person|francés|francese
+日本人|Japanese person|japonés|giapponese
+# 數量、單位
+公斤|kilogram|kilogramo|chilogrammo
+公克|gram|gramo|grammo
+公里|kilometer|kilómetro|chilometro
+公尺|meter|metro|metro
+公分|centimeter|centímetro|centimetro
+公升|liter|litro|litro
+一半|half|mitad|metà
+一打|dozen|docena|dozzina
+百分比|percentage|porcentaje|percentuale
+數字|number|número|numero
+號碼|number|número|numero
+大小|size|tamaño/talla|dimensione/taglia
+重量|weight|peso|peso
+長度|length|longitud|lunghezza
+高度|height|altura|altezza
+速度|speed|velocidad|velocità
+距離|distance|distancia|distanza
+# 疑問、代名詞、虛詞
+什麼|what|qué|che cosa/cosa
+誰|who|quién|chi
+哪裡|where|dónde|dove
+什麼時候|when|cuándo|quando
+為什麼|why|por qué|perché
+怎麼|how|cómo|come
+多少|how much/how many|cuánto/cuántos|quanto/quanti
+哪一個|which|cuál|quale
+我|I|yo|io
+你|you|tú|tu
+他|he|él|lui
+她|she|ella|lei
+它|it|ello|esso
+我們|we|nosotros|noi
+你們|you all|vosotros/ustedes|voi
+他們|they|ellos|loro
+我的|my|mi|mio
+你的|your|tu|tuo
+他的|his|su|suo
+她的|her|su|suo
+我們的|our|nuestro|nostro
+他們的|their|su|loro
+這個|this|este/esto|questo
+那個|that|ese/eso|quello
+這裡|here|aquí|qui/qua
+那裡|there|allí/ahí|lì/là
+和|and|y|e
+或|or|o|o
+但是|but|pero|ma
+因為|because|porque|perché
+所以|so/therefore|así que/por eso|quindi/perciò
+如果|if|si|se
+雖然|although|aunque|anche se/sebbene
+然後|then|luego/entonces|poi/allora
+也|also/too|también|anche
+只|only|solo/sólo|solo/soltanto
+還|still|todavía/aún|ancora
+已經|already|ya|già
+總是|always|siempre|sempre
+從不|never|nunca|mai
+有時候|sometimes|a veces|a volte/qualche volta
+常常|often|a menudo/frecuentemente|spesso
+通常|usually|normalmente/generalmente|di solito
+馬上|immediately/right away|enseguida/inmediatamente|subito
+很快|soon|pronto|presto
+慢慢地|slowly|despacio/lentamente|lentamente/piano
+一起|together|juntos|insieme
+一個人|alone|solo|da solo
+非常|very|muy|molto
+太|too|demasiado|troppo
+比較|more/rather|más/bastante|più/piuttosto
+最|most|más|più
+差不多|almost/about|casi/más o menos|quasi/più o meno
+大概|probably/about|probablemente/aproximadamente|probabilmente/circa
+真的|really|de verdad/realmente|davvero/veramente
+當然|of course|claro/por supuesto|certo/ovviamente
+也許|maybe/perhaps|quizás/tal vez|forse
+是的|yes|sí|sì
+不是|no|no|no
+不|not|no|non
+沒有|no/none|no/ninguno|no/nessuno
+謝謝|thank you/thanks|gracias|grazie
+請|please|por favor|per favore
+對不起|sorry|perdón/lo siento|scusa/mi dispiace
+你好|hello/hi|hola|ciao/salve
+再見|goodbye/bye|adiós|arrivederci/ciao
+歡迎|welcome|bienvenido|benvenuto
+恭喜|congratulations|felicidades/enhorabuena|congratulazioni/complimenti
+乾杯|cheers|salud|salute/cin cin
+加油|come on/go for it|ánimo/vamos|forza/dai
+小心|careful/watch out|cuidado|attenzione/attento
+救命|help|socorro/ayuda|aiuto
+沒問題|no problem|no hay problema|nessun problema
+好的|okay/OK|vale/de acuerdo|va bene/d'accordo

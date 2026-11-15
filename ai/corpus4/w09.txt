@@ -1,0 +1,221 @@
+# 更多形容詞
+美味|tasty|sabroso|gustoso/saporito
+難吃|disgusting/tastes bad|asqueroso/horrible|disgustoso/cattivo
+清淡|light/bland|ligero/suave|leggero/delicato
+油膩|greasy|grasiento|unto/grasso
+熟|cooked/ripe|cocido/maduro|cotto/maturo
+生|raw|crudo|crudo
+冰的|iced/cold|helado/frío|ghiacciato/freddo
+燙的|scalding hot|hirviendo|bollente
+溫的|lukewarm|tibio|tiepido
+香|fragrant|aromático/fragante|profumato
+臭|smelly|apestoso/maloliente|puzzolente
+吵鬧|noisy|ruidoso|rumoroso
+擁擠|crowded|abarrotado/lleno de gente|affollato
+空曠|spacious/open|amplio/despejado|spazioso/aperto
+舒服|comfortable|cómodo|comodo
+不舒服|uncomfortable/unwell|incómodo/mal|scomodo/indisposto
+方便|convenient|conveniente/práctico|comodo/conveniente
+不方便|inconvenient|inconveniente|scomodo
+有用|useful|útil|utile
+沒用|useless|inútil|inutile
+準時|on time/punctual|puntual|puntuale
+遲|late|tarde/tardío|in ritardo
+清楚|clear|claro|chiaro
+模糊|blurry/vague|borroso/vago|sfocato/vago
+安靜的|calm/quiet|tranquilo|tranquillo
+熱鬧|lively/bustling|animado/bullicioso|vivace/animato
+浪漫|romantic|romántico|romantico
+無聊的|boring|aburrido|noioso
+刺激|exciting|emocionante|emozionante/eccitante
+可怕|scary/terrible|terrible/aterrador|spaventoso/terribile
+恐怖|horrifying|horroroso|orribile/terrificante
+美好|wonderful|maravilloso|meraviglioso
+糟糕|terrible/awful|terrible/fatal|terribile/pessimo
+棒|great|genial/estupendo|fantastico/ottimo
+酷|cool|genial/guay|figo/forte
+可憐|poor/pitiful|pobre/lastimoso|povero/pietoso
+幸運的|lucky|afortunado|fortunato
+倒楣|unlucky|desafortunado/con mala suerte|sfortunato
+成功的|successful|exitoso|di successo
+忙碌的|busy/hectic|ajetreado|indaffarato/frenetico
+放鬆的|relaxed|relajado|rilassato
+激動|excited/agitated|emocionado/agitado|emozionato/agitato
+驚訝的|surprised|sorprendido|sorpreso
+失望的|disappointed|decepcionado|deluso
+擔心的|worried|preocupado|preoccupato
+寂寞的|lonely|solo/solitario|solo/solitario
+嫉妒的|jealous|celoso|geloso
+驕傲的|proud|orgulloso|orgoglioso
+慚愧|ashamed|avergonzado|vergognoso/imbarazzato
+尷尬|embarrassed/awkward|avergonzado/incómodo|imbarazzato
+感激|grateful|agradecido|grato/riconoscente
+滿意|satisfied|satisfecho|soddisfatto
+不滿|dissatisfied|insatisfecho|insoddisfatto
+著急|anxious/in a hurry|ansioso/apurado|ansioso/di fretta
+冷靜的|calm|tranquilo/sereno|calmo
+溫柔|gentle/tender|tierno/dulce|tenero/dolce
+嚴格|strict|estricto|severo/rigoroso
+嚴肅|serious|serio|serio
+幽默|humorous|gracioso/con humor|spiritoso/divertente
+樂觀|optimistic|optimista|ottimista
+悲觀|pessimistic|pesimista|pessimista
+積極|positive/proactive|positivo/proactivo|positivo/propositivo
+消極|negative/passive|negativo/pasivo|negativo/passivo
+自私|selfish|egoísta|egoista
+慷慨|generous|generoso|generoso
+小氣|stingy|tacaño|tirchio/avaro
+謙虛|humble|humilde|umile/modesto
+自大|arrogant|arrogante|arrogante
+固執|stubborn|terco/testarudo|testardo/ostinato
+聰慧|wise|sabio|saggio
+天真|naive|ingenuo|ingenuo
+成熟|mature|maduro|maturo
+獨立|independent|independiente|indipendente
+活潑|lively/outgoing|alegre/animado|vivace/allegro
+內向|introverted|introvertido|introverso
+外向|extroverted|extrovertido|estroverso
+認真|serious/conscientious|serio/aplicado|serio/coscienzioso
+細心|careful/attentive|cuidadoso/atento|attento/accurato
+粗心|careless|descuidado|distratto/sbadato
+可靠|reliable|fiable/confiable|affidabile
+忠誠|loyal|leal/fiel|leale/fedele
+有創意|creative|creativo|creativo
+有能力|capable|capaz|capace
+專業|professional|profesional|professionale
+業餘|amateur|aficionado/amateur|dilettante/amatoriale
+正式|formal|formal|formale
+隨便|casual|informal|informale/casual
+傳統的|traditional|tradicional|tradizionale
+流行|popular/trendy|popular/de moda|popolare/di moda
+時髦|fashionable|a la moda|alla moda
+過時|outdated|anticuado/pasado de moda|antiquato/fuori moda
+稀有|rare|raro|raro
+普通|ordinary|común/corriente|comune/ordinario
+獨特|unique|único|unico
+明顯|obvious|obvio/evidente|ovvio/evidente
+複雜的|complex|complejo|complesso
+基本|basic|básico|base/fondamentale
+主要|main|principal|principale
+次要|secondary|secundario|secondario
+完整|complete|completo|completo
+部分的|partial|parcial|parziale
+真實|real/true|real/verdadero|reale/vero
+虛假|false|falso|falso
+準確|accurate|preciso/exacto|preciso/accurato
+錯誤的|wrong/incorrect|erróneo/equivocado|sbagliato/errato
+合法|legal|legal|legale
+非法|illegal|ilegal|illegale
+公平|fair|justo|giusto/equo
+不公平|unfair|injusto|ingiusto
+安全的|secure|seguro|sicuro
+穩定|stable|estable|stabile
+不穩定的|unstable|inestable|instabile
+健康|healthy|sano|sano
+新鮮的|fresh|fresco|fresco
+乾燥|dry|seco|secco/asciutto
+潮濕|humid/damp|húmedo|umido
+晴朗|sunny/clear|despejado/soleado|sereno/soleggiato
+多雲|cloudy|nublado|nuvoloso
+下雨的|rainy|lluvioso|piovoso
+有風的|windy|ventoso|ventoso
+炎熱|scorching hot|caluroso|caldissimo/torrido
+寒冷|freezing cold|helado|gelido
+明亮的|bright|luminoso|luminoso
+陰暗|gloomy|sombrío|cupo/tetro
+彩色|colorful|colorido|colorato
+透明|transparent|transparente|trasparente
+圓|round|redondo|rotondo
+方|square|cuadrado|quadrato
+尖|sharp/pointed|puntiagudo/afilado|appuntito/aguzzo
+鈍|blunt|desafilado|spuntato/smussato
+平|flat|plano|piatto
+彎|curved/bent|curvo/doblado|curvo/piegato
+直|straight|recto|dritto
+深|deep|profundo|profondo
+淺|shallow|poco profundo|poco profondo
+滑|slippery/smooth|resbaladizo/liso|scivoloso/liscio
+粗糙|rough|áspero|ruvido
+緊|tight|apretado|stretto
+鬆|loose|suelto|largo/allentato
+鋒利|sharp|afilado|affilato
+破|broken/torn|roto|rotto/strappato
+完好|intact|intacto|intatto
+古|old/ancient|antiguo|antico
+未來的|future|futuro|futuro
+最近|recent|reciente|recente
+永遠|eternal/forever|eterno/para siempre|eterno/per sempre
+暫時|temporary|temporal|temporaneo
+經常的|frequent|frecuente|frequente
+偶爾|occasional/occasionally|ocasional/de vez en cuando|occasionale/ogni tanto
+每天|every day/daily|todos los días/diario|ogni giorno/quotidiano
+每週|weekly|semanal|settimanale
+每月|monthly|mensual|mensile
+每年|yearly/annual|anual|annuale
+# 更多副詞、片語詞
+剛剛|just now|hace un momento|poco fa
+等一下|in a moment|en un momento|tra un momento
+今晚|tonight|esta noche|stasera
+今早|this morning|esta mañana|stamattina
+明早|tomorrow morning|mañana por la mañana|domani mattina
+昨晚|last night|anoche|ieri sera
+上週|last week|la semana pasada|la settimana scorsa
+下週|next week|la semana que viene/la próxima semana|la settimana prossima
+上個月|last month|el mes pasado|il mese scorso
+下個月|next month|el mes que viene/el próximo mes|il mese prossimo
+去年|last year|el año pasado|l'anno scorso
+明年|next year|el año que viene/el próximo año|l'anno prossimo
+今年|this year|este año|quest'anno
+最近（副詞）|recently|recientemente/últimamente|recentemente/ultimamente
+後來|later/afterwards|después/más tarde|dopo/poi
+首先|first of all|primero/en primer lugar|prima di tutto
+最後（副詞）|finally/lastly|finalmente/por último|infine/alla fine
+突然|suddenly|de repente|all'improvviso
+終於|finally/at last|por fin|finalmente
+幾乎|almost|casi|quasi
+完全|completely|completamente|completamente
+一定|definitely/surely|seguro/definitivamente|sicuramente/di sicuro
+可能地|possibly|posiblemente|forse/probabilmente
+特別地|especially|especialmente|specialmente/soprattutto
+一直|all the time/always|siempre/todo el tiempo|sempre/tutto il tempo
+到處|everywhere|por todas partes|dappertutto/ovunque
+某處|somewhere|en algún lugar|da qualche parte
+任何地方|anywhere|en cualquier lugar|ovunque/da qualsiasi parte
+沒有地方|nowhere|en ninguna parte|da nessuna parte
+大家|everyone|todos/todo el mundo|tutti
+某人|someone|alguien|qualcuno
+沒有人|nobody|nadie|nessuno
+每個人|everybody|cada uno/todos|ognuno/tutti
+東西|thing|cosa|cosa
+事情|matter/thing|asunto/cosa|faccenda/cosa
+什麼東西|something|algo|qualcosa
+沒什麼|nothing|nada|niente/nulla
+一切|everything|todo|tutto
+另一個|another|otro|un altro
+兩個都|both|ambos|entrambi
+兩個都不|neither|ninguno de los dos|nessuno dei due
+否則|otherwise|si no/de lo contrario|altrimenti
+而且|moreover/and also|además|inoltre
+然而|however|sin embargo|tuttavia/però
+例如|for example|por ejemplo|per esempio
+其實|actually|en realidad|in realtà
+總之|in short|en resumen|insomma/in breve
+當時|at that time|en aquel momento|in quel momento/allora
+之前|before|antes de|prima di
+之後|after|después de|dopo
+期間|during|durante|durante
+直到|until|hasta|fino a
+從|from|desde/de|da
+到|to|a/hasta|a/fino a
+在…之間|between|entre|tra/fra
+對面|opposite/across from|enfrente de|di fronte a
+附近|nearby|cerca|vicino
+周圍|around|alrededor|intorno
+沿著|along|a lo largo de|lungo
+向|toward|hacia|verso
+關於|about|sobre/acerca de|su/riguardo a
+除了|except|excepto/salvo|tranne/eccetto
+沒有…的話|without|sin|senza
+跟|with|con|con
+為了|for/in order to|para|per
+根據|according to|según|secondo

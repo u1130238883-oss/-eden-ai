@@ -1,0 +1,344 @@
+# 人、家人、職業
+人|person|persona|persona
+男人|man|hombre|uomo
+女人|woman|mujer|donna
+男孩|boy|niño/chico|bambino/ragazzo
+女孩|girl|niña/chica|bambina/ragazza
+孩子|child|niño/hijo|bambino/figlio
+嬰兒|baby|bebé|neonato/bebè
+青少年|teenager|adolescente|adolescente
+大人|adult|adulto|adulto
+老人|old man/elderly person|anciano|anziano
+朋友|friend|amigo|amico
+好朋友|best friend|mejor amigo|migliore amico
+鄰居|neighbor|vecino|vicino
+同事|colleague/coworker|colega/compañero de trabajo|collega
+同學|classmate|compañero de clase|compagno di classe
+老闆|boss|jefe|capo
+客人|guest/customer|invitado/cliente|ospite/cliente
+陌生人|stranger|desconocido|sconosciuto
+家人|family member|familiar|familiare
+家庭|family|familia|famiglia
+父母|parents|padres|genitori
+爸爸|dad|papá|papà
+媽媽|mom|mamá|mamma
+父親|father|padre|padre
+母親|mother|madre|madre
+兒子|son|hijo|figlio
+女兒|daughter|hija|figlia
+哥哥|older brother|hermano mayor|fratello maggiore
+弟弟|younger brother|hermano menor|fratello minore
+姐姐|older sister|hermana mayor|sorella maggiore
+妹妹|younger sister|hermana menor|sorella minore
+兄弟|brother|hermano|fratello
+姐妹|sister|hermana|sorella
+爺爺|grandfather/grandpa|abuelo|nonno
+奶奶|grandmother/grandma|abuela|nonna
+外公|grandfather|abuelo|nonno
+外婆|grandmother|abuela|nonna
+孫子|grandson|nieto|nipote
+孫女|granddaughter|nieta|nipote
+叔叔|uncle|tío|zio
+阿姨|aunt|tía|zia
+表哥|cousin|primo|cugino
+表妹|cousin|prima|cugina
+姪子|nephew|sobrino|nipote
+姪女|niece|sobrina|nipote
+丈夫|husband|marido/esposo|marito
+妻子|wife|esposa/mujer|moglie
+男朋友|boyfriend|novio|fidanzato/ragazzo
+女朋友|girlfriend|novia|fidanzata/ragazza
+未婚夫|fiancé|prometido|fidanzato
+未婚妻|fiancée|prometida|fidanzata
+新娘|bride|novia|sposa
+新郎|groom|novio|sposo
+寶寶|baby|bebé|bebè
+雙胞胎|twins|gemelos|gemelli
+老師|teacher|profesor/maestro|insegnante/professore
+學生|student|estudiante|studente
+校長|principal|director|preside
+教授|professor|profesor|professore
+醫生|doctor|médico/doctor|medico/dottore
+護士|nurse|enfermero/enfermera|infermiere/infermiera
+牙醫|dentist|dentista|dentista
+藥劑師|pharmacist|farmacéutico|farmacista
+獸醫|veterinarian/vet|veterinario|veterinario
+警察|police officer|policía|poliziotto
+消防員|firefighter|bombero|pompiere/vigile del fuoco
+軍人|soldier|soldado|soldato
+律師|lawyer|abogado|avvocato
+法官|judge|juez|giudice
+工程師|engineer|ingeniero|ingegnere
+建築師|architect|arquitecto|architetto
+程式設計師|programmer|programador|programmatore
+設計師|designer|diseñador|designer/progettista
+科學家|scientist|científico|scienziato
+研究員|researcher|investigador|ricercatore
+記者|journalist/reporter|periodista|giornalista
+作家|writer|escritor|scrittore
+詩人|poet|poeta|poeta
+畫家|painter|pintor|pittore
+藝術家|artist|artista|artista
+音樂家|musician|músico|musicista
+歌手|singer|cantante|cantante
+演員|actor|actor|attore
+女演員|actress|actriz|attrice
+導演|director|director|regista
+舞者|dancer|bailarín|ballerino
+攝影師|photographer|fotógrafo|fotografo
+廚師|chef/cook|cocinero/chef|cuoco/chef
+服務生|waiter|camarero|cameriere
+司機|driver|conductor/chófer|autista
+飛行員|pilot|piloto|pilota
+空服員|flight attendant|azafata/auxiliar de vuelo|assistente di volo
+農夫|farmer|granjero/agricultor|contadino/agricoltore
+漁夫|fisherman|pescador|pescatore
+工人|worker|obrero/trabajador|operaio/lavoratore
+商人|businessman/merchant|comerciante/empresario|commerciante/uomo d'affari
+店員|shop assistant|dependiente|commesso
+收銀員|cashier|cajero|cassiere
+秘書|secretary|secretario|segretario
+會計|accountant|contador/contable|contabile/ragioniere
+經理|manager|gerente|direttore/manager
+總統|president|presidente|presidente
+國王|king|rey|re
+皇后|queen|reina|regina
+王子|prince|príncipe|principe
+公主|princess|princesa|principessa
+運動員|athlete|atleta|atleta
+足球員|soccer player/footballer|futbolista|calciatore
+教練|coach|entrenador|allenatore
+裁判|referee|árbitro|arbitro
+理髮師|barber/hairdresser|peluquero/barbero|parrucchiere/barbiere
+麵包師傅|baker|panadero|fornaio/panettiere
+屠夫|butcher|carnicero|macellaio
+木匠|carpenter|carpintero|falegname
+水電工|plumber|fontanero/plomero|idraulico
+電工|electrician|electricista|elettricista
+郵差|mail carrier/postman|cartero|postino
+導遊|tour guide|guía turístico|guida turistica
+翻譯員|translator/interpreter|traductor/intérprete|traduttore/interprete
+志工|volunteer|voluntario|volontario
+小偷|thief|ladrón|ladro
+英雄|hero|héroe|eroe
+敵人|enemy|enemigo|nemico
+主人|owner/host|dueño/anfitrión|padrone/proprietario
+觀眾|audience|público|pubblico
+乘客|passenger|pasajero|passeggero
+遊客|tourist|turista|turista
+病人|patient|paciente|paziente
+# 身體
+身體|body|cuerpo|corpo
+頭|head|cabeza|testa
+頭髮|hair|pelo/cabello|capelli
+臉|face|cara|faccia/viso
+眼睛|eye|ojo|occhio
+眉毛|eyebrow|ceja|sopracciglio
+睫毛|eyelash|pestaña|ciglio
+耳朵|ear|oreja|orecchio
+鼻子|nose|nariz|naso
+嘴巴|mouth|boca|bocca
+嘴唇|lip|labio|labbro
+牙齒|tooth|diente|dente
+舌頭|tongue|lengua|lingua
+下巴|chin|barbilla/mentón|mento
+臉頰|cheek|mejilla|guancia
+額頭|forehead|frente|fronte
+脖子|neck|cuello|collo
+喉嚨|throat|garganta|gola
+肩膀|shoulder|hombro|spalla
+手臂|arm|brazo|braccio
+手肘|elbow|codo|gomito
+手腕|wrist|muñeca|polso
+手|hand|mano|mano
+手指|finger|dedo|dito
+大拇指|thumb|pulgar|pollice
+指甲|nail/fingernail|uña|unghia
+胸部|chest|pecho|petto
+背|back|espalda|schiena
+肚子|belly/stomach|barriga/vientre|pancia
+腰|waist|cintura|vita
+腿|leg|pierna|gamba
+膝蓋|knee|rodilla|ginocchio
+腳|foot|pie|piede
+腳踝|ankle|tobillo|caviglia
+腳趾|toe|dedo del pie|dito del piede
+皮膚|skin|piel|pelle
+骨頭|bone|hueso|osso
+血|blood|sangre|sangue
+心臟|heart|corazón|cuore
+肺|lung|pulmón|polmone
+胃|stomach|estómago|stomaco
+肝臟|liver|hígado|fegato
+腎臟|kidney|riñón|rene
+大腦|brain|cerebro|cervello
+肌肉|muscle|músculo|muscolo
+鬍子|beard|barba|barba
+# 健康
+健康|health|salud|salute
+疾病|disease/illness|enfermedad|malattia
+感冒|cold|resfriado|raffreddore
+發燒|fever|fiebre|febbre
+咳嗽|cough|tos|tosse
+頭痛|headache|dolor de cabeza|mal di testa
+牙痛|toothache|dolor de muelas|mal di denti
+過敏|allergy|alergia|allergia
+傷口|wound|herida|ferita
+疼痛|pain|dolor|dolore
+藥|medicine|medicina/medicamento|medicina/medicinale
+藥丸|pill|pastilla|pillola
+處方|prescription|receta|ricetta
+醫院|hospital|hospital|ospedale
+診所|clinic|clínica|clinica
+藥局|pharmacy|farmacia|farmacia
+救護車|ambulance|ambulancia|ambulanza
+手術|surgery/operation|cirugía/operación|intervento/operazione
+疫苗|vaccine|vacuna|vaccino
+體溫計|thermometer|termómetro|termometro
+繃帶|bandage|venda|benda
+口罩|face mask|mascarilla|mascherina
+# 食物、飲料
+食物|food|comida|cibo
+早餐|breakfast|desayuno|colazione
+午餐|lunch|almuerzo/comida|pranzo
+晚餐|dinner|cena|cena
+點心|snack|merienda/aperitivo|spuntino
+飯|rice|arroz|riso
+麵包|bread|pan|pane
+麵條|noodles|fideos|spaghetti/tagliatelle
+義大利麵|pasta|pasta|pasta
+披薩|pizza|pizza|pizza
+漢堡|hamburger|hamburguesa|hamburger
+三明治|sandwich|sándwich/bocadillo|panino/tramezzino
+湯|soup|sopa|zuppa/minestra
+沙拉|salad|ensalada|insalata
+肉|meat|carne|carne
+牛肉|beef|carne de res/ternera|manzo
+豬肉|pork|cerdo|maiale
+雞肉|chicken|pollo|pollo
+羊肉|lamb|cordero|agnello
+火腿|ham|jamón|prosciutto
+香腸|sausage|salchicha|salsiccia
+培根|bacon|tocino/beicon|pancetta
+魚|fish|pescado|pesce
+蝦子|shrimp|camarón/gamba|gambero
+螃蟹|crab|cangrejo|granchio
+龍蝦|lobster|langosta|aragosta
+鮭魚|salmon|salmón|salmone
+鮪魚|tuna|atún|tonno
+蛋|egg|huevo|uovo
+起司|cheese|queso|formaggio
+奶油|butter|mantequilla|burro
+優格|yogurt|yogur|yogurt
+牛奶|milk|leche|latte
+鮮奶油|cream|nata/crema|panna
+糖|sugar|azúcar|zucchero
+鹽|salt|sal|sale
+胡椒|pepper|pimienta|pepe
+醋|vinegar|vinagre|aceto
+油|oil|aceite|olio
+橄欖油|olive oil|aceite de oliva|olio d'oliva
+醬油|soy sauce|salsa de soja|salsa di soia
+蜂蜜|honey|miel|miele
+果醬|jam|mermelada|marmellata
+巧克力|chocolate|chocolate|cioccolato
+蛋糕|cake|pastel/tarta|torta
+餅乾|cookie|galleta|biscotto
+冰淇淋|ice cream|helado|gelato
+糖果|candy|caramelo|caramella
+甜點|dessert|postre|dolce/dessert
+麥片|cereal|cereales|cereali
+米|rice|arroz|riso
+麵粉|flour|harina|farina
+豆腐|tofu|tofu|tofu
+豆子|beans|frijoles/judías|fagioli
+餃子|dumpling|empanadilla/dumpling|raviolo cinese
+壽司|sushi|sushi|sushi
+炸薯條|French fries|papas fritas/patatas fritas|patatine fritte
+洋芋片|potato chips|papas fritas de bolsa|patatine
+爆米花|popcorn|palomitas|popcorn
+水果|fruit|fruta|frutta
+蘋果|apple|manzana|mela
+香蕉|banana|plátano/banana|banana
+橘子|orange|naranja|arancia
+柳橙|orange|naranja|arancia
+檸檬|lemon|limón|limone
+葡萄|grape|uva|uva
+草莓|strawberry|fresa|fragola
+西瓜|watermelon|sandía|anguria/cocomero
+鳳梨|pineapple|piña|ananas
+芒果|mango|mango|mango
+桃子|peach|melocotón/durazno|pesca
+梨子|pear|pera|pera
+櫻桃|cherry|cereza|ciliegia
+藍莓|blueberry|arándano|mirtillo
+奇異果|kiwi|kiwi|kiwi
+椰子|coconut|coco|cocco
+酪梨|avocado|aguacate|avocado
+李子|plum|ciruela|prugna/susina
+無花果|fig|higo|fico
+石榴|pomegranate|granada|melograno
+木瓜|papaya|papaya|papaya
+哈密瓜|melon/cantaloupe|melón|melone
+蔬菜|vegetable|verdura|verdura
+番茄|tomato|tomate|pomodoro
+馬鈴薯|potato|papa/patata|patata
+洋蔥|onion|cebolla|cipolla
+大蒜|garlic|ajo|aglio
+紅蘿蔔|carrot|zanahoria|carota
+高麗菜|cabbage|repollo/col|cavolo
+生菜|lettuce|lechuga|lattuga
+菠菜|spinach|espinacas|spinaci
+花椰菜|broccoli|brócoli|broccoli
+小黃瓜|cucumber|pepino|cetriolo
+茄子|eggplant|berenjena|melanzana
+南瓜|pumpkin|calabaza|zucca
+玉米|corn|maíz|mais
+豌豆|peas|guisantes/arvejas|piselli
+蘑菇|mushroom|champiñón/hongo|fungo
+青椒|green pepper|pimiento verde|peperone verde
+辣椒|chili pepper|chile/guindilla|peperoncino
+芹菜|celery|apio|sedano
+薑|ginger|jengibre|zenzero
+堅果|nut|nuez/fruto seco|frutta secca/noce
+花生|peanut|cacahuete/maní|arachide/nocciolina
+杏仁|almond|almendra|mandorla
+核桃|walnut|nuez|noce
+飲料|drink/beverage|bebida|bevanda
+水|water|agua|acqua
+茶|tea|té|tè
+咖啡|coffee|café|caffè
+果汁|juice|jugo/zumo|succo
+柳橙汁|orange juice|jugo de naranja/zumo de naranja|succo d'arancia
+汽水|soda|refresco|bibita gassata
+啤酒|beer|cerveza|birra
+葡萄酒|wine|vino|vino
+紅酒|red wine|vino tinto|vino rosso
+白酒|white wine|vino blanco|vino bianco
+香檳|champagne|champán|champagne/spumante
+威士忌|whiskey|whisky|whisky
+雞尾酒|cocktail|cóctel|cocktail
+礦泉水|mineral water|agua mineral|acqua minerale
+熱巧克力|hot chocolate|chocolate caliente|cioccolata calda
+奶茶|milk tea|té con leche|tè al latte
+冰塊|ice|hielo|ghiaccio
+菜單|menu|menú/carta|menù
+帳單|bill/check|cuenta|conto
+小費|tip|propina|mancia
+盤子|plate|plato|piatto
+碗|bowl|cuenco/tazón|ciotola
+杯子|cup|taza/vaso|tazza/bicchiere
+玻璃杯|glass|vaso|bicchiere
+叉子|fork|tenedor|forchetta
+刀子|knife|cuchillo|coltello
+湯匙|spoon|cuchara|cucchiaio
+筷子|chopsticks|palillos|bacchette
+餐巾|napkin|servilleta|tovagliolo
+瓶子|bottle|botella|bottiglia
+罐子|jar/can|tarro/lata|barattolo/lattina
+鍋子|pot|olla|pentola
+平底鍋|frying pan|sartén|padella
+烤箱|oven|horno|forno
+微波爐|microwave|microondas|microonde
+冰箱|refrigerator/fridge|refrigerador/nevera|frigorifico/frigo
+爐子|stove|estufa/cocina|fornello
