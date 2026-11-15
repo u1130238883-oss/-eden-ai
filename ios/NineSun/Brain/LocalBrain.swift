@@ -277,7 +277,8 @@ final class LocalBrain {
 
     /// 系統指示＋前面的對話＋這次的話（每則太長就截短）
     static func messages(system: String, history: [Turn], user: String) -> [(role: String, content: String)] {
-        var m: [(role: String, content: String)] = [("system", system)]
+        // 沒有系統指示（直接用開源模型原本的樣子）：不放空的 system，照模型自己的預設
+        var m: [(role: String, content: String)] = system.isEmpty ? [] : [("system", system)]
         for t in history.suffix(6) {
             let text = t.text.count > 300 ? String(t.text.prefix(300)) + "…" : t.text
             m.append((t.fromUser ? "user" : "assistant", text))
@@ -449,6 +450,11 @@ final class LocalBrain {
         var s = raw
         if let r = s.range(of: "</think>") { s = String(s[r.upperBound...]) } else if s.contains("<think>") { return "" }
         s = s.replacingOccurrences(of: #"(?s)<\|channel>.*?<channel\|>"#, with: "", options: .regularExpression)   // Gemma 4 的思考
+        // 直接用開源模型：只拿掉思考過程，其他原樣（不轉繁體、不改格式）
+        if lang == "raw" {
+            if s.contains("<|channel>") { return "" }
+            return s.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
         s = s.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "<|im_end|>", with: "")
         // 有的模型會把提示裡的資料標題抄回來：答完之後再抄一遍資料的整段拿掉，開頭的標題行拿掉
         for tag in ["【NineSun 查到的資料】", "[NineSun's facts]", "【命盤推算結果】", "[chart results]", "【NineSun 的知識庫】", "[NineSun's notes]"] {

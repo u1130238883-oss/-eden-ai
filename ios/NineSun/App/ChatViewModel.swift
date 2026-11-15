@@ -213,6 +213,13 @@ final class ChatViewModel: ObservableObject {
         thinking = true
         streaming = ""
 
+        // 開源模型開著：每一句都直接交給模型本身回答（不加 NineSun 的個性、不先查網路、不經過引擎、不改寫回答）。
+        // 成人模式另外照設定的角色聊
+        if let brain = brainPath, !adultMode {
+            rawBrain(text, brain: brain)
+            return
+        }
+
         // 「重新查…」：直接上網查最新的
         if text.hasPrefix("重新查") || text.lowercased().hasPrefix("search again") {
             let q = text.replacingOccurrences(of: "重新查", with: "").replacingOccurrences(of: "search again", with: "", options: .caseInsensitive)
@@ -432,6 +439,28 @@ final class ChatViewModel: ObservableObject {
             brainChat(text, L, brain: brain, onFail: fallback)
         }
         return true
+    }
+
+    /// 直接問開源模型：只給前面的對話和這句話，沒有系統指示；回答原樣顯示（只拿掉模型的思考過程和控制字）
+    private func rawBrain(_ text: String, brain: String) {
+        streaming = LocalBrain.shared.isLoaded ? "🧠 …" : "🧠 模型讀取中…（第一次要幾秒）"
+        let past = turns.dropLast().suffix(6).filter { !$0.text.isEmpty }.map { LocalBrain.Turn(fromUser: $0.role == .user, text: $0.text) }
+        let work = BackgroundWork.start()
+        LocalBrain.shared.ask(modelPath: brain, system: "", history: Array(past), user: text, mode: .chat, lang: "raw",
+                              onText: { t in work.tick(t.count); DispatchQueue.main.async { if !t.isEmpty { self.streaming = t } } },
+                              done: { result in
+            work.end()
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let r) where !r.text.isEmpty:
+                    self.finish(ChatTurn(role: .echo, text: r.text, source: .neural))
+                case .success:
+                    self.finish(ChatTurn(role: .echo, text: "（模型沒有回答）", source: .tool))
+                case .failure(let e):
+                    self.finish(ChatTurn(role: .echo, text: "開源模型出錯了：\(e.localizedDescription)", source: .tool))
+                }
+            }
+        })
     }
 
     /// 回頭查上一題：引擎自己知道的（算得出來、常識、知識庫）直接當資料；引擎不知道的上網查。查到的交給大腦對照
