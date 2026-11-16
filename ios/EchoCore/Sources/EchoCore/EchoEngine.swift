@@ -179,7 +179,7 @@ public final class EchoEngine {
                    onToken: ((String) -> Void)? = nil) -> Reply {
         // 追問（「那這些國家都是哪些國家」）：先把代名詞換回上一題的主題，再照一般問題處理
         let prevQuestion = lastQuestion, prevQuestionTurn = lastQuestionTurn
-        var text = message
+        var text = EchoEngine.normalizeSlang(message)
         var rewritten = false
         // 「說簡單一點」：把上一則回答濃縮成一兩句；「說詳細一點」：上網把上一題查得更完整（命盤解讀有自己的「再多說一點」）
         let plain = Talk.clean(message)
@@ -292,7 +292,17 @@ public final class EchoEngine {
         return r
     }
 
-    /// 問 NineSun 自己的年紀、生日
+    /// 口語的問句詞換成一般說法：「日本首都是啥」「蝦米是黑洞」「咋辦」
+    static func normalizeSlang(_ m: String) -> String {
+        guard m.range(of: "啥|蝦米|三小|咋|甚麼|神馬|什么", options: .regularExpression) != nil else { return m }
+        var t = m
+        for (a, b) in [("蝦米", "什麼"), ("三小", "什麼"), ("神馬", "什麼"), ("甚麼", "什麼"), ("什么", "什麼"), ("咋辦", "怎麼辦"), ("咋麼", "怎麼"), ("咋", "怎麼"), ("為啥", "為什麼"), ("幹啥", "做什麼"), ("啥", "什麼")] {
+            t = t.replacingOccurrences(of: a, with: b)
+        }
+        return t
+    }
+
+    /// 問 NineSun 自己的年紀、生日    /// 問 NineSun 自己的年紀、生日
     static func aboutMe(_ raw: String, now: Date) -> String? {
         let t = Everyday.clean(raw)
         let age = ["你幾歲", "你今年幾歲", "你多大", "你多大了", "你幾歲了", "你的年紀", "你年紀多大", "你多老", "妳幾歲", "妳多大"]
