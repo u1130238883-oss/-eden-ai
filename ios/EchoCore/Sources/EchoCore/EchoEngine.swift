@@ -404,6 +404,8 @@ public final class EchoEngine {
             default: break
             }
         }
+        // 2.054) 自己有看法的比較題（「天氣和氣候有什麼不同」「病毒和細菌的差別」）：先用自己知道的，不當成近義詞
+        if L == .zh, let a = Commonsense.compare(Everyday.clean(text)) { return done(a, .knowledge) }
         // 2.055) 反義詞：「開心的反義詞是什麼」「大和小是反義詞嗎」——詞庫裡有就直接回答，沒有就上網查
         if L == .zh, let ask = Antonyms.parse(text) {
             if let a = Antonyms.answer(ask) { return done(a, .knowledge) }

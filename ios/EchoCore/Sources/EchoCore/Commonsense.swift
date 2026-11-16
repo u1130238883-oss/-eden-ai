@@ -144,7 +144,8 @@ public enum Commonsense {
         if ["查", "搜尋", "上網", "google", "Google", "維基"].contains(where: { raw.contains($0) }) { return nil }
         // 在說心情（「我難過到睡不著怎麼辦」）：先陪他，不是給方法
         if ["到睡不著", "難過", "傷心", "孤單", "寂寞", "害怕", "失落", "低落", "生氣", "煩惱", "好煩", "很煩", "焦慮", "憂鬱", "想哭", "心情"]
-            .contains(where: { t.contains($0) }) && t.contains("我") { return nil }
+            .contains(where: { t.contains($0) }) && t.contains("我")
+            && !["教我", "怎麼緩解", "如何緩解", "緩解", "方法", "減輕", "怎麼讓自己", "如何讓自己"].contains(where: { t.contains($0) }) { return nil }
         if let a = dynasty(t) { return a }
         if let a = howto(t) { return a }
         // 「你知道周杰倫嗎」「你認識李白嗎」：整句就是一個東西的名字 → 介紹它

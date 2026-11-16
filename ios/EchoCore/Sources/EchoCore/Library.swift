@@ -36,7 +36,7 @@ public enum Library {
     /// 書名號、空白、語氣詞拿掉
     static func bare(_ s: String) -> String {
         var t = s.filter { !"《》〈〉「」『』\"'“” ？?！!。，,~～".contains($0) && !$0.isWhitespace }
-        for w in ["欸", "誒", "嘿", "那"] where t.hasPrefix(w) && t.count > w.count + 2 { t.removeFirst(w.count) }
+        for w in ["欸", "誒", "嘿", "那", "好奇", "所以", "對了"] where t.hasPrefix(w) && t.count > w.count + 2 { t.removeFirst(w.count) }
         for w in ["我想問一下", "請問一下", "請問", "想問一下", "我想問", "想問", "我想知道", "你知道", "你曉得", "可以跟我說一下", "可以跟我說", "跟我說說", "跟我說一下",
                   "告訴我", "跟我說", "說說看", "說說", "聊聊", "說一下", "介紹一下", "介紹"] where t.hasPrefix(w) && t.count > w.count + 1 {
             t.removeFirst(w.count); break
