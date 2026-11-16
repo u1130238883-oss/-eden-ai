@@ -145,7 +145,7 @@ final class MyTopicTests: XCTestCase {
 }
 
 final class ConversationTests: XCTestCase {
-    func run(_ lines: [String]) throws -> [EchoEngine.Reply] {
+    static func run(_ lines: [String]) throws -> [EchoEngine.Reply] {
         let e = try SimpleQuestionsProbeTests.engine()
         var ctx = EchoEngine.Context()
         ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 8)
@@ -160,20 +160,20 @@ final class ConversationTests: XCTestCase {
 
     func testFillersAreNotSearches() throws {
         for q in ["好", "嗯", "😂", "？", "不知道", "隨便", "算了", "123", "你答錯了"] {
-            let r = try run([q]).last!
+            let r = try Self.run([q]).last!
             XCTAssertNil(r.webQuery, q)
         }
     }
 
     func testFollowUps() throws {
-        XCTAssertTrue(try run(["八大行星有哪些", "最大的是哪一個"]).last!.turn.text.contains("木星"))
-        XCTAssertEqual(try run(["哈姆雷特在講什麼", "結局呢"]).last!.webQuery, "哈姆雷特的結局")
-        XCTAssertEqual(try run(["紅樓夢的作者是誰", "他還寫了什麼"]).last!.webQuery, "曹雪芹還寫了什麼")
-        let joke = try run(["給我講個笑話", "再一個"])
+        XCTAssertTrue(try Self.run(["八大行星有哪些", "最大的是哪一個"]).last!.turn.text.contains("木星"))
+        XCTAssertEqual(try Self.run(["哈姆雷特在講什麼", "結局呢"]).last!.webQuery, "哈姆雷特的結局")
+        XCTAssertEqual(try Self.run(["紅樓夢的作者是誰", "他還寫了什麼"]).last!.webQuery, "曹雪芹還寫了什麼")
+        let joke = try Self.run(["給我講個笑話", "再一個"])
         XCTAssertNil(joke.last!.webQuery)
         XCTAssertNotEqual(joke[0].turn.text, joke[1].turn.text)
-        XCTAssertTrue(try run(["早安", "好"]).last!.turn.text.contains("今天"))
-        XCTAssertTrue(try run(["什麼是通貨膨脹", "可以說簡單一點嗎"]).last!.turn.text.hasPrefix("簡單說"))
+        XCTAssertTrue(try Self.run(["早安", "好"]).last!.turn.text.contains("今天"))
+        XCTAssertTrue(try Self.run(["什麼是通貨膨脹", "可以說簡單一點嗎"]).last!.turn.text.hasPrefix("簡單說"))
     }
 }
 
@@ -200,5 +200,16 @@ final class SmallTalkTests: XCTestCase {
         // 問題、喜歡一個人、想死這些不是閒聊
         for q in ["我今天去看電影好嗎", "我喜歡你", "我喜歡一個人", "我想死", "我在想什麼"] { XCTAssertNil(Talk.chat(q), q) }
         XCTAssertEqual(Affect.detect("我朋友要結婚了"), .happy)
+    }
+}
+
+final class SmallTalkFollowUpTests: XCTestCase {
+    func testAnswersToNineSunsQuestion() throws {
+        let t = ConversationTests.self
+        XCTAssertTrue(try t.run(["我今天去看電影了", "很好看，是鬼滅之刃"]).last!.turn.text.contains("《鬼滅之刃》"))
+        XCTAssertTrue(try t.run(["我明天要去日本", "去玩"]).last!.turn.text.contains("護照"))
+        XCTAssertTrue(try t.run(["我剛下班", "晚餐還沒吃"]).last!.turn.text.contains("今天吃什麼"))
+        // 接著問別的問題就照問題回答
+        XCTAssertTrue(try t.run(["我剛下班", "八大行星有哪些"]).last!.turn.text.contains("木星"))
     }
 }

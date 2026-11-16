@@ -44,7 +44,11 @@ public enum Talk {
     public static func answer(_ raw: String) -> String? { detailed(raw)?.text }
 
     /// 聊天：對方在說自己的事（不是問問題）——照說的內容接話、問下去，不拿宮位亂回（使用者 2026-10-28：「不要用宮位亂回」）
+    /// 剛剛閒聊的主題（看、吃、旅行:日本、下班、養寵物…），對方接著回答時用
+    static var lastChatTopic = ""
+
     public static func chat(_ raw: String) -> String? {
+        lastChatTopic = ""
         let t = clean(raw)
         guard t.count >= 2, t.count <= 24, !t.contains("嗎"), !t.contains("什麼"), !t.contains("怎麼"), !t.contains("為什麼") else { return nil }
         func m(_ p: String) -> [String]? { RuleBook.match(t, p) }
@@ -55,6 +59,7 @@ public enum Talk {
         }
         // 剛做完的事
         if let g = m(#"^我?(?:剛|剛剛|才剛)(下班|下課|放學|回家|到家|起床|睡醒|醒來|吃飽|洗完澡|運動完|考完試|開完會)(?:了)?$"#) {
+            lastChatTopic = "下班"
             switch g[0] {
             case "下班", "下課", "放學", "開完會": return "辛苦了！今天過得怎麼樣？晚餐吃了嗎？"
             case "起床", "睡醒", "醒來": return "早安（不管現在幾點都算）！睡得好嗎？"
@@ -68,6 +73,7 @@ public enum Talk {
         // 做了什麼：看了、吃了、買了、玩了……
         if let g = m(#"^我?(?:今天|剛剛|昨天|剛|早上|晚上|中午|週末)?(?:去)?(看|吃|買|玩|聽|讀|喝|追|逛)(?:了)(.{1,10})$"#) ?? m(#"^我?(?:今天|剛剛|昨天|剛|週末)?去(看|吃|買|玩|逛)(.{1,8})(?:了)$"#) {
             let x = g[1]
+            lastChatTopic = g[0]
             switch g[0] {
             case "看", "追": return "\(x)好看嗎？在講什麼？我想聽聽你的心得。"
             case "吃": return "\(x)好吃嗎？在哪裡吃的？聽起來好想吃看看～"
@@ -86,6 +92,7 @@ public enum Talk {
         // 要去哪裡、打算做什麼
         if let g = m(#"^我?(?:明天|後天|下週|下禮拜|下個月|週末|這週末|等一下|今天|今晚|過幾天|明年|下次)?(?:要|會|準備|打算|計畫)去(.{1,8}?)(?:玩|旅行|旅遊|出差|了)?$"#) {
             let x = g[0]
+            lastChatTopic = "旅行:" + x
             var tip = ""
             if Library.lists.contains(where: { $0.names.contains(x + "的景點") }) { tip = "想知道那邊有什麼好玩的，問我「\(x)有什麼好玩的」。" }
             return "去\(x)！是去玩還是辦事？" + (tip.isEmpty ? "祝你一路順利～" : tip)
@@ -113,7 +120,9 @@ public enum Talk {
         // 想做的事
         if let g = m(#"^我(?:好|很|超|真的)?想(?:要)?(?:去)?(出去玩|出國|旅行|放假|休息|養狗|養貓|談戀愛|換工作|搬家)$"#) {
             switch g[0] {
-            case "養狗", "養貓": return "養寵物很幸福，但也是十幾年的承諾：要想想時間（每天陪伴、散步）、空間、花費（飼料、醫療）。如果都 OK，也可以考慮領養！你喜歡什麼樣的\(g[0] == "養狗" ? "狗" : "貓")？"
+            case "養狗", "養貓":
+                lastChatTopic = "養寵物"
+                return "養寵物很幸福，但也是十幾年的承諾：要想想時間（每天陪伴、散步）、空間、花費（飼料、醫療）。如果都 OK，也可以考慮領養！你喜歡什麼樣的\(g[0] == "養狗" ? "狗" : "貓")？"
             case "出去玩", "旅行", "出國": return "想去哪裡呢？近一點的話週末就能出發，遠一點的可以開始存旅費～告訴我想去哪，我幫你列景點。"
             case "放假", "休息": return "真的需要好好休息一下。能請個假、或週末安排一天什麼都不做嗎？"
             default: return "想\(g[0])的話，有什麼讓你這樣想的原因嗎？我們可以一起想想。"
@@ -132,6 +141,49 @@ public enum Talk {
         if m(#"^(?:今天|最近|這幾天)?(?:好|很|超)?忙$"#) != nil {
             return "忙碌的一天辛苦了！記得中間喝點水、動一動，不要一直坐著。"
         }
+        return nil
+    }
+
+    /// 閒聊的下一句：NineSun 剛問了「好看嗎？」「是去玩還是辦事？」，對方的回答不是新的問題
+    public static func chatAnswer(_ raw: String, topic: String) -> String? {
+        let t = clean(raw)
+        guard !t.isEmpty, t.count <= 24, !t.hasSuffix("嗎"), !["什麼", "怎麼", "為什麼", "哪", "誰", "幾", "多少"].contains(where: { t.contains($0) }) else { return nil }
+        let positive = t.range(of: "好看|好吃|好玩|好喝|好聽|很棒|不錯|喜歡|超讚|很讚|很好|開心|順利|推薦|好用|滿意|感動", options: .regularExpression) != nil
+            && t.range(of: "不好看|不好吃|不好玩|不喜歡|不推薦|不滿意", options: .regularExpression) == nil
+        let negative = t.range(of: "不好看|難吃|不好吃|普通|還好|無聊|累|不好|爛|失望|難過|煩|後悔|雷", options: .regularExpression) != nil
+        switch topic {
+        case "看", "追", "讀":
+            // 「很好看，是鬼滅之刃」：認得的作品就聊它
+            if let g = RuleBook.match(t, #"(?:是|叫|看的是|片名是)《?([^》]{2,12})》?$"#), let w = Library.work(named: g[0]) {
+                let theme = (w.attr("主題") ?? "").split(separator: "、").first.map(String.init) ?? ""
+                return "《\(w.name)》！\(Library.shortIntro(w.attr("簡介") ?? ""))。" + (theme.isEmpty ? "" : "我覺得它最打動人的是「\(theme)」。") + "你最喜歡哪個角色或哪一段？"
+            }
+            if positive { return "聽起來很精彩！你最喜歡哪個角色或哪一段？" }
+            if negative { return "可惜～有時候期待越高越容易失望。下次想看什麼，我可以推薦給你。" }
+        case "吃", "喝":
+            if positive { return "聽得我都餓了😋 下次也帶我（的螢幕）去吧！" }
+            if negative { return "下次換一家試試～想要的話，問我「今天吃什麼」，我幫你想。" }
+        case "買", "玩", "逛", "聽":
+            if positive { return "太好了！開心最重要～" }
+            if negative { return "有點可惜呢，下次會更好的！" }
+        case "下班":
+            if t.contains("沒吃") || t.contains("還沒吃") { return "那快去吃點東西吧！想不到吃什麼，問我「今天吃什麼」，我幫你挑。" }
+            if negative { return "辛苦了，今天就早點休息吧。洗個熱水澡、早點睡，明天會好一點。" }
+            if positive { return "那就好！今天有什麼開心的事嗎？" }
+        case "養寵物":
+            if t.count <= 6, !negative { return "\(t)很可愛！養之前可以先了解牠的個性、運動量、掉毛和常見的疾病；也可以考慮去收容所領養同品種或米克斯，一樣可愛。" }
+        default:
+            if topic.hasPrefix("旅行:") {
+                let place = String(topic.dropFirst(3))
+                if t.contains("玩") || t.contains("旅行") || t.contains("旅遊") || t.contains("度假") {
+                    let tip = Library.lists.contains(where: { $0.names.contains(place + "的景點") }) ? "想知道景點，問我「\(place)有什麼好玩的」；想知道吃什麼，問我「\(place)有什麼好吃的」。" : ""
+                    return "好棒！第一次去嗎？記得帶好護照、網路和行動電源。" + tip
+                }
+                if t.contains("出差") || t.contains("工作") || t.contains("辦事") { return "出差辛苦了！工作之餘也找點時間吃點當地的好東西吧～" }
+            }
+        }
+        if positive { return "太好了！聽你這樣說我也很開心。" }
+        if negative { return "嗯嗯，辛苦了。想多說一點的話，我在聽。" }
         return nil
     }
 

@@ -689,6 +689,7 @@ public final class EchoEngine {
         if L == .zh, !EchoEngine.isQuestion(text), let s = Talk.chat(text) {
             // 在說自己的事：照內容接話（不拿宮位亂回）
             raw = s
+            if !Talk.lastChatTopic.isEmpty { lastLocal = LocalContext(kind: "smalltalk", subject: Talk.lastChatTopic, turn: turns) }
         } else if [.goodNews, .proudEffort, .excitedPlan, .happy].contains(mood), !EchoEngine.isQuestion(text) {
             // 好消息、開心的事：接著問下去（不要接「是發生了什麼事？」或一段宮位的話）
             raw = EchoEngine.celebrate(text)
@@ -789,6 +790,8 @@ public final class EchoEngine {
                 return .rewrite("\(lc.subject)的\(g[0])" + (["作者", "導演", "主角"].contains(g[0]) ? "是誰" : ""))
             }
             if t.range(of: "^(誰寫的|是誰寫的|誰拍的|是誰拍的|作者是誰)$", options: .regularExpression) != nil { return .rewrite("\(lc.subject)的作者是誰") }
+        case "smalltalk":
+            if !EchoEngine.isQuestion(message), !EchoEngine.fortuneIntent(message), let a = Talk.chatAnswer(message, topic: lc.subject) { return .answer(a) }
         case "recommend":
             if t.range(of: "^(為什麼|為何|為啥|怎麼說)(推薦)?(這部|這個|這本|這首|它|這)?$", options: .regularExpression) != nil, !lc.extra.isEmpty {
                 return .answer("我最推薦的是\(lc.extra)")
