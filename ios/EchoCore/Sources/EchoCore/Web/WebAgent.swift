@@ -255,7 +255,8 @@ public enum WebAgent {
         }()
         var brief: (title: String, text: String, url: String)?
         // NineSun 自己知道這部作品（works.txt）：百科拿不到、或拿錯條目（「鐵達尼號」拿到船）時就用自己知道的
-        let offlineWork = zh && !fortune ? (Library.workAnswer(question) ?? Library.defineAnswer(question)) : nil
+        let offlineWorkOnly = zh && !fortune ? Library.workAnswer(question) : nil
+        let offlineWork = offlineWorkOnly ?? (zh && !fortune ? Library.defineAnswer(question) : nil)
         func offline() -> Result? {
             guard let text = offlineWork else { return nil }
             var r = Result(text: "📌 回答\n" + text, card: nil, found: true, engines: ["library": 1])
@@ -274,7 +275,8 @@ public enum WebAgent {
                 let direct = fr?.want == .definition && !asksWhat ? WikiAnswer.define(subject: t, brief: b)
                     : asksWhat ? WikiAnswer.work(title: t, brief: b) : nil
                 // 自己知道這部作品，百科卻沒給故事（拿到的是同名的船、地名）：用自己知道的
-                if offlineWork != nil, direct.map({ !$0.text.contains("📖") }) ?? true, let r = offline() { return r }
+                // （只限作品：定義題百科的說明通常比自己的一兩句完整）
+                if offlineWorkOnly != nil, direct.map({ !$0.text.contains("📖") }) ?? true, let r = offline() { return r }
                 if let direct {
                     var r = Result(text: direct.text, card: nil, found: true, engines: ["wikibrief": 1])
                     r.answered = true; r.confident = true; r.evidence = direct.evidence
