@@ -642,16 +642,17 @@ public enum Commonsense {
         let e = first.entity
         // 人物什麼時候出生、過世（「愛因斯坦哪一年過世」「李白幾歲死的」）：從年代算
         if e.kind == "人物", let span = e.attr("年代"),
-           let g = RuleBook.match(span, #"(西元前|前)?\s*(\d+) 年到 (西元前|前)?\s*(\d+) 年"#), let y1 = Int(g[1]), let y2 = Int(g[3]) {
+           let g = RuleBook.match(span, #"(西元前|前)?\s*(\d+) 年到\s*(西元前|前)?\s*(\d+) 年"#), let y1 = Int(g[1]), let y2 = Int(g[3]) {
             let bc1 = !g[0].isEmpty, bc2 = !g[2].isEmpty
             let born = (bc1 ? "西元前 " : "") + "\(y1) 年", died = (bc2 ? "西元前 " : "") + "\(y2) 年"
             let age = (bc1 ? -y1 : y1) <= (bc2 ? -y2 : y2) ? (bc2 ? -y2 : y2) - (bc1 ? -y1 : y1) : 0
             let when = ["哪一年", "哪年", "幾年", "什麼時候", "何時", "幾歲", "年份", "多大"].contains(where: { t.contains($0) })
             if when, ["過世", "去世", "逝世", "死", "離世"].contains(where: { t.contains($0) }) {
-                return "\(e.name)在\(died)過世" + (age > 0 ? "，享年大約 \(age) 歲" : "") + "（生於\(born)）。"
+                let sd = died.first?.isNumber == true ? " " : "", sb = born.first?.isNumber == true ? " " : ""
+                return "\(e.name)在\(sd)\(died)過世" + (age > 0 ? "，享年大約 \(age) 歲" : "") + "（生於\(sb)\(born)）。"
             }
             if when, ["出生", "出世", "生的", "誕生", "生於"].contains(where: { t.contains($0) }) {
-                return "\(e.name)生於\(born)" + "，\(died)過世。"
+                return "\(e.name)生於\(born.first?.isNumber == true ? " " : "")\(born)" + "，\(died)過世。"
             }
             if ["活了幾歲", "活了多久", "活多久", "幾歲過世", "享年"].contains(where: { t.contains($0) }), age > 0 {
                 return "\(e.name)活了大約 \(age) 歲（\(born)到\(died)）。"
@@ -823,6 +824,10 @@ public enum Commonsense {
         for e in facts where e.kind == "人物" {
             guard let w = e.attr("代表作"), w.contains(work) else { continue }
             let kind = w.contains("《\(work)》") ? "《\(work)》" : "〈\(work)〉"
+            // 問「誰唱的」：歌手不一定是詞曲作者，說「是誰唱的」
+            if t.contains("唱") {
+                return "\(kind)是\(e.name)唱的。\(e.name)是\(e.attr("簡介") ?? "")。" + (e.attr("年代").map { "（\($0)）" } ?? "")
+            }
             return "\(kind)的作者是\(e.name)。\(e.name)是\(e.attr("簡介") ?? "")。" + (e.attr("年代").map { "（\($0)）" } ?? "")
         }
         return nil
