@@ -129,3 +129,17 @@ final class EverydaySafetyTests: XCTestCase {
         XCTAssertFalse(r.turn.text.contains("發生了什麼事"), r.turn.text)
     }
 }
+
+final class MyTopicTests: XCTestCase {
+    func testMyTopicGoesToTheReading() throws {
+        XCTAssertEqual(EchoEngine.myTopic("我的健康要注意什麼？"), "我的健康怎麼樣")
+        XCTAssertEqual(EchoEngine.myTopic("我的身體要注意什麼"), "我的健康怎麼樣")
+        XCTAssertNil(EchoEngine.myTopic("我的身體一直發燒怎麼辦"))
+        var ctx = EchoEngine.Context()
+        ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 8)
+        let e = try SimpleQuestionsProbeTests.engine()
+        let r = e.reply(to: "我的錢財要注意什麼", context: ctx)
+        XCTAssertNil(r.webQuery)
+        XCTAssertTrue(r.turn.text.contains("2宮"), r.turn.text)
+    }
+}

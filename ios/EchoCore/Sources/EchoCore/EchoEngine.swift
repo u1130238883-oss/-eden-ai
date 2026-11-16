@@ -403,6 +403,15 @@ public final class EchoEngine {
             lastWebTurn = history.count
             return done(a, .knowledge)
         }
+        // 2.068) 「我的健康要注意什麼」「我的錢財要注意什麼」：問的是自己命盤上的這個主題，不是上網查一般的健康、理財知識
+        if L == .zh, let norm = EchoEngine.myTopic(text), let tp = TopicRouter.parse(norm, L: .zh, now: ctx.now) {
+            guard let bd = ctx.profile.birthday else {
+                return done("我還不知道你的生日，沒辦法看這個主題。直接告訴我，例如：我的生日是2000年1月1日，或到右上角「調頻台」選好日期（會自動儲存）。", .tool)
+            }
+            let out = Reader(.zh, i18n: i18n).topicZh(Destiny(bd), palaces: tp.palaces.isEmpty ? [tp.palace] : tp.palaces, y: tp.y, m: tp.m)
+            last = out.follow; lastTurn = history.count; lastMantic = nil
+            return done(out.text, .reader, card: out.card)
+        }
         // 2.07) 問世界上的事（不是問自己的命、不是說心情、不是在跟我聊天）：上網查——
         // 不能被「房」「出國」「情緒」這些字帶去算命，也不能被書名裡的「煩惱」帶去安慰
         if L == .zh, EchoEngine.worldQuestion(text) {
@@ -912,6 +921,15 @@ public final class EchoEngine {
         let when = ["會不會", "會嗎", "今年", "明年", "什麼時候", "哪年", "哪一年", "幾歲", "這個月", "下個月"]
         if raw.contains("我") && when.contains(where: { raw.contains($0) }) { return false }
         return raw.count >= 2
+    }
+
+    /// 「我的健康要注意什麼」→「我的健康怎麼樣」（交給主題路由）；不是這種問法回傳 nil。
+    /// 有症狀（「我的身體一直發燒」）、問方法（「怎麼讓身體變好」）的不算
+    static func myTopic(_ raw: String) -> String? {
+        let t = raw.filter { !"？?。！!，, ".contains($0) }
+        guard let g = RuleBook.match(t, #"^我(?:的|今年的|最近的)?(健康|身體|錢財|財運|金錢|錢|感情|愛情|桃花|事業|工作|婚姻|朋友|人際關係|人際|家庭|家人|學業|考運)(?:運|運勢|方面)?(?:要|該|需要|應該)?(注意什麼|注意些什麼|注意哪些|小心什麼|怎麼樣|如何|好不好|好嗎|會好嗎|順不順|怎樣)$"#) else { return nil }
+        let topic = g[0] == "身體" ? "健康" : g[0] == "錢" || g[0] == "金錢" ? "錢財" : g[0]
+        return "我的\(topic)怎麼樣"
     }
 
     /// 在問 NineSun 自己（「你會唱歌嗎」「你幾歲」），不是要查資料

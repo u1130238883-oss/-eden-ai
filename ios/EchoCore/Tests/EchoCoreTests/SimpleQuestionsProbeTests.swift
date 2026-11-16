@@ -16,7 +16,12 @@ final class SimpleQuestionsProbeTests: XCTestCase {
             // App 先看是不是翻譯（「謝謝的英文怎麼說」），是的話不會進到引擎
             if Translate.parse(q) != nil { print("=== \(q)\n[翻譯]\n"); continue }
             let engine = try Self.engine()
-            let r = engine.reply(to: q, context: EchoEngine.Context())
+            // NINESUN_BIRTH=2006-01-14-8：用這個生日（和時辰）回答
+            var ctx = EchoEngine.Context()
+            if let b = ProcessInfo.processInfo.environment["NINESUN_BIRTH"]?.split(separator: "-").compactMap({ Int($0) }), b.count >= 3 {
+                ctx.profile = UserProfile(birthday: BirthDay(year: b[0], month: b[1], day: b[2]), hour: b.count > 3 ? b[3] : nil)
+            }
+            let r = engine.reply(to: q, context: ctx)
             var out = "=== \(q)\n[\(r.turn.source)] \(r.turn.text)"
             if let w = r.webQuery {
                 out += "\n[web: \(w)]"
