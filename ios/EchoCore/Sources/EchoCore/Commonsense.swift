@@ -152,6 +152,12 @@ public enum Commonsense {
         if ["到睡不著", "難過", "傷心", "孤單", "寂寞", "害怕", "失落", "低落", "生氣", "煩惱", "好煩", "很煩", "焦慮", "憂鬱", "想哭", "心情"]
             .contains(where: { t.contains($0) }) && t.contains("我")
             && !["教我", "怎麼緩解", "如何緩解", "緩解", "方法", "減輕", "怎麼讓自己", "如何讓自己"].contains(where: { t.contains($0) }) { return nil }
+        // 只打了一個名字（「咖啡」「黑洞」「番茄炒蛋」「電影」）：介紹它、給做法或推薦
+        if t.count <= 8, !fortuneish(t) {
+            if let e = facts.first(where: { $0.names.contains(t) }), e.kind != "常識", let d = define(e, now: now) { return d }
+            if let e = howtos.first(where: { $0.names.contains(t) }), let a = howto(e.name + "怎麼做") ?? howto("怎麼" + e.name) { return a }
+            if recommends.contains(where: { $0.names.contains(t) }), let a = recommend(t) ?? recommend("推薦" + t) { return a }
+        }
         if let a = whichClinic(t) { return a }
         // 「我膝蓋痛」「我嘴破了」「我便秘」：說了身體的狀況 → 關心一句，給做法
         if let g = RuleBook.match(t, #"^我(?:的)?(?:好像|一直|有點|今天|最近|又|突然|常常|很容易)?(.{2,8}?)(?:了|好幾天了|很久了)?$"#) {
