@@ -893,3 +893,27 @@ brief; still wrong: "鐵達尼號講的是什麼" (gets the ship: the film's art
 - `web_questions_shots.txt` 加了截圖那題（非常出名的西方文學作品講的都是什麼）和三題同類，看本地引擎怎麼答。
 - 2026-11-12 23:09 起 GitHub Actions 每個工作都在 2～3 秒內失敗、沒有任何步驟、沒有紀錄（帳號層級：多半是 Actions 額度或付款）。
   這一輪的 `[shots] [exam-mini]` 和 IPA 都還沒跑；額度恢復後重跑：Actions 頁面手動執行 Web shots、Brain exam、Build NineSun IPA。
+
+## Round 22（2026-11-16，分支 `claude/trusting-ritchie-v332ty`）：本身的引擎變聰明（大腦關著也要答得好）
+
+使用者：「回答得還是太笨了」——截圖是**大腦（Gemma）關著**、由 NineSun 自己的引擎回答「出名的西方作品講的是什麼」。要求至少優化、訓練 9 小時再出 IPA。
+
+**在 Linux 上跑 Swift 測試**：Ubuntu 24.04 沒有 swiftlang 套件、download.swift.org 被擋；從 archive.ubuntu.com 的 pool 抓 `swiftlang_6.0.3`、`libswiftlang`、`libxml2-16`、`libpython3.13` 的 .deb 解開來用（設好 `LD_LIBRARY_PATH`）。`swift build`／`swift test` 都能跑；release 建置在記憶體吃緊時編譯器會 signal 6，單獨跑或用 debug 就好。原本的 215 個測試 0 失敗（少掉的測試資料已從 `claude/ninesun-ai-ipa` 補回）。
+
+**量法**（都是不上網、只看引擎本身）：
+- `web_questions_graded.txt` 104 題：50.0% → 97% 左右
+- `Fixtures/offline_holdout.txt` 45 題（新寫的）：31.1% → 95.6%（後來看過錯題，不算完全獨立）
+- `Fixtures/offline_holdout2.txt` 81 題（中途寫好、之後不看個別題目）：原本 53.1% →（寫好時）91.4%
+- 錄好的上網考試（tapes/web-exam-25）重播：99.0%（原本實際上網 91.3%）；web-shots-15 實際上網：截圖那類題目、紅樓夢作者、八大行星都答出來了
+
+**加了什麼**
+- `Library.swift`（`works.txt` 100 部作品、`lists.txt` 77 個清單、`who.txt` 69 項誰提出／創立）：作者、清單、一類作品（截圖那題）、誰發明、作品內容（百科拿不到或拿錯條目時用）。
+- `Talk.swift`（`talk.txt`）：NineSun 自己的話（有沒有感情、喜歡什麼）、看法（AI、外星人、算命準不準、人生的意義）、笑話、選擇題（該不該換工作、怎麼交到女朋友）、短回應（好、嗯、😂、？、不知道、隨便、你答錯了）、寫作幫忙（生日祝福、請假信、取名字、短詩）、安慰；外語寒暄；閒聊（看了／吃了／去哪／在學…接著問下去，不再用宮位亂回）。
+- 常識：+~50 個做法（急救、詐騙、面試、履歷、霸凌、睡眠…，每個有自己的開頭）、+40 位人物、科學基礎、事件年份、科技名詞、旅遊和美食清單。
+- 追問接得上：`EchoEngine.lastLocal`（再一個、最大的是哪一個、他還寫了什麼、結局呢、為什麼推薦這部、可是我很怕、閒聊的回答）；回「好」照上一則建議的問法做；「說簡單一點／說詳細一點」。
+- 修正：詐騙（中獎叫你匯款）被說「恭喜」、「貓可以喝牛奶嗎」答「可以」、「怎麼交到女朋友」當成好消息、「怎麼學好英文」被翻譯、「我的健康要注意什麼」被拿去上網、問「五行是什麼」先答「五行局」、「光速是多少」查不到。
+- App：大腦開關照實（沒下載好就不偷用別的模型）、預設官方 Gemma 4 E4B、開源模型模式直接問模型、友善的語氣。
+
+**沒做的**：理解問題的模型（`ai/intent`）重新訓練——編碼 12 萬句要 5 小時以上 CPU，這個模型只用在上網查的一小部分，沒做。
+
+**測試**：`LibraryTests.swift`（作者、清單、一類作品、追問、閒聊、寫作、安全）；`WebRoutingTests`、`testUserPhrasings` 改成反映新的方針（自己知道的、自己有看法的就自己答）。
