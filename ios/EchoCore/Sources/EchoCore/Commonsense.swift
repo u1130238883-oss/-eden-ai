@@ -774,7 +774,8 @@ public enum Commonsense {
         }
         let stop: Set<String> = ["會有", "為什麼", "什麼", "會不會", "是不是", "怎麼", "原因", "為何"]
         for e in facts {
-            let named = e.names.contains { $0.count >= 1 && t.contains($0) }
+            // 「人」是大部分身體問題沒說出來的主角（「頭髮為什麼會變白」「為什麼會做夢」）
+            let named = e.names.contains { $0.count >= 1 && t.contains($0) } || ["人", "人體", "人類", "身體"].contains(e.name)
             for w in e.whys {
                 let hit = w.keys.filter { $0.count >= 2 && !stop.contains($0) && t.contains($0) }
                 let kept = hit.filter { h in !hit.contains { $0 != h && $0.contains(h) } }
