@@ -47,6 +47,8 @@ public enum Talk {
         let range = NSRange(t.startIndex..., in: t)
         for e in entries where !e.answers.isEmpty {
             guard e.asks.contains(where: { $0.firstMatch(in: t, range: range) != nil }) else { continue }
+            // 聊到自己認識的東西（「我喜歡吃香蕉」）：讓常識接話，說一件那個東西的事
+            if e.kind == "閒聊", Commonsense.react(raw) != nil { return nil }
             let n = asked[e.name, default: 0]
             asked[e.name] = n + 1
             // 笑話：每次換一個；其他：同一個問題給同一個回答（多個寫法時照問法輪替）

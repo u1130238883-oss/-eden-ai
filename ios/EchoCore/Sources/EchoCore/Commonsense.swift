@@ -183,8 +183,9 @@ public enum Commonsense {
                           "要準備什麼", "要帶什麼", "準備哪些", "要準備哪些", "該準備什麼", "該帶什麼"]
 
     static func howto(_ t: String) -> String? {
-        guard howCues.contains(where: { t.contains($0) }) else { return nil }
         let first = mentions(t, in: howtos).first
+        // 問法很具體的（「一天要喝多少水」）就算沒有「怎麼」也是在問做法
+        guard howCues.contains(where: { t.contains($0) }) || (first?.alias.count ?? 0) >= 5 else { return nil }
         var hit = first?.entity
         // 「番茄炒蛋怎麼做」不是「炒蛋」：問的菜名前面還多了別的料，是另一道菜，交給上網查
         if let f = first, f.entity.kind == "做法", let r = t.range(of: f.alias) {
@@ -201,7 +202,7 @@ public enum Commonsense {
         let steps = (e.attr("步驟") ?? "").split(separator: "；").enumerated().map { "\($0.offset + 1). \($0.element)" }
         guard !steps.isEmpty else { return nil }
         let symptom = ["感冒", "發燒", "頭痛", "睡不著", "拉肚子"].contains(e.name)
-        var s = e.kind == "做法" ? "\(e.name)的步驟：" : symptom ? "\(e.name)的時候可以這樣做：" : "想\(e.name)，可以這樣做："
+        var s = e.attr("開頭") ?? (e.kind == "做法" ? "\(e.name)的步驟：" : symptom ? "\(e.name)的時候可以這樣做：" : "想\(e.name)，可以這樣做：")
         s += "\n" + steps.joined(separator: "\n")
         if let x = e.attr("提醒") { s += "\n\n小提醒：\(x)。" }
         if let x = e.attr("看法") { s += "\n\n\(x)。" }
@@ -500,15 +501,34 @@ public enum Commonsense {
         }
         for p in ["真的", "也", "都", "到底", "其實", "本身"] where r.hasPrefix(p) { r.removeFirst(p.count) }
 
-        // 能不能吃：「狗可以吃巧克力嗎」
-        if RuleBook.match(r, #"^(?:可以|能|能夠)吃(.*)$"#) != nil, let food = es.dropFirst().first {
+        // 能不能吃、能不能喝：「狗可以吃巧克力嗎」「狗可以吃葡萄嗎」「貓可以喝牛奶嗎」
+        if let g = RuleBook.match(r, #"^(?:可以|能|能夠)(吃|喝)(.+)$"#) {
+            let verb = g[0]
+            let foodEntity = es.dropFirst().first
+            let words = (foodEntity?.names ?? []) + [g[1]]
             let diet = e.attr("吃") ?? ""
-            let banned = diet.range(of: "不能吃").map { String(diet[$0.upperBound...]) } ?? ""
-            if food.names.contains(where: { banned.contains($0) }) {
-                let reason = food.attr("說明").map { "\n" + $0 + "。" } ?? ""
-                return "不可以！\(e.name)不能吃\(food.name)。\(reason)"
+            // 「不能吃…」「不適合喝…」「不要給…」後面的部分是不能吃的
+            var bannedPart = ""
+            for neg in ["不能吃", "不可以吃", "不能喝", "不適合喝", "不適合吃", "不要給", "不能給", "也不適合"] {
+                if let rr = diet.range(of: neg) { bannedPart += String(diet[rr.lowerBound...]) + "；" }
             }
-            return nil
+            if let w = words.first(where: { $0.count >= 1 && bannedPart.contains($0) }) {
+                var reason = foodEntity?.attr("說明").map { "\n" + $0 + "。" } ?? ""
+                // 資料裡自己有說原因（括號裡的）就用那個
+                if let rr = bannedPart.range(of: w), let open = bannedPart[rr.upperBound...].firstIndex(of: "（"),
+                   bannedPart.distance(from: rr.upperBound, to: open) <= 2,
+                   let close = bannedPart[open...].firstIndex(of: "）") {
+                    reason = "\n" + bannedPart[bannedPart.index(after: open)..<close] + "。"
+                }
+                let name = foodEntity?.name ?? w
+                return "不可以！\(e.name)不能\(verb)\(name)。\(reason)"
+            }
+            // 能吃的那一段裡有：「狗可以吃肉嗎」
+            let allowed = String(diet.prefix { $0 != "；" })
+            if let w = words.first(where: { $0.count >= 1 && allowed.contains($0) }) {
+                return "可以，\(e.name)\(verb == "喝" ? "可以喝" : "會吃")\(foodEntity?.name ?? w)。\(e.name)平常吃：\(allowed)。"
+            }
+            if foodEntity != nil || !diet.isEmpty { return nil }
         }
         // 是：「鯨魚是魚嗎」「番茄是水果嗎」「地球是圓的嗎」
         if r.hasPrefix("是") {

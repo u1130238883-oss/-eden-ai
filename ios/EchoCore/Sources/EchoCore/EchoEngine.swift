@@ -620,7 +620,11 @@ public final class EchoEngine {
         let raw: String
         let asksMe = EchoEngine.addressedToMe(text)
         let asking = EchoEngine.isQuestion(text)
-        if let c = companionReply(text, L, ctx: ctx, palace: palace) {
+        let mood = L == .zh ? Affect.detect(text) : .info
+        if [.goodNews, .proudEffort, .excitedPlan, .happy].contains(mood), !EchoEngine.isQuestion(text) {
+            // 好消息、開心的事：接著問下去（不要接「是發生了什麼事？」或一段宮位的話）
+            raw = EchoEngine.celebrate(text)
+        } else if let c = companionReply(text, L, ctx: ctx, palace: palace) {
             raw = c
         } else if !asksMe, EchoEngine.infoQuestion(text) || EchoEngine.looksLikeQuestion(text) {
             // 在問問題（不是問 NineSun 自己）：上網查，不用本地寫死的答案
@@ -662,6 +666,16 @@ public final class EchoEngine {
         r.turn.tokens = []          // 讓對話泡泡出現 👍／👎
         r.turn.variant = raw
         return r
+    }
+
+    /// 好消息的接話：照是什麼好消息問下去
+    static func celebrate(_ t: String) -> String {
+        if t.range(of: "考上|錄取|上榜|考過|通過|合格|畢業", options: .regularExpression) != nil { return "是哪裡、哪個科系？準備了多久？這一路一定不容易。" }
+        if t.range(of: "升職|升官|加薪|拿到offer|找到工作|錄用", options: .regularExpression) != nil { return "新的工作內容是什麼？今天記得好好犒賞自己一下。" }
+        if t.range(of: "在一起|交往|脫單|交到(男|女)朋友|求婚|訂婚|結婚", options: .regularExpression) != nil { return "你們是怎麼認識的？我想聽！" }
+        if t.range(of: "中獎|中樂透|得獎|冠軍|第一名|滿分", options: .regularExpression) != nil { return "太厲害了！你打算怎麼慶祝？" }
+        if t.range(of: "懷孕|生了|寶寶", options: .regularExpression) != nil { return "要好好照顧身體！是男生還是女生，還是要等驚喜？" }
+        return "發生什麼好事了？說來聽聽，我想跟你一起開心。"
     }
 
     static let listenReplies: [[String]] = [

@@ -23,8 +23,11 @@ public enum ScamCheck {
                          "job", "loan", "hired", "text message", "stranger"])
         if payFirst && fees && (scene || prize) { return true }
         if prize && fees && any(["付", "繳", "匯", "轉帳", "pay"]) { return true }
+        // 「有人叫我匯款說中獎了」：說你中獎、又要你拿錢出來（沒提到運費、手續費也一樣）
+        if prize && any(["匯款", "匯錢", "轉帳", "付錢", "繳錢", "先付", "先繳", "買點數", "send money", "wire", "transfer"])
+            && any(["要我", "叫我", "請我", "要求我", "說要", "對方", "asked me", "told me", "wants me"]) { return true }
         // ③ 不認識的人、網友、「投資老師」要你拿錢出來
-        let stranger = any(["網友", "陌生人", "不認識的人", "簡訊", "自稱", "交友軟體", "投資老師", "投資群", "text message", "stranger", "online friend", "someone i met online"])
+        let stranger = any(["網友", "陌生人", "不認識的人", "簡訊", "自稱", "有人", "一個人打電話", "打電話來", "陌生電話", "交友軟體", "投資老師", "投資群", "text message", "stranger", "online friend", "someone i met online"])
         let money = any(["匯錢", "匯款", "轉帳", "借錢", "借我錢", "投資", "買點數", "給他錢", "給她錢", "付錢", "入金", "send money", "wire", "invest", "lend"])
         let asksMe = any(["要我", "叫我", "請我", "幫他", "幫她", "跟我借", "向我借", "帶我", "跟著他", "跟著她", "asked me", "asks me", "wants me", "told me"])
         if stranger && money && asksMe { return true }

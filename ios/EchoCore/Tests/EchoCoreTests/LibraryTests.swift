@@ -99,3 +99,33 @@ final class TalkTests: XCTestCase {
         XCTAssertEqual(Affect.detect("我交到女朋友了"), .goodNews)
     }
 }
+
+final class EverydaySafetyTests: XCTestCase {
+    func testPetFood() {
+        XCTAssertTrue(Commonsense.answer("狗可以吃葡萄嗎")?.hasPrefix("不可以") == true)
+        XCTAssertTrue(Commonsense.answer("貓可以喝牛奶嗎")?.hasPrefix("不可以") == true, "以前答「可以」")
+        XCTAssertTrue(Commonsense.answer("狗可以吃巧克力嗎")?.hasPrefix("不可以") == true)
+        XCTAssertTrue(Commonsense.answer("狗可以吃肉嗎")?.hasPrefix("可以") == true)
+    }
+
+    func testPrizeTransferIsAScam() {
+        XCTAssertTrue(ScamCheck.looks("有人叫我匯款說中獎了"))
+        XCTAssertTrue(ScamCheck.looks("對方說我中獎了要我先轉帳"))
+        XCTAssertFalse(ScamCheck.looks("我中獎了"))
+        XCTAssertFalse(ScamCheck.looks("怎麼匯款給家人"))
+    }
+
+    func testHowtoHeadings() {
+        XCTAssertTrue(Commonsense.answer("被霸凌怎麼辦")?.hasPrefix("被霸凌不是你的錯") == true)
+        XCTAssertTrue(Commonsense.answer("一天要喝多少水")?.contains("30 毫升") == true)
+        XCTAssertNil(Translate.parse("怎麼學好英文"))
+        XCTAssertNotNil(Translate.parse("蘋果的英文怎麼說"))
+    }
+
+    func testGoodNewsFollowUp() throws {
+        let e = try SimpleQuestionsProbeTests.engine()
+        let r = e.reply(to: "我考上大學了", context: EchoEngine.Context())
+        XCTAssertTrue(r.turn.text.contains("科系"), r.turn.text)
+        XCTAssertFalse(r.turn.text.contains("發生了什麼事"), r.turn.text)
+    }
+}
