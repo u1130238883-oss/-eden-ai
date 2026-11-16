@@ -187,6 +187,10 @@ public enum Library {
             }
         }
         if let g = pats.lazy.compactMap({ RuleBook.match(t, $0) }).first { names.append(g[0]) }
+        // 「列出歐洲的國家」「列出太陽系的行星」
+        if let g = RuleBook.match(t, #"^(?:請|幫我)?列出(?:所有的|全部的|所有|全部)?(.{2,14})$"#) {
+            names += [g[0], g[0].replacingOccurrences(of: "的", with: "")]
+        }
         // 「你知道八大行星嗎」：整句就是一個清單的名字
         names.append(t)
         guard let n = names.first(where: { n in lists.contains { $0.names.contains(n) } }),

@@ -127,6 +127,10 @@ public enum Commonsense {
 
     public static func answer(_ raw: String, now: Date = Date()) -> String? {
         var t = Everyday.clean(raw)
+        // 「解釋一下情緒勒索」「介紹一下黑洞」→「情緒勒索是什麼」
+        if let r = t.range(of: #"^(請|幫我)?(解釋一下|解釋|說明一下|介紹一下)"#, options: .regularExpression), t[r.upperBound...].count >= 2 {
+            t = String(t[r.upperBound...]) + "是什麼"
+        }
         // 「一光年有多遠」「一公斤是多少」：數量詞「一」後面接名字，先拿掉（不然名字前面接了字會被當成另一個詞）
         if t.hasPrefix("一"), facts.contains(where: { e in e.names.contains { $0.count >= 2 && t.dropFirst().hasPrefix($0) } }) { t.removeFirst() }
         // 「圓周率是多少」「光速是多少」：整句就是「名字＋是多少」→ 用簡介回答
@@ -190,7 +194,7 @@ public enum Commonsense {
     static let fortuneNames: [String] = all.flatMap { $0.names }.filter { n in n.count >= 2 && ["宮", "屬", "卦", "星座", "運"].contains(where: { n.contains($0) }) }.sorted { $0.count > $1.count }
 
     static let asking = ["嗎", "呢", "還是", "什麼", "幾", "多少", "哪", "誰", "怎麼", "如何", "為什麼", "為何", "是不是", "會不會", "有沒有", "能不能",
-                         "可不可以", "可以", "介紹", "多久", "多遠", "多高", "多大", "多長", "多深", "多快", "多熱", "多冷", "多重", "位於"]
+                         "可不可以", "可以", "介紹", "多久", "多遠", "多高", "多大", "多長", "多深", "多快", "多熱", "多冷", "多重", "位於", "解釋", "意思", "指的是"]
 
     // MARK: - 聊到某個東西
 
@@ -291,7 +295,9 @@ public enum Commonsense {
             let p = line.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
             guard t.contains(p[0]), t.contains(p[1]) else { continue }
             let angles = p[2].split(separator: ",").map(String.init)
-            if angles.isEmpty || angles.contains(where: { t.contains($0) }) { return p[3] + "。" }
+            // 問「差別、有什麼不同」：看法裡本來就會講差別，不限角度
+            let asksDiff = ["差別", "差異", "不同", "分別", "區別", "不一樣"].contains(where: { t.contains($0) })
+            if angles.isEmpty || asksDiff || angles.contains(where: { t.contains($0) }) { return p[3] + "。" }
         }
         return nil
     }
@@ -394,7 +400,7 @@ public enum Commonsense {
         ("面積", ["面積", "多少平方公里"]),
     ]
 
-    static let defineCues = ["是誰", "是什麼", "什麼是", "誰是", "介紹", "簡介", "是幹嘛的", "是做什麼的", "是幹什麼的", "認識", "知道", "是哪位",
+    static let defineCues = ["是誰", "是什麼", "什麼是", "誰是", "介紹", "簡介", "是幹嘛的", "是做什麼的", "是幹什麼的", "認識", "知道", "是哪位", "是什麼意思", "什麼意思", "的意思", "解釋一下", "解釋", "指的是什麼", "指的是", "是在說什麼",
                              "什麼東西", "怎樣的人", "什麼樣的人", "是個什麼"]
 
     static func about(_ t: String, now: Date) -> String? {
@@ -713,7 +719,7 @@ public enum Commonsense {
         case "說明": s = v + "。"
         case "頻率", "人數": s = "\(n)\(v)。"
         case "位置": s = "\(n)在\(v)。"
-        case "重量": s = "\(n)的體重：\(v)。"
+        case "重量": s = e.kind == "動物" ? "\(n)的體重：\(v)。" : "\(n)的質量：\(v)。"
         case "日期": return festivalAnswer(e, now: now)
         case "習俗": s = "\(n)的習俗：\(v)。"
         case "由來": s = "\(n)的由來：\(v)。"
