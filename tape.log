@@ -1,0 +1,60 @@
+[0;36m64 |[0;0m                 if let d = try? JSONSerialization.data(withJSONObject: row, options: [.sortedKeys]), let h = FileHandle(forWritingAtPath: jp) ?? { FileManager.default.createFile(atPath: jp, contents: nil); return FileHandle(forWritingAtPath: jp) }() {
+   [0;36m|[0;0m                                                                                                                                                                        `- [1;33mwarning: [1;39mresult of call to 'createFile(atPath:contents:attributes:)' is unused[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/no-usage\NoUsage]8;;\]
+[0;36m65 |[0;0m                     h.seekToEndOfFile(); h.write(d); h.write("\n".data(using: .utf8)!); h.closeFile()
+[0;36m66 |[0;0m                 }
+
+/home/runner/work/-eden-ai/-eden-ai/ios/EchoCore/Tests/EchoCoreTests/WebTests.swift:185:29: [1;33mwarning: [1;39mresult of call to 'createFile(atPath:contents:attributes:)' is unused[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/no-usage\NoUsage]8;;\]
+[0;36m183 |[0;0m     lazy var out: FileHandle? = {
+[0;36m184 |[0;0m         guard let path = ProcessInfo.processInfo.environment["NINESUN_LIVE_OUT"] else { return nil }
+[0;36m185 |[0;0m         FileManager.default.createFile(atPath: path, contents: nil)
+    [0;36m|[0;0m                             `- [1;33mwarning: [1;39mresult of call to 'createFile(atPath:contents:attributes:)' is unused[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/no-usage\NoUsage]8;;\]
+[0;36m186 |[0;0m         return FileHandle(forWritingAtPath: path)
+[0;36m187 |[0;0m     }()
+
+[#NoUsage]: <https://docs.swift.org/compiler/documentation/diagnostics/no-usage>
+[45 / 57] EchoCoreTests-product
+[50 / 57] EchoCoreTests-product
+[51 / 57] EchoCoreTests-test-runner
+[54 / 59] EchoCoreTests-test-runner
+[59 / 59] EchoCoreTests-test-runner
+Build complete! (243.62 secs)
+Test Suite 'Selected tests' started at 2026-11-16 00:42:58.211
+Test Suite 'WebTapeTests' started at 2026-11-16 00:42:58.238
+Test Case 'WebTapeTests.testRecord' started at 2026-11-16 00:42:58.238
+TAPE> 時間是什麼
+TAPE> 愛是什麼
+TAPE> 五行是什麼
+TAPE> 夏洛特的煩惱
+TAPE> 夏洛特的煩惱講的是什麼
+TAPE> 少年維特的煩惱講的是什麼
+TAPE> 紅樓夢的作者是誰
+TAPE> 八大行星有哪些
+TAPE> 百年孤寂在講什麼
+TAPE> 小王子在講什麼
+TAPE> 你的名字講了什麼
+TAPE> 刺激1995講的是什麼
+TAPE> 活著這本書在講什麼
+TAPE> 黑洞是什麼
+TAPE> 通貨膨脹是什麼
+TAPE> 光合作用是什麼
+TAPE> 民主是什麼
+TAPE> 幸福是什麼
+TAPE> 為什麼天空是藍的
+TAPE> 陰陽是什麼
+TAPE> 哈利波特在講什麼
+TAPE> 鐵達尼號講的是什麼
+TAPE> 三體在講什麼
+TAPE> 老人與海在講什麼
+TAPE> 進擊的巨人在講什麼
+TAPE> 相對論是什麼
+TAPE> 區塊鏈是什麼
+TAPE> 存在主義是什麼
+TAPE> 非常出名的西方文學作品講的都是什麼
+TAPE> 有哪些有名的西方文學作品
+TAPE> 世界四大名著是哪些
+TAPE> 莎士比亞有哪些有名的作品
+Test Case 'WebTapeTests.testRecord' passed (332.818 seconds)
+Test Suite 'WebTapeTests' passed at 2026-11-16 00:48:31.056
+	 Executed 1 test, with 0 failures (0 unexpected) in 332.818 (332.818) seconds
+Test Suite 'Selected tests' passed at 2026-11-16 00:48:31.056
+	 Executed 1 test, with 0 failures (0 unexpected) in 332.818 (332.818) seconds
