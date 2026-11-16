@@ -139,6 +139,9 @@ public final class EchoEngine {
     /// 上一個問題（不論是上網查還是本地回答），追問時用來補上主題
     var lastQuestion: String?
     var lastQuestionTurn = -100
+    /// 本地剛回答的東西（笑話、作者、清單、作品、推薦、選擇題）：追問「再一個」「最大的是哪一個」「結局呢」「為什麼」時接得上
+    struct LocalContext { var kind: String; var subject: String = ""; var extra: String = ""; var turn: Int }
+    var lastLocal: LocalContext?
 
     /// 逐字產生回覆。`onToken` 每產生一個字就回呼一次。
     public func reply(to message: String, history: [ChatTurn] = [], context: Context,
@@ -163,7 +166,8 @@ public final class EchoEngine {
         }
         // 帶著感受回答：對方開心就替他開心、難過就先心疼、罵我就先道歉——回答本來就有這種語氣、或是一般的問題就不加
         // 說想死的時候不加（「我想結束自己，哈哈」不能回「你真有趣😆」）
-        if r.lang == .zh, r.turn.role == .echo, !r.turn.text.isEmpty, !Safety.isCrisis(message) {
+        // NineSun 自己的話（笑話、看法、選擇題）本身就帶著語氣，不再加「你真有趣😆」這種開頭
+        if r.lang == .zh, r.turn.role == .echo, !r.turn.text.isEmpty, !Safety.isCrisis(message), r.turn.variant != "talk" {
             r.turn.text = Affect.color(r.turn.text, for: message, seed: message.count, voice: context.profile.birthday.map { Voice($0) })
         }
         return r
@@ -174,7 +178,22 @@ public final class EchoEngine {
         // 追問（「那這些國家都是哪些國家」）：先把代名詞換回上一題的主題，再照一般問題處理
         let prevQuestion = lastQuestion, prevQuestionTurn = lastQuestionTurn
         var text = message
-        if let prev = lastQuestion, history.count - lastQuestionTurn <= 8,
+        var rewritten = false
+        // 追問本地剛回答的東西：直接回答，或把問題補完整（「他還寫了什麼」→「曹雪芹還寫了什麼」、「結局呢」→「哈姆雷特的結局」）
+        if context.language == .zh || Lang.detect(message, fallback: .zh) == .zh, let lc = lastLocal, history.count - lc.turn <= 4 {
+            switch localFollowUp(message, lc) {
+            case .answer(let a)?:
+                var r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+                r.turn.variant = "talk"
+                lastLocal?.turn = history.count
+                return r
+            case .rewrite(let t)?:
+                text = t
+                rewritten = true
+            case nil: break
+            }
+        }
+        if !rewritten, let prev = lastQuestion, history.count - lastQuestionTurn <= 8,
            let t = EchoEngine.substituteAnaphor(message, previous: prev) { text = t }
         var r = replyCore(to: text, history: history, context: context, onToken: onToken)
         // 沒有主語的問題不能當成「上一題的主題」
@@ -382,7 +401,12 @@ public final class EchoEngine {
             }
         }
         // 2.058) NineSun 自己的話：關於自己、自己的看法、笑話、人生的選擇題（該不該換工作、怎麼交到女朋友）
-        if L == .zh, let a = Talk.answer(text) { return done(a, .knowledge) }
+        if L == .zh, let a = Talk.detailed(text) {
+            lastLocal = LocalContext(kind: a.kind, subject: a.name, turn: history.count)
+            var r = done(a.text, .knowledge)
+            r.turn.variant = "talk"
+            return r
+        }
         // 2.06) 假設題、兩難題（「如果有兩個按鈕…你怎麼選」）：問的是 NineSun 自己的想法，不是命盤、心情，也不用上網查。
         //       照自己的價值觀選一邊、說理由（大腦開著時 App 會交給大腦推理）
         if L == .zh || L == .en, Dilemma.looks(text) { return done(Dilemma.stance(text, zh: L == .zh), .knowledge) }
@@ -392,12 +416,16 @@ public final class EchoEngine {
         if L == .zh, let a = EchoEngine.aboutMe(text, now: ctx.now) { return done(a, .knowledge) }
         if L == .zh, let a = Commonsense.react(text) { return done(a, .neural) }
         // 作品的作者、常見的清單（八大行星、四大名著）、一類作品（有名的西方文學作品）：自己知道的就直接回答
-        if L == .zh, let a = Library.answer(text) {
+        if L == .zh, let a = Library.detailed(text) {
             lastWebQuery = EchoEngine.searchQuery(text)
             lastWebTurn = history.count
-            return done(a, .knowledge)
+            lastLocal = LocalContext(kind: a.kind, subject: a.subject, extra: a.extra, turn: history.count)
+            return done(a.text, .knowledge)
         }
         if L == .zh, let a = Commonsense.answer(text, now: ctx.now) {
+            if let r = a.range(of: "如果只能選一個：") {
+                lastLocal = LocalContext(kind: "recommend", extra: String(a[r.upperBound...].prefix { $0 != "\n" }), turn: history.count)
+            }
             // 自己答的也算上一題的主題：追問「那這些省都是哪些省」要接得上
             lastWebQuery = EchoEngine.searchQuery(text)
             lastWebTurn = history.count
@@ -415,10 +443,12 @@ public final class EchoEngine {
         // 2.07) 問世界上的事（不是問自己的命、不是說心情、不是在跟我聊天）：上網查——
         // 不能被「房」「出國」「情緒」這些字帶去算命，也不能被書名裡的「煩惱」帶去安慰
         if L == .zh, EchoEngine.worldQuestion(text) {
+            if let w = Library.workAsked(text) ?? Understanding.workTitle(text) { lastLocal = LocalContext(kind: "work", subject: w, turn: history.count) }
             return done(Loc.s("webAsk", .zh), .tool, web: EchoEngine.searchQuery(text))
         }
         // 2.08) 問一部作品（書名裡有「煩惱」「孤獨」也不是在說心情）：上網查
         if L == .zh, EchoEngine.asksAboutWork(text) || EchoEngine.bareTitle(text) {
+            if let w = Library.workAsked(text) ?? Understanding.workTitle(text) { lastLocal = LocalContext(kind: "work", subject: w, turn: history.count) }
             return done(Loc.s("webAsk", .zh), .tool, web: EchoEngine.searchQuery(text))
         }
         // 2.09) 生活上的「怎麼做」（怎麼存錢、面試要注意什麼、被主管罵了怎麼辦）：上網看好幾個網站，整理出共同的做法
@@ -675,6 +705,40 @@ public final class EchoEngine {
         r.turn.tokens = []          // 讓對話泡泡出現 👍／👎
         r.turn.variant = raw
         return r
+    }
+
+    enum LocalFollow { case answer(String), rewrite(String) }
+
+    /// 追問本地剛回答的東西
+    func localFollowUp(_ message: String, _ lc: LocalContext) -> LocalFollow? {
+        let t = Talk.clean(message)
+        switch lc.kind {
+        case "笑話", "選擇", "自己", "看法":
+            return Talk.followUp(message, kind: lc.kind).map { .answer($0) }
+        case "list":
+            return Library.listFollowUp(message, list: lc.subject).map { .answer($0) }
+        case "author":
+            // 「他還寫了什麼」「她是哪裡人」「作者是誰」：代名詞換成作者
+            guard !lc.extra.isEmpty, t.count <= 16 else { return nil }
+            if t.hasPrefix("他") || t.hasPrefix("她") || t.hasPrefix("作者") || t.hasPrefix("這個作者") {
+                var s = t
+                for p in ["這個作者", "作者", "他", "她"] where s.hasPrefix(p) { s.removeFirst(p.count); break }
+                let name = lc.extra.replacingOccurrences(of: #"^.*?的"#, with: "", options: .regularExpression)
+                return .rewrite(name + s)
+            }
+        case "work":
+            // 「結局呢」「主題是什麼」「誰寫的」：補上書名
+            if let g = RuleBook.match(t, #"^(?:那|它|這部|這本|這個)?(?:的)?(結局|主題|故事|劇情|內容|作者|導演|想表達什麼|主角)(?:是什麼|是誰|呢)?$"#) {
+                return .rewrite("\(lc.subject)的\(g[0])" + (["作者", "導演", "主角"].contains(g[0]) ? "是誰" : ""))
+            }
+            if t.range(of: "^(誰寫的|是誰寫的|誰拍的|是誰拍的|作者是誰)$", options: .regularExpression) != nil { return .rewrite("\(lc.subject)的作者是誰") }
+        case "recommend":
+            if t.range(of: "^(為什麼|為何|為啥|怎麼說)(推薦)?(這部|這個|這本|這首|它|這)?$", options: .regularExpression) != nil, !lc.extra.isEmpty {
+                return .answer("我最推薦的是\(lc.extra)")
+            }
+        default: break
+        }
+        return nil
     }
 
     /// 好消息的接話：照是什麼好消息問下去

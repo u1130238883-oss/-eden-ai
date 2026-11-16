@@ -15,7 +15,8 @@ final class WebRoutingTests: XCTestCase {
 
         let web: [String] = [
             "東京晴空塔有多高？", "上網查 iPhone 17 價格", "幫我查一下今天的新聞", "明天台北天氣如何", "美元對台幣匯率多少",
-            "量子電腦是什麼", "日本首相是誰", "搜尋 珍珠奶茶的由來", "紅燒肉怎麼煮", "世界上第二高的山是哪一座",
+            // 量子電腦、紅燒肉 NineSun 自己知道了（2026-11-16 加進常識），換成不知道的題目
+            "量子糾纏是什麼", "日本首相是誰", "搜尋 珍珠奶茶的由來", "宮保雞丁怎麼煮", "世界上第二高的山是哪一座",
             "上網查偏財格", "who won the last world cup", "what is the capital of Peru", "search quantum physics",
             "高雄到台南要多久", "今天股市怎麼樣？", "甲減是什麼", "甲狀腺疾病有哪些", "我有甲減要注意什麼", "甲亢的症狀",
             "橋本氏甲狀腺炎怎麼治療", "糖尿病可以吃什麼", "房東不還押金怎麼辦", "車禍對方不賠償怎麼辦", "老闆不給加班費違法嗎",
@@ -32,6 +33,11 @@ final class WebRoutingTests: XCTestCase {
         for q in local {
             let r = engine.reply(to: q, context: ctx)
             if r.webQuery != nil { fails.append("✗ 不該上網：\(q)") }
+        }
+        // 自己知道的就自己回答（不用等搜尋引擎、不怕被擋）
+        for (q, must) in [("量子電腦是什麼", "量子位元"), ("紅燒肉怎麼煮", "五花肉")] {
+            let r = engine.reply(to: q, context: ctx)
+            if r.webQuery != nil || !r.turn.text.contains(must) { fails.append("✗ 自己知道卻沒答好：\(q)") }
         }
         print("WEB-ROUTING: \(web.count + local.count - fails.count) ok, \(fails.count) failed")
         fails.forEach { print($0) }

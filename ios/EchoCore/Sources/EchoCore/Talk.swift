@@ -41,7 +41,42 @@ public enum Talk {
     /// 這次是第幾次被問到（笑話每次換一個）
     static var asked: [String: Int] = [:]
 
-    public static func answer(_ raw: String) -> String? {
+    public static func answer(_ raw: String) -> String? { detailed(raw)?.text }
+
+    /// 剛剛回答的是哪一種（笑話、自己、看法、選擇…），追問時要接得上
+    public static func detailed(_ raw: String) -> (text: String, kind: String, name: String)? {
+        guard let a = match(raw) else { return nil }
+        return a
+    }
+
+    /// 追問：笑話「再一個」「不好笑」、選擇題「可是我很怕」、看法「為什麼」
+    public static func followUp(_ raw: String, kind: String) -> String? {
+        let t = clean(raw)
+        switch kind {
+        case "笑話":
+            if t.range(of: "^(再|再來|再講|再說|多講|多說|還有|還要|換)(一|一個|一則|個|則|點)?(笑話|個|好笑的)?(嗎|啦)?$|^還有嗎$|^還有呢$|^另一個$|^換一個$|^再一次$", options: .regularExpression) != nil {
+                return answer("講個笑話")
+            }
+            if t.range(of: "^(不好笑|好冷|很冷|超冷|太冷了|好爛|很爛|沒梗|好無聊|聽不懂|不懂|冷笑話|尬)", options: .regularExpression) != nil {
+                return "哈哈，好啦，這個是冷了一點😅 再給我一次機會：\n" + (answer("講個笑話") ?? "")
+            }
+            if t.range(of: "^(哈+|笑死|好笑|很好笑|超好笑|XD+|lol)$", options: [.regularExpression, .caseInsensitive]) != nil {
+                return "看你笑我也開心！還要再聽一個嗎？"
+            }
+        case "選擇":
+            if t.range(of: "^(可是|但是|但)?我(還是)?(很|好|有點|超|真的)?(怕|害怕|不敢|擔心|猶豫|不確定|很難決定|好難決定|不知道怎麼選|不知道要不要)", options: .regularExpression) != nil {
+                return "會怕很正常，代表這件事對你很重要。可以試試這樣想：最壞的情況是什麼？如果真的發生，你有沒有辦法撐過去、有沒有退路？很多時候想清楚最壞的情況，反而就沒那麼怕了。你也不用一次決定，可以先做一個小小的、能回頭的試探。"
+            }
+        case "自己", "看法":
+            if t.range(of: "^(為什麼|為何|怎麼說|為啥|真的嗎|是喔|是哦)$", options: .regularExpression) != nil {
+                return "說不上有什麼大道理，這是我跟很多人聊天之後慢慢形成的想法。你呢？你怎麼看？"
+            }
+        default: break
+        }
+        return nil
+    }
+
+    static func match(_ raw: String) -> (text: String, kind: String, name: String)? {
         let t = clean(raw)
         guard t.count >= 1, t.count <= 30 else { return nil }
         let range = NSRange(t.startIndex..., in: t)
@@ -53,7 +88,7 @@ public enum Talk {
             asked[e.name] = n + 1
             // 笑話：每次換一個；其他：同一個問題給同一個回答（多個寫法時照問法輪替）
             let i = e.kind == "笑話" ? (n + t.count) % e.answers.count : t.unicodeScalars.reduce(0) { $0 &+ Int($1.value) } % e.answers.count
-            return e.answers[abs(i)]
+            return (e.answers[abs(i)], e.kind, e.name)
         }
         return nil
     }

@@ -54,11 +54,47 @@ public enum Library {
 
     // MARK: - 入口（引擎先問這裡；回 nil 就照原本的方法）
 
-    public static func answer(_ raw: String) -> String? {
+    public static func answer(_ raw: String) -> String? { detailed(raw)?.text }
+
+    /// 回答了什麼（追問時要接得上）：kind = author（subject 作品、extra 作者）、who、list（subject 清單名）、category
+    public struct Answered { public let text: String; public let kind: String; public let subject: String; public let extra: String }
+
+    public static func detailed(_ raw: String) -> Answered? {
         let t = bare(raw)
         guard t.count >= 3, t.count <= 40 else { return nil }
         if ["上網查", "幫我查", "搜尋", "google", "Google"].contains(where: { raw.contains($0) }) { return nil }
-        return author(t) ?? whoDid(t) ?? list(t) ?? category(t)
+        if let a = author(t) {
+            let w = authorWork(t)
+            return Answered(text: a, kind: "author", subject: w?.name ?? "", extra: w.map(authorName) ?? "")
+        }
+        if let a = whoDid(t) { return Answered(text: a, kind: "who", subject: "", extra: "") }
+        if let a = list(t) { return Answered(text: a, kind: "list", subject: lastListName ?? "", extra: "") }
+        if let a = category(t) { return Answered(text: a, kind: "category", subject: "", extra: "") }
+        return nil
+    }
+
+    /// 剛剛回答的清單（給 detailed 用）
+    static var lastListName: String?
+
+    static func authorWork(_ t: String) -> Item? {
+        let pats = [#"^(.{2,20}?)的(?:作者|原作者|導演|編劇)(?:是誰|是哪位|是什麼人)?$"#, #"^(.{2,20}?)是誰(?:寫|導演|導|拍|畫|創作|作)的$"#,
+                    #"^誰(?:寫|導演|導|拍|畫|創作)(?:了|的)?(.{2,20})$"#, #"^(.{2,20}?)(?:是|由)誰(?:所)?(?:寫|著|執導|導演)$"#, #"^(.{2,20}?)作者是誰$"#]
+        return pats.lazy.compactMap({ RuleBook.match(t, $0) }).first.flatMap { work(named: $0[0]) }
+    }
+
+    /// 清單的追問：「最大的是哪一個」「有幾個」
+    public static func listFollowUp(_ raw: String, list name: String) -> String? {
+        guard let l = lists.first(where: { $0.name == name }) else { return nil }
+        let t = bare(raw)
+        if let g = RuleBook.match(t, #"^(?:那|其中|裡面|這些|這裡面)?(?:的)?(?:離太陽)?(最大|最小|最近|最遠|最熱|最冷|最深|最多人)(?:的)?(?:是)?(?:哪一個|哪個|哪一顆|哪顆|哪一洲|哪洲|哪一個洋|什麼|誰)?$"#),
+           let v = l.attr(g[0]) {
+            return "\(l.name)裡\(g[0])的是\(v)。"
+        }
+        if t.range(of: #"^(?:那|這些|總共|一共)?(?:有|是)?(?:幾個|幾顆|幾種|多少個)$"#, options: .regularExpression) != nil, let items = l.attr("項目") {
+            let n = items.split(separator: "、").count
+            return "\(l.name)一共有 \(n) 個：\(items)。"
+        }
+        return nil
     }
 
     // MARK: 誰寫的、誰導演的
@@ -137,6 +173,7 @@ public enum Library {
         if let g = pats.lazy.compactMap({ RuleBook.match(t, $0) }).first { names.append(g[0]) }
         guard let n = names.first(where: { n in lists.contains { $0.names.contains(n) } }),
               let l = lists.first(where: { $0.names.contains(n) }), let items = l.attr("項目") else { return nil }
+        lastListName = l.name
         // 「五行是什麼」這種問定義的，交給原本的方法（會講意思，不只是列出來）
         if t.hasSuffix("是什麼"), !n.contains(where: { "二三四五六七八九十".contains($0) }) || n == "五行" { return nil }
         var s = "\(l.name)：\(items)。"
