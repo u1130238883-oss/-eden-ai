@@ -225,3 +225,26 @@ final class SymptomTests: XCTestCase {
         XCTAssertNil(Talk.answer("胸口痛是什麼原因"))
     }
 }
+
+/// 說心情的話（affect_holdout 裡不是問題的句子）：不能拿去上網查、不能用宮位亂回、不能說「沒學過」或「是發生了什麼事」
+final class MoodReplyTests: XCTestCase {
+    func testMoodStatementsGetARealReply() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "Fixtures/affect_holdout", withExtension: "json"))
+        let items = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [[String: String]]
+        let pool = items.filter { $0["label"] != "info" }
+        // 固定挑法：每隔 N 句挑一句
+        let step = max(1, pool.count / 300)
+        let sample = stride(from: 0, to: pool.count, by: step).prefix(300).map { pool[$0]["q"]! }
+        let e = try SimpleQuestionsProbeTests.engine()
+        var bad: [String] = []
+        for q in sample {
+            let r = e.reply(to: q, context: EchoEngine.Context())
+            let t = r.turn.text
+            if r.webQuery != nil || (t.contains("我感覺到") && t.contains("的氣息")) || t.contains("這個我沒學過") || t.contains("是發生了什麼事，還是只是想找人聊聊") {
+                bad.append(q)
+            }
+        }
+        print("MOOD-REPLY: \(sample.count - bad.count)/\(sample.count) ok；例：\(bad.prefix(8))")
+        XCTAssertLessThan(Double(bad.count) / Double(sample.count), 0.05, bad.prefix(20).joined(separator: "\n"))
+    }
+}

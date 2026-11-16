@@ -187,6 +187,70 @@ public enum Talk {
         return nil
     }
 
+    /// 說心情的話（不是問問題）：開頭的一句由 Affect 加，這裡是接下來的話——接住、問下去，對方要建議時給一個做得到的小步驟
+    public static func moodBody(_ mood: Affect.Mood, _ raw: String) -> String? {
+        let wantsAdvice = ["建議", "怎麼辦", "該怎麼", "要怎麼", "如何是好", "怎麼做"].contains(where: { raw.contains($0) })
+        switch mood {
+        case .grief:
+            return "想說說他（或牠）嗎？說說你們之間的回憶也好。失去的痛需要時間，不用急著好起來；如果難過到好幾週都睡不好、吃不下，可以找專業的人聊聊，台灣有 1925 安心專線。"
+        case .sick:
+            return "哪裡不舒服？先多喝水、多休息。如果症狀很嚴重、一直沒好，或有發高燒、呼吸困難、劇烈疼痛，要去看醫生；告訴我症狀，我幫你看看要注意什麼。"
+        case .worryOther:
+            return "他現在的狀況怎麼樣？你能做的通常是：陪著他、幫忙處理生活上的小事、陪他一起去看醫生或找資源。也別忘了照顧好你自己，你倒下了就沒辦法陪他。"
+        case .goodNews, .proudEffort, .happy:
+            return EchoEngine.celebrate(raw)
+        case .excitedPlan:
+            let when = ["明天", "後天", "大後天", "下週", "下禮拜", "週末", "下個月", "今晚", "今天", "等一下", "過幾天", "明年"].contains(where: { raw.contains($0) })
+            return when ? "好期待！要去做什麼呢？需要的話，我也可以幫你想想要準備什麼。" : "是什麼時候？想到什麼都可以跟我分享～需要的話，我也可以幫你想想要準備什麼。"
+        case .anxious:
+            return wantsAdvice || true ? "可以先試試這個：吸氣 4 秒、停 7 秒、慢慢吐氣 8 秒，做三次，身體會放鬆一點。再把擔心的事寫下來，分成「我能做的」和「我控制不了的」，先把能做的那一件做好。你最擔心的是哪一部分？" : nil
+        case .scared:
+            return "你現在安全嗎？如果有危險，先離開、找身邊的人，或打 110（警察）／119。如果是心裡害怕，先慢慢深呼吸，想說說發生了什麼事嗎？"
+        case .angry:
+            return wantsAdvice
+                ? "先讓自己離開現場、深呼吸，等冷靜一點再處理，比較不會說出後悔的話。之後可以用「我覺得…因為…我希望…」的方式說出你的感受和需要；如果是在工作或學校被欺負，記錄下來，找主管、老師或信任的人幫忙。"
+                : "發生了什麼事？說出來會舒服一點，我站在你這邊聽。"
+        case .complainAI:
+            return "可以告訴我哪裡不對嗎？如果是上網查到的答案，跟我說「重新查」，我換個方式再查一次。"
+        case .apology:
+            return "我們繼續聊吧～"
+        case .sad:
+            return "發生了什麼事？想說的話，我都在聽。"
+        case .lonely:
+            return "想聊什麼都可以，我一直在這裡。也可以試著傳個訊息給一個很久沒聯絡的朋友，常常對方也在想你。"
+        case .tired:
+            return wantsAdvice
+                ? "累的時候先照顧身體：今晚早點睡、吃點熱的東西、把明天的事挑一兩件最重要的就好。如果是長期累到撐不住，可能要想想是不是事情太多、需要跟身邊的人說。"
+                : "今天辛苦了，先讓自己好好休息一下。"
+        case .frustrated:
+            return wantsAdvice
+                ? "可以試試：把目標切小一點，先找出卡住的是哪一步；換個方法或找人問問；休息一下再回來，常常會看得更清楚。一次沒做好，不代表你做不到。"
+                : "卡在哪裡呢？說說看，我們一起想想有沒有別的方法。"
+        case .regret:
+            return "當時你是用你那時知道的、能做的去決定的，現在回頭看當然比較清楚。比起一直責怪自己，可以想想：這件事教會了我什麼？接下來還能做什麼來彌補或改變？"
+        case .confused:
+            return "哪一段看不懂？跟我說，我換個方式講。"
+        case .affection:
+            return "我也很喜歡跟你聊天！今天想聊什麼？"
+        case .hope:
+            return "一定會的。把希望放在心裡，也記得一步一步去做，好事會慢慢來。"
+        case .curious:
+            // 只是驚嘆（「太神奇了吧」）才接話；真的在問問題的交給原本的方法
+            if raw.contains("怎麼可能") { return "真的假的！發生了什麼事？說來聽聽～" }
+            return raw.contains("嗎") || raw.contains("什麼") || raw.contains("為什麼") ? nil : "對吧！是什麼讓你覺得這麼神奇？說來聽聽～"
+        case .joke:
+            return "😆 什麼事這麼好笑？說來讓我也笑一下！"
+        case .bored:
+            return "無聊的時候可以叫我講個笑話、推薦一部電影，或問我一個你一直好奇的問題；想動一動的話，出門走走、整理一個小角落也很好。"
+        case .thanks:
+            return raw.contains("陪") ? "能陪你聊天，我也很開心。" : "能幫上忙就好！"
+        case .praiseAI:
+            return "你這樣說我會更努力的！還有什麼想聊的嗎？"
+        default:
+            return nil
+        }
+    }
+
     /// 外語的簡單寒暄（英文、西班牙文、義大利文）
     public static func foreign(_ raw: String, _ L: Lang) -> String? {
         let t = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "?!.¿¡ "))

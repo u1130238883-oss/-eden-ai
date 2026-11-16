@@ -427,6 +427,35 @@ public final class EchoEngine {
             r.turn.variant = "talk"
             return r
         }
+        // 2.059) 在說心情（不是問問題、不是問命理）：先用安慰的流程，沒有的話照心情接話——不拿去上網查、不用宮位亂回
+        // （「今天」「今年」這種時間詞不算命理問題；要有運勢、命盤、宮這些字才是）
+        let fortuneWords = ["運勢", "運氣", "財運", "桃花", "命盤", "命宮", "算命", "宮", "八字", "紫微", "卦", "流年", "流月", "大運", "九型", "星座", "合盤"]
+        if L == .zh, !fortuneWords.contains(where: { text.contains($0) }), Library.detailed(text) == nil, Commonsense.answer(text, now: ctx.now) == nil {
+            let mood = Affect.detect(text)
+            let moods: Set<Affect.Mood> = [.grief, .sick, .worryOther, .goodNews, .proudEffort, .happy, .excitedPlan, .anxious, .scared, .angry,
+                                           .complainAI, .apology, .sad, .lonely, .tired, .frustrated, .regret, .confused, .affection, .hope,
+                                           .curious, .bored, .thanks, .praiseAI, .joke]
+            // 開心、期待的心情只接「說」的話；「我什麼時候會升職」是在問問題。閒聊認得的（「我明天要去日本」）交給閒聊，它記得剛剛聊什麼
+            let positive: Set<Affect.Mood> = [.goodNews, .proudEffort, .happy, .excitedPlan, .hope, .curious]
+            // 問問題但不是要建議（「我壓力大的時候會怎樣」問的是九型人格）：交給原本的路
+            let asksAdvice = ["怎麼辦", "建議", "該怎麼", "要怎麼", "如何是好", "你覺得呢", "你覺得", "你說呢", "怎麼想", "怎麼可能"].contains(where: { text.contains($0) })
+            _ = positive
+            if moods.contains(mood), !(EchoEngine.isQuestion(text) && !asksAdvice),
+               Talk.chat(text) == nil {
+                // 擔心別人（「我姊姊心情不好」）：不是在說自己的心情，不用安慰自己的那一套
+                if mood != .worryOther, let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now,
+                                        again: history.suffix(4).contains { $0.role == .echo && $0.text.contains("我看了你此刻走到的地方") }) {
+                    let p = core?.perceive(text)
+                    if let p { core?.remember(p) }
+                    return done(s, .neural, palace: p)
+                }
+                if let body = Talk.moodBody(mood, text) {
+                    var r = done(body, .neural)
+                    r.turn.tokens = []
+                    return r
+                }
+            }
+        }
         // 2.06) 假設題、兩難題（「如果有兩個按鈕…你怎麼選」）：問的是 NineSun 自己的想法，不是命盤、心情，也不用上網查。
         //       照自己的價值觀選一邊、說理由（大腦開著時 App 會交給大腦推理）
         if L == .zh || L == .en, Dilemma.looks(text) { return done(Dilemma.stance(text, zh: L == .zh), .knowledge) }
