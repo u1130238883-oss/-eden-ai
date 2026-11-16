@@ -108,6 +108,8 @@ public enum Affect {
             || (social.contains(m) && t0.range(of: p, options: [.regularExpression, .caseInsensitive]) != nil) {
             // 「老闆不給我加薪」「沒考上」不是好消息
             if m == .goodNews, t.range(of: "(不|沒|沒有)(給我|讓我)?(加薪|升職|錄取|考上|通過|上榜)", options: .regularExpression) != nil { continue }
+            // 別人的好消息（「我朋友要結婚了」）：開心，但不是「這是你努力換來的」
+            if m == .goodNews, t.range(of: "^我(的)?(朋友|好朋友|同事|同學|姐姐|姊姊|哥哥|弟弟|妹妹|媽媽|爸爸|表姐|表哥|堂姐|堂哥|閨蜜|室友)", options: .regularExpression) != nil { return .happy }
             // 在問一個情緒相關的東西（「焦慮症是什麼」「怎麼緩解焦慮」「感冒為什麼會發燒」）：是問題，不是心情
             // 「怎麼交到女朋友」「如何升職」是在問方法，不是好消息
             if [.anxious, .sad, .lonely, .scared, .angry, .tired, .frustrated, .regret, .sick, .goodNews, .happy].contains(m), asksThing(t) { return .info }

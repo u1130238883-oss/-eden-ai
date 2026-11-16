@@ -686,7 +686,10 @@ public final class EchoEngine {
         let asksMe = EchoEngine.addressedToMe(text)
         let asking = EchoEngine.isQuestion(text)
         let mood = L == .zh ? Affect.detect(text) : .info
-        if [.goodNews, .proudEffort, .excitedPlan, .happy].contains(mood), !EchoEngine.isQuestion(text) {
+        if L == .zh, !EchoEngine.isQuestion(text), let s = Talk.chat(text) {
+            // 在說自己的事：照內容接話（不拿宮位亂回）
+            raw = s
+        } else if [.goodNews, .proudEffort, .excitedPlan, .happy].contains(mood), !EchoEngine.isQuestion(text) {
             // 好消息、開心的事：接著問下去（不要接「是發生了什麼事？」或一段宮位的話）
             raw = EchoEngine.celebrate(text)
         } else if let c = companionReply(text, L, ctx: ctx, palace: palace) {

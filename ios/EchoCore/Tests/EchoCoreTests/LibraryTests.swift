@@ -189,3 +189,16 @@ final class WritingHelpTests: XCTestCase {
         XCTAssertTrue(Commonsense.answer("今年過年是幾號")?.contains("春節") == true)
     }
 }
+
+final class SmallTalkTests: XCTestCase {
+    func testStatementsGetARealReply() {
+        for (q, must) in [("我今天去看電影了", "好看嗎"), ("我今天吃了拉麵", "好吃嗎"), ("我剛下班", "辛苦了"), ("我在家", "在家"),
+                          ("我朋友要結婚了", "替你朋友開心"), ("我明天要去日本", "日本有什麼好玩的"), ("剛剛下大雨", "帶傘")] {
+            let a = Talk.chat(q)
+            XCTAssertTrue(a?.contains(must) == true, q + "：" + (a ?? "nil"))
+        }
+        // 問題、喜歡一個人、想死這些不是閒聊
+        for q in ["我今天去看電影好嗎", "我喜歡你", "我喜歡一個人", "我想死", "我在想什麼"] { XCTAssertNil(Talk.chat(q), q) }
+        XCTAssertEqual(Affect.detect("我朋友要結婚了"), .happy)
+    }
+}
