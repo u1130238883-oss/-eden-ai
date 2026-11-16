@@ -719,7 +719,8 @@ final class EchoCoreTests: XCTestCase {
         if whyT.contains("r12") || whyT.contains("年柱") || !whyT.contains("根源") { fails.append("✗ 為什麼還在講算法：\(whyT.prefix(80))") }
 
         // NineSun 自己的常識答得出來的就自己答（Commonsense）；答不出來、需要看法和最新資料的交給上網查
-        for q in ["每個月都存不了錢要怎麼辦", "人生的意義是什麼"] {
+        // 「人生的意義」「iPhone 和安卓哪個好」NineSun 有自己的看法了（2026-11-16），換成還是要上網的題目
+        for q in ["每個月都存不了錢要怎麼辦", "怎麼在職場上建立人脈"] {
             let r = engine.reply(to: q, context: ctx)
             if r.webQuery == nil { fails.append("✗ 日常問題應該交出去：\(q) → \(r.turn.text.prefix(40))") }
         }
@@ -737,7 +738,11 @@ final class EchoCoreTests: XCTestCase {
         if eu.webQuery == nil { fails.append("✗ 歐洲有多少個國家 應該上網查 → \(eu.turn.text.prefix(30))") }
         let fu = engine.reply(to: "那這些國家都是哪些國家", context: ctx)
         if fu.webQuery?.contains("歐洲") != true { fails.append("✗ 追問沒接上主題：\(fu.webQuery ?? "nil")") }
-        for q in ["亞洲有哪些國家", "歐洲國家人口有多少", "iPhone和安卓哪個好"] {
+        for (q, must) in [("人生的意義是什麼", "看法"), ("iPhone和安卓哪個好", "iPhone")] {
+            let r = engine.reply(to: q, context: ctx)
+            if r.webQuery != nil || !r.turn.text.contains(must) { fails.append("✗ 有自己的看法卻沒說：\(q)") }
+        }
+        for q in ["亞洲有哪些國家", "歐洲國家人口有多少", "PS5和Switch哪個好"] {
             let r = engine.reply(to: q, context: ctx)
             if r.webQuery == nil { fails.append("✗ 應該上網查：\(q) → \(r.turn.text.prefix(30))") }
         }
