@@ -140,7 +140,7 @@ public final class EchoEngine {
     var lastQuestion: String?
     var lastQuestionTurn = -100
     /// 本地剛回答的東西（笑話、作者、清單、作品、推薦、選擇題）：追問「再一個」「最大的是哪一個」「結局呢」「為什麼」時接得上
-    struct LocalContext { var kind: String; var subject: String = ""; var extra: String = ""; var shown: String = ""; var turn: Int }
+    struct LocalContext { var kind: String; var subject: String = ""; var extra: String = ""; var shown: String = ""; var answer: String = ""; var turn: Int }
     var lastLocal: LocalContext?
     /// 上一則回覆有沒有在問使用者（「後來呢？」）：短短的補充才算是在回答
     var lastEchoAsked = false
@@ -528,7 +528,7 @@ public final class EchoEngine {
             } else if let sub = Commonsense.answerSubject(text, a) ?? Commonsense.subject(text) {
                 // 上一個主角記在 shown：「日本有多大」「台灣呢」「誰比較大」
                 let before = lastLocal?.kind == "fact" && lastLocal?.subject != sub ? (lastLocal?.subject ?? "") : (lastLocal?.kind == "fact" ? lastLocal?.shown ?? "" : "")
-                lastLocal = LocalContext(kind: "fact", subject: sub, extra: text, shown: before, turn: history.count)
+                lastLocal = LocalContext(kind: "fact", subject: sub, extra: text, shown: before, answer: a, turn: history.count)
             }
             // 自己答的也算上一題的主題：追問「那這些省都是哪些省」要接得上
             lastWebQuery = EchoEngine.searchQuery(text)
@@ -897,6 +897,15 @@ public final class EchoEngine {
             }
             if !EchoEngine.isQuestion(message), !EchoEngine.fortuneIntent(message), let a = Talk.chatAnswer(message, topic: lc.subject) { return .answer(a) }
         case "fact":
+            // 「為什麼」「為什麼不行」：剛剛的回答裡已經有原因（「不會。企鵝不會飛。企鵝的翅膀演化成…」）→ 把原因說出來
+            if t.range(of: #"^(那)?(為什麼|為何|為啥|怎麼說|怎麼會)(不是|不行|不會|不能|會|是|這樣|呢)?$"#, options: .regularExpression) != nil, !lc.answer.isEmpty {
+                let parts = lc.answer.components(separatedBy: CharacterSet(charactersIn: "。\n")).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                let head = parts.first ?? ""
+                let reasons = parts.dropFirst().filter { !$0.hasPrefix(lc.subject + "不") || $0.count > 12 }.filter { $0 != head && !["不會", "不是", "不可以！", "是的", "會！"].contains($0) }
+                if let why = reasons.first(where: { $0.count >= 8 && !($0.hasPrefix(lc.subject) && $0.count < 14) }) {
+                    return .answer("因為\(why)。")
+                }
+            }
             // 「誰比較大」「哪個比較高」：比剛剛問的兩個東西
             if !lc.shown.isEmpty, let g = RuleBook.match(t, #"^(?:那)?(?:誰|哪個|哪一個|哪裡|哪國)(?:比較)?(大|小|高|矮|長|短|多|少|重|輕|遠|近)$"#),
                let a = Commonsense.compareNumbers("\(lc.subject)比\(lc.shown)\(g[0])嗎") {
