@@ -142,6 +142,8 @@ public final class EchoEngine {
     /// 本地剛回答的東西（笑話、作者、清單、作品、推薦、選擇題）：追問「再一個」「最大的是哪一個」「結局呢」「為什麼」時接得上
     struct LocalContext { var kind: String; var subject: String = ""; var extra: String = ""; var shown: String = ""; var turn: Int }
     var lastLocal: LocalContext?
+    /// 上一則回覆有沒有在問使用者（「後來呢？」）：短短的補充才算是在回答
+    var lastEchoAsked = false
 
     /// 逐字產生回覆。`onToken` 每產生一個字就回呼一次。
     public func reply(to message: String, history: [ChatTurn] = [], context: Context,
@@ -201,11 +203,13 @@ public final class EchoEngine {
         }
         // 追問本地剛回答的東西：直接回答，或把問題補完整（「他還寫了什麼」→「曹雪芹還寫了什麼」、「結局呢」→「哈姆雷特的結局」）
         if context.language == .zh || Lang.detect(message, fallback: .zh) == .zh, let lc = lastLocal, history.count - lc.turn <= 4 {
+            lastEchoAsked = history.last(where: { $0.role == .echo }).map { $0.text.contains("？") || $0.text.contains("?") } ?? false
             switch localFollowUp(message, lc) {
             case .answer(let a)?:
                 var r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
                 r.turn.variant = "talk"
                 lastLocal?.turn = history.count
+                if lc.kind == "mood" { lastLocal?.shown += "\u{1}" + message }
                 return r
             case .rewrite(let t)?:
                 text = t
@@ -891,23 +895,34 @@ public final class EchoEngine {
         case "mood":
             // 「要怎麼辦」：照剛剛說的事給做法（「我失眠了」→ 失眠怎麼辦）
             if t.range(of: #"^(那|所以)?(我)?(要|該|應該)?(怎麼辦|怎麼做|如何是好|怎麼處理|怎麼解決|有什麼方法|有什麼辦法|有什麼建議)(呢|啊)?$"#, options: .regularExpression) != nil {
-                for said in [lc.subject, lc.extra] where !said.isEmpty {
-                    let base = said.replacingOccurrences(of: #"[啦啊喔耶。！!～~]+$"#, with: "", options: .regularExpression)
+                let said = [lc.subject, lc.extra] + lc.shown.components(separatedBy: "\u{1}").reversed()
+                for s0 in said where !s0.isEmpty {
+                    let base = s0.replacingOccurrences(of: #"[啦啊喔耶。！!～~]+$"#, with: "", options: .regularExpression)
                     for ask in [base + "怎麼辦", base.replacingOccurrences(of: #"了$"#, with: "", options: .regularExpression) + "怎麼辦"] where Commonsense.answer(ask) != nil {
                         return .rewrite(ask)
                     }
                 }
-            }
-            // 「數學」（剛說考砸了）：很短的補充，接住、請對方多說
-            if t.count <= 5, !EchoEngine.isQuestion(message), Talk.chat(message) == nil, Talk.detailed(message) == nil,
-               t.range(of: "^(謝謝|謝啦|好|嗯|喔|哦|對|沒事|算了|不用|好的|OK|ok)", options: .regularExpression) == nil,
-               t.range(of: "查|搜|幫|給|算|翻譯|運|命|卦|規則|記住|寫|講|說|唱|推薦|[0-9０-９]", options: .regularExpression) == nil {
-                return .answer("嗯嗯，是\(t)。想多說一點嗎？是哪個地方讓你最在意？我在聽。")
+                if let h = Commonsense.howtoMentioned(said.joined(separator: "，")) { return .rewrite(h + "怎麼辦") }
+                return .answer("我陪你一起想，可以先這樣：\n1. 先照顧好自己：今天好好吃飯、早點睡，累的時候什麼事都會看起來更難\n2. 把讓你難受的事寫下來，分成「我能做點什麼的」和「我控制不了的」\n3. 能做的挑一件最小的先做；控制不了的，先試著放下\n4. 找一個信任的人說說，不要一個人扛\n\n如果願意，跟我多說一點是哪件事最讓你煩，我可以幫你想更具體的做法。")
             }
             // 「因為報告寫錯」：在說原因，接住它
             if let g = RuleBook.match(t, #"^(?:因為|就是|原因是|主要是)(.{2,30})$"#), !EchoEngine.isQuestion(message) {
                 let why = g[0].replacingOccurrences(of: "我", with: "你")
                 return .answer("原來是\(why)。會這麼在意，代表你很認真看待這件事，不是你不夠好。想聽聽我的建議，還是先讓我陪你說說？")
+            }
+            // 補充細節（「主管很兇」「他昨天罵我」「數學」）：接住、換句話說、請對方多說——不要每句都一樣
+            if lastEchoAsked, (1...12).contains(t.count), !EchoEngine.isQuestion(message), Talk.chat(message) == nil, Talk.detailed(message) == nil,
+               !t.contains("你"),
+               // 帶著新的事件或心情（「剛剛奶奶住院了」「我考上了」）是新的話題，不是補充
+               ![.grief, .sick, .worryOther, .goodNews, .crisis, .proudEffort, .excitedPlan, .happy, .hope, .thanks, .greeting, .farewell,
+                 .praiseAI, .complainAI, .apology, .confused, .joke, .bored, .curious, .affection].contains(Affect.detect(message)),
+               t.range(of: "^(謝謝|謝啦|好|嗯|喔|哦|對|沒事|算了|不用|好的|OK|ok|掰|晚安|早安)", options: .regularExpression) == nil,
+               t.range(of: "查|搜|幫|給|算|翻譯|運|命|卦|規則|記住|寫|講|說|唱|推薦|[0-9０-９]", options: .regularExpression) == nil {
+                let x = t.replacingOccurrences(of: "我", with: "你")
+                let n = lc.shown.components(separatedBy: "\u{1}").count
+                let lines = ["原來是這樣……\(x)，難怪你會這麼難受。", "嗯，我懂。\(x)真的很消耗人。", "\(x)……換作是我也會很不好受。", "聽起來真的很辛苦，\(x)。"]
+                let asks = ["後來呢？", "你那時候心裡怎麼想？", "現在感覺有好一點嗎？", "想聽聽我的建議嗎？跟我說「我該怎麼辦」就可以。"]
+                return .answer(lines[n % lines.count] + asks[n % asks.count])
             }
         case "recommend":
             if !lc.extra.isEmpty, t.range(of: #"^(真的)?(好看|好聽|好玩|好吃|值得看|值得讀|推薦)(嗎)?$"#, options: .regularExpression) != nil {

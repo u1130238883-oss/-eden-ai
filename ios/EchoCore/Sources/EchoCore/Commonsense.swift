@@ -425,6 +425,11 @@ public enum Commonsense {
         return answer(c, now: now) != nil ? (c, true) : (c, false)
     }
 
+    /// 一段話裡提到的「怎麼做」主題（「主管很兇，他昨天罵我」→ 被主管罵）
+    public static func howtoMentioned(_ t: String) -> String? {
+        mentions(Everyday.clean(t), in: howtos).filter { $0.alias.count >= 3 }.max(by: { $0.alias.count < $1.alias.count })?.entity.name
+    }
+
     // MARK: - 推薦
 
     /// 問的是哪一類推薦（「推薦一本書」→ 書）
