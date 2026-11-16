@@ -978,7 +978,7 @@ public enum Commonsense {
         var s = "\(e.name)是\(intro)。"
         switch e.kind {
         case "人物":
-            if let x = e.attr("年代") { s += "\n他生活在\(x)。" }
+            if let x = e.attr("年代") { s += x.contains("出生") ? "\n出生：\(x.replacingOccurrences(of: "出生", with: ""))。" : "\n年代：\(x)。" }
             if let x = e.attr("代表作") { s += "\n代表作和成就：\(x)。" }
             if let x = e.attr("名言") { s += "\n名言：「" + (x.split(separator: "；").first.map(String.init) ?? x) + "」" }
         case "國家":

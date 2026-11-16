@@ -32,8 +32,11 @@ public enum Celebrities {
     /// 在問名人的命盤、運勢（光提到名字、不是在問命理的不算）
     public static func asksChart(_ text: String) -> Person? {
         let words = ["命盤", "九型", "第幾型", "大運", "流年", "運勢", "宮", "命", "算"]
-        guard words.contains(where: { text.contains($0) }) else { return nil }
-        return find(in: text)
+        guard let p = find(in: text) else { return nil }
+        // 名字裡剛好有「宮」「命」（宮崎駿）不算：拿掉名字再看
+        let rest = text.replacingOccurrences(of: p.name, with: "")
+        guard words.contains(where: { rest.contains($0) }) else { return nil }
+        return p
     }
 
     /// 本命盤跟這個生日一模一樣的名人（年、月、日化成 1–9 之後相同）
