@@ -767,11 +767,27 @@ public enum Commonsense {
     /// 沒提到主角的為什麼（「為什麼會打哈欠」「夕陽為什麼是紅的」）：在所有的解釋裡找關鍵詞最吻合的一個，要明顯勝出才算
     static func globalWhy(_ t: String) -> String? {
         var scored: [(Int, Double, String)] = []
+        // 問句裡真正的內容（拿掉「為什麼、會、有、是…」）
+        var content = t
+        for w in ["為什麼", "為何", "怎麼會", "為啥", "原因", "是什麼", "會", "有", "是", "要", "的", "呢", "嗎", "都", "總是", "那麼", "這麼", "這樣", "一直"] {
+            content = content.replacingOccurrences(of: w, with: "")
+        }
+        let stop: Set<String> = ["會有", "為什麼", "什麼", "會不會", "是不是", "怎麼", "原因", "為何"]
         for e in facts {
+            let named = e.names.contains { $0.count >= 1 && t.contains($0) }
             for w in e.whys {
-                let hit = w.keys.filter { $0.count >= 2 && t.contains($0) }
-                let score = hit.filter { h in !hit.contains { $0 != h && $0.contains(h) } }.reduce(0) { $0 + $1.count }
-                if score >= 2 { scored.append((score, Double(hit.count) / Double(w.keys.count), w.text)) }
+                let hit = w.keys.filter { $0.count >= 2 && !stop.contains($0) && t.contains($0) }
+                let kept = hit.filter { h in !hit.contains { $0 != h && $0.contains(h) } }
+                let score = kept.reduce(0) { $0 + $1.count }
+                guard score >= 2 else { continue }
+                // 問題沒提到這個東西（「變色龍為什麼會變色」不是蘋果的「變色」）：關鍵詞要夠長、蓋住問題大部分的內容
+                if !named {
+                    var left = content
+                    for h in kept { left = left.replacingOccurrences(of: h, with: "") }
+                    let coverage = content.isEmpty ? 0 : 1 - Double(left.count) / Double(content.count)
+                    guard (score >= 4 && coverage >= 0.6) || (score >= 3 && coverage >= 0.8) else { continue }
+                }
+                scored.append((score, Double(hit.count) / Double(w.keys.count), w.text))
             }
         }
         scored.sort { $0.0 != $1.0 ? $0.0 > $1.0 : $0.1 > $1.1 }
@@ -790,7 +806,7 @@ public enum Commonsense {
         for e in facts where e.kind == "人物" {
             guard let w = e.attr("代表作"), w.contains(work) else { continue }
             let kind = w.contains("《\(work)》") ? "《\(work)》" : "〈\(work)〉"
-            return "\(kind)的作者是\(e.name)。\(e.name)是\(e.attr("簡介") ?? "")。" + (e.attr("年代").map { "他生活在\($0)。" } ?? "")
+            return "\(kind)的作者是\(e.name)。\(e.name)是\(e.attr("簡介") ?? "")。" + (e.attr("年代").map { "（\($0)）" } ?? "")
         }
         return nil
     }
