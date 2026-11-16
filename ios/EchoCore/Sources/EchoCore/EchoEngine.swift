@@ -516,7 +516,9 @@ public final class EchoEngine {
             if let r = a.range(of: "如果只能選一個：") {
                 lastLocal = LocalContext(kind: "recommend", subject: Commonsense.recommendCategory(text) ?? "", extra: String(a[r.upperBound...].prefix { $0 != "\n" }), shown: a, turn: history.count)
             } else if let sub = Commonsense.answerSubject(text, a) ?? Commonsense.subject(text) {
-                lastLocal = LocalContext(kind: "fact", subject: sub, extra: text, turn: history.count)
+                // 上一個主角記在 shown：「日本有多大」「台灣呢」「誰比較大」
+                let before = lastLocal?.kind == "fact" && lastLocal?.subject != sub ? (lastLocal?.subject ?? "") : (lastLocal?.kind == "fact" ? lastLocal?.shown ?? "" : "")
+                lastLocal = LocalContext(kind: "fact", subject: sub, extra: text, shown: before, turn: history.count)
             }
             // 自己答的也算上一題的主題：追問「那這些省都是哪些省」要接得上
             lastWebQuery = EchoEngine.searchQuery(text)
@@ -885,6 +887,11 @@ public final class EchoEngine {
             }
             if !EchoEngine.isQuestion(message), !EchoEngine.fortuneIntent(message), let a = Talk.chatAnswer(message, topic: lc.subject) { return .answer(a) }
         case "fact":
+            // 「誰比較大」「哪個比較高」：比剛剛問的兩個東西
+            if !lc.shown.isEmpty, let g = RuleBook.match(t, #"^(?:那)?(?:誰|哪個|哪一個|哪裡|哪國)(?:比較)?(大|小|高|矮|長|短|多|少|重|輕|遠|近)$"#),
+               let a = Commonsense.compareNumbers("\(lc.subject)比\(lc.shown)\(g[0])嗎") {
+                return .answer(a)
+            }
             if t.range(of: #"^(還有呢|還有嗎|還有別的嗎|還有其他的嗎|然後呢|就這樣嗎|只有這樣嗎|還有沒有)$"#, options: .regularExpression) != nil {
                 return .answer("我知道的重點大概就是這些了。想知道更多，跟我說「說詳細一點」，我上網幫你找更完整的資料。")
             }

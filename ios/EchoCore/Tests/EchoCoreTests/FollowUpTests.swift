@@ -72,6 +72,10 @@ final class FollowUpTests: XCTestCase {
         // 新的問題不能被接到上一題（「埃菲爾鐵塔高度多少」不是在問台北101）
         let d = try run(["台北101有多高", "埃菲爾鐵塔高度多少"])
         XCTAssertFalse(d[1].turn.text.contains("508"), d[1].turn.text)
+        let f = try run(["日本有多大", "台灣呢", "誰比較大"])
+        XCTAssertTrue(f[2].turn.text.hasPrefix("日本比較大"), f[2].turn.text)
+        let g = try run(["周杰倫是誰", "他幾歲"])
+        XCTAssertTrue(g[1].turn.text.contains("1979"), g[1].turn.text)
         let e = try run(["今天好累", "查量子力學"])
         XCTAssertEqual(e[1].webQuery, "量子力學")
     }
