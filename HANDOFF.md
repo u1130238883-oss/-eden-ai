@@ -901,13 +901,16 @@ brief; still wrong: "鐵達尼號講的是什麼" (gets the ship: the film's art
 **在 Linux 上跑 Swift 測試**：Ubuntu 24.04 沒有 swiftlang 套件、download.swift.org 被擋；從 archive.ubuntu.com 的 pool 抓 `swiftlang_6.0.3`、`libswiftlang`、`libxml2-16`、`libpython3.13` 的 .deb 解開來用（設好 `LD_LIBRARY_PATH`）。`swift build`／`swift test` 都能跑；release 建置在記憶體吃緊時編譯器會 signal 6，單獨跑或用 debug 就好。原本的 215 個測試 0 失敗（少掉的測試資料已從 `claude/ninesun-ai-ipa` 補回）。
 
 **量法**（都是不上網、只看引擎本身）：
-- `web_questions_graded.txt` 104 題：50.0% → 97% 左右
+- `web_questions_graded.txt` 104 題：50.0% → 96.2%
 - `Fixtures/offline_holdout.txt` 45 題（新寫的）：31.1% → 95.6%（後來看過錯題，不算完全獨立）
-- `Fixtures/offline_holdout2.txt` 81 題（中途寫好、之後不看個別題目）：原本 53.1% →（寫好時）91.4%
+- `Fixtures/offline_holdout2.txt` 81 題（中途寫好、之後沒照它改）：53.1% → 91.4%（錯的 7 題裡，「西遊記／三國演義在講什麼」本來就先上網查百科，離線分數算錯）
+- 說心情的話（`affect_holdout.json` 沒看過的 400 句）：用宮位亂回／說「沒學過」／「是發生了什麼事」／拿去上網查的 66% → 1%；`voice_holdout.json` 400 句：65% → 1%（`MoodReplyTests`）
 - 錄好的上網考試（tapes/web-exam-25）重播：99.0%（原本實際上網 91.3%）；web-shots-15 實際上網：截圖那類題目、紅樓夢作者、八大行星都答出來了
 
 **加了什麼**
 - `Library.swift`（`works.txt` 100 部作品、`lists.txt` 77 個清單、`who.txt` 69 項誰提出／創立）：作者、清單、一類作品（截圖那題）、誰發明、作品內容（百科拿不到或拿錯條目時用）。
+- 說心情的話（`EchoEngine` 2.059）：Affect 認出心情、又不是在問命理或知識 → 先用 Solace，沒有就照心情接話（`Talk.moodBody`，要建議時給一個小步驟）。
+- 身體不舒服（胸口痛先講 119／112、被狗咬、肚子痛、發燒…）：先做什麼＋什麼時候一定要看醫生。
 - `Talk.swift`（`talk.txt`）：NineSun 自己的話（有沒有感情、喜歡什麼）、看法（AI、外星人、算命準不準、人生的意義）、笑話、選擇題（該不該換工作、怎麼交到女朋友）、短回應（好、嗯、😂、？、不知道、隨便、你答錯了）、寫作幫忙（生日祝福、請假信、取名字、短詩）、安慰；外語寒暄；閒聊（看了／吃了／去哪／在學…接著問下去，不再用宮位亂回）。
 - 常識：+~50 個做法（急救、詐騙、面試、履歷、霸凌、睡眠…，每個有自己的開頭）、+40 位人物、科學基礎、事件年份、科技名詞、旅遊和美食清單。
 - 追問接得上：`EchoEngine.lastLocal`（再一個、最大的是哪一個、他還寫了什麼、結局呢、為什麼推薦這部、可是我很怕、閒聊的回答）；回「好」照上一則建議的問法做；「說簡單一點／說詳細一點」。
