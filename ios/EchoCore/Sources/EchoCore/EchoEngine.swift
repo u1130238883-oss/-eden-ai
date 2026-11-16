@@ -884,8 +884,14 @@ public final class EchoEngine {
                let a = Commonsense.recommendMore(lc.subject, shown: lc.shown) {
                 return .answer(a)
             }
-            if let g = RuleBook.match(t, #"^(?:那|那麼|還有)?(電影|書|動畫|音樂|歌|遊戲|影集|電視劇|景點|運動)(?:呢|的話呢|的話)?$"#) {
+            if let g = RuleBook.match(t, #"^(?:那|那麼|還有)?(電影|書|動畫|音樂|歌|遊戲|影集|電視劇|景點|運動|韓劇|日劇|英文歌|恐怖片|愛情片|動作片|喜劇片)(?:呢|的話呢|的話)?$"#) {
                 return .rewrite("推薦" + g[0])
+            }
+            // 「有沒有好笑一點的」「恐怖的呢」：同一類裡換一種
+            if lc.subject == "電影" || ["恐怖片", "愛情片", "動作片", "喜劇片"].contains(lc.subject) {
+                let genres: [(String, String)] = [("好笑", "喜劇片"), ("搞笑", "喜劇片"), ("輕鬆", "喜劇片"), ("喜劇", "喜劇片"), ("恐怖", "恐怖片"), ("鬼", "恐怖片"),
+                                                  ("驚悚", "恐怖片"), ("愛情", "愛情片"), ("浪漫", "愛情片"), ("甜", "愛情片"), ("動作", "動作片"), ("刺激", "動作片"), ("打鬥", "動作片")]
+                if t.count <= 14, let g = genres.first(where: { t.contains($0.0) }) { return .rewrite("推薦" + g.1) }
             }
             if t.range(of: "^(為什麼|為何|為啥|怎麼說)(推薦)?(這部|這個|這本|這首|它|這)?$", options: .regularExpression) != nil, !lc.extra.isEmpty {
                 return .answer("我最推薦的是\(lc.extra)")
