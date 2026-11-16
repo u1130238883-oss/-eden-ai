@@ -263,7 +263,8 @@ public enum Commonsense {
         var core = t
         for p in ["我現在", "我今天", "我真的", "我覺得", "現在", "今天", "真的", "我"] where core.hasPrefix(p) { core.removeFirst(p.count); break }
         while let l = core.last, "了喔啦耶啊呀哦欸".contains(l) { core.removeLast() }
-        if ["好無聊", "很無聊", "無聊死", "無聊死了", "無聊", "超無聊", "好悶", "沒事做", "好閒", "很閒", "不知道要幹嘛", "不知道要做什麼", "不知道做什麼"].contains(core),
+        if ["好無聊", "很無聊", "無聊死", "無聊死了", "無聊", "超無聊", "好悶", "沒事做", "好閒", "很閒", "不知道要幹嘛", "不知道要做什麼", "不知道做什麼"].contains(core)
+            || RuleBook.match(core, #"^(好)?無聊(的時候|時|的話)?(可以|能|要|該)?(做|幹|玩)(什麼|啥|嘛)(好|呢)?$"#) != nil,
            let e = recommends.first(where: { $0.name == "無聊" }) {
             let items = (e.attr("項目") ?? "").split(separator: "；").map(String.init)
             let seed = abs(Calendar(identifier: .gregorian).component(.hour, from: Date()) &+ t.count)
@@ -273,7 +274,8 @@ public enum Commonsense {
             return "無聊的時候，來試試這幾個：\n\(list)\n\n\(best)。\n\(ask)"
         }
         let cue = ["推薦", "介紹幾", "介紹一", "好看的", "好聽的", "好玩的", "該看什麼", "看什麼好", "聽什麼好", "吃什麼好", "吃什麼", "去哪裡玩",
-                   "哪裡好玩", "養什麼", "有什麼好看", "有什麼好聽", "有什麼好玩", "有什麼好吃", "吃啥", "要吃什麼"].contains { t.contains($0) }
+                   "哪裡好玩", "養什麼", "有什麼好看", "有什麼好聽", "有什麼好玩", "有什麼好吃", "吃啥", "要吃什麼",
+                   "可以做什麼", "能做什麼", "要做什麼", "做什麼好", "送什麼", "什麼禮物", "玩什麼", "可以去哪"].contains { t.contains($0) }
             && !["好處", "壞處", "為什麼"].contains(where: { t.contains($0) })
         guard cue, realMentions(t, in: facts).isEmpty, let e = mentions(t, in: recommends).first?.entity else { return nil }
         let items = (e.attr("項目") ?? "").split(separator: "；").map(String.init)
@@ -415,8 +417,23 @@ public enum Commonsense {
         }
         let ms = realMentions(t, in: facts)
         let whyAsk = ["為什麼", "為何", "怎麼會", "原因", "為啥", "幹嘛", "何以", "怎麼來的"].contains(where: { t.contains($0) })
-        guard let first = ms.first else { return reverseCapital(t) ?? (whyAsk ? globalWhy(t) : nil) }
+        guard let first = ms.first else {
+            if let a = reverseCapital(t) { return a }
+            if whyAsk { return globalWhy(t) }
+            // 沒有完整的名字，只有短的（「一天要睡幾個小時」裡的「睡」）：問的屬性剛好是它有的才回答
+            if asking.contains(where: { t.contains($0) }) {
+                let loose = mentions(t, in: facts).map { $0.entity }
+                for (key, words) in cues where words.contains(where: { t.contains($0) }) {
+                    if let owner = loose.first(where: { $0.attr(key) != nil }) { return phrase(owner, key, owner.attr(key)!, now: now) }
+                }
+            }
+            return nil
+        }
         let e = first.entity
+        // 名字本身就是一個問題（「雞蛋要放冰箱嗎」「世界上有幾個國家」）：直接回答
+        if e.kind == "常識", first.alias.count >= 4, let intro = e.attr("簡介") {
+            return intro + "。" + (e.attr("說明").map { "\n" + $0 + "。" } ?? "")
+        }
         // 「水的沸點」「人的體溫」：沒有問句，但就是「東西的屬性」
         if !asking.contains(where: { t.contains($0) }), !t.hasSuffix("嗎") {
             let after0 = String(t[first.range.upperBound...])
@@ -744,6 +761,7 @@ public enum Commonsense {
 
     static func define(_ e: Entity, now: Date) -> String? {
         guard let intro = e.attr("簡介") else { return nil }
+        if e.kind == "常識" { return intro + "。" + (e.attr("說明").map { "\n" + $0 + "。" } ?? "") }
         var s = "\(e.name)是\(intro)。"
         switch e.kind {
         case "人物":

@@ -416,6 +416,10 @@ public enum Everyday {
         // 第二個單位前面要是「幾／多少」（問的是它）
         let before = t[t.startIndex..<b.range.lowerBound]
         guard before.hasSuffix("幾") || before.hasSuffix("多少") || before.hasSuffix("成") || before.hasSuffix("於") || before.hasSuffix("算") else { return nil }
+        // 兩個單位中間只能是「是／有／等於／換成…」，「一天要睡幾個小時」不是換算
+        var mid = String(t[a.range.upperBound..<b.range.lowerBound])
+        for w in ["換算成", "換算", "換成", "轉成", "折合", "等於", "總共", "一共", "大約", "大概", "多少", "是", "有", "幾", "共", "約", "=", "合", "成", "於", "算"] { mid = mid.replacingOccurrences(of: w, with: "") }
+        guard mid.isEmpty else { return nil }
         // 第一個單位前面的數字（沒有就是 1）
         var numStr = ""
         var i = a.range.lowerBound
