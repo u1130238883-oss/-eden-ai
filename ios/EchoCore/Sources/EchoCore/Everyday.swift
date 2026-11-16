@@ -13,6 +13,7 @@ public enum Everyday {
         if let a = dateWeekday(t) { return a }
         if let a = leapYear(t, now) { return a }
         if let a = countdown(t, now) { return a }
+        if let a = misc(t, now) { return a }
         if let a = convert(t) { return a }
         if let a = arithmetic(t) { return a }
         if let a = seriesSum(t) { return a }
@@ -68,7 +69,46 @@ public enum Everyday {
         cal.dateComponents([.day], from: cal.startOfDay(for: a), to: cal.startOfDay(for: b)).day ?? 0
     }
 
-    // MARK: - 現在幾點
+    // MARK: - 今年還剩幾天、明天放假嗎、該睡了嗎
+
+    static func misc(_ t: String, _ now: Date) -> String? {
+        let c = ymd(now)
+        if ["今年還剩幾天", "今年還有幾天", "今年剩幾天", "今年剩下幾天", "今年還剩多少天", "離今年結束還有幾天", "今年還剩下幾天"].contains(t) {
+            guard let end = make(c.y, 12, 31) else { return nil }
+            let left = daysBetween(now, end)
+            let passed = daysBetween(make(c.y, 1, 1) ?? now, now) + 1
+            let total = (c.y % 4 == 0 && c.y % 100 != 0) || c.y % 400 == 0 ? 366 : 365
+            return "今年還剩 \(left) 天（不算今天）。今天是 \(c.y) 年的第 \(passed) 天，已經過了大約 \(passed * 100 / total)%。"
+        }
+        if let g = RuleBook.match(t, #"^(今天|明天|後天)(要|有|是不是|會不會)?(放假|休假|連假)(嗎|嗎?)?$"#) {
+            let off = g[0] == "今天" ? 0 : g[0] == "明天" ? 1 : 2
+            guard let day = cal.date(byAdding: .day, value: off, to: now) else { return nil }
+            let d = ymd(day)
+            let wd = "星期" + weekdays[d.w - 1]
+            let fixed: [String: String] = ["1-1": "元旦", "2-28": "和平紀念日", "4-4": "兒童節", "5-1": "勞動節（勞工放假）", "9-28": "教師節",
+                                           "10-10": "國慶日", "10-25": "台灣光復節", "12-25": "行憲紀念日"]
+            var why: String? = fixed["\(d.m)-\(d.d)"]
+            if why == nil, let f = Commonsense.festival(on: day), ["春節", "除夕", "清明節", "端午節", "中秋節"].contains(f) { why = f }
+            if why == nil {
+                let l = LunarCalendar.shared.lunar(d.y, d.m, d.d)
+                if l.month == 1 && l.day <= 3 { why = "春節" }
+            }
+            let head = "\(g[0])是 \(d.m) 月 \(d.d) 日\(wd)，"
+            let tail = "（遇到補假、調整放假，以行政院人事行政總處公告的行事曆為準。）"
+            if let why { return head + "是\(why)，一般是放假的！" + tail }
+            if d.w == 1 || d.w == 7 { return head + "是週末，一般是放假的。" + tail }
+            return head + "不是國定假日，一般要上班上課。" + tail
+        }
+        if ["我該睡覺了嗎", "我該睡了嗎", "該睡覺了嗎", "該睡了嗎", "我是不是該睡了", "我要不要去睡覺", "要不要睡覺", "現在該睡了嗎"].contains(t) {
+            let h = cal.component(.hour, from: now)
+            if h >= 23 || h < 5 { return "現在已經 \(h) 點多了，該睡囉！放下手機、把燈調暗，明天才有精神。晚安 🌙" }
+            if h >= 21 { return "現在 \(h) 點多，差不多可以準備了：洗個澡、放下手機，11 點前睡最好。" }
+            return "現在才 \(h) 點，還不用睡啦～如果很累的話，可以小睡 20 分鐘就好，睡太久晚上會睡不著。"
+        }
+        return nil
+    }
+
+    // MARK: - 現在幾點    // MARK: - 現在幾點
 
     static func clock(_ t: String, _ now: Date) -> String? {
         let forms = ["幾點", "幾點了", "幾點鐘", "幾點幾分", "現在幾點", "現在幾點了", "現在幾點鐘", "現在是幾點", "現在幾點幾分", "現在時間", "現在的時間",

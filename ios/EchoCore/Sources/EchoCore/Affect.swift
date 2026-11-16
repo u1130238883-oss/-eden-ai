@@ -196,6 +196,8 @@ public enum Affect {
     public static func color(_ text: String, for message: String, seed: Int = 0, voice: Voice? = nil) -> String {
         let m = detect(message)
         guard m != .info, m != .crisis else { return text }
+        // 問問題（「明天放假嗎」「這週末要去哪玩」）不是在報喜：不加「好棒的安排」這種開場
+        if [.excitedPlan, .goodNews, .happy].contains(m), message.range(of: "(放假|休假|連假|假日|週末|去哪|要去|會不會|能不能|可不可以)(嗎|呢)?[？?]*$", options: .regularExpression) != nil, EchoEngine.isQuestion(message) { return text }
         var out = text
         if !hasTone(String(text.prefix(60)), m), let o = voice?.opener(m) ?? opener(m, seed: seed) { out = o + "\n" + text }
         if let v = voice, !out.contains("💬"), let line = v.idiomLine(for: m, message: message) { out += "\n\n" + line }
