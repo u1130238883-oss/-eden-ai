@@ -16,7 +16,7 @@ KEYS = {"簡介", "是", "不是", "會", "不會", "吃", "住", "壽命", "腳
         "成分", "月份", "骨頭", "牙齒", "肌肉", "心臟", "心跳", "體溫", "血液", "大腦", "染色體", "肺", "腎臟", "最大的器官",
         "最長的骨頭", "最小的骨頭", "水", "顏色", "好處", "壞處", "時間", "年代", "國籍", "代表作", "名言", "發明者", "年份",
         "日期", "習俗", "由來", "步驟", "提醒", "就醫", "項目", "首選", "問", "縣市", "人口", "面積", "都道府縣", "州",
-        "大區", "省", "高度", "長度", "作者", "類型", "地區", "故事", "結局", "主題"}
+        "大區", "省", "高度", "長度", "作者", "類型", "地區", "故事", "結局", "主題", "誰", "問", "答"}
 
 
 def lines(name):
@@ -59,6 +59,8 @@ def check(e, seen):
         assert key in KEYS or key == "因", f"{e['name']}：不認得的屬性「{k}」"
         assert v.strip(), f"{e['name']}：「{k}」是空的"
         for bad in ("|", '"""', "\\"):
+            if bad == "|" and k == "問":
+                continue  # 問法是正規表示式，可以有 |
             assert bad not in v and bad not in k, f"{e['name']}：「{k}」裡有不能用的字元 {bad}"
     for a in [e["name"]] + e["alias"]:
         if a in seen and seen[a] != e["name"]:
@@ -91,11 +93,11 @@ def main(dst):
         out.append("@%s|%s|%s" % (e["name"], ",".join(e["alias"]), e["kind"]))
         out += ["%s=%s" % kv for kv in e["attrs"]]
     # 作品和清單：另外一池（不跟動物、國家這些混在一起比對名字；「活著」「三體」是書名，不是一般的詞）
-    for f in ("works.txt", "lists.txt"):
+    for f in ("works.txt", "lists.txt", "who.txt", "talk.txt"):
         pool = list(blocks(f))
         for e in pool:
             check(e, seen)
-        var = "works" if f == "works.txt" else "lists"
+        var = f.split(".")[0]
         out += ['"""', "", "    /// %s：@名|別名|類別，下面每行 屬性=值" % f, '    static let %s = """' % var]
         for e in pool:
             out.append("@%s|%s|%s" % (e["name"], ",".join(e["alias"]), e["kind"]))

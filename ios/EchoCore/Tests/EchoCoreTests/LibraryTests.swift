@@ -61,3 +61,41 @@ final class LibraryTests: XCTestCase {
         XCTAssertFalse(r.turn.text.contains("五行局"), r.turn.text)
     }
 }
+
+final class LibraryWhoTests: XCTestCase {
+    func testWhoDid() {
+        XCTAssertTrue(Library.answer("相對論是誰提出的")?.contains("愛因斯坦") == true)
+        XCTAssertTrue(Library.answer("蘋果公司是誰創立的")?.contains("賈伯斯") == true)
+        XCTAssertTrue(Library.answer("蘋果是誰創立的")?.contains("賈伯斯") == true)
+        XCTAssertTrue(Library.answer("微軟的創辦人是誰")?.contains("蓋茲") == true)
+        XCTAssertTrue(Library.answer("誰發現了萬有引力")?.contains("牛頓") == true)
+        XCTAssertTrue(Library.answer("台積電的創辦人是誰")?.contains("張忠謀") == true)
+        XCTAssertNil(Library.answer("我家的狗是誰發現的"))
+    }
+
+    func testDefineFallback() {
+        XCTAssertTrue(Library.defineAnswer("DeepSeek是什麼")?.contains("人工智慧") == true)
+        XCTAssertNil(Library.defineAnswer("蘋果是什麼"), "蘋果是水果")
+    }
+}
+
+final class TalkTests: XCTestCase {
+    func testTalk() {
+        for (q, must) in [("你有感情嗎", "感情"), ("你喜歡什麼？", "喜歡"), ("給我講個笑話", ""), ("你覺得AI會取代人類嗎", "取代"),
+                          ("我該不該換工作", "存款"), ("怎麼交到女朋友", "生活圈"), ("你覺得我很笨嗎", "不覺得"), ("世界上有外星人嗎", "證據"),
+                          ("算命準嗎", "鏡子"), ("人生的意義是什麼", "意義")] {
+            let a = Talk.answer(q)
+            XCTAssertNotNil(a, q)
+            if !must.isEmpty { XCTAssertTrue(a?.contains(must) == true, q + "：" + (a ?? "nil")) }
+        }
+        // 不能攔下來的：自己的事、命理問題、知識題
+        for q in ["我今年感情運如何", "你喜歡的人是誰的生日", "我喜歡你", "外星人電影推薦", "換工作要注意什麼", "交到女朋友了"] {
+            XCTAssertNil(Talk.answer(q), q)
+        }
+    }
+
+    func testGoodNewsIsNotAQuestion() {
+        XCTAssertEqual(Affect.detect("怎麼交到女朋友"), .info)
+        XCTAssertEqual(Affect.detect("我交到女朋友了"), .goodNews)
+    }
+}

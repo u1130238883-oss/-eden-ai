@@ -381,6 +381,8 @@ public final class EchoEngine {
             case let .pair(a, b): return done(Loc.s("webAsk", .zh), .tool, web: "\(a) \(b) 意思 差別")
             }
         }
+        // 2.058) NineSun 自己的話：關於自己、自己的看法、笑話、人生的選擇題（該不該換工作、怎麼交到女朋友）
+        if L == .zh, let a = Talk.answer(text) { return done(a, .knowledge) }
         // 2.06) 假設題、兩難題（「如果有兩個按鈕…你怎麼選」）：問的是 NineSun 自己的想法，不是命盤、心情，也不用上網查。
         //       照自己的價值觀選一邊、說理由（大腦開著時 App 會交給大腦推理）
         if L == .zh || L == .en, Dilemma.looks(text) { return done(Dilemma.stance(text, zh: L == .zh), .knowledge) }

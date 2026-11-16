@@ -133,6 +133,10 @@ public enum Translate {
         // 結尾的「～」「~」只是口氣
         q = q.replacingOccurrences(of: #"[～~]+$"#, with: "", options: .regularExpression)
         guard !q.isEmpty, q.count <= 600 else { return nil }
+        // 問怎麼「學」一種語言（「怎麼學好英文」「學日文推薦什麼方法」「英文要怎麼進步」）不是要翻譯
+        if !["翻", "譯", "怎麼說", "怎麼講", "怎麼寫", "怎麼念", "怎麼唸", "是什麼意思"].contains(where: { q.contains($0) }),
+           ["學好", "學習", "怎麼學", "如何學", "要學", "自學", "學會", "學日", "學英", "學韓", "學西", "學義", "學法", "學德", "學中",
+            "補習", "檢定", "進步", "練好", "練習", "課程", "教材", "推薦什麼方法", "怎麼背"].contains(where: { q.contains($0) }) { return nil }
         // 有中文的語言名稱：先拆開來想（固定句型容易把「請問」「告訴我」也當成內容）
         if let r = understand(q) { return r }
         // 簡稱：「中翻英：你好」「翻西 謝謝」「你好 翻英」「謝謝中翻義」「早安翻成英」

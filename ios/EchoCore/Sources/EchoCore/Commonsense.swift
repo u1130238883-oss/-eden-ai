@@ -179,7 +179,8 @@ public enum Commonsense {
 
     // MARK: - 怎麼做
 
-    static let howCues = ["怎麼", "如何", "要怎樣", "該怎樣", "方法", "步驟", "教我", "做法", "要怎", "該怎", "秘訣", "技巧", "撇步", "辦法", "建議", "訣竅"]
+    static let howCues = ["怎麼", "如何", "要怎樣", "該怎樣", "方法", "步驟", "教我", "做法", "要怎", "該怎", "秘訣", "技巧", "撇步", "辦法", "建議", "訣竅",
+                          "要準備什麼", "要帶什麼", "準備哪些", "要準備哪些", "該準備什麼", "該帶什麼"]
 
     static func howto(_ t: String) -> String? {
         guard howCues.contains(where: { t.contains($0) }) else { return nil }
@@ -241,7 +242,7 @@ public enum Commonsense {
     // MARK: - 比較（哪個比較好）
 
     static func compare(_ t: String) -> String? {
-        guard ["哪個", "哪一個", "還是", "比較", "誰比較", "哪種"].contains(where: { t.contains($0) }) else { return nil }
+        guard ["哪個", "哪一個", "還是", "比較", "誰比較", "哪種", "差別", "差異", "不同", "分別", "區別", "不一樣"].contains(where: { t.contains($0) }) else { return nil }
         for line in CommonsenseData.views.split(separator: "\n") {
             let p = line.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
             guard t.contains(p[0]), t.contains(p[1]) else { continue }
@@ -382,6 +383,10 @@ public enum Commonsense {
         }
         // 是不是、會不會、能不能、有沒有
         if let a = yesNo(t, after, e, mentioned) { return a }
+        // 「光速是多少」「音速多快」：名字本身就是在問速度
+        if first.alias.hasSuffix("速"), ["多少", "多快", "幾"].contains(where: { t.contains($0) }), let v = e.attr("速度") {
+            return phrase(e, "速度", v, now: now)
+        }
         // 有幾個…、有多少…
         if let a = count(rest, mentioned) { return a }
         // 直接說出屬性的名字（「人的體溫」「水的沸點」）

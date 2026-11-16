@@ -109,7 +109,8 @@ public enum Affect {
             // 「老闆不給我加薪」「沒考上」不是好消息
             if m == .goodNews, t.range(of: "(不|沒|沒有)(給我|讓我)?(加薪|升職|錄取|考上|通過|上榜)", options: .regularExpression) != nil { continue }
             // 在問一個情緒相關的東西（「焦慮症是什麼」「怎麼緩解焦慮」「感冒為什麼會發燒」）：是問題，不是心情
-            if [.anxious, .sad, .lonely, .scared, .angry, .tired, .frustrated, .regret, .sick].contains(m), asksThing(t) { return .info }
+            // 「怎麼交到女朋友」「如何升職」是在問方法，不是好消息
+            if [.anxious, .sad, .lonely, .scared, .angry, .tired, .frustrated, .regret, .sick, .goodNews, .happy].contains(m), asksThing(t) { return .info }
             return m
         }
         return .info
@@ -120,7 +121,7 @@ public enum Affect {
         if t.range(of: "我|好(累|煩|難過|緊張|氣|怕|孤單|寂寞|沮喪|挫折|無聊)|很(累|煩|難過|緊張|氣|怕|孤單|寂寞|沮喪)|超(累|煩|氣|怕)|氣死|嚇死|累死", options: .regularExpression) != nil { return false }
         // 「X怎麼辦」整句沒有逗號、沒有「我」：是在問處理的方法（「喉嚨痛怎麼辦」「考試考不好怎麼辦」）
         if t.range(of: "^[^，,]*[^，,\\s](怎麼辦|怎麼處理|要怎麼做|該怎麼做)$", options: .regularExpression) != nil { return true }
-        return t.range(of: "是什麼|什麼是|的意思|症狀|原因|為什麼|為何|方法|如何|怎麼(緩解|改善|克服|治|讀|學|做|處理)|要怎麼|該怎麼|有哪些|定義|解釋|技巧|^如果|^萬一|好不好看|好看|故事大綱|大綱|劇情|講了什麼|在講什麼|作者", options: .regularExpression) != nil
+        return t.range(of: "^(怎麼|如何|要怎麼|該怎麼|怎樣才能|怎樣)|是什麼|什麼是|的意思|症狀|原因|為什麼|為何|方法|如何|怎麼(緩解|改善|克服|治|讀|學|做|處理)|要怎麼|該怎麼|有哪些|定義|解釋|技巧|^如果|^萬一|好不好看|好看|故事大綱|大綱|劇情|講了什麼|在講什麼|作者", options: .regularExpression) != nil
     }
 
     /// NineSun 開口的第一句（帶著感受）；一般的問題不加

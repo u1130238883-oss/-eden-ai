@@ -255,7 +255,7 @@ public enum WebAgent {
         }()
         var brief: (title: String, text: String, url: String)?
         // NineSun 自己知道這部作品（works.txt）：百科拿不到、或拿錯條目（「鐵達尼號」拿到船）時就用自己知道的
-        let offlineWork = zh && !fortune ? Library.workAnswer(question) : nil
+        let offlineWork = zh && !fortune ? (Library.workAnswer(question) ?? Library.defineAnswer(question)) : nil
         func offline() -> Result? {
             guard let text = offlineWork else { return nil }
             var r = Result(text: "📌 回答\n" + text, card: nil, found: true, engines: ["library": 1])

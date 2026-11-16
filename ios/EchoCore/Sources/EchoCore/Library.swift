@@ -31,6 +31,7 @@ public enum Library {
 
     static let works = parse(CommonsenseData.works)
     static let lists = parse(CommonsenseData.lists)
+    static let whos = parse(CommonsenseData.who)
 
     /// 書名號、空白、語氣詞拿掉
     static func bare(_ s: String) -> String {
@@ -57,7 +58,7 @@ public enum Library {
         let t = bare(raw)
         guard t.count >= 3, t.count <= 40 else { return nil }
         if ["上網查", "幫我查", "搜尋", "google", "Google"].contains(where: { raw.contains($0) }) { return nil }
-        return author(t) ?? list(t) ?? category(t)
+        return author(t) ?? whoDid(t) ?? list(t) ?? category(t)
     }
 
     // MARK: 誰寫的、誰導演的
@@ -80,6 +81,43 @@ public enum Library {
         return s
     }
 
+    // MARK: 誰提出、發現、發明、創立的
+
+    static func whoItem(_ raw: String) -> Item? {
+        var n = raw
+        for s in ["這間公司", "這家公司", "公司", "這個理論", "理論", "這個定律", "定律", "學說"] where n.hasSuffix(s) && n.count > s.count + 1 {
+            if let w = whos.first(where: { $0.names.contains(n) }) { return w }
+            n.removeLast(s.count); break
+        }
+        return whos.first { $0.names.contains(n) }
+    }
+
+    static func whoDid(_ t: String) -> String? {
+        let verbs = "提出|發現|發明|創立|創辦|建立|成立|設計|開發|研發|創造|做出|發表|首創|開創|推出|製造"
+        let pats = [#"^(.{1,20}?)(?:是|由)?誰(?:最早|最先|首先|第一個)?(?:"# + verbs + #")(?:的|了)?$"#,
+                    #"^(.{1,20}?)的(?:創辦人|創始人|創立者|創辦者|提出者|發現者|發明者|發明人|開發者|設計者|創造者|老闆|爸爸|之父)(?:是誰|是哪位|是什麼人)?$"#,
+                    #"^誰(?:"# + verbs + #")(?:了|的)?(.{1,20})$"#,
+                    #"^(.{1,20}?)是(?:誰|哪個人|哪位)(?:"# + verbs + #")的$"#]
+        guard let g = pats.lazy.compactMap({ RuleBook.match(t, $0) }).first, let w = whoItem(g[0]), let who = w.attr("誰") else { return nil }
+        var s = "\(w.name)：\(who)"
+        if let y = w.attr("年份") { s += "，\(y)" }
+        s += "。"
+        if let i = w.attr("簡介") { s += "\n\(i)。" }
+        return s
+    }
+
+    /// 「DeepSeek是什麼」「比特幣是什麼」：百科查不到時，用自己知道的簡單說明
+    public static func defineAnswer(_ raw: String) -> String? {
+        let t = bare(raw)
+        guard let g = RuleBook.match(t, #"^(.{1,20}?)(?:是什麼|是啥|是什麼東西|是什麼意思|是做什麼的|是幹嘛的)$"#) ?? RuleBook.match(t, #"^(?:什麼是|何謂)(.{1,20})$"#),
+              let w = whoItem(g[0]), let i = w.attr("簡介"),
+              // 「蘋果是什麼」是水果，不是公司：常識裡已經有的名字不歸這裡
+              !Commonsense.all.contains(where: { $0.names.contains(g[0]) }) else { return nil }
+        var s = "\(w.name)是\(i)。"
+        if let who = w.attr("誰") { s += "\n由\(who)" + (w.attr("年份").map { "（\($0)）" } ?? "") + "。" }
+        return s
+    }
+
     // MARK: 清單
 
     static func list(_ t: String) -> String? {
@@ -87,9 +125,18 @@ public enum Library {
                     #"^(.{2,16}?)(?:有|是)(?:哪些|哪幾個|哪幾)(?:國家|行星|東西|作品|書|人|顏色|呢)?$"#,
                     #"^(?:什麼是|哪些是)(.{2,16})$"#,
                     #"^(.{2,16}?)的(?:名單|清單|名字|名稱|順序)$"#]
-        guard let g = pats.lazy.compactMap({ RuleBook.match(t, $0) }).first else { return nil }
-        let n = g[0]
-        guard let l = lists.first(where: { $0.names.contains(n) }), let items = l.attr("項目") else { return nil }
+        // 「台灣有哪些直轄市」「宮崎駿有哪些動畫」「金庸寫了哪些小說」：主角在前、東西在後 → 「台灣的直轄市」
+        var names: [String] = []
+        if let g = RuleBook.match(t, #"^(.{1,10}?)(?:有|寫了|寫過|拍了|拍過|畫了|做了|出了)(?:哪些|哪幾個|哪幾部|哪幾本|哪幾種|什麼)(?:有名的|著名的|出名的|經典的|代表的|知名的)?(.{1,8}?)(?:呢|啊)?$"#) {
+            let thing = g[1]
+            names += [g[0] + "的" + thing, g[0] + thing]
+            for (a, b) in [("作品", "作品"), ("書", "小說"), ("小說", "小說"), ("電影", "動畫"), ("動畫", "動畫"), ("國家", "國家")] where thing.contains(a) {
+                names += [g[0] + "的" + b, g[0] + b]
+            }
+        }
+        if let g = pats.lazy.compactMap({ RuleBook.match(t, $0) }).first { names.append(g[0]) }
+        guard let n = names.first(where: { n in lists.contains { $0.names.contains(n) } }),
+              let l = lists.first(where: { $0.names.contains(n) }), let items = l.attr("項目") else { return nil }
         // 「五行是什麼」這種問定義的，交給原本的方法（會講意思，不只是列出來）
         if t.hasSuffix("是什麼"), !n.contains(where: { "二三四五六七八九十".contains($0) }) || n == "五行" { return nil }
         var s = "\(l.name)：\(items)。"
