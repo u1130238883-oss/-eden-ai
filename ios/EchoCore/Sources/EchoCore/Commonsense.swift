@@ -175,7 +175,7 @@ public enum Commonsense {
         }
         if let a = compareNumbers(t) { return a }
         // 「台灣和日本哪個大」「台北101跟晴空塔誰比較高」→ 台灣比日本大嗎
-        if let g = RuleBook.match(t, #"^(.{1,10}?)(?:和|跟|與|還是|或)(.{1,10}?)(?:哪個|哪一個|誰|哪裡|哪一國|哪國)(?:比較|更)?(高|矮|大|小|長|短|重|輕|多|少|遠|近)(?:呢|啊)?$"#),
+        if let g = RuleBook.match(t, #"^(.{1,10}?)(?:和|跟|與|還是|或)(.{1,10}?)(?:哪個|哪一個|誰|哪裡|哪一國|哪國)(?:比較|更)?(高|矮|大|小|長|短|重|輕|多|少|遠|近|快|慢)(?:呢|啊)?$"#),
            let a = compareNumbers("\(g[0])比\(g[1])\(g[2])嗎") { return a }
         if let a = dynasty(t) { return a }
         // 「我想減肥」「我要開始學英文」：說想做一件事 → 給做法
@@ -210,19 +210,31 @@ public enum Commonsense {
 
     /// 「台北101比東京晴空塔高嗎」「日本比台灣大嗎」：兩個都有數字就比
     static func compareNumbers(_ t: String) -> String? {
-        guard let g = RuleBook.match(t, #"^(.{1,10}?)(?:有)?比(.{1,10}?)(?:還|更|要)?(高|矮|大|小|長|短|重|輕|多|少|遠|近)(?:嗎|嗎\?|很多嗎)?$"#) else { return nil }
+        guard let g = RuleBook.match(t, #"^(.{1,10}?)(?:有)?比(.{1,10}?)(?:還|更|要)?(高|矮|大|小|長|短|重|輕|多|少|遠|近|快|慢)(?:嗎|嗎\?|很多嗎)?$"#) else { return nil }
         let keyOf: [String: [String]] = ["高": ["高度"], "矮": ["高度"], "大": ["面積", "大小"], "小": ["面積", "大小"], "長": ["長度"], "短": ["長度"],
-                                         "重": ["重量"], "輕": ["重量"], "多": ["人口"], "少": ["人口"], "遠": ["距離"], "近": ["距離"]]
+                                         "重": ["重量"], "輕": ["重量"], "多": ["人口"], "少": ["人口"], "遠": ["距離"], "近": ["距離"], "快": ["速度"], "慢": ["速度"]]
         func ent(_ n: String) -> Entity? { facts.first(where: { $0.names.contains(n) }) ?? realMentions(n, in: facts).first.map { $0.entity } }
         func value(_ v: String) -> (Double, String)? {
-            guard let m = RuleBook.match(v, #"([\d,]+(?:\.\d+)?)\s*(萬|億)?\s*(公尺|公里|平方公里|公斤|噸|人|km)?"#), let x = Double(m[0].replacingOccurrences(of: ",", with: "")) else { return nil }
-            let mult = m[1] == "億" ? 1e8 : m[1] == "萬" ? 1e4 : 1
-            return (x * mult, m[2])
+            // 找第一個有單位的數字（「在 20°C 的空氣中每秒大約 343 公尺」要的是 343 公尺，不是 20）
+            guard let re = try? NSRegularExpression(pattern: #"([\d,]+(?:\.\d+)?)\s*(萬|億)?\s*(公尺|公里|平方公里|公斤|噸|人|km)?"#) else { return nil }
+            let ns = v as NSString
+            var firstAny: (Double, String)?
+            for m in re.matches(in: v, range: NSRange(location: 0, length: ns.length)) {
+                guard let x = Double(ns.substring(with: m.range(at: 1)).replacingOccurrences(of: ",", with: "")) else { continue }
+                let mul = m.range(at: 2).location != NSNotFound ? ns.substring(with: m.range(at: 2)) : ""
+                let unit = m.range(at: 3).location != NSNotFound ? ns.substring(with: m.range(at: 3)) : ""
+                let mult = mul == "億" ? 1e8 : mul == "萬" ? 1e4 : 1
+                // 公里換成公尺，才能跟公尺比（光速每秒 30 萬公里、音速每秒 343 公尺）
+                let r: (Double, String) = (unit == "公里" || unit == "km") ? (x * mult * 1000, "公尺") : (x * mult, unit)
+                if !unit.isEmpty { return r }
+                if firstAny == nil { firstAny = r }
+            }
+            return firstAny
         }
         guard let a = ent(g[0]), let b = ent(g[1]), a.name != b.name, let keys = keyOf[g[2]] else { return nil }
         for k in keys {
             guard let va = a.attr(k), let vb = b.attr(k), let xa = value(va), let xb = value(vb), xa.1 == xb.1 else { continue }
-            let bigWord: [String: String] = ["高度": "高", "面積": "大", "大小": "大", "長度": "長", "重量": "重", "人口": "多", "距離": "遠"]
+            let bigWord: [String: String] = ["高度": "高", "面積": "大", "大小": "大", "長度": "長", "重量": "重", "人口": "多", "距離": "遠", "速度": "快"]
             let w = bigWord[k] ?? g[2]
             let bigger = xa.0 >= xb.0 ? a.name : b.name
             let fmtA = va.split(separator: "，").first.map(String.init) ?? va, fmtB = vb.split(separator: "，").first.map(String.init) ?? vb

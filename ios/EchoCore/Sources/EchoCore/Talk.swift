@@ -70,6 +70,10 @@ public enum Talk {
             default: return "感覺很舒服吧～接下來有什麼打算？"
             }
         }
+        // 「第一次跑這麼多」：第一次做到的事
+        if let g = m(#"^(?:我)?(?:這是|這是我)?第一次(.{1,10}?)(?:耶|欸|喔|啦|呢)?$"#), !g[0].contains("什麼") {
+            return "第一次\(g[0])，真的很不容易！這種成就感要好好記住～接下來也記得照顧好身體。"
+        }
         // 「我跟男朋友吵架了」：先接住
         if m(#"^我(?:跟|和|與)(?:我)?(?:的)?(?:男朋友|女朋友|男友|女友|老公|老婆|另一半|朋友|好朋友|閨蜜|爸媽|爸爸|媽媽|家人|室友|同事|主管|老闆|同學|哥哥|姊姊|姐姐|弟弟|妹妹|我媽|我爸)(?:又|大)?吵架(?:了)?$"#) != nil {
             lastChatTopic = "吵架"
@@ -83,7 +87,8 @@ public enum Talk {
         // 「想吃拉麵」：接著聊吃的
         if let g = m(#"^(?:我)?(?:好|很|超|突然|現在|今天)?(?:好|很|超)?想吃(.{1,8}?)(?:耶|喔|啊)?$"#), !g[0].contains("什麼") {
             lastChatTopic = "吃"
-            if ["東西", "點東西", "飯", "宵夜", "甜的", "辣的", "零食", "點心", "甜點", "好吃的", "早餐", "午餐", "晚餐"].contains(g[0]) {
+            if ["甜的", "甜點", "甜食", "點心"].contains(g[0]), let a = Commonsense.answer("推薦甜點") { return a }
+            if ["東西", "點東西", "飯", "宵夜", "辣的", "零食", "好吃的", "早餐", "午餐", "晚餐"].contains(g[0]) {
                 return "肚子餓了嗎？要不要我推薦幾個？跟我說「晚餐吃什麼」或「推薦宵夜」就可以。"
             }
             let recipe = Commonsense.howtos.contains { $0.kind == "做法" && $0.names.contains(g[0]) }
@@ -91,7 +96,10 @@ public enum Talk {
         }
         // 「不想去」「不想上班」
         if let g = m(#"^(?:我)?(?:好|很|真的|超|有點)?不想(去|上班|上學|起床|出門|工作|去上班|去上學|讀書|念書|唸書)(?:了|啦)?$"#) {
-            let what = ["去", "出門"].contains(g[0]) ? "出門" : g[0]
+            if g[0] == "出門" {
+                return "不想出門也很好！在家也能過得很舒服：看一部想看很久的電影、學一道新菜、整理一下房間、玩個小遊戲，或跟我聊聊天～要我推薦電影或遊戲嗎？"
+            }
+            let what = g[0] == "去" ? "出門" : g[0]
             return "不想\(what)的時候真的很難熬，這種心情很正常。先撐過今天就好，結束後給自己一個小獎勵，像是好吃的晚餐或一集喜歡的劇。需要的話，我在這裡陪你。"
         }
         // 「好啦我去了」「我出門了」
@@ -433,11 +441,15 @@ public enum Talk {
     /// 回答 NineSun 剛剛問的問題（「牠叫什麼名字？」→「叫小白」、「今天煮什麼？」→「咖哩」、「是哪裡、哪個科系？」→「台大」）：
     /// 很短、不是新的問題、也不是要我做事 → 接住對方的回答，不要拿去上網查
     /// 考試考砸了，接著說是哪一科（「數學」「英文啦」）
-    public static func examSubject(_ raw: String) -> String? {
+    public static func examSubject(_ raw: String, upcoming: Bool = false) -> String? {
         var x = clean(raw)
         for p in ["是", "就是", "考"] where x.hasPrefix(p) && x.count > p.count { x.removeFirst(p.count); break }
         guard let g = RuleBook.match(x, #"^(數學|英文|國文|物理|化學|生物|歷史|地理|公民|自然|社會|理化|數理|英聽|作文|日文|會計|經濟學|微積分|統計)(?:科|課)?$"#) else { return nil }
         let s = g[0]
+        if upcoming {
+            let extra = ["英文", "日文", "英聽"].contains(s) ? "想要背單字的方法，問我「怎麼背單字比較快」。" : "想要考前的準備方法，問我「考試前一天要做什麼」。"
+            return "\(s)加油！考前可以把常錯的題目和觀念整理成一張表，再做一兩回考古題；前一天不要熬夜，睡飽比多讀一小時有用。" + extra
+        }
         let tip = Commonsense.answer(s + "不好怎麼辦") != nil ? "想要的話，問我「\(s)不好怎麼辦」，我給你具體的方法。" : "想要的話，問我「怎麼準備期末考」，我們一起排讀書計畫。"
         return "\(s)啊，\(s)真的不容易，這次沒考好不代表你學不會。可以先找出錯最多的是哪一種題目，把那個觀念補起來就會進步很多。" + tip
     }
@@ -482,6 +494,10 @@ public enum Talk {
         }
         // 「是哪一科呢？」→「數學」
         if q.contains("哪一科") || q.contains("哪科"), let a = examSubject(x) { return a }
+        // 「想聊什麼？」→「好」「嗯」：答應要聊
+        if q.contains("想聊什麼") || q.contains("想說什麼") || q.contains("想聊聊嗎"), t.range(of: "^(好|好啊|好呀|嗯|嗯嗯|可以|好喔|OK|ok|謝謝)$", options: .regularExpression) != nil {
+            return "好呀，我在聽～想從哪裡開始說都可以：今天發生的事、讓你煩心的事，或隨便聊聊都好，慢慢來。"
+        }
         // 「晚餐吃了嗎？」→「還沒」「吃了」
         if q.range(of: "(吃飯|吃飽|吃了|晚餐|午餐|早餐|宵夜).*嗎", options: .regularExpression) != nil {
             if t.range(of: "^(還沒|還沒吃|沒有|沒吃|還沒有|沒|不想吃|沒空吃|忘記吃|吃不下)", options: .regularExpression) != nil {
