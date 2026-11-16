@@ -300,7 +300,7 @@ public enum Talk {
         guard !qs.isEmpty else { return nil }
         let q = qs.joined()
         let isDuration = t.range(of: #"([0-9一二兩三四五六七八九十半幾]+)(年|個月|月|天|週|禮拜|星期|小時|歲)"#, options: .regularExpression) != nil
-        let request = ["什麼", "怎麼", "為什麼", "哪", "誰", "幾點", "多少", "嗎", "如何", "推薦", "幫我", "告訴我", "教我", "查", "給我", "寫", "算", "翻譯",
+        let request = ["什麼", "怎麼", "為什麼", "哪", "誰", "幾", "多少", "多高", "多遠", "多大", "多長", "多重", "多久", "呢", "嗎", "如何", "推薦", "幫我", "告訴我", "教我", "查", "給我", "寫", "算", "翻譯",
                        "運勢", "命盤", "八字", "紫微", "星座", "？", "?", "你"]
         if request.contains(where: { raw.contains($0) }) { return nil }
         var x = t

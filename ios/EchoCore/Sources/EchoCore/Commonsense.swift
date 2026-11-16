@@ -320,10 +320,15 @@ public enum Commonsense {
     public static func followUp(_ raw: String, subject: String, previous: String, now: Date = Date()) -> (text: String, local: Bool)? {
         var t = Everyday.clean(raw)
         guard !subject.isEmpty, (1...14).contains(t.count) else { return nil }
-        for p in ["那裡", "那邊", "這裡", "這邊", "當地"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); break }
+        let r0 = raw.trimmingCharacters(in: .whitespaces)
+        var pointed = false   // 明白指著上一題（「它」「那裡」）
+        for p in ["那裡", "那邊", "這裡", "這邊", "當地"] where r0.hasPrefix(p) || t.hasPrefix(p) {
+            pointed = true
+            if t.hasPrefix(p) { t.removeFirst(p.count) } else if let f = t.first, "裡邊".contains(f) { t.removeFirst() }
+            break
+        }
         for p in ["那麼", "那", "所以", "還有", "另外"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); break }
-        for p in ["它的", "它", "他的", "他", "她的", "她", "牠的", "牠", "這個的", "這個", "那個"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); break }
-        while let f = t.first, "裡邊".contains(f), t.count > 1 { t.removeFirst() }
+        for p in ["它的", "它", "他的", "他", "她的", "她", "牠的", "牠", "這個的", "這個", "那個"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); pointed = true; break }
         if t.hasPrefix(subject) { return nil }
         if ["你", "我", "妳"].contains(where: { t.contains($0) }) || fortuneish(t) { return nil }
         let ms = realMentions(t, in: facts) + realMentions(t, in: howtos)
@@ -339,6 +344,26 @@ public enum Commonsense {
             var core = t
             while let l = core.last, "呢啊呀".contains(l) { core.removeLast() }
             guard core.count >= 2 else { return nil }
+            // 問句前面不能有自己的主角（「埃菲爾鐵塔高度多少」「邊際效用的意思」是新的問題，不是在追問）：
+            // 前面只能是上一題主角的屬性（人口、首都）或「要、會、在、說、用」這種詞
+            if !pointed {
+                let cueAt = (asking + ["的意思", "意思"]).compactMap { core.range(of: $0)?.lowerBound }.min() ?? core.endIndex
+                var pre = String(core[..<cueAt])
+                let keys = facts.first(where: { $0.name == subject }).map { $0.attrs.map { $0.key } } ?? []
+                let lead = keys.filter { !$0.hasPrefix("因:") } + ["要", "會", "可以", "能", "有", "是", "說", "講", "用", "吃", "住", "在", "去", "還", "也", "都",
+                                                               "一共", "總共", "大概", "大約", "第二", "下一屆", "下一次", "上一次", "最", "的", "又", "要怎麼", "該"]
+                var changed = true
+                while changed && !pre.isEmpty {
+                    changed = false
+                    for w in lead.sorted(by: { $0.count > $1.count }) where pre.hasPrefix(w) { pre.removeFirst(w.count); changed = true; break }
+                }
+                guard pre.isEmpty else { return nil }
+                // 問句裡剩下的內容也要很少（「是誰發現相對論的」有自己的主題「相對論」）
+                var residual = core
+                for w in (asking + keys + ["的意思", "意思"]).sorted(by: { $0.count > $1.count }) where w.count >= 1 { residual = residual.replacingOccurrences(of: w, with: "") }
+                residual = residual.filter { !"是的了嗎呢有要會在個一啊呀".contains($0) }
+                guard residual.count <= 4 else { return nil }
+            }
             for c in [subject + core, subject + "的" + core] where answer(c, now: now) != nil { return (c, true) }
             return core.count <= 8 ? (subject + core, false) : nil
         }
