@@ -126,7 +126,12 @@ public enum Commonsense {
     // MARK: - 入口
 
     public static func answer(_ raw: String, now: Date = Date()) -> String? {
-        let t = Everyday.clean(raw)
+        var t = Everyday.clean(raw)
+        // 「今年過年是幾號」「明年的中秋節」：時間詞後面接節日，先拿掉時間詞（不然「年過年」會被當成另一個詞）
+        if let r = t.range(of: #"^(今年|明年|這次|下次|下一次)的?"#, options: .regularExpression),
+           festivalNamed(String(t[r.upperBound...])) != nil || facts.contains(where: { $0.kind == "節日" && $0.names.contains { t[r.upperBound...].hasPrefix($0) } }) {
+            t = String(t[r.upperBound...])
+        }
         guard t.count >= 2, t.count <= 40 else { return nil }
         // 明白叫我上網查的（「幫我查一下…」「搜尋…」）就上網
         if ["查", "搜尋", "上網", "google", "Google", "維基"].contains(where: { raw.contains($0) }) { return nil }

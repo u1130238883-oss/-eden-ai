@@ -176,3 +176,16 @@ final class ConversationTests: XCTestCase {
         XCTAssertTrue(try run(["什麼是通貨膨脹", "可以說簡單一點嗎"]).last!.turn.text.hasPrefix("簡單說"))
     }
 }
+
+final class WritingHelpTests: XCTestCase {
+    func testWritingRequests() {
+        XCTAssertTrue(Talk.answer("幫我寫一段生日祝福")?.contains("生日快樂") == true)
+        XCTAssertTrue(Talk.answer("幫我寫一封請假信")?.contains("請假") == true)
+        XCTAssertTrue(Talk.answer("寫一首關於月亮的詩")?.contains("〈月亮〉") == true)
+        XCTAssertTrue(Talk.answer("幫我取一個貓的名字")?.contains("布丁") == true)
+        XCTAssertTrue(Talk.answer("我和我男朋友合不合")?.contains("生日") == true)
+        // 有生日的合盤交給引擎算，不攔
+        XCTAssertNil(Talk.answer("我男朋友1998年5月5日生，我們合不合"))
+        XCTAssertTrue(Commonsense.answer("今年過年是幾號")?.contains("春節") == true)
+    }
+}
