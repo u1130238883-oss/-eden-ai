@@ -153,6 +153,14 @@ public enum Commonsense {
             .contains(where: { t.contains($0) }) && t.contains("我")
             && !["教我", "怎麼緩解", "如何緩解", "緩解", "方法", "減輕", "怎麼讓自己", "如何讓自己"].contains(where: { t.contains($0) }) { return nil }
         if let a = whichClinic(t) { return a }
+        // 「我膝蓋痛」「我嘴破了」「我便秘」：說了身體的狀況 → 關心一句，給做法
+        if let g = RuleBook.match(t, #"^我(?:的)?(?:好像|一直|有點|今天|最近|又|突然|常常|很容易)?(.{2,8}?)(?:了|好幾天了|很久了)?$"#) {
+            let x = g[0].replacingOccurrences(of: #"(好|很|超|一直|有點)"#, with: "", options: .regularExpression)
+            if x.count >= 2, let e = howtos.first(where: { $0.kind == "健康" && $0.names.contains(where: { $0 == x || $0 == x + "怎麼辦" }) }),
+               let a = howto(e.name + "怎麼辦") ?? howto("怎麼" + e.name) {
+                return "辛苦了，身體不舒服要好好照顧自己。\n" + a
+            }
+        }
         if let a = compareNumbers(t) { return a }
         if let a = dynasty(t) { return a }
         // 「我想減肥」「我要開始學英文」：說想做一件事 → 給做法
