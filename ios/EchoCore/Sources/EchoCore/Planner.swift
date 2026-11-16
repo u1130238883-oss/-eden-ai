@@ -78,6 +78,8 @@ public enum Planner {
         if whenAsk {
             for (p, words, name) in events where has(text, words) { return .when(palace: p, topic: name) }
             if let p = palaceNumber(text) { return .when(palace: p, topic: "\(p)宮") }
+            // 「我哪一年最好」「什麼時候運氣最好」：看好運（9宮）
+            if has(text, ["最好", "最順", "最旺", "好運", "運氣好", "轉運"]) { return .when(palace: 9, topic: "好運・順心") }
             return nil
         }
         if has(text, ["哪個月", "哪幾個月", "哪些月", "幾月"]) && has(text, ["好", "順", "適合", "旺", "注意", "小心", "差", "不好"]) {
