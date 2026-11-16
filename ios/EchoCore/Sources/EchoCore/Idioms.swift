@@ -191,7 +191,9 @@ public enum Idioms {
                                               "努力": "努力", "冷靜": "冷靜", "感謝": "感謝", "感恩": "感謝", "祝福": "祝福", "稱讚": "稱讚", "讚美": "稱讚",
                                               "驚訝": "驚訝", "擔心": "擔心", "謙虛": "謙虛", "鼓勵": "鼓勵", "安慰": "安慰"]
     static let themeMeaning: [String: String] = ["說話": "說", "團結": "一起", "很多人": "人非常多", "專心": "專"]
-    public static func theme(_ t: String) -> [Entry] {
+    public static func theme(_ t0: String) -> [Entry] {
+        // 「很開心」「非常努力」：程度副詞不影響主題
+        let t = t0.replacingOccurrences(of: #"^(很|非常|超|好|十分|特別|超級|有點)"#, with: "", options: .regularExpression)
         if let tone = themeTone[t] { return all.filter { $0.tones.contains(tone) } }
         let w = themeMeaning[t] ?? t
         guard w.count >= 1, t.count >= 2 else { return [] }
@@ -249,6 +251,17 @@ public enum Idioms {
         default:
             return nil
         }
+    }
+
+    /// 「給我一個四字成語」：挑一個（每次換）
+    public static func random(seed: Int) -> Entry? {
+        let four = all.filter { $0.idiom.count == 4 }
+        return four.isEmpty ? nil : four[abs(seed) % four.count]
+    }
+
+    /// 成語接龍：找一個用這個字開頭的成語
+    public static func chain(from ch: Character, avoid: Set<String>) -> Entry? {
+        all.filter { $0.idiom.first == ch && !avoid.contains($0.idiom) }.min(by: { $0.idiom < $1.idiom })
     }
 
     /// 用成語說自己的毛病：上網找改善的方法，用意思去查（「三天打魚兩天曬網」→「怎麼改善做事沒有恆心」）

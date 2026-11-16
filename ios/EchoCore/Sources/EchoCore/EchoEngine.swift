@@ -404,6 +404,18 @@ public final class EchoEngine {
         }
         // 2) 觸發規則
         if let t = ctx.rules.trigger(for: text) { return done(t, .rule) }
+        // 2.0004) 成語：「給我一個四字成語」「成語接龍」
+        if L == .zh {
+            let tt = text.filter { !"？?。！!，, ".contains($0) }
+            if tt.range(of: #"^(給我|說|講|來|教我|告訴我)?(一個|個|幾個)?(四字)?成語(吧)?$"#, options: .regularExpression) != nil, tt != "成語",
+               let e = Idioms.random(seed: Calendar.current.component(.minute, from: ctx.now) &+ history.count &* 7) {
+                return done("「\(e.idiom)」：\(e.meaning)。" + (e.en.first.map { "\n英文可以說：\($0)" } ?? "") + "\n想要形容某種情況的成語，可以問我「形容很努力的成語」。", .knowledge)
+            }
+            if tt.range(of: #"^(來|我們來|陪我)?(玩)?成語接龍(吧)?$"#, options: .regularExpression) != nil, let e = Idioms.random(seed: history.count &+ 3) {
+                lastLocal = LocalContext(kind: "接龍", subject: e.idiom, extra: e.idiom, turn: history.count)
+                return done("好啊！我先來：「\(e.idiom)」（\(e.meaning)）。\n換你接一個「\(e.idiom.last!)」開頭的成語！", .knowledge)
+            }
+        }
         // 2.0005) 記得使用者教過的事（「你記得我叫什麼嗎」「我喜歡什麼顏色」）
         if L == .zh, let a = ctx.rules.recall(text) { return done(a, .rule) }
         // 2.0006) 「我是什麼星座」「我屬什麼」：用存好的生日算
@@ -896,6 +908,19 @@ public final class EchoEngine {
                 return .rewrite("怎麼學" + lc.subject.dropFirst(2))
             }
             if !EchoEngine.isQuestion(message), !EchoEngine.fortuneIntent(message), let a = Talk.chatAnswer(message, topic: lc.subject) { return .answer(a) }
+        case "接龍":
+            let w = t.filter { !"「」".contains($0) }
+            if w.count == 4, let last = lc.subject.last {
+                guard w.first == last else { return .answer("「\(w)」不是「\(last)」開頭喔～再想一個「\(last)」開頭的成語？（不玩了可以說「不玩了」）") }
+                let used = Set(lc.extra.components(separatedBy: ",")).union([w])
+                if let e = Idioms.chain(from: w.last!, avoid: used) {
+                    lastLocal = LocalContext(kind: "接龍", subject: e.idiom, extra: lc.extra + "," + w + "," + e.idiom, turn: lc.turn + 2)
+                    return .answer("接得好！我接「\(e.idiom)」（\(e.meaning)）。\n換你接「\(e.idiom.last!)」開頭的！")
+                }
+                lastLocal = nil
+                return .answer("「\(w)」接得好！我想不到「\(w.last!)」開頭的成語了，你贏了 🎉 要再玩一次嗎？說「成語接龍」就可以。")
+            }
+            if t.range(of: "不玩|結束|算了|不想玩|換別的", options: .regularExpression) != nil { lastLocal = nil; return .answer("好，不玩了～你很厲害！想再玩隨時說「成語接龍」。") }
         case "fact":
             // 「為什麼」「為什麼不行」：剛剛的回答裡已經有原因（「不會。企鵝不會飛。企鵝的翅膀演化成…」）→ 把原因說出來
             if t.range(of: #"^(那)?(為什麼|為何|為啥|怎麼說|怎麼會)(不是|不行|不會|不能|會|是|這樣|呢)?$"#, options: .regularExpression) != nil, !lc.answer.isEmpty {
