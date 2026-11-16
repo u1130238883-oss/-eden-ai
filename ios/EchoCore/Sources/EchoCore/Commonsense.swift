@@ -466,8 +466,9 @@ public enum Commonsense {
         ("人數", ["幾個人", "幾人", "多少人上場", "幾個球員"]),
         ("營養", ["什麼營養", "營養", "有什麼營養"]),
         ("重量", ["多重", "重量", "幾公斤", "幾噸", "體重"]),
-        ("位置", ["在哪裡", "在哪", "位於", "在哪個國家", "哪個國家", "位置", "在什麼地方"]),
-        ("月份", ["哪幾個月", "幾月到幾月", "哪個月", "月份", "幾月"]),
+        ("位置", ["在哪裡", "在哪", "位於", "在哪個國家", "哪個國家", "位置", "在什麼地方", "哪個縣市", "哪一個縣市", "哪個縣", "哪一縣", "哪個城市", "哪個州"]),
+        ("月份", ["哪幾個月", "幾月到幾月", "哪個月", "月份", "幾月", "日期", "幾號", "什麼時候"]),
+        ("個性", ["個性", "性格", "特質", "是什麼樣的人", "怎麼樣的人", "什麼樣的人", "的特點", "脾氣"]),
         ("好處", ["好處", "優點", "益處", "有什麼好", "對身體好"]),
         ("壞處", ["壞處", "缺點", "副作用", "危害", "對身體不好", "風險"]),
         ("沸點", ["沸點", "沸騰", "燒開", "煮沸", "會滾", "煮開"]),
@@ -535,7 +536,7 @@ public enum Commonsense {
             }
         }
         // 名字本身就是一個問題（「雞蛋要放冰箱嗎」「世界上有幾個國家」）：直接回答
-        if e.kind == "常識", first.alias.count >= 4, let intro = e.attr("簡介") {
+        if ["常識", "健康常識"].contains(e.kind), first.alias.count >= 4, let intro = e.attr("簡介") {
             return intro + "。" + (e.attr("說明").map { "\n" + $0 + "。" } ?? "")
         }
         // 「水的沸點」「人的體溫」：沒有問句，但就是「東西的屬性」
@@ -543,6 +544,13 @@ public enum Commonsense {
             let after0 = String(t[first.range.upperBound...])
             if after0.hasPrefix("的"), let v = e.attr(String(after0.dropFirst())), !after0.dropFirst().hasPrefix("因:") {
                 return phrase(e, String(after0.dropFirst()), v, now: now)
+            }
+            // 「屬龍的人個性」「天蠍座個性」：句尾就是屬性的名字
+            for (word, key) in [("日期", "月份"), ("性格", "個性"), ("特質", "個性"), ("年份", "年份")] where after0.count <= 6 && after0.hasSuffix(word) {
+                if let v = e.attr(key) { return phrase(e, key, v, now: now) }
+            }
+            if after0.count <= 6, let a = e.attrs.first(where: { $0.key.count >= 2 && !$0.key.hasPrefix("因:") && !["簡介", "說明", "看法"].contains($0.key) && after0.hasSuffix($0.key) }) {
+                return phrase(e, a.key, a.value, now: now)
             }
             return nil
         }
@@ -836,6 +844,9 @@ public enum Commonsense {
         case "名言": s = "\(n)的名言：「" + v.split(separator: "；").joined(separator: "」「") + "」"
         case "發明者": s = e.kind == "地標" ? "\(n)是\(v)" + (v.hasSuffix("）") || v.hasSuffix("。") ? "" : "。") : "\(n)的發明者：\(v)。"
         case "就醫": s = v + "。"
+        case "個性": s = v + "。"
+        case "月份" where e.kind == "星座": s = "\(n)是生日在 \(v) 的人。"
+        case "年份" where e.kind == "生肖": s = v + "。"
         case "年份": s = e.kind == "事件" || ["完工", "開幕", "成立", "建成", "落成", "舉行", "開始", "創立"].contains(where: { v.contains($0) }) ? "\(n)：\(v)。" : "\(n)出現在\(v)。"
         case "說明": s = v + "。"
         case "頻率", "人數": s = "\(n)\(v)。"
@@ -865,7 +876,7 @@ public enum Commonsense {
 
     static func define(_ e: Entity, now: Date) -> String? {
         guard let intro = e.attr("簡介") else { return nil }
-        if e.kind == "常識" { return intro + "。" + (e.attr("說明").map { "\n" + $0 + "。" } ?? "") }
+        if ["常識", "健康常識"].contains(e.kind) { return intro + "。" + (e.attr("說明").map { "\n" + $0 + "。" } ?? "") }
         var s = "\(e.name)是\(intro)。"
         switch e.kind {
         case "人物":

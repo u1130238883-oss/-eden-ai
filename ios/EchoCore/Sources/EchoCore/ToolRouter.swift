@@ -33,6 +33,12 @@ public enum ToolRouter {
         let cal = Calendar(identifier: .gregorian)
         let c = cal.dateComponents([.year, .month, .day, .hour, .minute, .weekday], from: now)
         let weekdays = ["日", "一", "二", "三", "四", "五", "六"]
+        // 只回答「現在、今天」的時間（「處女座的日期」「母親節是幾號」問的是別的東西）
+        var rest = text.filter { !"？?。！!，, ".contains($0) }
+        for w in ["現在", "今天", "今日", "目前", "請問", "時間", "什麼", "幾點", "幾時", "星期幾", "禮拜幾", "週幾", "幾號", "日期", "幾月幾", "幾日", "是", "的", "了", "呢", "嗎", "鐘", "分", "日", "號", "幾", "月", "那", "你知道", "告訴我"] {
+            rest = rest.replacingOccurrences(of: w, with: "")
+        }
+        guard rest.count <= 1 else { return nil }
         if ["幾點", "現在時間", "什麼時間", "幾時"].contains(where: { text.contains($0) }) || text == "時間" {
             return String(format: "現在是 %02d:%02d。訊號時鐘校準完畢！", c.hour!, c.minute!)
         }

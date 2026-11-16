@@ -86,7 +86,9 @@ public enum Everyday {
     static let relDays: [(String, Int)] = [("大後天", 3), ("大前天", -3), ("今天", 0), ("今日", 0), ("明天", 1), ("明日", 1),
                                            ("後天", 2), ("昨天", -1), ("昨日", -1), ("前天", -2)]
 
-    static func dayQuestion(_ t: String, _ now: Date) -> String? {
+    static func dayQuestion(_ t0: String, _ now: Date) -> String? {
+        // 只問「幾號」「日期」：問的是今天
+        let t = ["幾號", "幾月幾號", "幾月幾日", "日期", "幾號了", "星期幾", "禮拜幾"].contains(t0) ? "今天" + t0.replacingOccurrences(of: "了", with: "") : t0
         guard let (word, off) = relDays.first(where: { t.hasPrefix($0.0) }) else { return nil }
         var rest = String(t.dropFirst(word.count))
         if rest.hasPrefix("是") { rest.removeFirst() }
