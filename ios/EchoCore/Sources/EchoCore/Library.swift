@@ -37,8 +37,9 @@ public enum Library {
     static func bare(_ s: String) -> String {
         var t = s.filter { !"《》〈〉「」『』\"'“” ？?！!。，,~～".contains($0) && !$0.isWhitespace }
         for w in ["欸", "誒", "嘿", "那"] where t.hasPrefix(w) && t.count > w.count + 2 { t.removeFirst(w.count) }
-        for w in ["請問一下", "請問", "想問一下", "想問", "我想知道", "你知道", "你曉得", "告訴我", "跟我說", "說說看", "說一下", "介紹一下"] where t.hasPrefix(w) {
-            t.removeFirst(w.count)
+        for w in ["我想問一下", "請問一下", "請問", "想問一下", "我想問", "想問", "我想知道", "你知道", "你曉得", "可以跟我說一下", "可以跟我說", "跟我說說", "跟我說一下",
+                  "告訴我", "跟我說", "說說看", "說說", "聊聊", "說一下", "介紹一下", "介紹"] where t.hasPrefix(w) && t.count > w.count + 1 {
+            t.removeFirst(w.count); break
         }
         while let last = t.last, "呢嗎啊呀喔哦啦吧".contains(last) { t.removeLast() }
         return t

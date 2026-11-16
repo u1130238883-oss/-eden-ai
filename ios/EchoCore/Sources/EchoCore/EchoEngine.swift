@@ -451,6 +451,11 @@ public final class EchoEngine {
             lastWebTurn = history.count
             return done(a, .knowledge)
         }
+        // 2.067) 「跟我說說紅樓夢」「介紹一下哈利波特」：認得的作品就照「作品在講什麼」查（不是閒聊、不是宮位）
+        if L == .zh, ["說說", "聊聊", "介紹", "跟我說"].contains(where: { text.contains($0) }), let w = Library.workAsked(text) {
+            lastLocal = LocalContext(kind: "work", subject: w, turn: history.count)
+            return done(Loc.s("webAsk", .zh), .tool, web: w + "在講什麼")
+        }
         // 2.068) 「我的健康要注意什麼」「我的錢財要注意什麼」：問的是自己命盤上的這個主題，不是上網查一般的健康、理財知識
         if L == .zh, let norm = EchoEngine.myTopic(text), let tp = TopicRouter.parse(norm, L: .zh, now: ctx.now) {
             guard let bd = ctx.profile.birthday else {
@@ -858,6 +863,9 @@ public final class EchoEngine {
         let prefixes = ["上網", "搜尋", "搜索", "查一下", "幫我查", "幫我搜", "幫我上網", "請上網", "請幫我查", "請幫我上網", "去網上", "網上查", "google",
                         "search ", "search for ", "look up ", "busca ", "buscar ", "cerca "]
         let inside = ["上網查", "上網搜", "上網找", "網路上查", "網上查", "上網看看"]
+        // 「你可以幫我查一下明天天氣嗎」：請我幫忙查，查的是後面那一段
+        if let g = RuleBook.match(t.trimmingCharacters(in: CharacterSet(charactersIn: "？?。！! ")), #"^(?:你|妳)?(?:可以|能不能|能|可不可以)?(?:幫我|幫忙)(?:上網)?(?:查|搜|找|搜尋)(?:一下|看看)?(.{2,30}?)(?:嗎|好嗎|好不好|呢)?$"#),
+           !g[0].contains("我的"), !g[0].contains("運勢") { return g[0] }
         guard prefixes.contains(where: { l.hasPrefix($0) }) || inside.contains(where: { t.contains($0) }) else { return nil }
         if t.contains("我的") || t.contains("運勢") || (t.contains("我") && ManticReader.wants(t)) { return nil }
         // 「你可以上網找資料嗎」「你會上網嗎」是在問 NineSun 的能力，不是要它去查
