@@ -213,3 +213,15 @@ final class SmallTalkFollowUpTests: XCTestCase {
         XCTAssertTrue(try t.run(["我剛下班", "八大行星有哪些"]).last!.turn.text.contains("木星"))
     }
 }
+
+final class SymptomTests: XCTestCase {
+    func testSymptomsGetCareAndRedFlags() {
+        // 胸口痛一定要先講急救電話
+        XCTAssertTrue(Talk.answer("我胸口痛")?.contains("119") == true)
+        XCTAssertTrue(Talk.answer("我被狗咬了")?.contains("肥皂") == true)
+        XCTAssertTrue(Talk.answer("我過敏了")?.contains("119") == true)
+        for q in ["我肚子痛", "我頭暈", "我發燒了", "我牙齒痛", "我扭到腳了"] { XCTAssertNotNil(Talk.answer(q), q) }
+        // 問知識的不攔
+        XCTAssertNil(Talk.answer("胸口痛是什麼原因"))
+    }
+}
