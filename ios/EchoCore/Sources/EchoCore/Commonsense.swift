@@ -497,13 +497,13 @@ public enum Commonsense {
     // MARK: - 比較（哪個比較好）
 
     static func compare(_ t: String) -> String? {
-        guard ["哪個", "哪一個", "還是", "比較", "誰比較", "哪種", "差別", "差異", "不同", "分別", "區別", "不一樣"].contains(where: { t.contains($0) }) else { return nil }
+        guard ["哪個", "哪一個", "還是", "比較", "誰比較", "哪種", "差別", "差異", "不同", "分別", "區別", "不一樣", "差在哪"].contains(where: { t.contains($0) }) else { return nil }
         for line in CommonsenseData.views.split(separator: "\n") {
             let p = line.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
             guard t.contains(p[0]), t.contains(p[1]) else { continue }
             let angles = p[2].split(separator: ",").map(String.init)
             // 問「差別、有什麼不同」：看法裡本來就會講差別，不限角度
-            let asksDiff = ["差別", "差異", "不同", "分別", "區別", "不一樣"].contains(where: { t.contains($0) })
+            let asksDiff = ["差別", "差異", "不同", "分別", "區別", "不一樣", "差在哪"].contains(where: { t.contains($0) })
             if angles.isEmpty || asksDiff || angles.contains(where: { t.contains($0) }) { return p[3] + "。" }
         }
         return nil
@@ -565,7 +565,7 @@ public enum Commonsense {
         ("貨幣", ["貨幣", "什麼錢", "用什麼幣", "錢叫什麼", "什麼幣", "哪種錢"]),
         ("日期", ["幾月幾號", "幾月幾日", "幾號", "哪一天", "哪天", "什麼時候", "幾月", "日期", "是星期幾"]),
         ("習俗", ["習俗", "要做什麼", "做什麼", "有什麼活動", "怎麼過", "傳統", "慶祝"]),
-        ("由來", ["由來", "起源", "典故", "為什麼要過", "怎麼來的", "傳說", "紀念誰", "紀念什麼"]),
+        ("由來", ["由來", "起源", "典故", "為什麼要過", "怎麼來的", "傳說", "紀念誰", "紀念什麼", "是哪裡的", "哪裡來的", "發源地", "從哪裡來"]),
         ("吃", ["吃什麼", "吃些什麼", "吃哪些", "食物", "以什麼為食", "吃啥", "愛吃", "喜歡吃", "要吃"]),
         ("住", ["住在哪", "住哪", "生活在哪", "棲息", "在哪裡生活", "哪裡有", "分布", "住在什麼地方", "在哪裡", "在哪"]),
         ("壽命", ["活多久", "壽命", "活幾年", "能活", "可以活", "活多少年", "活到幾歲", "多長壽"]),
@@ -588,6 +588,7 @@ public enum Commonsense {
         ("月份", ["哪幾個月", "幾月到幾月", "哪個月", "月份", "幾月", "日期", "幾號", "什麼時候"]),
         ("個性", ["個性", "性格", "特質", "是什麼樣的人", "怎麼樣的人", "什麼樣的人", "的特點", "脾氣"]),
         ("好處", ["好處", "優點", "益處", "有什麼好", "對身體好"]),
+        ("交通", ["怎麼去", "怎麼到", "要怎麼去", "怎麼過去", "交通", "要搭什麼", "怎麼上山"]),
         ("壞處", ["壞處", "缺點", "副作用", "危害", "對身體不好", "風險"]),
         ("沸點", ["沸點", "沸騰", "燒開", "煮沸", "會滾", "煮開"]),
         ("冰點", ["冰點", "結冰", "凝固", "結成冰"]),
@@ -622,7 +623,7 @@ public enum Commonsense {
             return "\(said)的發明者：\(v)。"
         }
         let ms = realMentions(t, in: facts)
-        let whyAsk = ["為什麼", "為何", "怎麼會", "原因", "為啥", "幹嘛", "何以", "怎麼來的"].contains(where: { t.contains($0) })
+        let whyAsk = ["為什麼", "為何", "怎麼會", "原因", "為啥", "幹嘛", "何以", "怎麼來的", "怎麼發生", "如何發生", "怎麼形成", "如何形成", "怎麼產生", "如何產生", "怎麼運作", "如何運作", "原理"].contains(where: { t.contains($0) })
         guard let first = ms.first else {
             if let a = reverseCapital(t) { return a }
             if whyAsk { return globalWhy(t) }
@@ -670,6 +671,10 @@ public enum Commonsense {
         if ["常識", "健康常識"].contains(e.kind), first.alias.count >= 4, let intro = e.attr("簡介") {
             return intro + "。" + (e.attr("說明").map { "\n" + $0 + "。" } ?? "")
         }
+        // 後面有一整句問題的說法（「高鐵從台北到高雄多久」裡的「台北到高雄多久」）：用它回答
+        if let q = ms.dropFirst().first(where: { ["常識", "健康常識"].contains($0.entity.kind) && $0.alias.count >= 5 }), let intro = q.entity.attr("簡介") {
+            return intro + "。" + (q.entity.attr("說明").map { "\n" + $0 + "。" } ?? "")
+        }
         // 「水的沸點」「人的體溫」：沒有問句，但就是「東西的屬性」
         if !asking.contains(where: { t.contains($0) }), !t.hasSuffix("嗎") {
             let after0 = String(t[first.range.upperBound...])
@@ -714,6 +719,10 @@ public enum Commonsense {
         }
         // 有幾個…、有多少…
         if let a = count(rest, mentioned) { return a }
+        // 「心臟一分鐘跳幾下」問的是心跳，不是心臟有幾顆
+        if ["跳幾下", "跳多少下", "一分鐘跳", "跳多快"].contains(where: { t.contains($0) }), let o = (mentioned + loose).first(where: { $0.attr("心跳") != nil }) {
+            return phrase(o, "心跳", o.attr("心跳")!, now: now)
+        }
         // 直接說出屬性的名字（「人的體溫」「水的沸點」）
         for o in mentioned {
             if let a = o.attrs.filter({ !$0.key.hasPrefix("因:") && $0.key.count >= 2 && !["簡介", "說明", "特點", "看法"].contains($0.key) && t.contains($0.key) })
@@ -768,10 +777,14 @@ public enum Commonsense {
     static func globalWhy(_ t: String) -> String? {
         var scored: [(Int, Double, String)] = []
         // 問句裡真正的內容（拿掉「為什麼、會、有、是…」）
-        var content = t
-        for w in ["為什麼", "為何", "怎麼會", "為啥", "原因", "是什麼", "會", "有", "是", "要", "的", "呢", "嗎", "都", "總是", "那麼", "這麼", "這樣", "一直"] {
-            content = content.replacingOccurrences(of: w, with: "")
+        func strip(_ s: String) -> String {
+            var c = s
+            for w in ["為什麼", "為何", "怎麼會", "為啥", "原因", "是什麼", "會", "有", "是", "要", "的", "呢", "嗎", "都", "總是", "那麼", "這麼", "這樣", "一直"] {
+                c = c.replacingOccurrences(of: w, with: "")
+            }
+            return c
         }
+        let content = strip(t)
         let stop: Set<String> = ["會有", "為什麼", "什麼", "會不會", "是不是", "怎麼", "原因", "為何"]
         for e in facts {
             // 「人」是大部分身體問題沒說出來的主角（「頭髮為什麼會變白」「為什麼會做夢」）
@@ -784,7 +797,8 @@ public enum Commonsense {
                 // 問題沒提到這個東西（「變色龍為什麼會變色」不是蘋果的「變色」）：關鍵詞要夠長、蓋住問題大部分的內容
                 if !named {
                     var left = content
-                    for h in kept { left = left.replacingOccurrences(of: h, with: "") }
+                    // 關鍵詞也拿掉同樣的虛字再比（「不會淹死」→「不淹死」）
+                    for h in kept { let k = strip(h); if !k.isEmpty { left = left.replacingOccurrences(of: k, with: "") } }
                     let coverage = content.isEmpty ? 0 : 1 - Double(left.count) / Double(content.count)
                     guard (score >= 4 && coverage >= 0.6) || (score >= 3 && coverage >= 0.8) else { continue }
                 }
@@ -1005,6 +1019,7 @@ public enum Commonsense {
         case "習俗": s = "\(n)的習俗：\(v)。"
         case "由來": s = "\(n)的由來：\(v)。"
         case "好處": s = "\(n)的好處：\(v)。"
+        case "交通": s = "去\(n)：\(v)。"
         case "壞處": s = "要注意的地方：\(v)。"
         default:
             let head = String(v.prefix { !"：，；（".contains($0) })
