@@ -158,7 +158,7 @@ public struct RuleBook: Codable, Equatable {
     /// 「你記得我叫什麼嗎」「我喜歡什麼顏色」：從使用者教過我的規則裡找
     public func recall(_ message: String) -> String? {
         let t = message.filter { !"？?。！!，, ".contains($0) }
-        let asksName = ["你記得我叫什麼", "我叫什麼名字", "我叫什麼", "你知道我叫什麼", "我的名字是什麼", "你記得我的名字", "記得我是誰"].contains(where: { t.contains($0) })
+        let asksName = ["你記得我叫什麼", "我叫什麼名字", "我叫什麼", "你知道我叫什麼", "我的名字是什麼", "你記得我的名字", "記得我是誰", "知道我是誰", "你認識我嗎", "你記得我嗎", "你還記得我嗎"].contains(where: { t.contains($0) }) || t == "我是誰"
         if asksName {
             if let r = rules.last(where: { $0.kind == .address }) { return "記得啊，你叫\(r.a)！" }
             return "你還沒告訴我你的名字耶。跟我說「我叫○○」，我就會記住。"
