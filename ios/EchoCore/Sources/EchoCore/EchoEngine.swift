@@ -470,6 +470,12 @@ public final class EchoEngine {
 
         // 外語走多語系流程
         if L != .zh, let i18n {
+            // 簡單的寒暄（how are you、tell me a joke、thank you）：直接回，不要說「我沒學過」
+            if let a = Talk.foreign(text, L) {
+                var r = done(a, .knowledge)
+                r.turn.variant = "talk"
+                return r
+            }
             return replyForeign(text, L, i18n, history: history, ctx: ctx, onToken: onToken, done: done)
         }
 

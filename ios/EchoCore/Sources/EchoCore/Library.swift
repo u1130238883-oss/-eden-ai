@@ -36,7 +36,8 @@ public enum Library {
     /// 書名號、空白、語氣詞拿掉
     static func bare(_ s: String) -> String {
         var t = s.filter { !"《》〈〉「」『』\"'“” ？?！!。，,~～".contains($0) && !$0.isWhitespace }
-        for w in ["請問一下", "請問", "想問一下", "想問", "我想知道", "你知道", "告訴我", "跟我說", "說說看", "說一下", "介紹一下"] where t.hasPrefix(w) {
+        for w in ["欸", "誒", "嘿", "那"] where t.hasPrefix(w) && t.count > w.count + 2 { t.removeFirst(w.count) }
+        for w in ["請問一下", "請問", "想問一下", "想問", "我想知道", "你知道", "你曉得", "告訴我", "跟我說", "說說看", "說一下", "介紹一下"] where t.hasPrefix(w) {
             t.removeFirst(w.count)
         }
         while let last = t.last, "呢嗎啊呀喔哦啦吧".contains(last) { t.removeLast() }
@@ -77,8 +78,8 @@ public enum Library {
     static var lastListName: String?
 
     static func authorWork(_ t: String) -> Item? {
-        let pats = [#"^(.{2,20}?)的(?:作者|原作者|導演|編劇)(?:是誰|是哪位|是什麼人)?$"#, #"^(.{2,20}?)是誰(?:寫|導演|導|拍|畫|創作|作)的$"#,
-                    #"^誰(?:寫|導演|導|拍|畫|創作)(?:了|的)?(.{2,20})$"#, #"^(.{2,20}?)(?:是|由)誰(?:所)?(?:寫|著|執導|導演)$"#, #"^(.{2,20}?)作者是誰$"#]
+        let pats = [#"^(.{2,20}?)的(?:作者|原作者|導演|編劇)(?:是誰|是哪位|是什麼人)?$"#, #"^(.{2,20}?)(?:是)?誰(?:寫|導演|導|拍|畫|創作|作)的$"#,
+                    #"^誰(?:寫|導演|導|拍|畫|創作)(?:了|的)?(.{2,20})$"#, #"^(.{2,20}?)(?:是|由)誰(?:所)?(?:寫|著|執導|導演)$"#, #"^(.{2,20}?)作者(?:是誰)?$"#]
         return pats.lazy.compactMap({ RuleBook.match(t, $0) }).first.flatMap { work(named: $0[0]) }
     }
 
@@ -101,10 +102,10 @@ public enum Library {
 
     static func author(_ t: String) -> String? {
         let pats = [#"^(.{2,20}?)的(?:作者|原作者|導演|編劇)(?:是誰|是哪位|是什麼人)?$"#,
-                    #"^(.{2,20}?)是誰(?:寫|導演|導|拍|畫|創作|作)的$"#,
+                    #"^(.{2,20}?)(?:是)?誰(?:寫|導演|導|拍|畫|創作|作)的$"#,
                     #"^誰(?:寫|導演|導|拍|畫|創作)(?:了|的)?(.{2,20})$"#,
                     #"^(.{2,20}?)(?:是|由)誰(?:所)?(?:寫|著|執導|導演)$"#,
-                    #"^(.{2,20}?)作者是誰$"#]
+                    #"^(.{2,20}?)作者(?:是誰)?$"#]
         guard let g = pats.lazy.compactMap({ RuleBook.match(t, $0) }).first, let w = work(named: g[0]), let a = w.attr("作者") else { return nil }
         var s = "《\(w.name)》"
         if let k = w.attr("類型"), k.contains("電影") || k.contains("動畫電影") {
@@ -171,6 +172,8 @@ public enum Library {
             }
         }
         if let g = pats.lazy.compactMap({ RuleBook.match(t, $0) }).first { names.append(g[0]) }
+        // 「你知道八大行星嗎」：整句就是一個清單的名字
+        names.append(t)
         guard let n = names.first(where: { n in lists.contains { $0.names.contains(n) } }),
               let l = lists.first(where: { $0.names.contains(n) }), let items = l.attr("項目") else { return nil }
         lastListName = l.name

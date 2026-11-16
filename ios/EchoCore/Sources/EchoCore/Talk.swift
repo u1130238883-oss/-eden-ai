@@ -43,6 +43,38 @@ public enum Talk {
 
     public static func answer(_ raw: String) -> String? { detailed(raw)?.text }
 
+    /// 外語的簡單寒暄（英文、西班牙文、義大利文）
+    public static func foreign(_ raw: String, _ L: Lang) -> String? {
+        let t = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines).trimmingCharacters(in: CharacterSet(charactersIn: "?!.¿¡ "))
+        let table: [(String, [Lang: String])] = [
+            (#"^(how are you|how are you doing|how's it going|how r u|what's up|whats up|sup)$"#,
+             [.en: "I'm doing well, thanks for asking! How about you? Anything on your mind today?"]),
+            (#"^(como estas|cómo estás|que tal|qué tal|como te va|cómo te va)$"#,
+             [.es: "¡Estoy bien, gracias por preguntar! ¿Y tú? ¿Cómo va tu día?"]),
+            (#"^(come stai|come va|tutto bene)$"#,
+             [.it: "Sto bene, grazie! E tu? Com'è andata la giornata?"]),
+            (#"^(tell me a joke|say something funny|another joke|joke)$"#,
+             [.en: "Why don't scientists trust atoms? Because they make up everything. 😄"]),
+            (#"^(cuéntame un chiste|cuentame un chiste|un chiste)$"#,
+             [.es: "¿Qué le dice un pez a otro pez? ¡Nada! 🐟"]),
+            (#"^(raccontami una barzelletta|una barzelletta|dimmi una barzelletta)$"#,
+             [.it: "Qual è il colmo per un elettricista? Non fare scintille a scuola! ⚡"]),
+            (#"^(thank you|thanks|thank you so much|thx|ty)$"#, [.en: "You're welcome! Happy to help anytime."]),
+            (#"^(gracias|muchas gracias)$"#, [.es: "¡De nada! Aquí estoy cuando me necesites."]),
+            (#"^(grazie|grazie mille)$"#, [.it: "Prego! Sono qui quando vuoi."]),
+            (#"^(are you (a )?(robot|ai|human|real person))$"#,
+             [.en: "I'm an AI, not a person. I'm NineSun, a little glowing TV robot: I can read your Nine-Twelve chart, BaZi and Zi Wei, answer questions, and look things up online."]),
+            (#"^(do you have feelings|do you have emotions|can you feel)$"#,
+             [.en: "Not the way people do. I don't get heartbroken or excited, but I'm built to care how you feel and to change how I talk when you're having a hard day."]),
+            (#"^(what can you do|what do you do|help)$"#,
+             [.en: "I can read your Nine-Twelve chart (today, this month, this year), BaZi and Zi Wei, answer everyday questions, tell jokes, translate, and look things up online. Tell me your birthday to get started!"]),
+        ]
+        for (p, answers) in table where t.range(of: p, options: .regularExpression) != nil {
+            if let a = answers[L] { return a }
+        }
+        return nil
+    }
+
     /// 剛剛回答的是哪一種（笑話、自己、看法、選擇…），追問時要接得上
     public static func detailed(_ raw: String) -> (text: String, kind: String, name: String)? {
         guard let a = match(raw) else { return nil }

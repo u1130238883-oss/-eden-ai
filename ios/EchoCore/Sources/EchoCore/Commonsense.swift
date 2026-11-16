@@ -134,6 +134,13 @@ public enum Commonsense {
         if ["到睡不著", "難過", "傷心", "孤單", "寂寞", "害怕", "失落", "低落", "生氣", "煩惱", "好煩", "很煩", "焦慮", "憂鬱", "想哭", "心情"]
             .contains(where: { t.contains($0) }) && t.contains("我") { return nil }
         if let a = howto(t) { return a }
+        // 「你知道周杰倫嗎」「你認識李白嗎」：整句就是一個東西的名字 → 介紹它
+        if ["知道", "認識", "聽過", "介紹"].contains(where: { raw.contains($0) }) {
+            var n = t
+            for p in ["你知道", "你認識", "你有聽過", "你聽過", "介紹一下", "介紹"] where n.hasPrefix(p) { n.removeFirst(p.count) }
+            while let l = n.last, "嗎呢啊".contains(l) { n.removeLast() }
+            if let e = facts.first(where: { $0.names.contains(n) }), let d = define(e, now: now) { return d }
+        }
         if let a = recommend(t) { return a }
         if fortuneish(t) { return nil }
         if let a = compare(t) { return a }
@@ -179,7 +186,7 @@ public enum Commonsense {
 
     // MARK: - 怎麼做
 
-    static let howCues = ["怎麼", "如何", "要怎樣", "該怎樣", "方法", "步驟", "教我", "做法", "要怎", "該怎", "秘訣", "技巧", "撇步", "辦法", "建議", "訣竅",
+    static let howCues = ["怎麼", "如何", "要怎樣", "該怎樣", "方法", "步驟", "教我", "做法", "要怎", "該怎", "秘訣", "技巧", "撇步", "辦法", "建議", "訣竅", "我想學", "想學",
                           "要準備什麼", "要帶什麼", "準備哪些", "要準備哪些", "該準備什麼", "該帶什麼"]
 
     static func howto(_ t: String) -> String? {
@@ -190,7 +197,7 @@ public enum Commonsense {
         // 「番茄炒蛋怎麼做」不是「炒蛋」：問的菜名前面還多了別的料，是另一道菜，交給上網查
         if let f = first, f.entity.kind == "做法", let r = t.range(of: f.alias) {
             var pre = String(t[..<r.lowerBound])
-            for w in howCues + ["怎麼", "如何", "怎樣", "教我", "請問", "我想", "想要", "要"] { pre = pre.replacingOccurrences(of: w, with: "") }
+            for w in howCues + ["怎麼", "如何", "怎樣", "教我", "請問", "我想", "想要", "可以", "能不能", "能", "幫我", "請", "做", "煮", "要"] { pre = pre.replacingOccurrences(of: w, with: "") }
             let before = pre.filter { $0.unicodeScalars.first?.properties.isIdeographic == true }
             if before.count >= 1 { return nil }
         }
@@ -226,7 +233,7 @@ public enum Commonsense {
             return "無聊的時候，來試試這幾個：\n\(list)\n\n\(best)。\n\(ask)"
         }
         let cue = ["推薦", "介紹幾", "介紹一", "好看的", "好聽的", "好玩的", "該看什麼", "看什麼好", "聽什麼好", "吃什麼好", "吃什麼", "去哪裡玩",
-                   "哪裡好玩", "養什麼", "有什麼好看", "有什麼好聽", "有什麼好玩", "有什麼好吃"].contains { t.contains($0) }
+                   "哪裡好玩", "養什麼", "有什麼好看", "有什麼好聽", "有什麼好玩", "有什麼好吃", "吃啥", "要吃什麼"].contains { t.contains($0) }
             && !["好處", "壞處", "為什麼"].contains(where: { t.contains($0) })
         guard cue, realMentions(t, in: facts).isEmpty, let e = mentions(t, in: recommends).first?.entity else { return nil }
         let items = (e.attr("項目") ?? "").split(separator: "；").map(String.init)
@@ -360,7 +367,14 @@ public enum Commonsense {
         let whyAsk = ["為什麼", "為何", "怎麼會", "原因", "為啥", "幹嘛", "何以", "怎麼來的"].contains(where: { t.contains($0) })
         guard let first = ms.first else { return reverseCapital(t) ?? (whyAsk ? globalWhy(t) : nil) }
         let e = first.entity
-        guard asking.contains(where: { t.contains($0) }) || t.hasSuffix("嗎") else { return nil }
+        // 「水的沸點」「人的體溫」：沒有問句，但就是「東西的屬性」
+        if !asking.contains(where: { t.contains($0) }), !t.hasSuffix("嗎") {
+            let after0 = String(t[first.range.upperBound...])
+            if after0.hasPrefix("的"), let v = e.attr(String(after0.dropFirst())), !after0.dropFirst().hasPrefix("因:") {
+                return phrase(e, String(after0.dropFirst()), v, now: now)
+            }
+            return nil
+        }
         // 主角後面的話（「無尾熊是熊嗎」→「是熊嗎」：後面的「熊」是在問的分類，不是另一個主角）
         let after = String(t[first.range.upperBound...])
         // 句子裡提到的所有東西（包括被更長的詞包住的），找屬性時當備用
