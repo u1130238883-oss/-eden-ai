@@ -107,7 +107,7 @@ final class CommonsenseTests: XCTestCase {
     /// 不是常識題的不要攔下來：算命、心情、聊天、作品內容、時事
     func testLeavesOtherQuestionsAlone() {
         for q in ["我今年財運如何", "屬蛇的人今年運勢", "我今天心情不好", "少年維特的煩惱講了什麼", "格林童話有什麼故事",
-                  "太陽星座是什麼", "貓咪好可愛", "我的狗今天生病了", "你好", "我叫小明", "台積電股價多少", "今天天氣如何", "東京晴空塔有多高"] {
+                  "太陽星座是什麼", "貓咪好可愛", "我的狗今天生病了", "你好", "我叫小明", "台積電股價多少", "今天天氣如何", "廣州塔有多高"] {
             XCTAssertNil(Everyday.answer(q, now: now), q)
             XCTAssertNil(Commonsense.answer(q, now: now), q)
         }

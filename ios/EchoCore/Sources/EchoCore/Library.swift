@@ -37,7 +37,7 @@ public enum Library {
     static func bare(_ s: String) -> String {
         var t = s.filter { !"《》〈〉「」『』\"'“” ？?！!。，,~～".contains($0) && !$0.isWhitespace }
         for w in ["欸", "誒", "嘿", "那", "好奇", "所以", "對了"] where t.hasPrefix(w) && t.count > w.count + 2 { t.removeFirst(w.count) }
-        for w in ["我想問一下", "請問一下", "請問", "想問一下", "我想問", "想問", "我想知道", "你知道", "你曉得", "可以跟我說一下", "可以跟我說", "跟我說說", "跟我說一下",
+        for w in ["可以告訴我", "能不能告訴我", "我想問一下", "請問一下", "請問", "想問一下", "我想問", "想問", "我想知道", "你知道", "你曉得", "可以跟我說一下", "可以跟我說", "跟我說說", "跟我說一下",
                   "告訴我", "跟我說", "說說看", "說說", "聊聊", "說一下", "介紹一下", "介紹"] where t.hasPrefix(w) && t.count > w.count + 1 {
             t.removeFirst(w.count); break
         }
@@ -135,6 +135,7 @@ public enum Library {
         let pats = [#"^(.{1,20}?)(?:是|由)?誰(?:最早|最先|首先|第一個)?(?:"# + verbs + #")(?:的|了)?$"#,
                     #"^(.{1,20}?)的(?:創辦人|創始人|創立者|創辦者|提出者|發現者|發明者|發明人|開發者|設計者|創造者|老闆|爸爸|之父)(?:是誰|是哪位|是什麼人)?$"#,
                     #"^誰(?:"# + verbs + #")(?:了|的)?(.{1,20})$"#,
+                    #"^(?:"# + verbs + #")(.{1,12}?)的(?:人|是誰|人是誰|是哪位)$"#,
                     #"^(.{1,20}?)是(?:誰|哪個人|哪位)(?:"# + verbs + #")的$"#]
         guard let g = pats.lazy.compactMap({ RuleBook.match(t, $0) }).first, let w = whoItem(g[0]), let who = w.attr("誰") else { return nil }
         var s = "\(w.name)：\(who)"

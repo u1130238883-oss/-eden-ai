@@ -14,7 +14,7 @@ final class WebRoutingTests: XCTestCase {
         ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 8, minute: 0, male: true)
 
         let web: [String] = [
-            "東京晴空塔有多高？", "上網查 iPhone 17 價格", "幫我查一下今天的新聞", "明天台北天氣如何", "美元對台幣匯率多少",
+            "廣州塔有多高？", "上網查 iPhone 17 價格", "幫我查一下今天的新聞", "明天台北天氣如何", "美元對台幣匯率多少",
             // 量子電腦、紅燒肉 NineSun 自己知道了（2026-11-16 加進常識），換成不知道的題目
             "量子糾纏是什麼", "日本首相是誰", "搜尋 珍珠奶茶的由來", "宮保雞丁怎麼煮", "世界上第二高的山是哪一座",
             "上網查偏財格", "who won the last world cup", "what is the capital of Peru", "search quantum physics",

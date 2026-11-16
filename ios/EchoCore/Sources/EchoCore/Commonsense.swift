@@ -180,13 +180,17 @@ public enum Commonsense {
     }
 
     /// 算命、運勢的問題不歸這裡（「屬蛇的人今年會好嗎」「月亮星座」）
-    static func fortuneish(_ t: String) -> Bool {
-        ["運勢", "命盤", "命宮", "星座", "八字", "紫微", "流年", "屬", "卦", "宮", "運氣", "財運", "桃花", "命理", "算命", "上升", "合盤"]
+    static func fortuneish(_ t0: String) -> Bool {
+        // 名字裡剛好有這些字的（羅浮宮、故宮、白羊座的「屬」不算）：先拿掉認得的名字
+        var t = t0
+        for n in fortuneNames where t.contains(n) { t = t.replacingOccurrences(of: n, with: "　") }
+        return ["運勢", "命盤", "命宮", "星座", "八字", "紫微", "流年", "屬", "卦", "宮", "運氣", "財運", "桃花", "命理", "算命", "上升", "合盤"]
             .contains { t.contains($0) }
     }
+    static let fortuneNames: [String] = all.flatMap { $0.names }.filter { n in n.count >= 2 && ["宮", "屬", "卦", "星座", "運"].contains(where: { n.contains($0) }) }.sorted { $0.count > $1.count }
 
     static let asking = ["嗎", "呢", "還是", "什麼", "幾", "多少", "哪", "誰", "怎麼", "如何", "為什麼", "為何", "是不是", "會不會", "有沒有", "能不能",
-                         "可不可以", "可以", "介紹", "多久", "多遠", "多高", "多大", "多長", "多深", "多快", "多熱", "多冷"]
+                         "可不可以", "可以", "介紹", "多久", "多遠", "多高", "多大", "多長", "多深", "多快", "多熱", "多冷", "多重", "位於"]
 
     // MARK: - 聊到某個東西
 
@@ -365,6 +369,8 @@ public enum Commonsense {
         ("頻率", ["幾年一次", "多久一次", "幾年舉辦", "多久舉辦", "多久辦一次", "幾年辦一次"]),
         ("人數", ["幾個人", "幾人", "多少人上場", "幾個球員"]),
         ("營養", ["什麼營養", "營養", "有什麼營養"]),
+        ("重量", ["多重", "重量", "幾公斤", "幾噸", "體重"]),
+        ("位置", ["在哪裡", "在哪", "位於", "在哪個國家", "哪個國家", "位置", "在什麼地方"]),
         ("月份", ["哪幾個月", "幾月到幾月", "哪個月", "月份", "幾月"]),
         ("好處", ["好處", "優點", "益處", "有什麼好", "對身體好"]),
         ("壞處", ["壞處", "缺點", "副作用", "危害", "對身體不好", "風險"]),
@@ -392,6 +398,8 @@ public enum Commonsense {
 
     static func about(_ t: String, now: Date) -> String? {
         if let a = reverseWork(t) { return a }
+        // 「東京是哪個國家的首都」：先看是不是在問首都（東京也是一個城市的名字）
+        if let a = reverseCapital(t) { return a }
         // 「發明飛機的人是誰」「電燈的發明者」→ 飛機是誰發明的
         if let g = RuleBook.match(t, #"^(?:發明|發現)(.{1,10}?)的(?:人|是誰)"#) ?? RuleBook.match(t, #"^(.{1,10}?)的(?:發明者|發明人)"#),
            let e = facts.first(where: { $0.names.contains(g[0]) }), let v = e.attr("發明者") {
@@ -703,6 +711,8 @@ public enum Commonsense {
         case "年份": s = e.kind == "事件" ? "\(n)：\(v)。" : "\(n)出現在\(v)。"
         case "說明": s = v + "。"
         case "頻率", "人數": s = "\(n)\(v)。"
+        case "位置": s = "\(n)在\(v)。"
+        case "重量": s = "\(n)的體重：\(v)。"
         case "日期": return festivalAnswer(e, now: now)
         case "習俗": s = "\(n)的習俗：\(v)。"
         case "由來": s = "\(n)的由來：\(v)。"
