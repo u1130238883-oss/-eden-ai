@@ -127,6 +127,8 @@ public enum Commonsense {
 
     public static func answer(_ raw: String, now: Date = Date()) -> String? {
         var t = Everyday.clean(raw)
+        // 「人總共有幾顆牙齒」「一共有幾個」：「總共」「一共」不影響問什麼
+        for w in ["總共有", "一共有"] where t.contains(w) && !t.contains("國家") { t = t.replacingOccurrences(of: w, with: "有") }
         // 「解釋一下情緒勒索」「介紹一下黑洞」→「情緒勒索是什麼」
         if let r = t.range(of: #"^(請|幫我)?(解釋一下|解釋|說明一下|介紹一下)"#, options: .regularExpression), t[r.upperBound...].count >= 2 {
             t = String(t[r.upperBound...]) + "是什麼"
