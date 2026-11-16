@@ -143,6 +143,8 @@ public enum Commonsense {
            festivalNamed(String(t[r.upperBound...])) != nil || facts.contains(where: { $0.kind == "節日" && $0.names.contains { t[r.upperBound...].hasPrefix($0) } }) {
             t = String(t[r.upperBound...])
         }
+        // 只打一個字、剛好是認得的動物或東西（「貓」「狗」）：介紹它
+        if t.count == 1, let e = facts.first(where: { $0.name == t }), let d = define(e, now: now) { return d }
         guard t.count >= 2, t.count <= 40 else { return nil }
         // 明白叫我上網查的（「幫我查一下…」「搜尋…」）就上網
         // （「檢查」「調查」「查詢」裡的「查」不算）
