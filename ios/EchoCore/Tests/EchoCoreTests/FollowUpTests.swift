@@ -123,4 +123,28 @@ final class FollowUpTests: XCTestCase {
         let h = try run(["我考試考砸了", "數學"])
         XCTAssertTrue(h[1].turn.text.contains("數學") && h[1].webQuery == nil, h[1].turn.text)
     }
+
+    /// 多輪對話：比較、推薦換一種、更正、幾句前的主題、寵物代名詞、就醫時機
+    func testMultiTurnRefinements() throws {
+        let a = try run(["台灣和日本哪個大", "人口呢"])
+        XCTAssertTrue(a[0].turn.text.contains("日本比較大"), a[0].turn.text)
+        XCTAssertNil(a[1].webQuery, a[1].turn.text)
+        let b = try run(["推薦一部電影", "要溫馨一點的", "適合跟家人看的"])
+        XCTAssertTrue(b[1].turn.text.contains("可可夜總會") && b[1].webQuery == nil, b[1].turn.text)
+        XCTAssertFalse(b[2].turn.text.contains("生日"), b[2].turn.text)
+        let c = try run(["台灣最高的山", "不是，我是問第二高的"])
+        XCTAssertTrue(c[1].turn.text.contains("雪山"), c[1].turn.text)
+        let d = try run(["我想學游泳", "要多久才會", "要買什麼"])
+        XCTAssertTrue(d[2].turn.text.contains("泳帽") && d[2].webQuery == nil, d[2].turn.text)
+        let e = try run(["我養了一隻狗", "叫Lucky", "牠很愛叫"])
+        XCTAssertTrue(e[2].turn.text.contains("叫") && e[2].webQuery == nil, e[2].turn.text)
+        let f = try run(["我的貓不吃飯", "已經兩天了"])
+        XCTAssertTrue(f[1].turn.text.contains("獸醫") && f[1].webQuery == nil, f[1].turn.text)
+        let g = try run(["富士山有多高", "什麼時候去最好"])
+        XCTAssertTrue(g[1].turn.text.contains("月") && g[1].webQuery == nil, g[1].turn.text)
+        let h = try run(["我想喝咖啡", "可是已經晚上了"])
+        XCTAssertTrue(h[1].turn.text.contains("咖啡因"), h[1].turn.text)
+        let i = try run(["跑步好還是游泳好", "一天要走幾步"])
+        XCTAssertTrue(i[1].turn.text.contains("步"), i[1].turn.text)
+    }
 }

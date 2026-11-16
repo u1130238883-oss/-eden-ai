@@ -174,6 +174,9 @@ public enum Commonsense {
             }
         }
         if let a = compareNumbers(t) { return a }
+        // 「台灣和日本哪個大」「台北101跟晴空塔誰比較高」→ 台灣比日本大嗎
+        if let g = RuleBook.match(t, #"^(.{1,10}?)(?:和|跟|與|還是|或)(.{1,10}?)(?:哪個|哪一個|誰|哪裡|哪一國|哪國)(?:比較|更)?(高|矮|大|小|長|短|重|輕|多|少|遠|近)(?:呢|啊)?$"#),
+           let a = compareNumbers("\(g[0])比\(g[1])\(g[2])嗎") { return a }
         if let a = dynasty(t) { return a }
         // 「我想減肥」「我要開始學英文」：說想做一件事 → 給做法
         // 「我想做番茄炒蛋」「我要煮咖哩」：給做法
@@ -184,6 +187,11 @@ public enum Commonsense {
         if let g = RuleBook.match(t, #"^我(?:想|要|想要|打算|決定|準備)(?:開始|好好|認真)?(.{2,8}?)(?:了)?$"#),
            let e = howtos.first(where: { $0.kind != "做法" && $0.names.contains(g[0]) }), let a = howto("怎麼" + e.name) ?? howto(e.name + "怎麼做") {
             return "好啊，我陪你！" + a
+        }
+        // 整句問題的說法比做法的名字更長（「學游泳要買什麼」問的不是「學游泳」的做法）
+        if let q = mentions(t, in: facts.filter { ["常識", "健康常識"].contains($0.kind) }).max(by: { $0.alias.count < $1.alias.count }), q.alias.count >= 5,
+           q.alias.count > (mentions(t, in: howtos).map { $0.alias.count }.max() ?? 0), let intro = q.entity.attr("簡介") {
+            return intro + "。" + (q.entity.attr("說明").map { "\n" + $0 + "。" } ?? "")
         }
         if let a = howto(t) { return a }
         // 「你知道周杰倫嗎」「你認識李白嗎」：整句就是一個東西的名字 → 介紹它
@@ -377,7 +385,7 @@ public enum Commonsense {
             break
         }
         for p in ["那麼", "那", "所以", "還有", "另外"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); break }
-        for p in ["它的", "它", "他的", "他", "她的", "她", "牠的", "牠", "這個的", "這個", "那個"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); pointed = true; break }
+        for p in ["它們的", "它們", "他們的", "他們", "牠們的", "牠們", "她們的", "她們", "它的", "它", "他的", "他", "她的", "她", "牠的", "牠", "這個的", "這個", "那個"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); pointed = true; break }
         if t.hasPrefix(subject) { return nil }
         if ["你", "我", "妳"].contains(where: { t.contains($0) }) || fortuneish(t) { return nil }
         let ms = realMentions(t, in: facts) + realMentions(t, in: howtos)
@@ -412,7 +420,7 @@ public enum Commonsense {
                 // 問句裡剩下的內容也要很少（「是誰發現相對論的」有自己的主題「相對論」）
                 var residual = core
                 for w in (asking + keys + ["的意思", "意思"]).sorted(by: { $0.count > $1.count }) where w.count >= 1 { residual = residual.replacingOccurrences(of: w, with: "") }
-                for w in ["方法", "技巧", "建議", "辦法", "時候", "地方", "原因", "方式", "步驟", "注意", "比較", "學得會", "學會", "才", "得", "辦", "處理", "解決", "做"] { residual = residual.replacingOccurrences(of: w, with: "") }
+                for w in ["方法", "技巧", "建議", "辦法", "時候", "地方", "原因", "方式", "步驟", "注意", "比較", "學得會", "學會", "才", "得", "辦", "處理", "解決", "做", "最適合", "最好", "適合", "去"] { residual = residual.replacingOccurrences(of: w, with: "") }
                 residual = residual.filter { !"是的了嗎呢有要會在個一啊呀".contains($0) }
                 guard residual.count <= 2 else { return nil }
                 // 上一題是「怎麼做」：只接「怎麼開始」「多久會進步」這種追問（「有沒有方法可以戒菸」是新問題）
@@ -591,6 +599,9 @@ public enum Commonsense {
         ("好處", ["好處", "優點", "益處", "有什麼好", "對身體好"]),
         ("交通", ["怎麼去", "怎麼到", "要怎麼去", "怎麼過去", "交通", "要搭什麼", "怎麼上山"]),
         ("嗅覺", ["嗅覺", "鼻子多靈", "鼻子很靈", "鼻子有多靈"]),
+        ("建造", ["誰蓋的", "誰建的", "誰造的", "誰修的", "什麼時候蓋", "什麼時候建", "什麼時候造", "什麼時候修", "哪一年蓋", "哪一年建", "怎麼蓋的"]),
+        ("登山", ["可以爬", "能爬", "怎麼爬", "爬上去", "登山", "爬得上去", "可以登"]),
+        ("最佳季節", ["什麼時候去", "幾月去", "最佳季節", "什麼季節去", "哪個季節", "什麼時候最好", "幾月最好", "何時去"]),
         ("壞處", ["壞處", "缺點", "副作用", "危害", "對身體不好", "風險"]),
         ("沸點", ["沸點", "沸騰", "燒開", "煮沸", "會滾", "煮開"]),
         ("冰點", ["冰點", "結冰", "凝固", "結成冰"]),
@@ -1027,6 +1038,7 @@ public enum Commonsense {
         case "由來": s = "\(n)的由來：\(v)。"
         case "好處": s = "\(n)的好處：\(v)。"
         case "交通": s = "去\(n)：\(v)。"
+        case "建造", "登山", "最佳季節": s = v + "。"
         case "壞處": s = "要注意的地方：\(v)。"
         default:
             let head = String(v.prefix { !"：，；（".contains($0) })

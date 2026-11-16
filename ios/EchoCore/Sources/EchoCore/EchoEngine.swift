@@ -146,6 +146,27 @@ public final class EchoEngine {
     var lastTravel: (place: String, turn: Int)?
     /// 上一則回覆有沒有在問使用者（「後來呢？」）：短短的補充才算是在回答
     var lastEchoAsked = false
+    /// 現在是第幾輪（history.count），追問時比較隔了幾輪
+    var nowTurn = 0
+    /// 最近幾句使用者說的話（新的在前），追問沒有主角時接上去
+    var recentUser: [String] = []
+
+    /// 「要買什麼」「一天要吃多少」「要怎麼慶祝」：接上前幾句說的事（「我想學游泳」「我想減肥」「我明天生日」）再問一次
+    func composeWithRecent(_ message: String, now: Date) -> String? {
+        let plain = Talk.clean(message)
+        // 自己就答得出來的（「一天要走幾步」）不用接
+        guard Commonsense.answer(message, now: now) == nil else { return nil }
+        guard (2...10).contains(plain.count), EchoEngine.isQuestion(message) || plain.hasSuffix("嗎"),
+              plain.range(of: "^(要|該|可以|能|需要|會|還要|那要|那該|一天|每天|每個月)", options: .regularExpression) != nil else { return nil }
+        for prev in recentUser.prefix(3) where prev.count >= 2 && prev.count <= 20 {
+            let p = prev.replacingOccurrences(of: #"[。！!？?～~]+$"#, with: "", options: .regularExpression)
+            let prevAnswer = Commonsense.answer(p, now: now)
+            for cand in [p + plain, p.replacingOccurrences(of: #"^(我)?(今天|明天|最近|現在)?(想|要|好|很)?"#, with: "", options: .regularExpression) + plain] {
+                if let a = Commonsense.answer(cand, now: now), a != prevAnswer { return cand }
+            }
+        }
+        return nil
+    }
 
     /// 逐字產生回覆。`onToken` 每產生一個字就回呼一次。
     public func reply(to message: String, history: [ChatTurn] = [], context: Context,
@@ -206,6 +227,8 @@ public final class EchoEngine {
         // 追問本地剛回答的東西：直接回答，或把問題補完整（「他還寫了什麼」→「曹雪芹還寫了什麼」、「結局呢」→「哈姆雷特的結局」）
         if context.language == .zh || Lang.detect(message, fallback: .zh) == .zh, let lc = lastLocal, history.count - lc.turn <= 4 {
             lastEchoAsked = history.last(where: { $0.role == .echo }).map { $0.text.contains("？") || $0.text.contains("?") } ?? false
+            nowTurn = history.count
+            recentUser = history.filter { $0.role == .user }.suffix(4).reversed().map { $0.text }
             switch localFollowUp(message, lc) {
             case .answer(let a)?:
                 var r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
@@ -223,9 +246,13 @@ public final class EchoEngine {
         }
         // 「我該怎麼辦」「那怎麼辦」：沒有接上剛剛的話題時，照前面幾句說的事給做法
         if !rewritten, context.language == .zh,
-           plain.range(of: #"^(那|所以|可是|但是)?(我)?(現在)?(要|該|應該)?(怎麼辦|怎麼做|如何是好|怎麼處理|怎麼解決)(才好)?(呢|啊)?$"#, options: .regularExpression) != nil {
+           plain.range(of: #"^(那|所以|可是|但是)?(我)?(現在)?(要|該|應該)?(怎麼辦|怎麼做|如何是好|怎麼處理|怎麼解決|有什麼方法|有什麼辦法|有什麼建議|有沒有方法|有沒有辦法)(才好)?(呢|啊|嗎)?$"#, options: .regularExpression) != nil {
             let said = history.filter { $0.role == .user }.suffix(4).reversed().map { $0.text }
-            search: for s0 in said {
+            // 「牠很愛叫」：牠是前面說的狗
+            let pet = said.joined().contains("狗") ? "狗狗" : (said.joined().contains("貓") ? "貓咪" : "")
+            search: for s1 in said {
+                var s0 = s1
+                if !pet.isEmpty, let f = s0.first, "牠他它".contains(f) { s0 = pet + s0.dropFirst() }
                 let base = s0.replacingOccurrences(of: #"[啦啊喔耶。！!～~？?]+$"#, with: "", options: .regularExpression)
                 guard base.count >= 2, !base.contains("怎麼辦") else { continue }
                 for ask in [base + "怎麼辦", base.replacingOccurrences(of: #"了$"#, with: "", options: .regularExpression) + "怎麼辦"] where Commonsense.answer(ask, now: context.now) != nil {
@@ -241,6 +268,35 @@ public final class EchoEngine {
                 return r
             }
         }
+        // 「不是，我是問第二高的」：改問上一題的另一個說法
+        if !rewritten, context.language == .zh, let g = RuleBook.match(message.trimmingCharacters(in: .whitespaces), #"^(?:不是|不對|錯了)[，,、 ]*(?:我是問|我是說|我問的是|我要問|我想問|是問)(.{2,30}?)[？?。！!]*$"#),
+           let prevQ = history.last(where: { $0.role == .user })?.text {
+            var q = g[0]
+            // 只說了一部分（「第二高的」）：換掉上一題裡的「最高的」
+            if q.count <= 5, let r = prevQ.range(of: #"最[\p{Han}]{1,2}的"#, options: .regularExpression) {
+                var p = prevQ
+                p.replaceSubrange(r, with: q.hasSuffix("的") ? q : q + "的")
+                q = p
+            }
+            text = q
+            rewritten = true
+        }
+        // 短短的追問沒有主角（「要怎麼慶祝」「要穿什麼」「要放哪裡」）：接上前一句說的事再問一次
+        if !rewritten, context.language == .zh, Commonsense.answer(message, now: context.now) == nil {
+            recentUser = history.filter { $0.role == .user }.suffix(4).reversed().map { $0.text }
+            if let c = composeWithRecent(message, now: context.now) { text = c; rewritten = true }
+        }
+        // 「已經兩天了」「要看醫生嗎」：剛剛的建議裡有什麼時候要就醫
+        if !rewritten, context.language == .zh, let lastEcho = history.last(where: { $0.role == .echo })?.text, lastEcho.contains("醫"),
+           plain.range(of: #"^(已經|都|快)?[0-9一二兩三四五六七八九十幾半]+(天|個禮拜|週|星期|個月|小時|個小時)(了)?(都)?(沒吃|沒好|還沒好|不吃|沒改善)?(了)?$|^(那)?(要|需要|該|應該|要不要)(去)?(看醫生|看獸醫|就醫|去醫院|看急診|掛急診)(嗎|呢)?$"#, options: .regularExpression) != nil,
+           let c = lastEcho.components(separatedBy: CharacterSet(charactersIn: "。；\n")).first(where: { $0.contains("醫") }) {
+            let clause = c.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^.*?建議不要再等："#, with: "", options: .regularExpression)
+                .replacingOccurrences(of: #"^([0-9]+\.|⚠️|小提醒：)\s*"#, with: "", options: .regularExpression)
+            let lead = plain.contains("醫") ? "要，" : "已經\(plain.replacingOccurrences(of: #"^(已經|都|快)"#, with: "", options: .regularExpression))，建議不要再等："
+            var r = Reply(turn: ChatTurn(role: .echo, text: lead + clause + "。", source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+            r.turn.variant = "talk"
+            return r
+        }
         // 回答我剛剛問的問題（「牠叫什麼名字？」→「叫小白」）：接住，不拿去上網查
         if !rewritten, context.language == .zh, let prevEcho = history.last(where: { $0.role == .echo }),
            Talk.chat(message) == nil, Talk.detailed(message) == nil, Commonsense.answer(message, now: context.now) == nil,
@@ -255,6 +311,12 @@ public final class EchoEngine {
             var r = Reply(turn: ChatTurn(role: .echo, text: "我知道的重點大概就是這些了。想知道更多，跟我說「說詳細一點」，我上網幫你找更完整的資料。", source: .knowledge), profile: nil, rules: nil, webQuery: nil)
             r.turn.variant = "talk"
             return r
+        }
+        // 「牠很愛叫」：牠是前面說的狗或貓
+        if !rewritten, context.language == .zh, text.hasPrefix("牠"), text.count >= 3 {
+            let recent = history.filter { $0.role == .user }.suffix(6).map { $0.text }.joined()
+            let pet = recent.contains("狗") ? "狗狗" : (recent.contains("貓") ? "貓咪" : "")
+            if !pet.isEmpty { text = pet + text.dropFirst(); rewritten = true }
         }
         if !rewritten, let prev = lastQuestion, history.count - lastQuestionTurn <= 8,
            let t = EchoEngine.substituteAnaphor(message, previous: prev) { text = t }
@@ -920,6 +982,11 @@ public final class EchoEngine {
             core = core.replacingOccurrences(of: w, with: "")
         }
         guard !core.isEmpty, core.count <= 8 else { return nil }
+        // 「要看醫生嗎」：找剛剛說什麼時候要就醫的那段
+        if core.contains("醫"), let c = answer.components(separatedBy: CharacterSet(charactersIn: "。；\n")).first(where: { $0.contains("醫") }) {
+            let clause = c.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^([0-9]+\.|⚠️|小提醒：)\s*"#, with: "", options: .regularExpression)
+            return (t.hasPrefix("要") || t.hasPrefix("需要") ? "可以這樣判斷：" : "") + clause + "。"
+        }
         // 問數量（多久、多少、幾）：找到的那段要有數字
         let wantsNumber = ["多久", "多少", "多長", "多遠", "多高", "多大", "幾"].contains(where: { t.contains($0) })
         let singleOK: Set<String> = ["糖", "鹽", "油", "蛋", "蔥", "蒜", "薑", "酒", "醋", "水", "冰", "奶", "肉", "魚", "蝦", "米", "麵", "湯", "茶", "醬"]
@@ -972,6 +1039,12 @@ public final class EchoEngine {
                 if t.range(of: #"(要|需要)簽證"#, options: .regularExpression) != nil { return .rewrite(String(lc.subject.dropFirst(3)) + "要簽證嗎") }
                 if t.range(of: #"^(有)?(什麼|哪些)好玩"#, options: .regularExpression) != nil { return .rewrite(String(lc.subject.dropFirst(3)) + "有什麼好玩的") }
             }
+            // 「我想喝咖啡」→「可是已經晚上了」「那喝什麼好」
+            if lc.subject.hasPrefix("喝:"), ["咖啡", "茶", "奶茶", "紅茶", "綠茶", "珍奶", "可樂", "拿鐵", "美式"].contains(where: { lc.subject.contains($0) }) {
+                if t.range(of: "晚上|太晚|很晚|睡不著|要睡了|快睡了|睡前", options: .regularExpression) != nil || t.range(of: "喝什麼", options: .regularExpression) != nil {
+                    return .answer("晚上喝咖啡、茶可能會睡不著，咖啡因要 5 到 6 個小時才會代謝掉一半。想喝點熱的，可以改成低咖啡因咖啡、熱牛奶、麥茶、黑豆水，或洋甘菊這類花草茶，暖暖的又比較好睡。")
+                }
+            }
             // 「我在學日文」→「有什麼方法」：怎麼學日文
             if lc.subject.hasPrefix("學:"), t.range(of: #"^(那)?(要)?(有什麼|有沒有)?(方法|技巧|建議|訣竅|撇步)(嗎)?$|^(要)?(怎麼|如何)(學|練|開始|進步)(比較好|才會進步)?$"#, options: .regularExpression) != nil {
                 return .rewrite("怎麼學" + lc.subject.dropFirst(2))
@@ -1022,6 +1095,17 @@ public final class EchoEngine {
                     let tail = String(lc.answer[r.lowerBound...].prefix { !"。\n".contains($0) })
                     if tail.count >= 6 { return .answer(tail + "。") }
                 }
+            }
+            // 「試過重開了」「還是很卡」：剛剛的方法試過沒用 → 下一步
+            if lc.answer.contains("\n1. "), t.count <= 12,
+               t.range(of: #"^(我)?(都)?(試過了|試過|做過了|都試過了|重開了|重開過了|試過重開了|試過重開|還是一樣|還是不行|還是很.{1,4}|沒有用|沒用|沒效|都沒用|還是沒用|還是沒好|還是沒辦法)"#, options: .regularExpression) != nil {
+                return .answer("那些方法都試過還是不行的話，可能是比較根本的問題了：建議找專業的人實際看看（像原廠維修、醫生、獸醫或客服），他們能檢查到我看不到的地方。也可以跟我說「說詳細一點」，我上網幫你找更多方法。")
+            }
+            // 「已經兩天了」：剛剛的回答裡有什麼時候要看醫生
+            if let g = RuleBook.match(t, #"^(?:已經|都|快)?([0-9一二兩三四五六七八九十幾半]+)(天|個禮拜|週|星期|個月|小時|個小時)(?:了)?(?:都)?(?:沒吃|沒好|還沒好|不吃|沒改善)?(?:了)?$"#),
+               let c = lc.answer.components(separatedBy: CharacterSet(charactersIn: "。；\n")).first(where: { $0.contains("醫") }) {
+                let clause = c.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^([0-9]+\.|⚠️|小提醒：)\s*"#, with: "", options: .regularExpression)
+                return .answer("已經\(g[0])\(g[1])了，建議不要再等：\(clause)。")
             }
             // 「那台中呢」（上一題「台北到高雄多遠」）：把上一題裡同一類的地方換掉
             let r0 = message.trimmingCharacters(in: .whitespacesAndNewlines).filter { !"？?。！!～~ ".contains($0) }
@@ -1079,6 +1163,7 @@ public final class EchoEngine {
             if lc.answer.contains("的步驟"), let g = RuleBook.match(t, #"^(?:那)?(?:可以|能|要不要|可不可以|能不能)(?:加|放|用|加點|放點)(.{1,6}?)(?:嗎|呢)?$"#) {
                 return .answer("可以呀！家常菜沒有標準答案，喜歡\(g[0])就加。比較硬、比較耐煮的食材先下鍋炒軟，再照原本的步驟做就好。")
             }
+            if let c = composeWithRecent(message, now: Date()) { return .rewrite(c) }
             if let f { return .rewrite(f.text) }
         case "mood":
             // 「要怎麼辦」：照剛剛說的事給做法（「我失眠了」→ 失眠怎麼辦）
@@ -1101,16 +1186,21 @@ public final class EchoEngine {
             // 剛剛說考試考砸了，接著說科目（「數學」）
             if lc.subject.contains("考") || lc.extra.contains("考"), let a = Talk.examSubject(t) { return .answer(a) }
             // 補充細節（「主管很兇」「他昨天罵我」「數學」）：接住、換句話說、請對方多說——不要每句都一樣
-            if lastEchoAsked, (1...12).contains(t.count), !EchoEngine.isQuestion(message), Talk.chat(message) == nil, Talk.detailed(message) == nil,
+            if lastEchoAsked || nowTurn - lc.turn <= 2, (1...12).contains(t.count), !EchoEngine.isQuestion(message), Talk.chat(message) == nil, Talk.detailed(message) == nil,
+               // 開心的事（「我考上研究所了」→「台大」）交給回答我問題的那一段
+               ![.goodNews, .proudEffort, .happy, .excitedPlan, .hope].contains(Affect.detect(lc.subject)),
                !t.contains("你"),
                // 帶著新的事件或心情（「剛剛奶奶住院了」「我考上了」）是新的話題，不是補充
                ![.grief, .sick, .worryOther, .goodNews, .crisis, .proudEffort, .excitedPlan, .happy, .hope, .thanks, .greeting, .farewell,
                  .praiseAI, .complainAI, .apology, .confused, .joke, .bored, .curious, .affection].contains(Affect.detect(message)),
                t.range(of: "^(謝謝|謝啦|好|嗯|喔|哦|對|沒事|算了|不用|好的|OK|ok|掰|晚安|早安)", options: .regularExpression) == nil,
                t.range(of: "查|搜|幫|給|算|翻譯|運|命|卦|規則|記住|寫|講|說|唱|推薦|[0-9０-９]", options: .regularExpression) == nil {
-                let x = t.replacingOccurrences(of: "我", with: "你")
                 let n = lc.shown.components(separatedBy: "\u{1}").count
-                let lines = ["原來是這樣……\(x)，難怪你會這麼難受。", "嗯，我懂。\(x)真的很消耗人。", "\(x)……換作是我也會很不好受。", "聽起來真的很辛苦，\(x)。"]
+                // 「我們在一起三年」：說了時間
+                if let g = RuleBook.match(t, #"([0-9一二兩三四五六七八九十幾半]+)(年|個月)"#), t.contains("在一起") || t.contains("交往") || t.contains("認識") {
+                    return .answer("\(g[0])\(g[1])真的不是一段短的時間，那麼多回憶，難怪會這麼痛。你現在最放不下的是什麼？")
+                }
+                let lines = ["原來是這樣……難怪你會這麼難受。", "嗯，我在聽。", "我懂，這真的不容易。", "聽起來真的很辛苦。"]
                 let asks = ["後來呢？", "你那時候心裡怎麼想？", "現在感覺有好一點嗎？", "想聽聽我的建議嗎？跟我說「我該怎麼辦」就可以。"]
                 return .answer(lines[n % lines.count] + asks[n % asks.count])
             }
@@ -1119,6 +1209,20 @@ public final class EchoEngine {
                 return .answer("真的推薦！我最推薦的是\(lc.extra)" + (lc.extra.hasSuffix("。") ? "" : "。"))
             }
             // 「還有呢」「還有別的嗎」「換幾個」：推薦剛剛沒講到的
+            // 「要溫馨一點的」「適合跟家人看的」「想吃清淡的」「預算一百」：同一類裡換一種
+            let refine: [(String, String)] = ["電影", "書", "動畫", "恐怖片", "愛情片", "動作片", "喜劇片", "溫馨電影", "家庭電影"].contains(lc.subject)
+                ? [("溫馨", "溫馨電影"), ("感人", "溫馨電影"), ("療癒", "溫馨電影"), ("暖心", "溫馨電影"), ("家人", "家庭電影"), ("全家", "家庭電影"), ("小孩", "家庭電影"), ("闔家", "家庭電影"), ("爸媽", "家庭電影")]
+                : (["晚餐", "早餐", "宵夜", "清淡晚餐", "不用煮的晚餐", "便宜晚餐"].contains(lc.subject)
+                   ? [("清淡", "清淡晚餐"), ("不要辣", "清淡晚餐"), ("不辣", "清淡晚餐"), ("健康", "清淡晚餐"), ("不用煮", "不用煮的晚餐"), ("懶得煮", "不用煮的晚餐"), ("不想煮", "不用煮的晚餐"),
+                      ("便宜", "便宜晚餐"), ("預算", "便宜晚餐"), ("省錢", "便宜晚餐"), ("一百", "便宜晚餐"), ("100", "便宜晚餐")] : [])
+            if t.count <= 16, let g = refine.first(where: { t.contains($0.0) }), let a = Commonsense.answer("推薦" + g.1) {
+                lastLocal = LocalContext(kind: "recommend", subject: g.1, extra: lc.extra, shown: a, turn: lc.turn)
+                return .answer(a)
+            }
+            if !lc.subject.isEmpty, t.range(of: #"^(我)?(都)?(看過了|讀過了|看過|讀過|聽過了|吃過了|玩過了|去過了)$|^換一(本|部|首|家|款|個)$"#, options: .regularExpression) != nil,
+               let a = Commonsense.recommendMore(lc.subject, shown: lc.shown) {
+                return .answer(a)
+            }
             if !lc.subject.isEmpty, t.range(of: #"^(還有|還有呢|還有別的嗎|還有其他的嗎|還有嗎|有別的嗎|其他的呢|別的呢|換一個|換幾個|再推薦|再推薦幾個|再來幾個|再多一點|還有沒有)$"#, options: .regularExpression) != nil,
                let a = Commonsense.recommendMore(lc.subject, shown: lc.shown) {
                 return .answer(a)
