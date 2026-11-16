@@ -216,7 +216,8 @@ public enum Talk {
              [.en: "I can read your Nine-Twelve chart (today, this month, this year), BaZi and Zi Wei, answer everyday questions, tell jokes, translate, and look things up online. Tell me your birthday to get started!"]),
         ]
         for (p, answers) in table where t.range(of: p, options: .regularExpression) != nil {
-            if let a = answers[L] { return a }
+            // 問法本身就是某一種語言（偵測的語言可能不準，像義大利文被當成英文）
+            if let a = answers[L] ?? answers.values.first { return a }
         }
         return nil
     }
