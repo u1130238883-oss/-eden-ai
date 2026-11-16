@@ -14,6 +14,7 @@ public enum Everyday {
         if let a = leapYear(t, now) { return a }
         if let a = countdown(t, now) { return a }
         if let a = misc(t, now) { return a }
+        if let a = calcMore(t, now) { return a }
         if let a = convert(t) { return a }
         if let a = arithmetic(t) { return a }
         if let a = seriesSum(t) { return a }
@@ -69,7 +70,38 @@ public enum Everyday {
         cal.dateComponents([.day], from: cal.startOfDay(for: a), to: cal.startOfDay(for: b)).day ?? 0
     }
 
-    // MARK: - 今年還剩幾天、明天放假嗎、該睡了嗎
+    // MARK: - 金額的百分比、N 天後、幾歲、直角三角形
+
+    static func calcMore(_ t0: String, _ now: Date) -> String? {
+        let t = digitize(t0)
+        func num(_ s: String) -> Double? { Double(s.replacingOccurrences(of: ",", with: "")) }
+        // 「3000元的15%是多少」「500塊的兩成」
+        if let g = RuleBook.match(t, #"^([\d,.]+)(?:元|塊錢|塊|美元|台幣)?的([\d.]+)%(?:是|等於)?(?:多少|多少錢|幾元)?$"#), let a = num(g[0]), let p = num(g[1]) {
+            return "\(fmt(a)) 的 \(fmt(p))% 是 \(fmt(a * p / 100))（\(fmt(a)) × \(fmt(p)) ÷ 100）。"
+        }
+        // 「100天後是幾月幾號」「三週後是星期幾」
+        if let g = RuleBook.match(t, #"^([\d]+)(天|個星期|星期|週|周|個月|年)(後|以後|之後|前|以前|之前)(?:是)?(?:幾月幾號|幾月幾日|哪一天|幾號|星期幾|什麼時候|哪天)$"#), let n = Int(g[0]) {
+            let sign = ["前", "以前", "之前"].contains(g[2]) ? -1 : 1
+            let comp: Calendar.Component = g[1] == "天" ? .day : g[1].contains("月") ? .month : g[1] == "年" ? .year : .weekOfYear
+            guard let d = cal.date(byAdding: comp, value: sign * n, to: now) else { return nil }
+            return "\(n) \(g[1])\(sign > 0 ? "後" : "前")是 " + show(d, year: true) + "。"
+        }
+        // 「我1990年出生今年幾歲」「1990年出生的人幾歲」
+        if let g = RuleBook.match(t, #"^我?(?:是)?(\d{4})年(?:出生|生)(?:的人)?(?:今年|現在)?(?:幾歲|多大)(?:了)?$"#), let y = Int(g[0]) {
+            let c = ymd(now)
+            guard y <= c.y, y > 1900 else { return nil }
+            return "\(y) 年出生，今年（\(c.y) 年）生日過了是 \(c.y - y) 歲，還沒過生日是 \(c.y - y - 1) 歲（實歲）；如果算虛歲大約是 \(c.y - y + 1) 歲。"
+        }
+        // 「直角三角形兩邊3和4斜邊是多少」
+        if t.contains("直角三角形") || t.contains("斜邊"), t.contains("斜邊"),
+           let g = RuleBook.match(t, #"([\d.]+)(?:和|跟|與|、|,|，)([\d.]+)"#), let a = num(g[0]), let b = num(g[1]) {
+            let c = (a * a + b * b).squareRoot()
+            return "斜邊 = √(\(fmt(a))² + \(fmt(b))²) = √\(fmt(a * a + b * b)) = \(fmt(c))。（畢氏定理：兩股的平方和等於斜邊的平方）"
+        }
+        return nil
+    }
+
+    // MARK: - 今年還剩幾天、明天放假嗎、該睡了嗎    // MARK: - 今年還剩幾天、明天放假嗎、該睡了嗎
 
     static func misc(_ t: String, _ now: Date) -> String? {
         let c = ymd(now)
