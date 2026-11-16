@@ -150,7 +150,8 @@ public enum Commonsense {
         guard t.count >= 2, t.count <= 40 else { return nil }
         // 明白叫我上網查的（「幫我查一下…」「搜尋…」）就上網
         // （「檢查」「調查」「查詢」裡的「查」不算）
-        if ["搜尋", "上網", "google", "Google", "維基"].contains(where: { raw.contains($0) })
+        if ["搜尋", "上網", "維基"].contains(where: { raw.contains($0) })
+            || raw.range(of: #"(?i)google(一下|查|看看|搜尋|找)|用google(查|搜尋|找|搜)|幫我google"#, options: .regularExpression) != nil
             || raw.range(of: #"(?<![檢調審考盤普探巡抽核清追偵複待])查(?!詢|看看?是)"#, options: .regularExpression) != nil { return nil }
         // 在說心情（「我難過到睡不著怎麼辦」）：先陪他，不是給方法
         if ["到睡不著", "難過", "傷心", "孤單", "寂寞", "害怕", "失落", "低落", "生氣", "煩惱", "好煩", "很煩", "焦慮", "憂鬱", "想哭", "心情"]
@@ -604,9 +605,7 @@ public enum Commonsense {
         ("成分", ["成分", "由什麼組成", "組成", "含有什麼", "裡面有什麼"]),
         ("時間", ["睡幾個小時", "要睡多久", "睡多久", "幾個小時", "多久"]),
         ("人口", ["人口", "多少人", "幾個人"]),
-        ("面積", ["面積", "多少平方公里", "多大", "有多大", "大不大"]),
-        // 國家「在哪裡」：說在哪一洲（城市、地標有「位置」會先用）
-        ("洲", ["在哪裡", "在哪", "在什麼地方", "哪裡"])
+        ("面積", ["面積", "多少平方公里", "多大", "有多大", "大不大"])
     ]
 
     static let defineCues = ["是誰", "是什麼", "什麼是", "誰是", "介紹", "簡介", "是幹嘛的", "是做什麼的", "是幹什麼的", "認識", "知道", "是哪位", "是什麼意思", "什麼意思", "的意思", "解釋一下", "解釋", "指的是什麼", "指的是", "是在說什麼",
@@ -660,6 +659,12 @@ public enum Commonsense {
            ["幾歲", "多大", "年紀", "幾年次", "哪一年出生", "哪年出生", "什麼時候出生"].contains(where: { t.contains($0) }) {
             let now0 = Calendar(identifier: .gregorian).component(.year, from: now)
             return "\(e.name)是 \(y) 年出生的，今年（\(now0) 年）大約 \(now0 - y) 歲。"
+        }
+        // 「以色列在哪裡」：只問國家在哪裡（沒有「最南端」這種別的問法）→ 說在哪一洲
+        if e.kind == "國家", let v = e.attr("洲"),
+           String(t[first.range.upperBound...]).range(of: #"^(是)?(在|位於|位在)(哪裡|哪|什麼地方|哪邊|哪一帶)$"#, options: .regularExpression) != nil,
+           String(t[..<first.range.lowerBound]).isEmpty {
+            return phrase(e, "洲", v, now: now)
         }
         // 名字本身就是一個問題（「雞蛋要放冰箱嗎」「世界上有幾個國家」）：直接回答
         if ["常識", "健康常識"].contains(e.kind), first.alias.count >= 4, let intro = e.attr("簡介") {
