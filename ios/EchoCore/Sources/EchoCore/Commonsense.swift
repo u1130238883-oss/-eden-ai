@@ -156,7 +156,7 @@ public enum Commonsense {
         // 在說心情（「我難過到睡不著怎麼辦」）：先陪他，不是給方法
         if ["到睡不著", "難過", "傷心", "孤單", "寂寞", "害怕", "失落", "低落", "生氣", "煩惱", "好煩", "很煩", "焦慮", "憂鬱", "想哭", "心情"]
             .contains(where: { t.contains($0) }) && t.contains("我")
-            && !["教我", "怎麼緩解", "如何緩解", "緩解", "方法", "減輕", "怎麼讓自己", "如何讓自己"].contains(where: { t.contains($0) }) { return nil }
+            && !["教我", "怎麼緩解", "如何緩解", "緩解", "方法", "減輕", "怎麼讓自己", "如何讓自己", "容易", "控制", "脾氣"].contains(where: { t.contains($0) }) { return nil }
         // 只打了一個名字（「咖啡」「黑洞」「番茄炒蛋」「電影」）：介紹它、給做法或推薦
         if t.count <= 8, !fortuneish(t), !asking.contains(where: { t.contains($0) }), !["好處", "壞處", "原因", "由來"].contains(where: { t.contains($0) }) {
             if let e = facts.first(where: { $0.names.contains(t) }), e.kind != "常識", let d = define(e, now: now) { return d }
@@ -167,7 +167,8 @@ public enum Commonsense {
         // 「我膝蓋痛」「我嘴破了」「我便秘」：說了身體的狀況 → 關心一句，給做法
         if let g = RuleBook.match(t, #"^我(?:的)?(?:好像|一直|有點|今天|最近|又|突然|常常|很容易)?(.{2,8}?)(?:了|好幾天了|很久了)?$"#) {
             let x = g[0].replacingOccurrences(of: #"(好|很|超|一直|有點)"#, with: "", options: .regularExpression)
-            if x.count >= 2, let e = howtos.first(where: { $0.kind == "健康" && $0.names.contains(where: { $0 == x || $0 == x + "怎麼辦" }) }),
+            // 「我很怕打針」是害怕，不是身體不舒服
+            if x.count >= 2, !x.contains("怕"), let e = howtos.first(where: { $0.kind == "健康" && $0.names.contains(where: { $0 == x || $0 == x + "怎麼辦" }) }),
                let a = howto(e.name + "怎麼辦") ?? howto("怎麼" + e.name) {
                 return "辛苦了，身體不舒服要好好照顧自己。\n" + a
             }
