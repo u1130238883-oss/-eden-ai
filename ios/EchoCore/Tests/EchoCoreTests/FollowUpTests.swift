@@ -147,4 +147,15 @@ final class FollowUpTests: XCTestCase {
         let i = try run(["跑步好還是游泳好", "一天要走幾步"])
         XCTAssertTrue(i[1].turn.text.contains("步"), i[1].turn.text)
     }
+
+    /// 心情的長對話：不能回「做不到」、不知道怎麼辦要給方法、「如果…怎麼辦」照一般問題答
+    func testEmotionalConversation() throws {
+        let a = try run(["我好焦慮", "明天要報告", "我準備好了但還是很怕", "如果講不好怎麼辦", "你可以給我一點鼓勵嗎"])
+        XCTAssertTrue(a[2].turn.text.contains("緊張") || a[2].turn.text.contains("在乎"), a[2].turn.text)
+        XCTAssertNil(a[3].webQuery, a[3].turn.text)
+        XCTAssertFalse(a[4].turn.text.contains("做不到"), a[4].turn.text)
+        let b = try run(["我最近心情很差", "工作很不順", "同事也不幫我", "我不知道該怎麼辦"])
+        XCTAssertNil(b[3].webQuery, b[3].turn.text)
+        XCTAssertFalse(b[2].turn.text.contains("運勢"), b[2].turn.text)
+    }
 }

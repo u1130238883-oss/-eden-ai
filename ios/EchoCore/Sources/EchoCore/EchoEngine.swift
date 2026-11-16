@@ -318,7 +318,7 @@ public final class EchoEngine {
         }
         // 「我該怎麼辦」「那怎麼辦」：沒有接上剛剛的話題時，照前面幾句說的事給做法
         if !rewritten, context.language == .zh,
-           plain.range(of: #"^(那|所以|可是|但是)?(我)?(現在)?(要|該|應該)?(怎麼辦|怎麼做|如何是好|怎麼處理|怎麼解決|有什麼方法|有什麼辦法|有什麼建議|有沒有方法|有沒有辦法|能做什麼|可以做什麼|能幫什麼|可以幫什麼|能為他做什麼|可以為他做什麼|能做些什麼|可以做些什麼)(才好)?(呢|啊|嗎)?$"#, options: .regularExpression) != nil {
+           plain.range(of: #"^(那|所以|可是|但是)?(我)?(真的|現在)?(不知道|不曉得)?(現在)?(要|該|應該)?(怎麼辦|怎麼做|如何是好|怎麼處理|怎麼解決|有什麼方法|有什麼辦法|有什麼建議|有沒有方法|有沒有辦法|能做什麼|可以做什麼|能幫什麼|可以幫什麼|能為他做什麼|可以為他做什麼|能做些什麼|可以做些什麼)(才好)?(呢|啊|嗎)?$"#, options: .regularExpression) != nil {
             let said = history.filter { $0.role == .user }.suffix(4).reversed().map { $0.text }
             // 「牠很愛叫」：牠是前面說的狗
             let pet = said.joined().contains("狗") ? "狗狗" : (said.joined().contains("貓") ? "貓咪" : "")
@@ -459,6 +459,9 @@ public final class EchoEngine {
 
     /// 口語的問句詞換成一般說法：「日本首都是啥」「蝦米是黑洞」「咋辦」
     static func normalizeSlang(_ m: String) -> String {
+        var m = m
+        // 「如果講不好怎麼辦」「萬一地震怎麼辦」→「講不好怎麼辦」
+        if let r = m.range(of: #"^(如果|萬一|要是|假如)(?=.{2,14}(怎麼辦|該怎麼辦|要怎麼辦)[？?]*$)"#, options: .regularExpression) { m.removeSubrange(r) }
         guard m.range(of: "啥|蝦米|三小|咋|甚麼|神馬|什么|到底|怎麼樣才能|怎樣才能|要怎麼樣|是什麼東西", options: .regularExpression) != nil else { return m }
         var t = m
         for (a, b) in [("到底", ""), ("要怎麼樣才能", "要怎麼"), ("怎麼樣才能", "怎麼"), ("怎樣才能", "怎麼"), ("要怎麼樣", "要怎麼"), ("是什麼東西", "是什麼"),("蝦米", "什麼"), ("三小", "什麼"), ("神馬", "什麼"), ("甚麼", "什麼"), ("什么", "什麼"), ("咋辦", "怎麼辦"), ("咋麼", "怎麼"), ("咋", "怎麼"), ("為啥", "為什麼"), ("幹啥", "做什麼"), ("啥", "什麼")] {
@@ -1330,7 +1333,7 @@ public final class EchoEngine {
                ![.grief, .sick, .worryOther, .goodNews, .crisis, .proudEffort, .excitedPlan, .happy, .hope, .thanks, .greeting, .farewell,
                  .praiseAI, .complainAI, .apology, .confused, .joke, .bored, .curious, .affection].contains(Affect.detect(message)),
                t.range(of: "^(謝謝|謝啦|好|嗯|喔|哦|對|沒事|算了|不用|好的|OK|ok|掰|晚安|早安)", options: .regularExpression) == nil,
-               t.range(of: "查|搜|幫|給|算|翻譯|運|命|卦|規則|記住|寫|講|說|唱|推薦|[0-9０-９]", options: .regularExpression) == nil {
+               t.range(of: "^(幫我|幫忙|請|查|搜|給我|算|翻譯|寫|講|說|唱|推薦)|運勢|命盤|卦|規則|記住|[0-9０-９]", options: .regularExpression) == nil {
                 let n = lc.shown.components(separatedBy: "\u{1}").count
                 // 「我們在一起三年」：說了時間
                 if let g = RuleBook.match(t, #"([0-9一二兩三四五六七八九十幾半]+)(年|個月)"#), t.contains("在一起") || t.contains("交往") || t.contains("認識") {
