@@ -364,6 +364,9 @@ public enum Commonsense {
                 for w in ["方法", "技巧", "建議", "辦法", "時候", "地方", "原因", "方式", "步驟", "注意", "比較"] { residual = residual.replacingOccurrences(of: w, with: "") }
                 residual = residual.filter { !"是的了嗎呢有要會在個一啊呀".contains($0) }
                 guard residual.count <= 2 else { return nil }
+                // 上一題是「怎麼做」：只接「怎麼開始」「多久會進步」這種追問（「有沒有方法可以戒菸」是新問題）
+                if !residual.isEmpty, !facts.contains(where: { $0.name == subject }),
+                   !["開始", "進步", "練習", "持續", "堅持", "準備", "做", "多久", "效果", "最快", "最好"].contains(where: { residual == $0 || $0.contains(residual) }) { return nil }
             }
             for c in [subject + core, subject + "的" + core] where answer(c, now: now) != nil { return (c, true) }
             return core.count <= 8 ? (subject + core, false) : nil
