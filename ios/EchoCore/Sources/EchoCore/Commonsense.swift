@@ -151,6 +151,11 @@ public enum Commonsense {
             .contains(where: { t.contains($0) }) && t.contains("我")
             && !["教我", "怎麼緩解", "如何緩解", "緩解", "方法", "減輕", "怎麼讓自己", "如何讓自己"].contains(where: { t.contains($0) }) { return nil }
         if let a = dynasty(t) { return a }
+        // 「我想減肥」「我要開始學英文」：說想做一件事 → 給做法
+        if let g = RuleBook.match(t, #"^我(?:想|要|想要|打算|決定|準備)(?:開始|好好|認真)?(.{2,8}?)(?:了)?$"#),
+           let e = howtos.first(where: { $0.kind != "做法" && $0.names.contains(g[0]) }), let a = howto("怎麼" + e.name) ?? howto(e.name + "怎麼做") {
+            return "好啊，我陪你！" + a
+        }
         if let a = howto(t) { return a }
         // 「你知道周杰倫嗎」「你認識李白嗎」：整句就是一個東西的名字 → 介紹它
         if ["知道", "認識", "聽過", "介紹"].contains(where: { raw.contains($0) }) {
@@ -255,6 +260,65 @@ public enum Commonsense {
         if let x = e.attr("看法") { s += "\n\n\(x)。" }
         if let x = e.attr("就醫") { s += "\n\n⚠️ 什麼時候要看醫生：\(x)。" }
         return s
+    }
+
+    // MARK: - 追問（接著上一題的主題）
+
+    /// 上一題問的主角（「日本的首都是哪裡」→ 日本、「番茄炒蛋怎麼做」→ 番茄炒蛋）
+    public static func subject(_ raw: String) -> String? {
+        let t = Everyday.clean(raw)
+        return realMentions(t, in: facts).first?.entity.name ?? realMentions(t, in: howtos).first?.entity.name
+            ?? mentions(t, in: howtos).filter { $0.alias.count >= 2 }.max(by: { $0.alias.count < $1.alias.count })?.entity.name
+    }
+
+    /// 「貓可以吃巧克力嗎」＋「葡萄」→「貓可以吃葡萄嗎」：換掉上一題裡同一類的東西，或動詞後面的東西
+    static func swapInto(_ p: String, _ x: String, kind: String?) -> String? {
+        let pm = realMentions(p, in: facts) + realMentions(p, in: howtos)
+        if let kind, let target = pm.first(where: { $0.entity.kind == kind && !x.contains($0.alias) }) {
+            var c = p
+            c.replaceSubrange(target.range, with: x)
+            return c
+        }
+        if let g = RuleBook.match(p, #"^(.*(?:吃|喝|去|用|養|買|看|學|放|種))(.{1,8}?)(嗎|呢|好嗎|可以嗎)?$"#), !g[1].contains(x),
+           !(pm.first.map { g[1].contains($0.alias) } ?? false) {
+            return g[0] + x + g[2]
+        }
+        return nil
+    }
+
+    /// 追問補成完整的問題：「人口多少」→「日本人口多少」、「那葡萄呢」（上一題「貓可以吃巧克力嗎」）→「貓可以吃葡萄嗎」。
+    /// local：補完之後自己答得出來；不然只在很短、明顯接著問的時候補上主題（上網查也要知道在問什麼）
+    public static func followUp(_ raw: String, subject: String, previous: String, now: Date = Date()) -> (text: String, local: Bool)? {
+        var t = Everyday.clean(raw)
+        guard !subject.isEmpty, (1...14).contains(t.count) else { return nil }
+        for p in ["那裡", "那邊", "這裡", "這邊", "當地"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); break }
+        for p in ["那麼", "那", "所以", "還有", "另外"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); break }
+        for p in ["它的", "它", "他的", "他", "她的", "她", "牠的", "牠", "這個的", "這個", "那個"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); break }
+        while let f = t.first, "裡邊".contains(f), t.count > 1 { t.removeFirst() }
+        if t.hasPrefix(subject) { return nil }
+        if ["你", "我", "妳"].contains(where: { t.contains($0) }) || fortuneish(t) { return nil }
+        let ms = realMentions(t, in: facts) + realMentions(t, in: howtos)
+        // 「那葡萄呢」（葡萄不是認得的東西）：換掉上一題動詞後面的東西
+        if ms.isEmpty, let g = RuleBook.match(t, #"^(.{1,6}?)(?:呢|也可以嗎|可以嗎|也是嗎)$"#), !asking.contains(where: { g[0].contains($0) }),
+           let c = swapInto(Everyday.clean(previous), g[0], kind: nil) {
+            return (c, answer(c, now: now) != nil)
+        }
+        if ms.isEmpty {
+            let asks = asking.contains(where: { t.contains($0) }) || t.hasSuffix("呢") || t.hasPrefix("的")
+                || ["要放", "要加", "要多久", "可以嗎", "好吃嗎", "難嗎"].contains(where: { t.contains($0) })
+            guard asks else { return nil }
+            var core = t
+            while let l = core.last, "呢啊呀".contains(l) { core.removeLast() }
+            for c in [subject + core, subject + "的" + core] where answer(c, now: now) != nil { return (c, true) }
+            return core.count <= 8 ? (subject + core, false) : nil
+        }
+        // 「那葡萄呢」「狗呢」「那德國」：只換掉上一題裡同一類的東西
+        guard ms.count == 1, let m = ms.first else { return nil }
+        var rest = t
+        rest.replaceSubrange(m.range, with: "")
+        guard ["", "呢", "也是嗎", "也可以嗎", "可以嗎", "也一樣嗎", "怎麼樣", "如何", "的呢"].contains(rest) else { return nil }
+        guard let c = swapInto(Everyday.clean(previous), m.alias, kind: m.entity.kind) else { return nil }
+        return answer(c, now: now) != nil ? (c, true) : (c, false)
     }
 
     // MARK: - 推薦
@@ -430,6 +494,23 @@ public enum Commonsense {
             return nil
         }
         let e = first.entity
+        // 人物什麼時候出生、過世（「愛因斯坦哪一年過世」「李白幾歲死的」）：從年代算
+        if e.kind == "人物", let span = e.attr("年代"),
+           let g = RuleBook.match(span, #"(西元前|前)?\s*(\d+) 年到 (西元前|前)?\s*(\d+) 年"#), let y1 = Int(g[1]), let y2 = Int(g[3]) {
+            let bc1 = !g[0].isEmpty, bc2 = !g[2].isEmpty
+            let born = (bc1 ? "西元前 " : "") + "\(y1) 年", died = (bc2 ? "西元前 " : "") + "\(y2) 年"
+            let age = (bc1 ? -y1 : y1) <= (bc2 ? -y2 : y2) ? (bc2 ? -y2 : y2) - (bc1 ? -y1 : y1) : 0
+            let when = ["哪一年", "哪年", "幾年", "什麼時候", "何時", "幾歲", "年份", "多大"].contains(where: { t.contains($0) })
+            if when, ["過世", "去世", "逝世", "死", "離世"].contains(where: { t.contains($0) }) {
+                return "\(e.name)在\(died)過世" + (age > 0 ? "，享年大約 \(age) 歲" : "") + "（生於\(born)）。"
+            }
+            if when, ["出生", "出世", "生的", "誕生", "生於"].contains(where: { t.contains($0) }) {
+                return "\(e.name)生於\(born)" + "，\(died)過世。"
+            }
+            if ["活了幾歲", "活了多久", "活多久", "幾歲過世", "享年"].contains(where: { t.contains($0) }), age > 0 {
+                return "\(e.name)活了大約 \(age) 歲（\(born)到\(died)）。"
+            }
+        }
         // 名字本身就是一個問題（「雞蛋要放冰箱嗎」「世界上有幾個國家」）：直接回答
         if e.kind == "常識", first.alias.count >= 4, let intro = e.attr("簡介") {
             return intro + "。" + (e.attr("說明").map { "\n" + $0 + "。" } ?? "")

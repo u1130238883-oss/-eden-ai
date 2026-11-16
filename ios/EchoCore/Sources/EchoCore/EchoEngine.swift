@@ -476,6 +476,8 @@ public final class EchoEngine {
         if L == .zh, let a = Commonsense.answer(text, now: ctx.now) {
             if let r = a.range(of: "如果只能選一個：") {
                 lastLocal = LocalContext(kind: "recommend", extra: String(a[r.upperBound...].prefix { $0 != "\n" }), turn: history.count)
+            } else if let sub = Commonsense.subject(text) {
+                lastLocal = LocalContext(kind: "fact", subject: sub, extra: text, turn: history.count)
             }
             // 自己答的也算上一題的主題：追問「那這些省都是哪些省」要接得上
             lastWebQuery = EchoEngine.searchQuery(text)
@@ -828,7 +830,15 @@ public final class EchoEngine {
             if t.range(of: "^(誰寫的|是誰寫的|誰拍的|是誰拍的|作者是誰)$", options: .regularExpression) != nil { return .rewrite("\(lc.subject)的作者是誰") }
         case "smalltalk":
             if !EchoEngine.isQuestion(message), !EchoEngine.fortuneIntent(message), let a = Talk.chatAnswer(message, topic: lc.subject) { return .answer(a) }
+        case "fact":
+            // 「人口多少」「說什麼語言」（上一題在問日本）、「那葡萄呢」（上一題「貓可以吃巧克力嗎」）：補上主題
+            if Talk.detailed(message) == nil, let f = Commonsense.followUp(message, subject: lc.subject, previous: lc.extra) {
+                return .rewrite(f.text)
+            }
         case "recommend":
+            if let g = RuleBook.match(t, #"^(?:那|那麼|還有)?(電影|書|動畫|音樂|歌|遊戲|影集|電視劇|景點|運動)(?:呢|的話呢|的話)?$"#) {
+                return .rewrite("推薦" + g[0])
+            }
             if t.range(of: "^(為什麼|為何|為啥|怎麼說)(推薦)?(這部|這個|這本|這首|它|這)?$", options: .regularExpression) != nil, !lc.extra.isEmpty {
                 return .answer("我最推薦的是\(lc.extra)")
             }

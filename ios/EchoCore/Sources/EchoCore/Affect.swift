@@ -102,6 +102,9 @@ public enum Affect {
         // 問作品（「少年維特的煩惱講了什麼」）、問近義詞（「難過的近義詞」）：書名、詞裡的情緒字不是心情
         if EchoEngine.asksAboutWork(t) || Synonyms.parse(t) != nil || Antonyms.parse(t) != nil
             || Synonyms.parse(t0) != nil || Antonyms.parse(t0) != nil { return .info }
+        // 問名人什麼時候、怎麼過世的（「愛因斯坦哪一年過世」「李白怎麼死的」）：是問歷史，不是失去親人
+        if t.range(of: "(哪一年|哪年|什麼時候|幾歲|何時|幾年|怎麼|如何|為什麼|為何|在哪裡|在哪)(過世|去世|死|離世|逝世)", options: .regularExpression) != nil,
+           t.range(of: "我|爸|媽|爺|奶|外公|外婆|阿公|阿嬤|家|狗|貓|寵物|朋友|老公|老婆", options: .regularExpression) == nil { return .info }
         // 打招呼、道謝、道別這種短句，拿掉語氣詞前後都看（「謝啦」的「啦」不能拿掉）
         let social: Set<Mood> = [.thanks, .greeting, .farewell, .confused, .praiseAI, .apology]
         for (m, p) in rules where t.range(of: p, options: [.regularExpression, .caseInsensitive]) != nil
