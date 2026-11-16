@@ -1059,7 +1059,8 @@ public final class EchoEngine {
     /// 追問剛剛回答裡提到的東西（「搭高鐵要多久」「要放糖嗎」「那台鐵呢」）：從剛剛的回答裡找出那一段
     static func fromPrevious(_ raw: String, answer: String) -> String? {
         let t = Talk.clean(raw)
-        guard (2...16).contains(t.count), answer.count >= 10 else { return nil }
+        // 在問我自己的事（「你會日文嗎」）不是在問剛剛的回答
+        guard (2...16).contains(t.count), answer.count >= 10, !t.contains("你") else { return nil }
         let asks = EchoEngine.isQuestion(raw) || t.hasSuffix("嗎") || t.hasSuffix("呢")
             || ["要不要", "可不可以", "會不會", "多久", "多少", "幾"].contains(where: { t.contains($0) })
             || (t.hasPrefix("是") && t.count <= 10)   // 「是Windows」：補充是哪一種
