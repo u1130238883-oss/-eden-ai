@@ -763,6 +763,10 @@ public final class EchoEngine {
             var r = done(Loc.s("webAsk", L), .tool, palace)
             r.webQuery = EchoEngine.searchQuery(text)
             return r
+        } else if L == .zh, text.hasPrefix("我"), !EchoEngine.isQuestion(text), let a = Commonsense.answer(text + "怎麼辦", now: ctx.now),
+                  a.contains("1.") {
+            // 說了一個生活上的麻煩（「我養的貓不吃飯」）：直接給做法
+            raw = "聽起來有點讓人擔心。" + a
         } else if let p = palace {
             let cal = Calendar(identifier: .gregorian).dateComponents([.month, .day], from: ctx.now)
             let dn = ctx.profile.birthday.map { Destiny($0).day(month: cal.month!, day: cal.day!) }
@@ -849,6 +853,12 @@ public final class EchoEngine {
             }
             if t.range(of: "^(誰寫的|是誰寫的|誰拍的|是誰拍的|作者是誰)$", options: .regularExpression) != nil { return .rewrite("\(lc.subject)的作者是誰") }
         case "smalltalk":
+            if lc.subject.hasPrefix("旅行:") {
+                if t.range(of: #"(要|該)?(帶|換)多少(錢|現金)"#, options: .regularExpression) != nil { return .rewrite("出國要換多少錢") }
+                if t.range(of: #"^(要)?(帶|準備)(什麼|哪些)"#, options: .regularExpression) != nil { return .rewrite("出國要帶什麼") }
+                if t.range(of: #"(要|需要)簽證"#, options: .regularExpression) != nil { return .rewrite(String(lc.subject.dropFirst(3)) + "要簽證嗎") }
+                if t.range(of: #"^(有)?(什麼|哪些)好玩"#, options: .regularExpression) != nil { return .rewrite(String(lc.subject.dropFirst(3)) + "有什麼好玩的") }
+            }
             // 「我在學日文」→「有什麼方法」：怎麼學日文
             if lc.subject.hasPrefix("學:"), t.range(of: #"^(那)?(要)?(有什麼|有沒有)?(方法|技巧|建議|訣竅|撇步)(嗎)?$|^(要)?(怎麼|如何)(學|練|開始|進步)(比較好|才會進步)?$"#, options: .regularExpression) != nil {
                 return .rewrite("怎麼學" + lc.subject.dropFirst(2))
@@ -866,9 +876,17 @@ public final class EchoEngine {
             // 「要怎麼辦」：照剛剛說的事給做法（「我失眠了」→ 失眠怎麼辦）
             if t.range(of: #"^(那|所以)?(我)?(要|該|應該)?(怎麼辦|怎麼做|如何是好|怎麼處理|怎麼解決|有什麼方法|有什麼辦法|有什麼建議)(呢|啊)?$"#, options: .regularExpression) != nil {
                 for said in [lc.subject, lc.extra] where !said.isEmpty {
-                    let ask = said.replacingOccurrences(of: #"[了啦啊喔耶。！!～~]+$"#, with: "", options: .regularExpression) + "怎麼辦"
-                    if Commonsense.answer(ask) != nil { return .rewrite(ask) }
+                    let base = said.replacingOccurrences(of: #"[啦啊喔耶。！!～~]+$"#, with: "", options: .regularExpression)
+                    for ask in [base + "怎麼辦", base.replacingOccurrences(of: #"了$"#, with: "", options: .regularExpression) + "怎麼辦"] where Commonsense.answer(ask) != nil {
+                        return .rewrite(ask)
+                    }
                 }
+            }
+            // 「數學」（剛說考砸了）：很短的補充，接住、請對方多說
+            if t.count <= 5, !EchoEngine.isQuestion(message), Talk.chat(message) == nil, Talk.detailed(message) == nil,
+               t.range(of: "^(謝謝|謝啦|好|嗯|喔|哦|對|沒事|算了|不用|好的|OK|ok)", options: .regularExpression) == nil,
+               t.range(of: "查|搜|幫|給|算|翻譯|運|命|卦|規則|記住|寫|講|說|唱|推薦|[0-9０-９]", options: .regularExpression) == nil {
+                return .answer("嗯嗯，是\(t)。想多說一點嗎？是哪個地方讓你最在意？我在聽。")
             }
             // 「因為報告寫錯」：在說原因，接住它
             if let g = RuleBook.match(t, #"^(?:因為|就是|原因是|主要是)(.{2,30})$"#), !EchoEngine.isQuestion(message) {

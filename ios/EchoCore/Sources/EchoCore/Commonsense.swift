@@ -153,6 +153,7 @@ public enum Commonsense {
             .contains(where: { t.contains($0) }) && t.contains("我")
             && !["教我", "怎麼緩解", "如何緩解", "緩解", "方法", "減輕", "怎麼讓自己", "如何讓自己"].contains(where: { t.contains($0) }) { return nil }
         if let a = whichClinic(t) { return a }
+        if let a = compareNumbers(t) { return a }
         if let a = dynasty(t) { return a }
         // 「我想減肥」「我要開始學英文」：說想做一件事 → 給做法
         if let g = RuleBook.match(t, #"^我(?:想|要|想要|打算|決定|準備)(?:開始|好好|認真)?(.{2,8}?)(?:了)?$"#),
@@ -172,6 +173,29 @@ public enum Commonsense {
         if let a = compare(t) { return a }
         if let a = superlative(t) { return a }
         return about(t, now: now)
+    }
+
+    /// 「台北101比東京晴空塔高嗎」「日本比台灣大嗎」：兩個都有數字就比
+    static func compareNumbers(_ t: String) -> String? {
+        guard let g = RuleBook.match(t, #"^(.{1,10}?)(?:有)?比(.{1,10}?)(?:還|更|要)?(高|矮|大|小|長|短|重|輕|多|少|遠|近)(?:嗎|嗎\?|很多嗎)?$"#) else { return nil }
+        let keyOf: [String: [String]] = ["高": ["高度"], "矮": ["高度"], "大": ["面積", "大小"], "小": ["面積", "大小"], "長": ["長度"], "短": ["長度"],
+                                         "重": ["重量"], "輕": ["重量"], "多": ["人口"], "少": ["人口"], "遠": ["距離"], "近": ["距離"]]
+        func ent(_ n: String) -> Entity? { facts.first(where: { $0.names.contains(n) }) ?? realMentions(n, in: facts).first.map { $0.entity } }
+        func value(_ v: String) -> (Double, String)? {
+            guard let m = RuleBook.match(v, #"([\d,]+(?:\.\d+)?)\s*(萬|億)?\s*(公尺|公里|平方公里|公斤|噸|人|km)?"#), let x = Double(m[0].replacingOccurrences(of: ",", with: "")) else { return nil }
+            let mult = m[1] == "億" ? 1e8 : m[1] == "萬" ? 1e4 : 1
+            return (x * mult, m[2])
+        }
+        guard let a = ent(g[0]), let b = ent(g[1]), a.name != b.name, let keys = keyOf[g[2]] else { return nil }
+        for k in keys {
+            guard let va = a.attr(k), let vb = b.attr(k), let xa = value(va), let xb = value(vb), xa.1 == xb.1 else { continue }
+            let bigWord: [String: String] = ["高度": "高", "面積": "大", "大小": "大", "長度": "長", "重量": "重", "人口": "多", "距離": "遠"]
+            let w = bigWord[k] ?? g[2]
+            let bigger = xa.0 >= xb.0 ? a.name : b.name
+            let fmtA = va.split(separator: "，").first.map(String.init) ?? va, fmtB = vb.split(separator: "，").first.map(String.init) ?? vb
+            return "\(bigger)比較\(w)。\(a.name)：\(fmtA)；\(b.name)：\(fmtB)。"
+        }
+        return nil
     }
 
     /// 「頭痛要看哪一科」「小孩發燒掛什麼科」
@@ -338,7 +362,7 @@ public enum Commonsense {
             return (c, answer(c, now: now) != nil)
         }
         if ms.isEmpty {
-            let asks = asking.contains(where: { t.contains($0) }) || t.hasSuffix("呢") || t.hasPrefix("的")
+            let asks = asking.contains(where: { t.contains($0) }) || t.hasSuffix("呢") || t.hasPrefix("的") || t.hasPrefix("比") || r0.hasSuffix("嗎") || r0.hasSuffix("？") || r0.hasSuffix("?")
                 || ["要放", "要加", "要多久", "可以嗎", "好吃嗎", "難嗎"].contains(where: { t.contains($0) })
             guard asks else { return nil }
             var core = t
@@ -346,6 +370,8 @@ public enum Commonsense {
             guard core.count >= 2 else { return nil }
             // 問句前面不能有自己的主角（「埃菲爾鐵塔高度多少」「邊際效用的意思」是新的問題，不是在追問）：
             // 前面只能是上一題主角的屬性（人口、首都）或「要、會、在、說、用」這種詞
+            // 「比東京晴空塔高嗎」：拿上一題的主角來比
+            if core.hasPrefix("比"), let a = compareNumbers(subject + core) { return (subject + core, a.isEmpty == false) }
             if !pointed {
                 let cueAt = (asking + ["的意思", "意思"]).compactMap { core.range(of: $0)?.lowerBound }.min() ?? core.endIndex
                 var pre = String(core[..<cueAt])
@@ -361,7 +387,7 @@ public enum Commonsense {
                 // 問句裡剩下的內容也要很少（「是誰發現相對論的」有自己的主題「相對論」）
                 var residual = core
                 for w in (asking + keys + ["的意思", "意思"]).sorted(by: { $0.count > $1.count }) where w.count >= 1 { residual = residual.replacingOccurrences(of: w, with: "") }
-                for w in ["方法", "技巧", "建議", "辦法", "時候", "地方", "原因", "方式", "步驟", "注意", "比較"] { residual = residual.replacingOccurrences(of: w, with: "") }
+                for w in ["方法", "技巧", "建議", "辦法", "時候", "地方", "原因", "方式", "步驟", "注意", "比較", "學得會", "學會", "才", "得"] { residual = residual.replacingOccurrences(of: w, with: "") }
                 residual = residual.filter { !"是的了嗎呢有要會在個一啊呀".contains($0) }
                 guard residual.count <= 2 else { return nil }
                 // 上一題是「怎麼做」：只接「怎麼開始」「多久會進步」這種追問（「有沒有方法可以戒菸」是新問題）
@@ -372,6 +398,11 @@ public enum Commonsense {
             return core.count <= 8 ? (subject + core, false) : nil
         }
         // 「那葡萄呢」「狗呢」「那德國」：只換掉上一題裡同一類的東西
+        // 明白指著上一題（「那裡冬天冷嗎」）：句子裡的「冬天」不是新的主角，補上主題
+        if pointed, !ms.contains(where: { $0.entity.kind == facts.first(where: { $0.name == subject })?.kind }) {
+            let c = subject + t
+            return (c, answer(c, now: now) != nil)
+        }
         guard ms.count == 1, let m = ms.first else { return nil }
         var rest = t
         rest.replaceSubrange(m.range, with: "")
