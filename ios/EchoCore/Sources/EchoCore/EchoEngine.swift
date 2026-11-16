@@ -179,6 +179,26 @@ public final class EchoEngine {
         let prevQuestion = lastQuestion, prevQuestionTurn = lastQuestionTurn
         var text = message
         var rewritten = false
+        // 「說簡單一點」：把上一則回答濃縮成一兩句；「說詳細一點」：上網把上一題查得更完整（命盤解讀有自己的「再多說一點」）
+        let plain = Talk.clean(message)
+        if plain.range(of: #"^(可以|能不能|請)?(再)?(說|講|解釋|寫)?(得)?(簡單|白話|簡短|短|精簡)(一點|一些|點)(嗎)?$|^(簡單說|長話短說|太長了|太長|重點是什麼|說重點|講重點)$"#, options: .regularExpression) != nil,
+           let prevAnswer = history.last(where: { $0.role == .echo })?.text, prevAnswer.count > 60 {
+            var r = Reply(turn: ChatTurn(role: .echo, text: "簡單說：" + EchoEngine.gist(prevAnswer), source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+            r.turn.variant = "talk"
+            return r
+        }
+        if last == nil || history.count - lastTurn > 6,
+           plain.range(of: #"^(可以|能不能|請)?(再)?(說|講|解釋|寫)?(得)?(詳細|多|清楚|完整)(一點|一些|點)(嗎)?$|^(再多說一點|多說一點|說多一點|詳細說明|詳細一點|展開說說)$"#, options: .regularExpression) != nil,
+           let prevQ = history.last(where: { $0.role == .user })?.text, prevQ.count >= 2 {
+            var r = Reply(turn: ChatTurn(role: .echo, text: Loc.s("webAsk", .zh), source: .tool), profile: nil, rules: nil, webQuery: EchoEngine.searchQuery(prevQ))
+            r.lang = .zh
+            return r
+        }
+        // 回「好」「要」「想」：上一則回答建議了一個問法（「想看看今天的運勢嗎？直接問我「今天運勢」」），就照那個問法做
+        if let cmd = EchoEngine.acceptedSuggestion(message, history: history) {
+            text = cmd
+            rewritten = true
+        }
         // 追問本地剛回答的東西：直接回答，或把問題補完整（「他還寫了什麼」→「曹雪芹還寫了什麼」、「結局呢」→「哈姆雷特的結局」）
         if context.language == .zh || Lang.detect(message, fallback: .zh) == .zh, let lc = lastLocal, history.count - lc.turn <= 4 {
             switch localFollowUp(message, lc) {
@@ -711,6 +731,34 @@ public final class EchoEngine {
         r.turn.tokens = []          // 讓對話泡泡出現 👍／👎
         r.turn.variant = raw
         return r
+    }
+
+    /// 一段回答的重點：拿掉標題、項目符號，留最前面一兩句完整的話
+    static func gist(_ text: String) -> String {
+        let lines = text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty && !$0.hasPrefix("📌") && !$0.hasPrefix("💬") && !$0.hasPrefix("來源") && !$0.hasPrefix("【") && $0.count > 6 }
+        let body = lines.joined(separator: "")
+            .replacingOccurrences(of: #"^[0-9①-⑩•\-．.、\s]+"#, with: "", options: .regularExpression)
+        var out = "", count = 0
+        for ch in body {
+            out.append(ch)
+            if "。！？".contains(ch) { count += 1; if count >= 2 || out.count >= 80 { break } }
+        }
+        return out.isEmpty ? String(body.prefix(80)) : out
+    }
+
+    /// 對方只回「好」「好啊」「要」「想」，而上一則回答的最後有建議的問法（「…可以問我「今天運勢」」）：回傳那個問法
+    static func acceptedSuggestion(_ message: String, history: [ChatTurn]) -> String? {
+        let t = Talk.clean(message)
+        guard ["好", "好啊", "好喔", "好的", "好呀", "要", "要啊", "要喔", "想", "想啊", "想要", "想看", "要看", "對", "對啊", "可以", "可以啊", "OK", "ok", "嗯", "嗯嗯", "好啊好啊", "麻煩你", "拜託"].contains(t),
+              let last = history.last(where: { $0.role == .echo }), last.text.contains("嗎") || last.text.contains("？") || last.text.contains("問我「") else { return nil }
+        // 最後一段裡的「…」（離結尾最近的建議）
+        let tail = String(last.text.suffix(160))
+        guard let r = tail.range(of: #"「([^「」]{2,16})」"#, options: [.regularExpression, .backwards]) else { return nil }
+        let cmd = String(tail[r]).trimmingCharacters(in: CharacterSet(charactersIn: "「」"))
+        // 只接受像問題、指令的建議（「今天運勢」「這個月運勢」「今天吃什麼」），不是書名、引言
+        guard ["運勢", "運", "吃什麼", "解讀", "命盤", "八字", "紫微", "大運", "流年", "在講什麼", "笑話", "推薦", "怎麼", "是什麼"].contains(where: { cmd.contains($0) }) else { return nil }
+        return cmd
     }
 
     enum LocalFollow { case answer(String), rewrite(String) }

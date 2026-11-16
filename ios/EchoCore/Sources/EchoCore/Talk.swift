@@ -60,6 +60,8 @@ public enum Talk {
             (#"^(raccontami una barzelletta|una barzelletta|dimmi una barzelletta)$"#,
              [.it: "Qual è il colmo per un elettricista? Non fare scintille a scuola! ⚡"]),
             (#"^(thank you|thanks|thank you so much|thx|ty)$"#, [.en: "You're welcome! Happy to help anytime."]),
+            (#"^(ok|okay|k|cool|nice|great|got it|i see|alright|sure)$"#, [.en: "👍 Anything else you'd like to ask or talk about?"]),
+            (#"^(haha+|lol+|lmao|hehe+)$"#, [.en: "Glad that made you smile 😄 What's up?"]),
             (#"^(gracias|muchas gracias)$"#, [.es: "¡De nada! Aquí estoy cuando me necesites."]),
             (#"^(grazie|grazie mille)$"#, [.it: "Prego! Sono qui quando vuoi."]),
             (#"^(are you (a )?(robot|ai|human|real person))$"#,
@@ -109,7 +111,9 @@ public enum Talk {
     }
 
     static func match(_ raw: String) -> (text: String, kind: String, name: String)? {
-        let t = clean(raw)
+        var t = clean(raw)
+        // 整句只有標點（「？」「...」）：清掉就沒了，用原本的字比對
+        if t.isEmpty { t = raw.trimmingCharacters(in: .whitespacesAndNewlines) }
         guard t.count >= 1, t.count <= 30 else { return nil }
         let range = NSRange(t.startIndex..., in: t)
         for e in entries where !e.answers.isEmpty {

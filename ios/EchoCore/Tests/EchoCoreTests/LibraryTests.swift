@@ -143,3 +143,36 @@ final class MyTopicTests: XCTestCase {
         XCTAssertTrue(r.turn.text.contains("2宮"), r.turn.text)
     }
 }
+
+final class ConversationTests: XCTestCase {
+    func run(_ lines: [String]) throws -> [EchoEngine.Reply] {
+        let e = try SimpleQuestionsProbeTests.engine()
+        var ctx = EchoEngine.Context()
+        ctx.profile = UserProfile(birthday: BirthDay(year: 2006, month: 1, day: 14), hour: 8)
+        var history: [ChatTurn] = [], out: [EchoEngine.Reply] = []
+        for q in lines {
+            let r = e.reply(to: q, history: history, context: ctx)
+            history += [ChatTurn(role: .user, text: q), r.turn]
+            out.append(r)
+        }
+        return out
+    }
+
+    func testFillersAreNotSearches() throws {
+        for q in ["好", "嗯", "😂", "？", "不知道", "隨便", "算了", "123", "你答錯了"] {
+            let r = try run([q]).last!
+            XCTAssertNil(r.webQuery, q)
+        }
+    }
+
+    func testFollowUps() throws {
+        XCTAssertTrue(try run(["八大行星有哪些", "最大的是哪一個"]).last!.turn.text.contains("木星"))
+        XCTAssertEqual(try run(["哈姆雷特在講什麼", "結局呢"]).last!.webQuery, "哈姆雷特的結局")
+        XCTAssertEqual(try run(["紅樓夢的作者是誰", "他還寫了什麼"]).last!.webQuery, "曹雪芹還寫了什麼")
+        let joke = try run(["給我講個笑話", "再一個"])
+        XCTAssertNil(joke.last!.webQuery)
+        XCTAssertNotEqual(joke[0].turn.text, joke[1].turn.text)
+        XCTAssertTrue(try run(["早安", "好"]).last!.turn.text.contains("今天"))
+        XCTAssertTrue(try run(["什麼是通貨膨脹", "可以說簡單一點嗎"]).last!.turn.text.hasPrefix("簡單說"))
+    }
+}
