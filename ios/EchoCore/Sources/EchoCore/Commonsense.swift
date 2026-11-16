@@ -153,7 +153,7 @@ public enum Commonsense {
             .contains(where: { t.contains($0) }) && t.contains("我")
             && !["教我", "怎麼緩解", "如何緩解", "緩解", "方法", "減輕", "怎麼讓自己", "如何讓自己"].contains(where: { t.contains($0) }) { return nil }
         // 只打了一個名字（「咖啡」「黑洞」「番茄炒蛋」「電影」）：介紹它、給做法或推薦
-        if t.count <= 8, !fortuneish(t) {
+        if t.count <= 8, !fortuneish(t), !asking.contains(where: { t.contains($0) }), !["好處", "壞處", "原因", "由來"].contains(where: { t.contains($0) }) {
             if let e = facts.first(where: { $0.names.contains(t) }), e.kind != "常識", let d = define(e, now: now) { return d }
             if let e = howtos.first(where: { $0.names.contains(t) }), let a = howto(e.name + "怎麼做") ?? howto("怎麼" + e.name) { return a }
             if recommends.contains(where: { $0.names.contains(t) }), let a = recommend(t) ?? recommend("推薦" + t) { return a }
@@ -882,7 +882,8 @@ public enum Commonsense {
 
     /// 在相關的事實裡找到這件事，看是肯定還是否定（「月亮會發光嗎」→「月亮自己不會發光」→ 不會）
     static func judge(_ x: String, _ e: Entity, _ es: [Entity], yes: String, no: String) -> String? {
-        guard x.count >= 1 else { return nil }
+        // 只有一個字（「喝」）當證據太弱：「過期的牛奶可以喝嗎」不能因為說明裡有「改喝」就答「可以」
+        guard x.count >= 2 || (x.count == 1 && yes == "是的") else { return nil }
         var texts: [String] = []
         for o in es {
             texts += o.whys.filter { $0.keys.contains { $0.contains(x) || x.contains($0) } }.map { $0.text }
