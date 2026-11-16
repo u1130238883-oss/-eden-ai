@@ -395,7 +395,7 @@ public enum Commonsense {
                 // 問句裡剩下的內容也要很少（「是誰發現相對論的」有自己的主題「相對論」）
                 var residual = core
                 for w in (asking + keys + ["的意思", "意思"]).sorted(by: { $0.count > $1.count }) where w.count >= 1 { residual = residual.replacingOccurrences(of: w, with: "") }
-                for w in ["方法", "技巧", "建議", "辦法", "時候", "地方", "原因", "方式", "步驟", "注意", "比較", "學得會", "學會", "才", "得"] { residual = residual.replacingOccurrences(of: w, with: "") }
+                for w in ["方法", "技巧", "建議", "辦法", "時候", "地方", "原因", "方式", "步驟", "注意", "比較", "學得會", "學會", "才", "得", "辦", "處理", "解決", "做"] { residual = residual.replacingOccurrences(of: w, with: "") }
                 residual = residual.filter { !"是的了嗎呢有要會在個一啊呀".contains($0) }
                 guard residual.count <= 2 else { return nil }
                 // 上一題是「怎麼做」：只接「怎麼開始」「多久會進步」這種追問（「有沒有方法可以戒菸」是新問題）

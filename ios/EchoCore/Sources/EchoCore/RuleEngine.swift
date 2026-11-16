@@ -55,7 +55,7 @@ public struct RuleBook: Codable, Equatable {
 
     // MARK: - 解析
 
-    static let prefixes = ["規則：", "規則:", "規則", "記住：", "記住:", "記住", "命令：", "命令:", "從現在開始", "從今以後", "以後",
+    static let prefixes = ["規則：", "規則:", "規則", "幫我記住：", "幫我記住", "請記住：", "請記住", "你要記住", "記住：", "記住:", "記住", "命令：", "命令:", "從現在開始", "從今以後", "以後",
                            "rule:", "remember:", "from now on,", "from now on",
                            "regla:", "recuerda:", "a partir de ahora", "desde ahora",
                            "regola:", "ricorda:", "d'ora in poi", "da ora in poi"]
@@ -153,7 +153,28 @@ public struct RuleBook: Codable, Equatable {
         return rule(.note, b)
     }
 
-    // MARK: - 執行
+    // MARK: - 記得的事
+
+    /// 「你記得我叫什麼嗎」「我喜歡什麼顏色」：從使用者教過我的規則裡找
+    public func recall(_ message: String) -> String? {
+        let t = message.filter { !"？?。！!，, ".contains($0) }
+        let asksName = ["你記得我叫什麼", "我叫什麼名字", "我叫什麼", "你知道我叫什麼", "我的名字是什麼", "你記得我的名字", "記得我是誰"].contains(where: { t.contains($0) })
+        if asksName {
+            if let r = rules.last(where: { $0.kind == .address }) { return "記得啊，你叫\(r.a)！" }
+            return "你還沒告訴我你的名字耶。跟我說「我叫○○」，我就會記住。"
+        }
+        // 「我喜歡什麼顏色」「你記得我喜歡吃什麼嗎」：找記下來的事
+        guard t.contains("我"), t.contains("什麼") || t.contains("記得"), t.range(of: "喜歡|討厭|愛|生日|住|養|工作|最", options: .regularExpression) != nil else { return nil }
+        let keys = ["顏色", "吃", "喝", "動物", "電影", "歌", "書", "運動", "季節", "花", "喜歡", "討厭", "住", "養", "工作"].filter { t.contains($0) }
+        let notes = rules.filter { $0.kind == .note }
+        if let n = notes.last(where: { r in keys.filter { $0 != "喜歡" }.contains(where: { r.a.contains($0) }) || (keys == ["喜歡"] && r.a.contains("喜歡")) })
+            ?? notes.last(where: { r in keys.contains(where: { r.a.contains($0) }) && !keys.isEmpty }) {
+            return "我記得！你跟我說過：「\(n.a.replacingOccurrences(of: "我", with: "你"))」。"
+        }
+        return notes.isEmpty ? nil : nil
+    }
+
+    // MARK: - 執行    // MARK: - 執行
 
     public mutating func apply(_ cmd: RuleCommand, _ L: Lang = .zh) -> String {
         let i = [Lang.zh, .en, .es, .it].firstIndex(of: L)!

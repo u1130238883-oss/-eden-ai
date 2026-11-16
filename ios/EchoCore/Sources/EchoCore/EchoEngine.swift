@@ -390,6 +390,22 @@ public final class EchoEngine {
         }
         // 2) 觸發規則
         if let t = ctx.rules.trigger(for: text) { return done(t, .rule) }
+        // 2.0005) 記得使用者教過的事（「你記得我叫什麼嗎」「我喜歡什麼顏色」）
+        if L == .zh, let a = ctx.rules.recall(text) { return done(a, .rule) }
+        // 2.0006) 「我是什麼星座」「我屬什麼」：用存好的生日算
+        if L == .zh, let g = RuleBook.match(text.filter { !"？?。！!，, ".contains($0) }, #"^我(?:是)?(?:什麼|哪個)(星座|生肖)(?:呢|啊)?$|^我屬什麼(?:生肖)?(?:呢|啊)?$"#) {
+            guard let b = ctx.profile.birthday else { return done("告訴我你的生日（例如「我的生日是2000年1月1日」），我就能告訴你是什麼星座、屬什麼。", .tool) }
+            let signs: [(Int, Int, String)] = [(1, 20, "摩羯座"), (2, 19, "水瓶座"), (3, 21, "雙魚座"), (4, 20, "牡羊座"), (5, 21, "金牛座"), (6, 22, "雙子座"),
+                                               (7, 23, "巨蟹座"), (8, 23, "獅子座"), (9, 23, "巨蟹座"), (10, 24, "天秤座"), (11, 23, "天蠍座"), (12, 22, "射手座")]
+            // 每個月在分界日之前是前一個星座
+            let order = ["摩羯座", "水瓶座", "雙魚座", "牡羊座", "金牛座", "雙子座", "巨蟹座", "獅子座", "處女座", "天秤座", "天蠍座", "射手座"]
+            let cut = signs[b.month - 1].1
+            let sign = b.day >= cut ? order[b.month % 12] : order[(b.month - 1) % 12]
+            let lunarYear = LunarCalendar.shared.lunar(b.year, b.month, b.day).year
+            let animals = ["鼠", "牛", "虎", "兔", "龍", "蛇", "馬", "羊", "猴", "雞", "狗", "豬"]
+            let animal = animals[((lunarYear - 4) % 12 + 12) % 12]
+            return done("你的生日是 \(b.year) 年 \(b.month) 月 \(b.day) 日：太陽星座是\(sign)，生肖屬\(animal)（以農曆過年為界）。想看更完整的命盤，可以問我「我的命盤」。", .tool)
+        }
 
         // 2.001) 有標準答案、用算的就知道的（某年生肖、干支、日期加減、地支沖合、按比例分、面積、利息、原子序）：引擎直接算
         if L == .zh, let a = QuickCalc.answer(text) { return done(a, .tool) }

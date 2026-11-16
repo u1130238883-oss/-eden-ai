@@ -75,4 +75,25 @@ final class FollowUpTests: XCTestCase {
         let e = try run(["今天好累", "查量子力學"])
         XCTAssertEqual(e[1].webQuery, "量子力學")
     }
+
+    /// 像 App 一樣：規則和生日會存起來，下一句用得到
+    func testRemembersNameLikesAndSign() throws {
+        let engine = try SimpleQuestionsProbeTests.engine()
+        var ctx = EchoEngine.Context()
+        var history: [ChatTurn] = []
+        func say(_ q: String) -> EchoEngine.Reply {
+            let r = engine.reply(to: q, history: history, context: ctx)
+            if let b = r.rules { ctx.rules = b }
+            if let p = r.profile { ctx.profile = p }
+            history.append(ChatTurn(role: .user, text: q)); history.append(r.turn)
+            return r
+        }
+        _ = say("我叫小明")
+        _ = say("幫我記住我喜歡藍色")
+        XCTAssertTrue(say("你記得我叫什麼嗎").turn.text.contains("小明"))
+        XCTAssertTrue(say("我喜歡什麼顏色").turn.text.contains("藍色"))
+        _ = say("我的生日是1995年3月8日")
+        let s = say("我是什麼星座").turn.text
+        XCTAssertTrue(s.contains("雙魚座") && s.contains("豬"), s)
+    }
 }
