@@ -100,4 +100,27 @@ final class FollowUpTests: XCTestCase {
         let s = say("我是什麼星座").turn.text
         XCTAssertTrue(s.contains("雙魚座") && s.contains("豬"), s)
     }
+
+    /// 多輪對話：答案在剛剛的回答裡、換一個地方、謎語的答案、回答「吃了嗎」、要建議時照前面說的事
+    func testMultiTurnFromContext() throws {
+        let a = try run(["台北到高雄多遠", "搭高鐵要多久", "那台中呢"])
+        XCTAssertTrue(a[1].turn.text.contains("高鐵") && a[1].webQuery == nil, a[1].turn.text)
+        XCTAssertTrue(a[2].turn.text.contains("台中") && a[2].webQuery == nil, a[2].turn.text)
+        let b = try run(["番茄炒蛋怎麼做", "要放糖嗎", "可以加洋蔥嗎"])
+        XCTAssertTrue(b[1].turn.text.contains("糖") && b[1].webQuery == nil, b[1].turn.text)
+        XCTAssertNil(b[2].webQuery, b[2].turn.text)
+        let c = try run(["猜謎語", "答案是什麼", "再一題"])
+        XCTAssertTrue(c[1].turn.text.hasPrefix("答案是"), c[1].turn.text)
+        XCTAssertTrue(c[2].turn.text.contains("謎語") || c[2].turn.text.contains("腦筋急轉彎"), c[2].turn.text)
+        let d = try run(["我剛下班", "還沒"])
+        XCTAssertTrue(d[1].turn.text.contains("吃") && d[1].webQuery == nil, d[1].turn.text)
+        let e = try run(["我想去日本玩", "要帶多少錢", "要簽證嗎"])
+        XCTAssertTrue(e[2].turn.text.contains("日本") && e[2].webQuery == nil, e[2].turn.text)
+        let f = try run(["工作做不完", "主管一直催", "我該怎麼辦"])
+        XCTAssertNil(f[2].webQuery, f[2].turn.text)
+        let g = try run(["天空是什麼顏色", "為什麼"])
+        XCTAssertTrue(g[1].turn.text.contains("散射") && g[1].webQuery == nil, g[1].turn.text)
+        let h = try run(["我考試考砸了", "數學"])
+        XCTAssertTrue(h[1].turn.text.contains("數學") && h[1].webQuery == nil, h[1].turn.text)
+    }
 }

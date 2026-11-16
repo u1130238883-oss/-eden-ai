@@ -70,6 +70,46 @@ public enum Talk {
             default: return "感覺很舒服吧～接下來有什麼打算？"
             }
         }
+        // 「我跟男朋友吵架了」：先接住
+        if m(#"^我(?:跟|和|與)(?:我)?(?:的)?(?:男朋友|女朋友|男友|女友|老公|老婆|另一半|朋友|好朋友|閨蜜|爸媽|爸爸|媽媽|家人|室友|同事|主管|老闆|同學|哥哥|姊姊|姐姐|弟弟|妹妹|我媽|我爸)(?:又|大)?吵架(?:了)?$"#) != nil {
+            lastChatTopic = "吵架"
+            return "吵架真的很難受，心裡一定很不舒服。發生了什麼事？想說的話我都在聽；想和好的話，我也可以陪你想想怎麼開口。"
+        }
+        // 「我考試考砸了」：接住，問是哪一科
+        if m(#"^(?:我)?(?:這次)?(?:的)?(?:考試|期中考|期末考|段考|月考|小考|模擬考|學測|會考)?(?:又)?(?:考砸了|考爛了|考不好|沒考好|考很爛|考得很爛|考得不好|不及格|被當了|考差了|考得很差)$"#) != nil {
+            lastChatTopic = "考試"
+            return "抱抱，考砸的感覺真的很差。是哪一科呢？一次考試不代表你這個人，想說說發生了什麼事嗎？我們也可以一起看看下次怎麼準備。"
+        }
+        // 「想吃拉麵」：接著聊吃的
+        if let g = m(#"^(?:我)?(?:好|很|超|突然|現在|今天)?(?:好|很|超)?想吃(.{1,8}?)(?:耶|喔|啊)?$"#), !g[0].contains("什麼") {
+            lastChatTopic = "吃"
+            if ["東西", "點東西", "飯", "宵夜", "甜的", "辣的", "零食", "點心", "甜點", "好吃的", "早餐", "午餐", "晚餐"].contains(g[0]) {
+                return "肚子餓了嗎？要不要我推薦幾個？跟我說「晚餐吃什麼」或「推薦宵夜」就可以。"
+            }
+            let recipe = Commonsense.howtos.contains { $0.kind == "做法" && $0.names.contains(g[0]) }
+            return "\(g[0])聽起來好好吃！😋 要自己煮還是出去吃？" + (recipe ? "想自己做的話，問我「\(g[0])怎麼做」。" : "")
+        }
+        // 「不想去」「不想上班」
+        if let g = m(#"^(?:我)?(?:好|很|真的|超|有點)?不想(去|上班|上學|起床|出門|工作|去上班|去上學|讀書|念書|唸書)(?:了|啦)?$"#) {
+            let what = ["去", "出門"].contains(g[0]) ? "出門" : g[0]
+            return "不想\(what)的時候真的很難熬，這種心情很正常。先撐過今天就好，結束後給自己一個小獎勵，像是好吃的晚餐或一集喜歡的劇。需要的話，我在這裡陪你。"
+        }
+        // 「好啦我去了」「我出門了」
+        if m(#"^(?:好啦|好吧|好|那)?(?:我)?(?:要)?(?:去|出門|走|出發|去上班|去上學)了(?:喔|啦|掰)?$"#) != nil {
+            return "好，路上小心！加油，忙完再來找我聊～"
+        }
+        // 「主管一直催」「老闆一直盯」
+        if let g = m(#"^(?:我的)?(主管|老闆|上司|老師|客戶|爸媽|媽媽|爸爸)(?:一直|又|都|很愛|老是)(催|盯|唸|念|罵|找麻煩|挑毛病|加工作|丟工作)(?:我)?(?:了)?$"#) {
+            return "被\(g[0])一直\(g[1])真的很有壓力，換作是我也會很煩。可以試試把手上的事列出來、排好先後，跟\(g[0])確認哪件最急；做不完的部分，提早說比最後趕不出來好。你現在最卡的是哪一件？"
+        }
+        // 「牠一直咬我」（剛剛在聊寵物）、「我的貓一直咬我」
+        if m(#"^(?:牠|他|它|我家的貓|我的貓|貓咪|貓|小貓)(?:一直|很愛|常常|會|老是)(?:咬|抓)(?:我|人)(?:的手)?$"#) != nil {
+            return "小貓咬人多半是在玩、在練習狩獵，或是長牙癢癢的。可以這樣做：不要用手逗牠，改用逗貓棒讓牠咬；被咬的時候輕輕「啊」一聲、停止互動、慢慢把手抽開，牠會學到咬人就沒得玩；每天陪牠玩到累，精力消耗了就比較不會亂咬。如果是突然一直咬、還哈氣，可能是不舒服或緊張，可以帶去給獸醫看看。"
+        }
+        // 「做行銷」「我做業務的」：說自己的工作內容
+        if let g = m(#"^(?:我)?(?:是)?(?:在)?做(行銷|業務|設計|工程|會計|行政|客服|餐飲|服務業|研發|人資|財務|美術|網拍|電商|外送|保險|房仲|物流|醫療|教育|科技業|金融業)(?:的|業)?$"#) {
+            return "做\(g[0])！這份工作最有成就感的是什麼時候？忙起來一定也很累，記得照顧好自己。"
+        }
         // 「我今年25歲」：說自己的年紀
         if let g = m(#"^我(?:今年|現在|已經)?([0-9]{1,2})歲(?:了)?$"#), let n = Int(g[0]) {
             switch n {
@@ -374,6 +414,16 @@ public enum Talk {
 
     /// 回答 NineSun 剛剛問的問題（「牠叫什麼名字？」→「叫小白」、「今天煮什麼？」→「咖哩」、「是哪裡、哪個科系？」→「台大」）：
     /// 很短、不是新的問題、也不是要我做事 → 接住對方的回答，不要拿去上網查
+    /// 考試考砸了，接著說是哪一科（「數學」「英文啦」）
+    public static func examSubject(_ raw: String) -> String? {
+        var x = clean(raw)
+        for p in ["是", "就是", "考"] where x.hasPrefix(p) && x.count > p.count { x.removeFirst(p.count); break }
+        guard let g = RuleBook.match(x, #"^(數學|英文|國文|物理|化學|生物|歷史|地理|公民|自然|社會|理化|數理|英聽|作文|日文|會計|經濟學|微積分|統計)(?:科|課)?$"#) else { return nil }
+        let s = g[0]
+        let tip = Commonsense.answer(s + "不好怎麼辦") != nil ? "想要的話，問我「\(s)不好怎麼辦」，我給你具體的方法。" : "想要的話，問我「怎麼準備期末考」，我們一起排讀書計畫。"
+        return "\(s)啊，\(s)真的不容易，這次沒考好不代表你學不會。可以先找出錯最多的是哪一種題目，把那個觀念補起來就會進步很多。" + tip
+    }
+
     public static func replyToMyQuestion(_ raw: String, asked prev: String) -> String? {
         let t = clean(raw)
         guard (1...16).contains(t.count) else { return nil }
@@ -397,6 +447,33 @@ public enum Talk {
         if isDuration, q.contains("多久") || q.contains("幾歲") || pet {
             if pet { return "\(x)，正是最黏人、最可愛的時候～記得定期帶牠打預防針、做健康檢查喔！" }
             return "\(x)！能堅持這麼久真的很不容易，你很棒。"
+        }
+        // 「是哪一科呢？」→「數學」
+        if q.contains("哪一科") || q.contains("哪科"), let a = examSubject(x) { return a }
+        // 「晚餐吃了嗎？」→「還沒」「吃了」
+        if q.range(of: "(吃飯|吃飽|吃了|晚餐|午餐|早餐|宵夜).*嗎", options: .regularExpression) != nil {
+            if t.range(of: "^(還沒|還沒吃|沒有|沒吃|還沒有|沒|不想吃|沒空吃|忘記吃|吃不下)", options: .regularExpression) != nil {
+                return "還沒吃的話記得找點東西吃喔，空著肚子會更累。想吃什麼？跟我說，我可以推薦幾個簡單的。"
+            }
+            if t.range(of: "^(吃了|吃過了|吃飽了|有|有吃|剛吃完|吃完了|吃過|早就吃了)", options: .regularExpression) != nil {
+                return "很好！吃了什麼好吃的？"
+            }
+        }
+        // 「今天過得怎麼樣？」→「還不錯」「很累」
+        if q.contains("過得怎麼樣") || q.contains("還好嗎") || q.contains("過得好嗎") || q.contains("今天怎麼樣") {
+            if t.range(of: "^(很累|好累|超累|累死了|不好|很糟|很爛|爛透了|很差|不太好|很煩|好煩|普通偏累|有點累|累)", options: .regularExpression) != nil {
+                return "辛苦了，聽起來今天不太輕鬆。想說說發生了什麼事嗎？說出來會舒服一點。"
+            }
+            if t.range(of: "^(還好|還不錯|不錯|很好|很棒|超好|蠻好的|挺好的|還可以|普通|很開心|開心|很順利)", options: .regularExpression) != nil {
+                return "那就好！今天有什麼讓你印象深刻的事嗎？"
+            }
+        }
+        // 「睡得好嗎？」
+        if q.contains("睡得好嗎") || q.contains("睡得怎麼樣") {
+            if t.range(of: "^(不好|很差|沒睡好|睡不好|失眠|沒睡|一直醒)", options: .regularExpression) != nil {
+                return "沒睡好真的很累，今天記得找空檔休息一下。想知道怎麼睡得更好，可以問我「睡不著怎麼辦」。"
+            }
+            if t.range(of: "^(很好|還不錯|不錯|還好|睡很飽|睡飽了|很飽)", options: .regularExpression) != nil { return "太好了！睡飽了，今天一定很有精神 ☀️" }
         }
         if q.contains("名字") || q.contains("叫什麼") {
             return pet ? "\(x)，好可愛的名字！🐾 牠平常最喜歡做什麼？" : "\(x)，很好聽的名字！"
@@ -581,9 +658,27 @@ public enum Talk {
     }
 
     /// 追問：笑話「再一個」「不好笑」、選擇題「可是我很怕」、看法「為什麼」
-    public static func followUp(_ raw: String, kind: String) -> String? {
+    public static func followUp(_ raw: String, kind: String, last: String = "", name: String = "") -> String? {
         let t = clean(raw)
         switch kind {
+        case "笑話" where name == "猜謎語" || last.contains("謎語") || last.contains("腦筋急轉彎"):
+            // 謎語：剛剛那題的答案（「答案：水。」）
+            let full = RuleBook.match(last, #"答案：(.+?)。"#)?[0] ?? ""
+            let core = String(full.prefix { $0 != "（" && $0 != "(" })
+            if t.range(of: "^(再|再來|再出|再給我|再說|換|還有|還要|下)(一|一個|個)?(題|道|個|謎語|腦筋急轉彎)?(嗎|吧|啦)?$|^(好|好啊|要|來|來吧|可以|OK|ok|好喔|好呀|再來)$", options: .regularExpression) != nil {
+                return answer("猜謎語")
+            }
+            if !core.isEmpty, t.range(of: "^(答案|謎底|答案呢|答案是什麼|答案是啥|公布答案|說答案|告訴我答案|揭曉|揭曉答案|不知道|我不知道|猜不到|猜不出來|我猜不出來|想不到|想不出來|不會|放棄|我放棄)", options: .regularExpression) != nil {
+                return "答案是：\(full) 😄 要不要再來一題？"
+            }
+            // 猜一個答案（「水」「是硬幣嗎」）
+            if !core.isEmpty, (1...10).contains(t.count) {
+                var g = t
+                for p in ["是不是", "是", "應該是", "我猜是", "我猜", "答案是"] where g.hasPrefix(p) && g.count > p.count { g.removeFirst(p.count); break }
+                for p in ["嗎", "吧", "對不對", "對嗎"] where g.hasSuffix(p) && g.count > p.count { g.removeLast(p.count) }
+                if g == core || (g.count >= 2 && (core.contains(g) || g.contains(core))) { return "答對了！🎉 就是\(core)。你好聰明！要再來一題嗎？" }
+                return "差一點點～答案是：\(full) 😄 要再來一題嗎？"
+            }
         case "笑話":
             if t.range(of: "^(再|再來|再講|再說|多講|多說|還有|還要|換)(一|一個|一則|個|則|點)?(笑話|個|好笑的)?(嗎|啦)?$|^還有嗎$|^還有呢$|^另一個$|^換一個$|^再一次$", options: .regularExpression) != nil {
                 return answer("講個笑話")

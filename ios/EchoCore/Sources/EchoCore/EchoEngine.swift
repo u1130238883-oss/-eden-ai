@@ -142,6 +142,8 @@ public final class EchoEngine {
     /// 本地剛回答的東西（笑話、作者、清單、作品、推薦、選擇題）：追問「再一個」「最大的是哪一個」「結局呢」「為什麼」時接得上
     struct LocalContext { var kind: String; var subject: String = ""; var extra: String = ""; var shown: String = ""; var answer: String = ""; var turn: Int }
     var lastLocal: LocalContext?
+    /// 剛剛聊到想去的地方（「我想去日本玩」）：後面幾句「要簽證嗎」「有什麼好吃的」都是在問那裡
+    var lastTravel: (place: String, turn: Int)?
     /// 上一則回覆有沒有在問使用者（「後來呢？」）：短短的補充才算是在回答
     var lastEchoAsked = false
 
@@ -210,11 +212,33 @@ public final class EchoEngine {
                 r.turn.variant = "talk"
                 lastLocal?.turn = history.count
                 if lc.kind == "mood" { lastLocal?.shown += "\u{1}" + message }
+                // 謎語、笑話：記住最新的一題，追問「答案是什麼」才對得上
+                if lc.kind == "笑話" { lastLocal?.answer = a }
                 return r
             case .rewrite(let t)?:
                 text = t
                 rewritten = true
             case nil: break
+            }
+        }
+        // 「我該怎麼辦」「那怎麼辦」：沒有接上剛剛的話題時，照前面幾句說的事給做法
+        if !rewritten, context.language == .zh,
+           plain.range(of: #"^(那|所以|可是|但是)?(我)?(現在)?(要|該|應該)?(怎麼辦|怎麼做|如何是好|怎麼處理|怎麼解決)(才好)?(呢|啊)?$"#, options: .regularExpression) != nil {
+            let said = history.filter { $0.role == .user }.suffix(4).reversed().map { $0.text }
+            search: for s0 in said {
+                let base = s0.replacingOccurrences(of: #"[啦啊喔耶。！!～~？?]+$"#, with: "", options: .regularExpression)
+                guard base.count >= 2, !base.contains("怎麼辦") else { continue }
+                for ask in [base + "怎麼辦", base.replacingOccurrences(of: #"了$"#, with: "", options: .regularExpression) + "怎麼辦"] where Commonsense.answer(ask, now: context.now) != nil {
+                    text = ask
+                    rewritten = true
+                    break search
+                }
+                if let h = Commonsense.howtoMentioned(base) { text = h + "怎麼辦"; rewritten = true; break }
+            }
+            if !rewritten, !said.isEmpty {
+                var r = Reply(turn: ChatTurn(role: .echo, text: EchoEngine.copingSteps, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+                r.turn.variant = "talk"
+                return r
             }
         }
         // 回答我剛剛問的問題（「牠叫什麼名字？」→「叫小白」）：接住，不拿去上網查
@@ -483,7 +507,7 @@ public final class EchoEngine {
         if L == .zh, let a = Talk.detailed(text) {
             // 「好難」「真的嗎」只是回應，不換掉剛剛在聊的主題
             if ["好難", "真的嗎"].contains(a.name), lastLocal != nil { lastLocal?.turn = history.count }
-            else { lastLocal = LocalContext(kind: a.kind, subject: a.name, turn: history.count) }
+            else { lastLocal = LocalContext(kind: a.kind, subject: a.name, answer: a.text, turn: history.count) }
             var r = done(a.text, .knowledge)
             r.turn.variant = "talk"
             return r
@@ -541,6 +565,11 @@ public final class EchoEngine {
                 // 上一個主角記在 shown：「日本有多大」「台灣呢」「誰比較大」
                 let before = lastLocal?.kind == "fact" && lastLocal?.subject != sub ? (lastLocal?.subject ?? "") : (lastLocal?.kind == "fact" ? lastLocal?.shown ?? "" : "")
                 lastLocal = LocalContext(kind: "fact", subject: sub, extra: text, shown: before, answer: a, turn: history.count)
+            } else {
+                // 沒有單一主角的回答（做法、整句問題）：還是記住剛剛的回答，追問「要放糖嗎」「搭高鐵要多久」可以從裡面找；
+                // 不是做法的話，主題沿用上一題的（「台灣有幾個縣市」→「最大的城市是哪個」→「人口多少」還是在問台灣）
+                let keep = !a.contains("\n1. ") && lastLocal?.kind == "fact" ? (lastLocal?.subject ?? "") : ""
+                lastLocal = LocalContext(kind: "fact", subject: keep, extra: text, answer: a, turn: history.count)
             }
             // 自己答的也算上一題的主題：追問「那這些省都是哪些省」要接得上
             lastWebQuery = EchoEngine.searchQuery(text)
@@ -792,6 +821,7 @@ public final class EchoEngine {
             // 在說自己的事：照內容接話（不拿宮位亂回）
             raw = s
             if !Talk.lastChatTopic.isEmpty { lastLocal = LocalContext(kind: "smalltalk", subject: Talk.lastChatTopic, turn: turns) }
+            if Talk.lastChatTopic.hasPrefix("旅行:") { lastTravel = (String(Talk.lastChatTopic.dropFirst(3)), turns) }
         } else if [.goodNews, .proudEffort, .excitedPlan, .happy].contains(mood), !EchoEngine.isQuestion(text) {
             // 好消息、開心的事：接著問下去（不要接「是發生了什麼事？」或一段宮位的話）
             raw = EchoEngine.celebrate(text)
@@ -873,12 +903,51 @@ public final class EchoEngine {
 
     enum LocalFollow { case answer(String), rewrite(String) }
 
+    static let copingSteps = "我陪你一起想，可以先這樣：\n1. 先照顧好自己：今天好好吃飯、早點睡，累的時候什麼事都會看起來更難\n2. 把讓你難受的事寫下來，分成「我能做點什麼的」和「我控制不了的」\n3. 能做的挑一件最小的先做；控制不了的，先試著放下\n4. 找一個信任的人說說，不要一個人扛\n\n如果願意，跟我多說一點是哪件事最讓你煩，我可以幫你想更具體的做法。"
+
+    /// 追問剛剛回答裡提到的東西（「搭高鐵要多久」「要放糖嗎」「那台鐵呢」）：從剛剛的回答裡找出那一段
+    static func fromPrevious(_ raw: String, answer: String) -> String? {
+        let t = Talk.clean(raw)
+        guard (2...16).contains(t.count), answer.count >= 10 else { return nil }
+        let asks = EchoEngine.isQuestion(raw) || t.hasSuffix("嗎") || t.hasSuffix("呢")
+            || ["要不要", "可不可以", "會不會", "多久", "多少", "幾"].contains(where: { t.contains($0) })
+        guard asks else { return nil }
+        // 問句裡真正在問的東西
+        var core = t
+        for w in ["那麼", "那", "請問", "所以", "大概", "大約", "需要", "要不要", "可不可以", "會不會", "能不能", "可以", "應該", "要", "會", "能", "該",
+                  "多久", "多少", "多長", "幾分鐘", "幾小時", "幾個小時", "幾天", "幾個", "幾", "什麼", "怎麼", "如何", "哪裡", "哪個", "嗎", "呢", "啊", "是",
+                  "有", "的", "搭", "坐", "用", "加", "放", "吃", "我", "你", "一定", "還", "也", "時間", "要花"] {
+            core = core.replacingOccurrences(of: w, with: "")
+        }
+        guard !core.isEmpty, core.count <= 8 else { return nil }
+        // 問數量（多久、多少、幾）：找到的那段要有數字
+        let wantsNumber = ["多久", "多少", "多長", "多遠", "多高", "多大", "幾"].contains(where: { t.contains($0) })
+        let singleOK: Set<String> = ["糖", "鹽", "油", "蛋", "蔥", "蒜", "薑", "酒", "醋", "水", "冰", "奶", "肉", "魚", "蝦", "米", "麵", "湯", "茶", "醬"]
+        let clauses = answer.components(separatedBy: CharacterSet(charactersIn: "。；\n"))
+            .map { $0.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^([0-9]+\.|・|•)\s*"#, with: "", options: .regularExpression) }
+            .filter { $0.count >= 4 }
+        let chars = Array(core)
+        for len in stride(from: min(chars.count, 6), through: 1, by: -1) {
+            // 問的東西大部分都要對得上（「台北人口多少」只對到「台北」不算）
+            guard Double(len) / Double(chars.count) >= 0.75 else { break }
+            for i in 0...(chars.count - len) {
+                let piece = String(chars[i..<(i + len)])
+                if len == 1, !singleOK.contains(piece) { continue }
+                if let c = clauses.first(where: { $0.contains(piece) && (!wantsNumber || $0.contains(where: { $0.isNumber })) }) {
+                    let lead = t.hasPrefix("要") && t.hasSuffix("嗎") ? "要，" : (t.hasPrefix("可以") && t.hasSuffix("嗎") ? "可以，" : "")
+                    return lead + c + (c.hasSuffix("）") || c.hasSuffix("」") ? "" : "。")
+                }
+            }
+        }
+        return nil
+    }
+
     /// 追問本地剛回答的東西
     func localFollowUp(_ message: String, _ lc: LocalContext) -> LocalFollow? {
         let t = Talk.clean(message)
         switch lc.kind {
         case "笑話", "選擇", "自己", "看法":
-            return Talk.followUp(message, kind: lc.kind).map { .answer($0) }
+            return Talk.followUp(message, kind: lc.kind, last: lc.answer, name: lc.subject).map { .answer($0) }
         case "list":
             return Library.listFollowUp(message, list: lc.subject).map { .answer($0) }
         case "author":
@@ -931,7 +1000,8 @@ public final class EchoEngine {
                 if let ex = parts.first(where: { $0.contains("，像") || $0.contains("：") }), let r = ex.range(of: "，像") ?? ex.range(of: "：") {
                     return .answer("舉個例子：" + ex[r.upperBound...] + "。")
                 }
-                return .rewrite(lc.subject + "的例子")
+                if let e = Commonsense.facts.first(where: { $0.name == lc.subject }), let ex = e.attr("例子") { return .answer("舉個例子：" + ex + "。") }
+                return lc.subject.isEmpty ? nil : .rewrite(lc.subject + "的例子")
             }
             // 「為什麼」「為什麼不行」：剛剛的回答裡已經有原因（「不會。企鵝不會飛。企鵝的翅膀演化成…」）→ 把原因說出來
             if t.range(of: #"^(那)?(為什麼|為何|為啥|怎麼說|怎麼會)(不是|不行|不會|不能|會|是|這樣|呢)?$"#, options: .regularExpression) != nil, !lc.answer.isEmpty {
@@ -940,6 +1010,38 @@ public final class EchoEngine {
                 let reasons = parts.dropFirst().filter { !$0.hasPrefix(lc.subject + "不") || $0.count > 12 }.filter { $0 != head && !["不會", "不是", "不可以！", "是的", "會！"].contains($0) }
                 if let why = reasons.first(where: { $0.count >= 8 && !($0.hasPrefix(lc.subject) && $0.count < 14) }) {
                     return .answer("因為\(why)。")
+                }
+                // 主角自己有解釋，關鍵詞出現在剛剛的回答裡（「天空是什麼顏色」→ 藍色 →「為什麼」）
+                if let e = Commonsense.facts.first(where: { $0.name == lc.subject }) {
+                    var best: (Int, String)?
+                    for w in e.whys { for k in w.keys where k.count >= 1 && lc.answer.contains(k) && k.count > (best?.0 ?? 0) { best = (k.count, w.text) } }
+                    if let b = best { return .answer(b.1 + "。") }
+                }
+                // 剛剛的回答裡有「因為…」
+                if let r = lc.answer.range(of: "因為") {
+                    let tail = String(lc.answer[r.lowerBound...].prefix { !"。\n".contains($0) })
+                    if tail.count >= 6 { return .answer(tail + "。") }
+                }
+            }
+            // 「那台中呢」（上一題「台北到高雄多遠」）：把上一題裡同一類的地方換掉
+            let r0 = message.trimmingCharacters(in: .whitespacesAndNewlines).filter { !"？?。！!～~ ".contains($0) }
+            if !lc.extra.isEmpty, let g = RuleBook.match(r0, #"^(?:那|那麼)?(.{2,8}?)(?:呢|的話呢|的話)$"#) {
+                let x = g[0]
+                let placeKinds: Set<String> = ["城市", "國家", "地標"]
+                let places = Commonsense.facts.filter { placeKinds.contains($0.kind) }
+                if let xe = places.first(where: { $0.names.contains(x) }) {
+                    var best: (Range<String.Index>, Int)?
+                    for e in places where e.kind == xe.kind || (e.kind != "國家" && xe.kind != "國家") {
+                        for n in e.names where n.count >= 2 && n != x && !x.contains(n) {
+                            guard let r = lc.extra.range(of: n, options: .backwards) else { continue }
+                            if best == nil || r.lowerBound > best!.0.lowerBound || (r.lowerBound == best!.0.lowerBound && n.count > best!.1) { best = (r, n.count) }
+                        }
+                    }
+                    if let (r, _) = best {
+                        var q = lc.extra
+                        q.replaceSubrange(r, with: x)
+                        if Commonsense.answer(q) != nil { return .rewrite(q) }
+                    }
                 }
             }
             // 「誰比較大」「哪個比較高」：比剛剛問的兩個東西
@@ -950,10 +1052,34 @@ public final class EchoEngine {
             if t.range(of: #"^(還有呢|還有嗎|還有別的嗎|還有其他的嗎|然後呢|就這樣嗎|只有這樣嗎|還有沒有)$"#, options: .regularExpression) != nil {
                 return .answer("我知道的重點大概就是這些了。想知道更多，跟我說「說詳細一點」，我上網幫你找更完整的資料。")
             }
-            // 「人口多少」「說什麼語言」（上一題在問日本）、「那葡萄呢」（上一題「貓可以吃巧克力嗎」）：補上主題
-            if Talk.detailed(message) == nil, let f = Commonsense.followUp(message, subject: lc.subject, previous: lc.extra) {
-                return .rewrite(f.text)
+            // 「我想學日文」→「有推薦的app嗎」：學什麼的推薦
+            if let g = RuleBook.match(t, #"(?:推薦|有什麼|有沒有|哪些|什麼)(?:的|好用的|好的)?(app|App|APP|應用程式|書|教材|課程|網站|頻道|YouTube|youtube)"#) {
+                let base = lc.subject.hasPrefix("學") ? lc.subject : (Commonsense.howtoMentioned(lc.extra) ?? "")
+                if base.hasPrefix("學") {
+                    let thing = ["app", "App", "APP", "應用程式"].contains(g[0]) ? "app" : g[0]
+                    let q = base + "推薦" + thing
+                    if Commonsense.answer(q) != nil { return .rewrite(q) }
+                }
             }
+            // 剛剛聊到要去哪裡玩（「我想去日本玩」→「要帶多少錢」→「要簽證嗎」）：補上那個地方
+            if let tr = lastTravel, lc.turn - tr.turn <= 6, t.count <= 12,
+               t.range(of: "^(那裡|那邊|當地|那)?(要|需要|有|會|可以|用|說|時差|天氣|物價|治安|小費|插座|插頭|電壓|安全|什麼|哪裡|好玩|好吃)", options: .regularExpression) != nil,
+               t.range(of: "簽證|好玩|景點|貨幣|用什麼錢|語言|說什麼話|時差|插座|插頭|電壓|好吃|美食|小費|天氣|治安|安全嗎|物價", options: .regularExpression) != nil,
+               !Commonsense.facts.contains(where: { $0.kind == "國家" && $0.names.contains(where: { $0.count >= 2 && t.contains($0) }) }) {
+                var q = t
+                for p in ["那裡", "那邊", "當地", "那"] where q.hasPrefix(p) { q.removeFirst(p.count); break }
+                return .rewrite(tr.place + q)
+            }
+            // 「人口多少」「說什麼語言」（上一題在問日本）、「那葡萄呢」（上一題「貓可以吃巧克力嗎」）：補上主題
+            let f = Talk.detailed(message) == nil ? Commonsense.followUp(message, subject: lc.subject, previous: lc.extra) : nil
+            if let f, f.local { return .rewrite(f.text) }
+            // 「搭高鐵要多久」「要放糖嗎」「那台鐵呢」：剛剛的回答裡就有
+            if let a = EchoEngine.fromPrevious(message, answer: lc.answer) { return .answer(a) }
+            // 食譜：「可以加洋蔥嗎」——剛剛的做法裡沒有，也可以照自己的口味加
+            if lc.answer.contains("的步驟"), let g = RuleBook.match(t, #"^(?:那)?(?:可以|能|要不要|可不可以|能不能)(?:加|放|用|加點|放點)(.{1,6}?)(?:嗎|呢)?$"#) {
+                return .answer("可以呀！家常菜沒有標準答案，喜歡\(g[0])就加。比較硬、比較耐煮的食材先下鍋炒軟，再照原本的步驟做就好。")
+            }
+            if let f { return .rewrite(f.text) }
         case "mood":
             // 「要怎麼辦」：照剛剛說的事給做法（「我失眠了」→ 失眠怎麼辦）
             if t.range(of: #"^(那|所以)?(我)?(要|該|應該)?(怎麼辦|怎麼做|如何是好|怎麼處理|怎麼解決|有什麼方法|有什麼辦法|有什麼建議)(呢|啊)?$"#, options: .regularExpression) != nil {
@@ -965,13 +1091,15 @@ public final class EchoEngine {
                     }
                 }
                 if let h = Commonsense.howtoMentioned(said.joined(separator: "，")) { return .rewrite(h + "怎麼辦") }
-                return .answer("我陪你一起想，可以先這樣：\n1. 先照顧好自己：今天好好吃飯、早點睡，累的時候什麼事都會看起來更難\n2. 把讓你難受的事寫下來，分成「我能做點什麼的」和「我控制不了的」\n3. 能做的挑一件最小的先做；控制不了的，先試著放下\n4. 找一個信任的人說說，不要一個人扛\n\n如果願意，跟我多說一點是哪件事最讓你煩，我可以幫你想更具體的做法。")
+                return .answer(EchoEngine.copingSteps)
             }
             // 「因為報告寫錯」：在說原因，接住它
             if let g = RuleBook.match(t, #"^(?:因為|就是|原因是|主要是)(.{2,30})$"#), !EchoEngine.isQuestion(message) {
                 let why = g[0].replacingOccurrences(of: "我", with: "你")
                 return .answer("原來是\(why)。會這麼在意，代表你很認真看待這件事，不是你不夠好。想聽聽我的建議，還是先讓我陪你說說？")
             }
+            // 剛剛說考試考砸了，接著說科目（「數學」）
+            if lc.subject.contains("考") || lc.extra.contains("考"), let a = Talk.examSubject(t) { return .answer(a) }
             // 補充細節（「主管很兇」「他昨天罵我」「數學」）：接住、換句話說、請對方多說——不要每句都一樣
             if lastEchoAsked, (1...12).contains(t.count), !EchoEngine.isQuestion(message), Talk.chat(message) == nil, Talk.detailed(message) == nil,
                !t.contains("你"),
