@@ -127,6 +127,13 @@ public enum Commonsense {
 
     public static func answer(_ raw: String, now: Date = Date()) -> String? {
         var t = Everyday.clean(raw)
+        // 「一光年有多遠」「一公斤是多少」：數量詞「一」後面接名字，先拿掉（不然名字前面接了字會被當成另一個詞）
+        if t.hasPrefix("一"), facts.contains(where: { e in e.names.contains { $0.count >= 2 && t.dropFirst().hasPrefix($0) } }) { t.removeFirst() }
+        // 「圓周率是多少」「光速是多少」：整句就是「名字＋是多少」→ 用簡介回答
+        if let g = RuleBook.match(t, #"^(.{2,8}?)(?:是|有|大概是|大約是|等於)?多少$"#), !g[0].hasSuffix("速"), let e = facts.first(where: { $0.names.contains(g[0]) }),
+           e.attrs.allSatisfy({ !t.contains($0.key) || $0.key.count < 2 }), ["科學", "天體"].contains(e.kind), let d = define(e, now: now) {
+            return d
+        }
         // 「今年過年是幾號」「明年的中秋節」：時間詞後面接節日，先拿掉時間詞（不然「年過年」會被當成另一個詞）
         if let r = t.range(of: #"^(今年|明年|這次|下次|下一次)的?"#, options: .regularExpression),
            festivalNamed(String(t[r.upperBound...])) != nil || facts.contains(where: { $0.kind == "節日" && $0.names.contains { t[r.upperBound...].hasPrefix($0) } }) {
@@ -680,7 +687,7 @@ public enum Commonsense {
         case "壞處": s = "要注意的地方：\(v)。"
         default:
             let head = String(v.prefix { !"：，；（".contains($0) })
-            if v.first?.isNumber == true, head.count <= 8, !["距離", "溫度", "沸點", "冰點", "速度", "年齡", "大小", "密度", "時間", "人口", "面積", "高度", "長度"].contains(key) {
+            if v.first?.isNumber == true, head.count <= 8, !["距離", "溫度", "沸點", "冰點", "速度", "年齡", "大小", "密度", "時間", "人口", "面積", "高度", "長度", "內角和"].contains(key) {
                 s = "\(n)有 " + (head.contains(key) ? v : head + key + String(v.dropFirst(head.count))) + "。"
             } else if v.first?.isNumber == true {
                 s = "\(n)的\(key)是 \(v)。"

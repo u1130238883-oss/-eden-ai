@@ -15,7 +15,17 @@ public enum Everyday {
         if let a = countdown(t, now) { return a }
         if let a = convert(t) { return a }
         if let a = arithmetic(t) { return a }
+        if let a = seriesSum(t) { return a }
         return nil
+    }
+
+    /// 「1到100加起來是多少」「從1加到100」：等差數列的和（高斯的方法）
+    static func seriesSum(_ t: String) -> String? {
+        guard let g = RuleBook.match(t, #"^(?:從)?(\d{1,7})(?:到|加到|一直加到|~|-)(\d{1,7})(?:的)?(?:全部|所有的數|所有數字|每個數)?(?:加起來|相加|的總和|總和|的和|和)?(?:是|等於)?(?:多少|幾)?$"#),
+              let a = Int(g[0]), let b = Int(g[1]), b > a, t.contains("加") || t.contains("和") else { return nil }
+        let n = b - a + 1
+        let sum = (a + b) * n / 2
+        return "\(a) 加到 \(b) 等於 \(sum)。\n算法（高斯的方法）：頭尾相加 \(a) + \(b) = \(a + b)，一共有 \(n) 個數，所以是 \(a + b) × \(n) ÷ 2 = \(sum)。"
     }
 
     /// 去掉客套話、標點、語氣詞
