@@ -922,6 +922,17 @@ public final class EchoEngine {
             }
             if t.range(of: "不玩|結束|算了|不想玩|換別的", options: .regularExpression) != nil { lastLocal = nil; return .answer("好，不玩了～你很厲害！想再玩隨時說「成語接龍」。") }
         case "fact":
+            // 「舉個例子」：剛剛的回答裡有「例如…」「像…」就拿出來
+            if t.range(of: #"^(可以|能)?(舉個?|舉一個|給我一個|有沒有)(例子|例)(嗎|呢)?$|^(例子呢|比如說呢|比如呢|像是什麼)$"#, options: .regularExpression) != nil, !lc.answer.isEmpty {
+                let parts = lc.answer.components(separatedBy: CharacterSet(charactersIn: "。；\n")).map { $0.trimmingCharacters(in: .whitespaces) }
+                if let ex = parts.first(where: { $0.contains("例如") || $0.hasPrefix("像") || $0.contains("例句") || $0.contains("比如") }) {
+                    return .answer("舉個例子：" + ex.replacingOccurrences(of: #"^.*?(例如|比如)[，：]?"#, with: "", options: .regularExpression) + "。")
+                }
+                if let ex = parts.first(where: { $0.contains("，像") || $0.contains("：") }), let r = ex.range(of: "，像") ?? ex.range(of: "：") {
+                    return .answer("舉個例子：" + ex[r.upperBound...] + "。")
+                }
+                return .rewrite(lc.subject + "的例子")
+            }
             // 「為什麼」「為什麼不行」：剛剛的回答裡已經有原因（「不會。企鵝不會飛。企鵝的翅膀演化成…」）→ 把原因說出來
             if t.range(of: #"^(那)?(為什麼|為何|為啥|怎麼說|怎麼會)(不是|不行|不會|不能|會|是|這樣|呢)?$"#, options: .regularExpression) != nil, !lc.answer.isEmpty {
                 let parts = lc.answer.components(separatedBy: CharacterSet(charactersIn: "。\n")).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
