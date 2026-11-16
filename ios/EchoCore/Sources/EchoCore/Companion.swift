@@ -182,6 +182,11 @@ public enum Companion {
         }
 
         // 寒暄
+        // 「晚安」「good night」是要去睡了，不是打招呼（不能回「午安」）
+        let night = ["晚安", "good night", "goodnight", "night night", "buenas noches", "buonanotte"]
+        if short, night.contains(where: { text.lowercased().trimmingCharacters(in: .punctuationCharacters.union(.whitespaces)) == $0 }) {
+            return R.t("晚安！好好休息，明天見 🌙", "Good night! Sleep well — see you tomorrow 🌙", "¡Buenas noches! Que descanses, hasta mañana 🌙", "Buonanotte! Riposa bene, a domani 🌙")
+        }
         if short && hasF(text, greet[idx], L, exact: true) {
             let hour = Calendar(identifier: .gregorian).component(.hour, from: now)
             let slot = hour < 5 ? 0 : hour < 11 ? 1 : hour < 14 ? 2 : hour < 18 ? 3 : 4
