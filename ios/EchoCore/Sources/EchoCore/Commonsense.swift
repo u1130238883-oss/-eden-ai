@@ -174,6 +174,11 @@ public enum Commonsense {
         if let a = compareNumbers(t) { return a }
         if let a = dynasty(t) { return a }
         // 「我想減肥」「我要開始學英文」：說想做一件事 → 給做法
+        // 「我想做番茄炒蛋」「我要煮咖哩」：給做法
+        if let g = RuleBook.match(t, #"^我(?:想|要|想要|打算)(?:學)?(?:做|煮|炒|烤)(.{2,8}?)(?:看看|吃)?$"#),
+           let e = howtos.first(where: { $0.kind == "做法" && $0.names.contains(g[0]) }), let a = howto(e.name + "怎麼做") {
+            return "好啊，一起來做！" + a
+        }
         if let g = RuleBook.match(t, #"^我(?:想|要|想要|打算|決定|準備)(?:開始|好好|認真)?(.{2,8}?)(?:了)?$"#),
            let e = howtos.first(where: { $0.kind != "做法" && $0.names.contains(g[0]) }), let a = howto("怎麼" + e.name) ?? howto(e.name + "怎麼做") {
             return "好啊，我陪你！" + a

@@ -294,9 +294,9 @@ public final class EchoEngine {
 
     /// 口語的問句詞換成一般說法：「日本首都是啥」「蝦米是黑洞」「咋辦」
     static func normalizeSlang(_ m: String) -> String {
-        guard m.range(of: "啥|蝦米|三小|咋|甚麼|神馬|什么", options: .regularExpression) != nil else { return m }
+        guard m.range(of: "啥|蝦米|三小|咋|甚麼|神馬|什么|到底|怎麼樣才能|怎樣才能|要怎麼樣|是什麼東西", options: .regularExpression) != nil else { return m }
         var t = m
-        for (a, b) in [("蝦米", "什麼"), ("三小", "什麼"), ("神馬", "什麼"), ("甚麼", "什麼"), ("什么", "什麼"), ("咋辦", "怎麼辦"), ("咋麼", "怎麼"), ("咋", "怎麼"), ("為啥", "為什麼"), ("幹啥", "做什麼"), ("啥", "什麼")] {
+        for (a, b) in [("到底", ""), ("要怎麼樣才能", "要怎麼"), ("怎麼樣才能", "怎麼"), ("怎樣才能", "怎麼"), ("要怎麼樣", "要怎麼"), ("是什麼東西", "是什麼"),("蝦米", "什麼"), ("三小", "什麼"), ("神馬", "什麼"), ("甚麼", "什麼"), ("什么", "什麼"), ("咋辦", "怎麼辦"), ("咋麼", "怎麼"), ("咋", "怎麼"), ("為啥", "為什麼"), ("幹啥", "做什麼"), ("啥", "什麼")] {
             t = t.replacingOccurrences(of: a, with: b)
         }
         return t
@@ -795,7 +795,7 @@ public final class EchoEngine {
             var r = done(Loc.s("webAsk", L), .tool, palace)
             r.webQuery = EchoEngine.searchQuery(text)
             return r
-        } else if L == .zh, text.hasPrefix("我"), !EchoEngine.isQuestion(text), let a = Commonsense.answer(text + "怎麼辦", now: ctx.now),
+        } else if L == .zh, text.hasPrefix("我"), !text.hasPrefix("我想"), !text.hasPrefix("我要"), !EchoEngine.isQuestion(text), let a = Commonsense.answer(text + "怎麼辦", now: ctx.now),
                   a.contains("1.") {
             // 說了一個生活上的麻煩（「我養的貓不吃飯」）：直接給做法
             raw = "聽起來有點讓人擔心。" + a
