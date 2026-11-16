@@ -160,6 +160,19 @@ public enum Library {
     // MARK: 清單
 
     static func list(_ t: String) -> String? {
+        // 「非洲有幾個國家」「歐洲一共有多少國家」「聯合國有多少個會員國」
+        if let g = RuleBook.match(t, #"^(.{1,8}?)(?:總共|一共|共|大概|大約)?有(?:幾個|多少個|多少)(國家|會員國|國)?$"#) {
+            let base = g[0]
+            for n in [base + "國家", base + "的國家", base + "的會員國", base + "會員國", base] {
+                if let l = lists.first(where: { $0.names.contains(n) }), let c = l.attr("數量") {
+                    lastListName = l.name
+                    var s = "\(base)\(c.hasPrefix("大約") ? "" : "一共有 ")\(c)\(g[1].isEmpty ? "" : (g[1] == "國" ? "國家" : g[1]))。"
+                    if let items = l.attr("項目"), items.count <= 120 { s += "\n\(items)。" }
+                    if let x = l.attr("說明") { s += "\n\(x)。" }
+                    return s
+                }
+            }
+        }
         let pats = [#"^(.{2,16}?)(?:有|是|包括|包含|分別是|指的是|指)(?:哪些|哪幾個|哪幾種|哪幾位|哪幾項|哪幾|什麼|那些)$"#,
                     #"^(.{2,16}?)(?:有|是)(?:哪些|哪幾個|哪幾)(?:國家|行星|東西|作品|書|人|顏色|呢)?$"#,
                     #"^(?:什麼是|哪些是)(.{2,16})$"#,
