@@ -40,4 +40,25 @@ final class FollowUpTests: XCTestCase {
         XCTAssertFalse(a[1].turn.text.contains("日本"), a[1].turn.text)
         XCTAssertNil(a[2].webQuery)
     }
+
+    func testAnswersToMyQuestions() throws {
+        let a = try run(["我養了一隻狗", "叫小白", "兩歲了"])
+        XCTAssertTrue(a[1].turn.text.contains("小白") && a[1].webQuery == nil, a[1].turn.text)
+        XCTAssertNil(a[2].webQuery, a[2].turn.text)
+        let b = try run(["我考上研究所了", "台大", "準備了一年"])
+        XCTAssertTrue(b[1].turn.text.contains("台大") && b[1].webQuery == nil, b[1].turn.text)
+        XCTAssertNil(b[2].webQuery, b[2].turn.text)
+        let c = try run(["我在煮飯", "咖哩"])
+        XCTAssertTrue(c[1].turn.text.contains("咖哩") && c[1].webQuery == nil, c[1].turn.text)
+        // 不是在回答：照一般問題處理
+        let d = try run(["我在煮飯", "台灣最高的山是哪座"])
+        XCTAssertTrue(d[1].turn.text.contains("玉山"), d[1].turn.text)
+    }
+
+    func testMoodThenAdvice() throws {
+        let a = try run(["我失眠了", "要怎麼辦"])
+        XCTAssertTrue(a[1].turn.text.contains("手機") || a[1].turn.text.contains("起床"), a[1].turn.text)
+        let b = try run(["我最近在學日文", "好難", "有什麼方法"])
+        XCTAssertTrue(b[2].turn.text.contains("五十音"), b[2].turn.text)
+    }
 }

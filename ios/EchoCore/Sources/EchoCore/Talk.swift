@@ -177,6 +177,7 @@ public enum Talk {
             return "去\(x)！是去玩還是辦事？" + (tip.isEmpty ? "祝你一路順利～" : tip)
         }
         if let g = m(#"^我?(?:最近|現在|正)?在學(.{1,8})$"#) {
+            lastChatTopic = "學:" + g[0]
             return "學\(g[0])很棒！學多久了？卡住的地方可以問我，我幫你一起想辦法。"
         }
         if let g = m(#"^我?(?:現在|正|還)?在(家|公司|學校|外面|路上|車上|捷運上|公車上|辦公室|圖書館|咖啡廳|醫院|機場)$"#) {
@@ -217,6 +218,9 @@ public enum Talk {
         if let g = m(#"^我?(?:昨天|昨晚|今天|又|一直)?熬夜(打遊戲|玩遊戲|追劇|看劇|讀書|唸書|趕報告|工作|加班|滑手機)?(?:了)?$"#) {
             let what = g[0].isEmpty ? "" : "\(g[0])到很晚，"
             return "\(what)今天一定很睏吧！記得找時間補個午覺，今晚早點睡，身體會謝謝你的。"
+        }
+        if m(#"^我?(?:明天|明早|明天早上)(?:還|又)?(?:要|得)(?:很)?(早起|上班|上課|早點起床|五點起床|六點起床|七點起床)$"#) != nil {
+            return "那今晚早點睡吧！睡前放下手機，明天才有精神。晚安 🌙"
         }
         if m(#"^(?:我)?(?:要|準備|快要|剛|剛剛|最近)?搬(?:新)?家(?:了)?$"#) != nil {
             return "搬家很累但也很期待吧！搬去哪裡？需要的話我可以幫你列搬家要準備的事。"
@@ -270,6 +274,65 @@ public enum Talk {
         }
         if positive { return "太好了！聽你這樣說我也很開心。" }
         if negative { return "嗯嗯，辛苦了。想多說一點的話，我在聽。" }
+        return nil
+    }
+
+    /// 回答 NineSun 剛剛問的問題（「牠叫什麼名字？」→「叫小白」、「今天煮什麼？」→「咖哩」、「是哪裡、哪個科系？」→「台大」）：
+    /// 很短、不是新的問題、也不是要我做事 → 接住對方的回答，不要拿去上網查
+    public static func replyToMyQuestion(_ raw: String, asked prev: String) -> String? {
+        let t = clean(raw)
+        guard (1...16).contains(t.count) else { return nil }
+        // 剛剛問的所有問句（「是哪裡、哪個科系？準備了多久？」兩個都算）
+        var qs: [String] = []
+        var cur = ""
+        for ch in prev {
+            if "。！!\n".contains(ch) { cur = "" ; continue }
+            cur.append(ch)
+            if ch == "？" || ch == "?" { qs.append(cur); cur = "" }
+        }
+        guard !qs.isEmpty else { return nil }
+        let q = qs.joined()
+        let isDuration = t.range(of: #"([0-9一二兩三四五六七八九十半幾]+)(年|個月|月|天|週|禮拜|星期|小時|歲)"#, options: .regularExpression) != nil
+        let request = ["什麼", "怎麼", "為什麼", "哪", "誰", "幾點", "多少", "嗎", "如何", "推薦", "幫我", "告訴我", "教我", "查", "給我", "寫", "算", "翻譯",
+                       "運勢", "命盤", "八字", "紫微", "星座", "？", "?", "你"]
+        if request.contains(where: { raw.contains($0) }) { return nil }
+        var x = t
+        for p in ["牠叫", "他叫", "她叫", "名字叫", "叫做", "叫", "是在", "是", "在", "就是", "我們"] where x.hasPrefix(p) && x.count > p.count { x.removeFirst(p.count); break }
+        let pet = prev.contains("🐾") || prev.contains("牠")
+        if isDuration, q.contains("多久") || q.contains("幾歲") || pet {
+            if pet { return "\(x)，正是最黏人、最可愛的時候～記得定期帶牠打預防針、做健康檢查喔！" }
+            return "\(x)！能堅持這麼久真的很不容易，你很棒。"
+        }
+        if q.contains("名字") || q.contains("叫什麼") {
+            return pet ? "\(x)，好可愛的名字！🐾 牠平常最喜歡做什麼？" : "\(x)，很好聽的名字！"
+        }
+        if q.contains("養多久") || (pet && q.contains("幾歲")) {
+            return "\(x)，正是最黏人、最可愛的時候～記得定期帶牠打預防針、做健康檢查喔！"
+        }
+        if q.contains("煮什麼") || q.contains("吃了什麼") || q.contains("吃什麼好吃") || q.contains("點了什麼") {
+            if Commonsense.howtos.contains(where: { $0.kind == "做法" && $0.names.contains(x) }) { return "\(x)！好吃又下飯😋 需要做法的話跟我說「\(x)怎麼做」。" }
+            return "\(x)！聽起來好好吃😋"
+        }
+        if q.contains("科系") || q.contains("哪間") || q.contains("哪個學校") || q.contains("哪裡、") {
+            return "\(x)耶，好厲害！" + (q.contains("多久") ? "準備了多久呢？" : "新的開始一定很期待吧，有什麼想先做的事嗎？")
+        }
+        if q.contains("準備了多久") || q.contains("學多久") || q.contains("多久了") {
+            return "\(x)！能堅持這麼久真的很不容易，你很棒。"
+        }
+        if q.contains("在講什麼") || q.contains("心得") {
+            return "聽起來很有意思！你最喜歡哪一段？"
+        }
+        if q.contains("在哪裡吃") || q.contains("在哪裡買") {
+            return "\(x)！下次經過也想去看看（用你的手機鏡頭 😄）。"
+        }
+        if q.contains("要去哪") || q.contains("去哪裡") || q.contains("第一次去嗎") || q.contains("是去玩還是辦事") {
+            if let a = Library.detailed(x + "有什麼好玩的") ?? Library.detailed(x + "的景點") { return "去\(x)很棒！\n" + a.text }
+            if Commonsense.facts.contains(where: { $0.names.contains(x) }), let d = Commonsense.answer(x + "是什麼") { return "去\(x)很棒！" + d + "\n玩得開心，回來再跟我分享～" }
+            if x.count <= 6, x.range(of: #"^[\p{Han}A-Za-z]+$"#, options: .regularExpression) != nil {
+                return "\(x)！聽起來很棒～想知道那邊有什麼好玩、好吃的，可以問我「\(x)有什麼好玩的」。玩得開心！"
+            }
+            return nil
+        }
         return nil
     }
 
