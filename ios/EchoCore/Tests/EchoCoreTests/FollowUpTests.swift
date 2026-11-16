@@ -61,4 +61,18 @@ final class FollowUpTests: XCTestCase {
         let b = try run(["我最近在學日文", "好難", "有什麼方法"])
         XCTAssertTrue(b[2].turn.text.contains("五十音"), b[2].turn.text)
     }
+
+    func testComparisonsTravelAndMood() throws {
+        let a = try run(["台北101有多高", "比東京晴空塔高嗎"])
+        XCTAssertTrue(a[1].turn.text.contains("634") && a[1].turn.text.contains("東京晴空塔比較高"), a[1].turn.text)
+        let b = try run(["我想去日本玩", "要帶多少錢"])
+        XCTAssertTrue(b[1].turn.text.contains("現金") || b[1].turn.text.contains("日圓"), b[1].turn.text)
+        let c = try run(["我今天考試考砸了", "怎麼辦"])
+        XCTAssertTrue(c[1].turn.text.contains("考試考不好"), c[1].turn.text)
+        // 新的問題不能被接到上一題（「埃菲爾鐵塔高度多少」不是在問台北101）
+        let d = try run(["台北101有多高", "埃菲爾鐵塔高度多少"])
+        XCTAssertFalse(d[1].turn.text.contains("508"), d[1].turn.text)
+        let e = try run(["今天好累", "查量子力學"])
+        XCTAssertEqual(e[1].webQuery, "量子力學")
+    }
 }
