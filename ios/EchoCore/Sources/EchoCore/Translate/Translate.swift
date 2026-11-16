@@ -385,6 +385,10 @@ public enum Translate {
             guard target != (last.source ?? detect(last.text)) else { return nil }
             return Request(text: last.text, source: last.source, target: target)
         }
+        // 「那香蕉呢」：同一種語言，換一個詞
+        if let m = match(q, #"^(?:那|那麼)(.{1,12}?)(?:呢|的呢|怎麼說|怎麼說呢)[？?。！!]*$"#), code(m[1]) == nil, !m[1].isEmpty {
+            return Request(text: m[1], source: nil, target: last.target)
+        }
         return nil
     }
 

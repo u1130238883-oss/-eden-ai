@@ -206,6 +206,56 @@ public final class EchoEngine {
         var rewritten = false
         // 「說簡單一點」：把上一則回答濃縮成一兩句；「說詳細一點」：上網把上一題查得更完整（命盤解讀有自己的「再多說一點」）
         let plain = Talk.clean(message)
+        // 「感情呢」「工作方面呢」（剛剛在看運勢）：同一段時間換一個面向
+        if context.language == .zh,
+           let g = RuleBook.match(plain, #"^(?:那|那麼)?(感情|愛情|桃花|戀愛|工作|事業|財運|錢|財|健康|身體|學業|考試|讀書|人際|家庭)(?:方面|運|運勢)?(?:呢|如何|怎麼樣|好嗎|會怎樣)?$"#) {
+            let users = Array(history.enumerated().filter { $0.element.role == .user })
+            // 前幾句裡、回答是命盤解讀的那一句
+            if let hit = users.suffix(4).last(where: { u in u.offset + 1 < history.count && [.reader, .grounded].contains(history[u.offset + 1].source) }) {
+                let prev = hit.element.text
+                let times = ["今天", "明天", "後天", "這週", "這個禮拜", "下週", "這個月", "下個月", "今年", "明年"]
+                let earlier = users.suffix(4).reversed().map { $0.element.text }
+                let time = times.first(where: { prev.contains($0) }) ?? earlier.compactMap { e in times.first(where: { e.contains($0) }) }.first ?? "今年"
+                let aspect = ["愛情": "感情", "桃花": "感情", "戀愛": "感情", "事業": "工作", "錢": "財運", "財": "財運", "身體": "健康", "考試": "學業", "讀書": "學業"][g[0]] ?? g[0]
+                text = time + aspect + (aspect == "財運" ? "如何" : "運勢")
+                rewritten = true
+            }
+        }
+        // 「再乘以3」「那除以2呢」：接著剛剛算出來的數字算
+        if context.language == .zh, let prevEcho = history.last(where: { $0.role == .echo })?.text,
+           let pv = RuleBook.match(prevEcho, #"等於\s*(-?[0-9][0-9,]*(?:\.[0-9]+)?)"#).flatMap({ Double($0[0].replacingOccurrences(of: ",", with: "")) }),
+           let g = RuleBook.match(plain, #"^(?:那|再|然後)?(?:再)?(加上|加|減掉|減去|減|乘以|乘上|乘|除以|除)\s*(-?[0-9]+(?:\.[0-9]+)?)(?:呢|是多少|等於多少|會是多少)?$"#),
+           let y = Double(g[1]) {
+            let op = g[0]
+            var v = pv, sym = ""
+            switch op {
+            case "加上", "加": v = pv + y; sym = "+"
+            case "減掉", "減去", "減": v = pv - y; sym = "−"
+            case "乘以", "乘上", "乘": v = pv * y; sym = "×"
+            default: sym = "÷"; v = y == 0 ? .nan : pv / y
+            }
+            let txt = v.isNaN ? "不能除以 0 喔。" : "\(QuickCalc.num(pv)) \(sym) \(QuickCalc.num(y)) 等於 \(QuickCalc.num(v))。"
+            var r = Reply(turn: ChatTurn(role: .echo, text: txt, source: .tool), profile: nil, rules: nil, webQuery: nil)
+            r.turn.variant = "talk"
+            return r
+        }
+        // 「下週五是幾號」「這週六幾號」
+        if context.language == .zh, let g = RuleBook.match(plain, #"^(這|這個|下|下個|下下|下下個)(週|周|禮拜|星期)([一二三四五六日天])(?:是)?(?:幾號|幾月幾號|幾月幾日|哪一天|哪天)$"#) {
+            let cal = Calendar(identifier: .gregorian)
+            let wd = ["一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "日": 7, "天": 7][g[2]] ?? 1
+            let today = cal.component(.weekday, from: context.now)            // 1 = 星期日
+            let mondayOffset = (today + 5) % 7                                  // 今天離這週一幾天
+            let weeks = g[0].hasPrefix("下下") ? 2 : (g[0].hasPrefix("下") ? 1 : 0)
+            if let d = cal.date(byAdding: .day, value: -mondayOffset + 7 * weeks + (wd - 1), to: context.now) {
+                let c = cal.dateComponents([.year, .month, .day], from: d)
+                let names = ["日", "一", "二", "三", "四", "五", "六"]
+                let w = names[cal.component(.weekday, from: d) - 1]
+                let txt = "\(g[0])\(g[1])\(g[2])是 \(c.month!) 月 \(c.day!) 日（星期\(w)）。"
+                var r = Reply(turn: ChatTurn(role: .echo, text: txt, source: .tool), profile: nil, rules: nil, webQuery: nil)
+                r.turn.variant = "talk"
+                return r
+            }
+        }
         // 「再說一次」「你剛剛說什麼」：把上一則再說一次
         if plain.range(of: #"^(再說一次|再講一次|再說一遍|再講一遍|你剛剛說什麼|剛剛說什麼|重複一次|再重複一次|沒聽清楚|剛剛那個再說一次|可以再說一次嗎)$"#, options: .regularExpression) != nil,
            let prevEcho = history.last(where: { $0.role == .echo })?.text, !prevEcho.hasPrefix("我剛剛說的是") {
@@ -534,7 +584,7 @@ public final class EchoEngine {
         // 2.0005) 記得使用者教過的事（「你記得我叫什麼嗎」「我喜歡什麼顏色」）
         if L == .zh, let a = ctx.rules.recall(text) { return done(a, .rule) }
         // 2.0006) 「我是什麼星座」「我屬什麼」：用存好的生日算
-        if L == .zh, let g = RuleBook.match(text.filter { !"？?。！!，, ".contains($0) }, #"^我(?:是)?(?:什麼|哪個)(星座|生肖)(?:呢|啊)?$|^我屬什麼(?:生肖)?(?:呢|啊)?$"#) {
+        if L == .zh, let g = RuleBook.match(text.filter { !"？?。！!，, ".contains($0) }, #"^(?:那|那麼)?我(?:是)?(?:什麼|哪個)(星座|生肖)(?:呢|啊)?$|^(?:那|那麼)?我屬什麼(?:生肖)?(?:呢|啊)?$"#) {
             guard let b = ctx.profile.birthday else { return done("告訴我你的生日（例如「我的生日是2000年1月1日」），我就能告訴你是什麼星座、屬什麼。", .tool) }
             let signs: [(Int, Int, String)] = [(1, 20, "摩羯座"), (2, 19, "水瓶座"), (3, 21, "雙魚座"), (4, 20, "牡羊座"), (5, 21, "金牛座"), (6, 22, "雙子座"),
                                                (7, 23, "巨蟹座"), (8, 23, "獅子座"), (9, 23, "巨蟹座"), (10, 24, "天秤座"), (11, 23, "天蠍座"), (12, 22, "射手座")]
@@ -1053,6 +1103,11 @@ public final class EchoEngine {
     func localFollowUp(_ message: String, _ lc: LocalContext) -> LocalFollow? {
         let t = Talk.clean(message)
         switch lc.kind {
+        case "寫作":
+            // 「寫給媽媽的」：剛剛寫了生日祝福，換成寫給某個人
+            if let g = RuleBook.match(t, #"^(?:那|幫我)?(?:寫|改成|換成)?(?:給|送給)(.{1,6}?)(?:的)?(?:呢)?$"#), lc.subject.contains("生日") {
+                return .rewrite("幫我寫給\(g[0])的生日祝福")
+            }
         case "笑話", "選擇", "自己", "看法":
             return Talk.followUp(message, kind: lc.kind, last: lc.answer, name: lc.subject).map { .answer($0) }
         case "list":
@@ -1296,6 +1351,12 @@ public final class EchoEngine {
                    ? [("清淡", "清淡晚餐"), ("不要辣", "清淡晚餐"), ("不辣", "清淡晚餐"), ("健康", "清淡晚餐"), ("不用煮", "不用煮的晚餐"), ("懶得煮", "不用煮的晚餐"), ("不想煮", "不用煮的晚餐"),
                       ("便宜", "便宜晚餐"), ("預算", "便宜晚餐"), ("省錢", "便宜晚餐"), ("一百", "便宜晚餐"), ("100", "便宜晚餐")]
                    : (["甜點", "健康甜點"].contains(lc.subject) ? [("健康", "健康甜點"), ("低卡", "健康甜點"), ("不會胖", "健康甜點"), ("不胖", "健康甜點"), ("少糖", "健康甜點"), ("無糖", "健康甜點")] : []))
+            // 「周杰倫的」（剛剛推薦歌）：那個歌手的歌
+            if ["音樂", "英文歌", "周杰倫的歌"].contains(lc.subject), let g = RuleBook.match(t, #"^(?:那)?(?:有沒有)?(.{1,8}?)的(?:歌)?(?:呢|嗎)?$"#),
+               let a = Commonsense.answer("推薦" + g[0] + "的歌") {
+                lastLocal = LocalContext(kind: "recommend", subject: g[0] + "的歌", extra: lc.extra, shown: a, turn: lc.turn)
+                return .answer(a)
+            }
             if t.count <= 16, let g = refine.first(where: { t.contains($0.0) }), let a = Commonsense.answer("推薦" + g.1) {
                 lastLocal = LocalContext(kind: "recommend", subject: g.1, extra: lc.extra, shown: a, turn: lc.turn)
                 return .answer(a)
