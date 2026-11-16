@@ -309,6 +309,7 @@ public enum Commonsense {
             guard asks else { return nil }
             var core = t
             while let l = core.last, "呢啊呀".contains(l) { core.removeLast() }
+            guard core.count >= 2 else { return nil }
             for c in [subject + core, subject + "的" + core] where answer(c, now: now) != nil { return (c, true) }
             return core.count <= 8 ? (subject + core, false) : nil
         }
@@ -322,6 +323,28 @@ public enum Commonsense {
     }
 
     // MARK: - 推薦
+
+    /// 問的是哪一類推薦（「推薦一本書」→ 書）
+    public static func recommendCategory(_ raw: String) -> String? {
+        mentions(Everyday.clean(raw), in: recommends).first?.entity.name
+    }
+
+    /// 「還有呢」：同一類裡剛剛沒推薦到的
+    public static func recommendMore(_ category: String, shown: String) -> String? {
+        guard let e = recommends.first(where: { $0.name == category }) else { return nil }
+        let items = (e.attr("項目") ?? "").split(separator: "；").map(String.init)
+        let fresh = items.filter { item in !shown.contains(String(item.prefix { $0 != "：" })) }
+        guard !fresh.isEmpty else { return "我知道的好\(category)差不多都推薦給你了！告訴我你喜歡什麼樣的，我再幫你想想，或是我可以上網幫你找更多。" }
+        return "再推薦你這幾個：\n" + fresh.prefix(4).map { "• " + $0 }.joined(separator: "\n")
+    }
+
+    /// 「世界上最大的動物」→ 回答講的是藍鯨，追問「牠有多重」問的是藍鯨
+    public static func answerSubject(_ question: String, _ answer: String) -> String? {
+        guard question.contains("最") || question.contains("第一"), let g = RuleBook.match(answer, #"^[^。\n]*?是([^。，、（\n]{1,12})"#) else { return nil }
+        let x = g[0].trimmingCharacters(in: .whitespaces)
+        return facts.first(where: { $0.names.contains(x) })?.name
+            ?? realMentions(x, in: facts).first?.entity.name
+    }
 
     static func recommend(_ t: String) -> String? {
         var core = t
@@ -813,7 +836,7 @@ public enum Commonsense {
         case "名言": s = "\(n)的名言：「" + v.split(separator: "；").joined(separator: "」「") + "」"
         case "發明者": s = e.kind == "地標" ? "\(n)是\(v)" + (v.hasSuffix("）") || v.hasSuffix("。") ? "" : "。") : "\(n)的發明者：\(v)。"
         case "就醫": s = v + "。"
-        case "年份": s = e.kind == "事件" ? "\(n)：\(v)。" : "\(n)出現在\(v)。"
+        case "年份": s = e.kind == "事件" || ["完工", "開幕", "成立", "建成", "落成", "舉行", "開始", "創立"].contains(where: { v.contains($0) }) ? "\(n)：\(v)。" : "\(n)出現在\(v)。"
         case "說明": s = v + "。"
         case "頻率", "人數": s = "\(n)\(v)。"
         case "位置": s = "\(n)在\(v)。"
