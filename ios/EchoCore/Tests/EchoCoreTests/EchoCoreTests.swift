@@ -720,7 +720,8 @@ final class EchoCoreTests: XCTestCase {
 
         // NineSun 自己的常識答得出來的就自己答（Commonsense）；答不出來、需要看法和最新資料的交給上網查
         // 「人生的意義」「iPhone 和安卓哪個好」NineSun 有自己的看法了（2026-11-16），換成還是要上網的題目
-        for q in ["每個月都存不了錢要怎麼辦", "怎麼在職場上建立人脈"] {
+        // 「每個月都存不了錢」NineSun 也有做法了（2026-11-16 第 23 輪），換成還是要上網的題目
+        for q in ["怎麼跟房東談降房租", "怎麼在職場上建立人脈"] {
             let r = engine.reply(to: q, context: ctx)
             if r.webQuery == nil { fails.append("✗ 日常問題應該交出去：\(q) → \(r.turn.text.prefix(40))") }
         }
@@ -738,7 +739,7 @@ final class EchoCoreTests: XCTestCase {
         if eu.webQuery == nil { fails.append("✗ 歐洲有多少個國家 應該上網查 → \(eu.turn.text.prefix(30))") }
         let fu = engine.reply(to: "那這些國家都是哪些國家", context: ctx)
         if fu.webQuery?.contains("歐洲") != true { fails.append("✗ 追問沒接上主題：\(fu.webQuery ?? "nil")") }
-        for (q, must) in [("人生的意義是什麼", "看法"), ("iPhone和安卓哪個好", "iPhone")] {
+        for (q, must) in [("人生的意義是什麼", "看法"), ("iPhone和安卓哪個好", "iPhone"), ("每個月都存不了錢要怎麼辦", "記帳")] {
             let r = engine.reply(to: q, context: ctx)
             if r.webQuery != nil || !r.turn.text.contains(must) { fails.append("✗ 有自己的看法卻沒說：\(q)") }
         }
