@@ -361,8 +361,9 @@ public enum Commonsense {
                 // 問句裡剩下的內容也要很少（「是誰發現相對論的」有自己的主題「相對論」）
                 var residual = core
                 for w in (asking + keys + ["的意思", "意思"]).sorted(by: { $0.count > $1.count }) where w.count >= 1 { residual = residual.replacingOccurrences(of: w, with: "") }
+                for w in ["方法", "技巧", "建議", "辦法", "時候", "地方", "原因", "方式", "步驟", "注意", "比較"] { residual = residual.replacingOccurrences(of: w, with: "") }
                 residual = residual.filter { !"是的了嗎呢有要會在個一啊呀".contains($0) }
-                guard residual.count <= 4 else { return nil }
+                guard residual.count <= 2 else { return nil }
             }
             for c in [subject + core, subject + "的" + core] where answer(c, now: now) != nil { return (c, true) }
             return core.count <= 8 ? (subject + core, false) : nil
@@ -564,7 +565,8 @@ public enum Commonsense {
             if whyAsk { return globalWhy(t) }
             // 沒有完整的名字，只有短的（「一天要睡幾個小時」裡的「睡」）：問的屬性剛好是它有的才回答
             if asking.contains(where: { t.contains($0) }) {
-                let loose = mentions(t, in: facts).map { $0.entity }
+                // 只用一個字的說法（「睡」）；長一點的片段（埃菲爾「鐵塔」、阿波羅「登月」）是別的東西的名字
+                let loose = mentions(t, in: facts).filter { $0.alias.count == 1 }.map { $0.entity }
                 for (key, words) in cues where words.contains(where: { t.contains($0) }) {
                     if let owner = loose.first(where: { $0.attr(key) != nil }) { return phrase(owner, key, owner.attr(key)!, now: now) }
                 }
