@@ -109,7 +109,7 @@ public enum Library {
                     #"^(.{2,20}?)作者(?:是誰)?$"#]
         guard let g = pats.lazy.compactMap({ RuleBook.match(t, $0) }).first, let w = work(named: g[0]), let a = w.attr("作者") else { return nil }
         var s = "《\(w.name)》"
-        if let k = w.attr("類型"), k.contains("電影") || k.contains("動畫電影") {
+        if let k = w.attr("類型"), k.contains("電影") || k.contains("劇") && !k.contains("劇本") || k.contains("動畫") {
             s += "：\(a)。"
         } else {
             s += "的作者是\(a)。"
@@ -198,20 +198,27 @@ public enum Library {
         if ["西方", "歐美", "外國", "國外", "西洋", "歐洲", "英國", "美國", "法國", "俄國", "世界"].contains(where: { t.contains($0) }) { region = "西方" }
         else if ["中國", "中文", "華人", "古典", "四大"].contains(where: { t.contains($0) }) { region = "中國" }
         else if ["日本", "日系"].contains(where: { t.contains($0) }) { region = "日本" }
+        else if ["韓國", "韓"].contains(where: { t.contains($0) }) { region = "韓國" }
+        else if ["台灣", "臺灣", "國片"].contains(where: { t.contains($0) }) { region = "台灣" }
         else { return nil }
         var pool = works.filter { ($0.attr("地區") ?? "").hasPrefix(region) }
         // 文學、小說、書：不要電影；電影、動畫：只要影像作品
-        let wantsFilm = ["電影", "動畫", "片"].contains(where: { t.contains($0) })
+        let wantsFilm = ["電影", "動畫", "片", "劇", "影集"].contains(where: { t.contains($0) })
+        let onlyDrama = ["劇", "影集"].contains(where: { t.contains($0) }) && !t.contains("電影")
+        let onlyMovie = t.contains("電影") && !["劇", "影集", "動畫"].contains(where: { t.contains($0) })
         pool = pool.filter { w in
             let k = w.attr("類型") ?? ""
-            let film = k.contains("電影") || k.contains("動畫") || k.contains("漫畫")
+            let drama = k.contains("劇") && !k.contains("劇本")
+            let film = k.contains("電影") || k.contains("動畫") || k.contains("漫畫") || drama
+            if onlyDrama { return drama }
+            if onlyMovie { return k.contains("電影") }
             return wantsFilm ? film : !film
         }
         // 問小說就只要小說（不要劇本、詩）
         if t.contains("小說") { pool = pool.filter { ($0.attr("類型") ?? "").contains("小說") } }
         // 古典：二十世紀以後的不算
         if t.contains("古典") { pool = pool.filter { w in !["19", "20"].contains(where: { (w.attr("年代") ?? "").hasPrefix($0) }) } }
-        guard pool.count >= 3 else { return nil }
+        guard pool.count >= (["韓國", "台灣"].contains(region) ? 2 : 3) else { return nil }
         // 每個作者先挑一部（不然前面全是莎士比亞），不夠再補
         let limit = region == "西方" ? 10 : 8
         var picks: [Item] = [], seenAuthors: Set<String> = []
@@ -220,7 +227,7 @@ public enum Library {
         let asksAbout = ["講", "在說", "說了", "內容", "主題", "關於什麼", "寫什麼", "寫的是", "想表達", "意義", "共同", "都是什麼"].contains(where: { t.contains($0) })
         let place = region == "西方" ? "西方" : region
         var s = asksAbout ? "\(place)有名的作品很多，每一部講的不一樣。挑幾部最常被提到的，說說各自在講什麼：\n"
-                          : "\(place)最常被提到的經典\(wantsFilm ? "電影和動畫" : "文學作品")：\n"
+                          : "\(place)最常被提到的經典\(onlyDrama ? "影集" : onlyMovie ? "電影" : wantsFilm ? "電影、動畫和影集" : "文學作品")：\n"
         for w in picks {
             let who = authorName(w)
             let what: String
@@ -246,7 +253,10 @@ public enum Library {
         var a = w.attr("作者") ?? ""
         if let r = a.range(of: "（") { a = String(a[..<r.lowerBound]) }
         a = a.split(separator: "，").first.map(String.init) ?? a
-        return a.replacingOccurrences(of: "導演", with: "")
+        // 「周杰倫導演、主演」→「周杰倫」；「日本漫畫家諫山創」→「諫山創」
+        if let r = a.range(of: "導演") { a = String(a[..<r.lowerBound]) }
+        for p in ["日本漫畫家", "漫畫家"] where a.hasPrefix(p) { a.removeFirst(p.count) }
+        return a.replacingOccurrences(of: "編劇", with: "")
     }
 
     static func shortIntro(_ s: String) -> String {
