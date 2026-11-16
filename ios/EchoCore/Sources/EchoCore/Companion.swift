@@ -215,7 +215,13 @@ public enum Companion {
     public static func life(L: Lang, reader R: Reader, perceived p: Int, day: Int?, night: Int?, choose: ([String]) -> String,
                             destiny D: Destiny? = nil, now: Date = Date()) -> String {
         let idx = [Lang.zh, .en, .es, .it].firstIndex(of: L)!
-        var s = R.fmt(choose(lifeIntro[idx]), R.topicShort(p), R.pn(p), R.kw(p, 3), R.tip(p))
+        // 中文：一般的一句話（「在公司附近」「我剛搬家」）不拿宮位的關鍵字硬套（「鬱悶、壓抑、消極」）——
+        // 使用者說過「不要用宮位亂回」。接住話題、請對方多說，想看運勢再提供問法
+        if L == .zh && D == nil {
+            let openers = ["嗯嗯，我在聽。可以多說一點嗎？", "原來是這樣。後來呢？想多說一點的話，我在聽。", "我在，想說什麼都可以慢慢說。"]
+            return choose(openers) + "（想看看最近的運勢走向，可以問我「這個月運勢」。）"
+        }
+        var s = L == .zh ? "聽起來跟\(R.topicShort(p))有關，我在聽。" : R.fmt(choose(lifeIntro[idx]), R.topicShort(p), R.pn(p), R.kw(p, 3), R.tip(p))
         if day == p || night == p {
             let which = day == p ? R.t("日宮", "day palace", "día", "giorno") : R.t("夜宮", "night palace", "noche", "notte")
             s += R.sp + R.fmt(lifeDayLink[idx], which)
