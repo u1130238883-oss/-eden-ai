@@ -86,6 +86,9 @@ public enum TopicRouter {
             if text.hasPrefix("你") && !["你覺得", "你認為", "你看"].contains(where: { text.hasPrefix($0) }) { return nil }
             let personalOrTime = has(text, ["我", "今", "明", "這", "本月", "下個", "去年", "後年", "最近"])
             if (has(text, FortuneRouter.knowledgeMarkers) && !personalOrTime) || has(text, ["八字", "紫微", "合盤", "合不合", "配不配"]) { return nil }
+            // 問的是世界上的事（簽證、經濟、房價、股市），不是自己的運：「韓國要簽證嗎」「今年經濟好嗎」
+            if has(text, ["簽證", "經濟", "景氣", "房價", "股市", "匯率", "油價", "物價", "政府", "總統", "選舉", "疫情", "天氣", "颱風"]),
+               !has(text, ["我", "運"]) { return nil }
             let ask = has(text, ["運", "如何", "怎麼樣", "怎樣", "好不好", "順不順", "順利", "會不會", "有沒有", "能不能", "適合",
                                  "機會", "走向", "趨勢", "看看", "看一下", "幫我看", "算算", "嗎", "？", "?", "怎麼"])
             guard ask else { return nil }
