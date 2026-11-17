@@ -172,7 +172,8 @@ public final class EchoEngine {
     public func reply(to message0: String, history: [ChatTurn] = [], context: Context,
                       onToken: ((String) -> Void)? = nil) -> Reply {
         // 簡體字、異體字（「猫可以吃巧克力吗」「怎麽煮白飯」）先轉成繁體再理解
-        let message = Hanzi.toTraditional(message0)
+        // 自我介紹的名字（「我叫张伟」）照原樣，不轉
+        let message = message0.range(of: "^(我叫|叫我|你可以叫我|我的名字是|我的名字叫|請叫我|以後叫我)", options: .regularExpression) != nil ? message0 : Hanzi.toTraditional(message0)
         var r = replyMain(to: message, history: history, context: context, onToken: onToken)
         // 問的是查表就能答的命理知識（「庚干的四化」「日主辛看癸是什麼十神」），引擎卻在要生日：直接用算好的答
         if r.lang == .zh, r.turn.text.contains("不知道你的生日") {
