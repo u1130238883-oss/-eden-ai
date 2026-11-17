@@ -229,6 +229,25 @@ final class FollowUpTests: XCTestCase {
         XCTAssertEqual(Affect.detect("我阿公上個月走了"), .grief)
     }
 
+    /// 日常的小要求、算數、日期、節日、動物：都自己答，而且答對問的那件事
+    func testEverydayRequestsAnsweredLocally() throws {
+        let cases: [(String, [String])] = [
+            ("擲骰子", ["點"]), ("丟硬幣", ["正面", "反面"]), ("幫我決定要吃拉麵還是火鍋", ["拉麵", "火鍋"]), ("我的生日是5月20日", ["金牛座"]),
+            ("這個月有幾天", ["天"]), ("還有幾天過年", ["春節"]), ("月薪三萬年薪多少", ["360,000"]), ("一個月存五千一年存多少", ["60,000"]),
+            ("三千塊的八折", ["2,400"]), ("中秋節要幹嘛", ["賞月"]), ("貓一天要睡多久", ["12 到 16"]), ("GDP是什麼意思", ["國內生產毛額"]),
+            ("花蓮好玩嗎", ["太魯閣"]), ("狗為什麼喜歡聞屁股", ["氣味"]), ("你相信星座嗎", ["鏡子"]), ("週末要幹嘛", ["推薦"]),
+        ]
+        for (q, any) in cases {
+            let r = try run([q])[0]
+            XCTAssertTrue(r.webQuery == nil && any.contains { r.turn.text.contains($0) }, "\(q) → \(r.turn.text.prefix(60))")
+        }
+        // 謎語之後換一個要求，不是在猜答案
+        let rs = try run(["出一個謎語給我猜", "跟我說一個有趣的事"])
+        XCTAssertFalse(rs[1].turn.text.contains("答案是"), rs[1].turn.text)
+        // 運動完腳痠不是生病
+        XCTAssertNotEqual(Affect.detect("腳好痠"), .sick)
+    }
+
     func testCompoundGreetingAndWorship() throws {
         let a = try run(["台北101多高，富士山多高"])[0]
         XCTAssertTrue(a.turn.text.contains("508") && a.turn.text.contains("3776"), a.turn.text)
