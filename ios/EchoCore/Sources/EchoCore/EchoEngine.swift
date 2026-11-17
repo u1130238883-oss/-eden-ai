@@ -641,6 +641,11 @@ public final class EchoEngine {
         m = m.replacingOccurrences(of: #"ㄅ(?=[？?！!～~]*$)"#, with: "吧", options: .regularExpression)
         m = m.replacingOccurrences(of: #"ㄋ(?=[？?！!～~]*$)"#, with: "呢", options: .regularExpression)
         m = m.replacingOccurrences(of: "ㄉ", with: "的")
+        // 「什摸是區塊鏈」「手機沒電了怎摸辦」「信用卡被盜用怎麼半」：注音選錯字
+        m = m.replacingOccurrences(of: "什摸", with: "什麼").replacingOccurrences(of: "甚摸", with: "什麼").replacingOccurrences(of: "怎摸", with: "怎麼")
+        m = m.replacingOccurrences(of: #"怎麼(半|伴|扮|拌|瓣)(?=[？?！!。～~]*$)"#, with: "怎麼辦", options: .regularExpression)
+        // 「頭好痛喔怎麼辦」「好累啊怎麼辦」：中間的語氣詞
+        m = m.replacingOccurrences(of: #"(?<=\p{Han})(喔|噢|啊|耶|捏|欸|ㄛ)(?=(要)?怎麼辦|該怎麼辦|怎麼|嗎[？?]*$)"#, with: "", options: .regularExpression)
         if let g = RuleBook.match(m, #"^(.{1,8}?)(?:的)?(煮法|炒法|烤法|滷法)[？?]*$"#) { m = g[0] + "怎麼" + String(g[1].prefix(1)) }
         // 「可以吃巧克力嗎呢」：多打的語氣詞
         m = m.replacingOccurrences(of: #"嗎呢(?=[？?！!。～~]*$)"#, with: "嗎", options: .regularExpression)

@@ -113,6 +113,9 @@ public enum Affect {
             // 「小孩怕黑」「我兒子很緊張」：說的是孩子或家人的心情，是在擔心他，不是自己害怕
             if [.scared, .anxious, .sad, .angry, .tired, .lonely, .frustrated].contains(m),
                t.range(of: "^(我的?|我家的?|我養的)?(小孩|孩子|寶寶|兒子|女兒|小朋友|弟弟|妹妹|小孫子|孫子|孫女|狗狗|貓咪|毛孩|狗|貓)", options: .regularExpression) != nil { return .worryOther }
+            // 「為什麼會打雷」「打雷可以洗澡嗎」：問打雷這件事，不是在害怕
+            if m == .scared, t.contains("打雷"), t.range(of: "為什麼|為甚麼|為何|怎麼形成|是什麼|可以|能不能|要不要|會不會|嗎", options: .regularExpression) != nil,
+               t.range(of: "好怕|很怕|害怕|嚇", options: .regularExpression) == nil { return .info }
             // 「鄧麗君是怎麼過世的」「愛因斯坦幾歲去世」：問別人（名人）怎麼過世的，是在問事情
             if m == .grief, t.range(of: "(怎麼|如何|為什麼|什麼時候|哪一年|幾歲|是怎麼|因為什麼)(過世|去世|死|離世|逝世)", options: .regularExpression) != nil,
                t.range(of: "我|爸|媽|爺|奶|外公|外婆|阿公|阿嬤|家|狗|貓|寵物|朋友|老公|老婆|男友|女友|同學|同事", options: .regularExpression) == nil { return .info }

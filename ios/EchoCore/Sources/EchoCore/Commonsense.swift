@@ -255,6 +255,8 @@ public enum Commonsense {
         var t = out
         for w in ["一直", "應該", "常常", "總是", "老是", "真的", "到底", "一下", "裡面", "上面", "好吵", "好煩", "好可怕"] { t = t.replacingOccurrences(of: w, with: "") }
         t = t.replacingOccurrences(of: "要怎麼", with: "怎麼").replacingOccurrences(of: "該怎麼", with: "怎麼")
+        // 「頭好痛怎麼辦」「肚子很痛」＝頭痛、肚子痛
+        t = t.replacingOccurrences(of: "(好|很|超|有點)(?=[痛癢痠酸脹暈])", with: "", options: .regularExpression)
         // 「QR碼是什麼東西」「VPN是啥」＝是什麼
         t = t.replacingOccurrences(of: "是什麼東西", with: "是什麼").replacingOccurrences(of: "是啥", with: "是什麼")
         // 「台灣飛日本要多久」＝台灣到日本；「新手適合養哪種貓」＝養什麼貓
@@ -328,6 +330,12 @@ public enum Commonsense {
                let a = howto(e.name + "怎麼辦") ?? howto("怎麼" + e.name) {
                 return "辛苦了，身體不舒服要好好照顧自己。\n" + a
             }
+        }
+        // 「我爸最近記性很差」「阿嬤常常忘東忘西」：長輩記性變差，先提醒失智的警訊和記憶門診，不是一般的健忘小撇步
+        if t.range(of: "^(我|我的|我家)?(的)?(爸|媽|爸爸|媽媽|父親|母親|爺爺|奶奶|阿公|阿嬤|外公|外婆|長輩|老人家|老人|家裡的長輩)", options: .regularExpression) != nil,
+           t.range(of: "記性|忘東忘西|健忘|記憶力|一直忘|常忘|忘記|重複講|重複問", options: .regularExpression) != nil,
+           let e = howtos.first(where: { $0.name == "長輩失智" }), let a = formatHowto(e) {
+            return "長輩記性變差，家人一定很擔心。\n" + a
         }
         if let a = difference(t) { return a }
         // 「東京到大阪要多久」「台北到高雄要坐多久」：兩地之間的資料裡就有交通時間
