@@ -457,7 +457,7 @@ public final class EchoEngine {
         let asksMethod = text.range(of: "怎麼辦|建議|該怎麼|要怎麼|有什麼方法|有什麼辦法|怎麼做|怎麼處理|要注意", options: .regularExpression) != nil
         if context.language == .zh, r.webQuery != nil || r.turn.source == .neural, (4...40).contains(text.count),
            EchoEngine.explicitSearch(text) == nil, !EchoEngine.explicitFortune(text), !Commonsense.talksFeelings(text),
-           !moodReply || Affect.detect(text) == .sick || asksMethod,
+           !moodReply || [.sick, .worryOther].contains(Affect.detect(text)) || asksMethod,
            // 已經給了做法、或是閒聊本來就有好好接的話（「我在學吉他」→「學吉他很棒！學多久了？」）就不換
            !r.turn.text.contains("\n1. "),
            r.webQuery != nil || (Talk.chat(text) == nil && Talk.detailed(text) == nil),
