@@ -13,10 +13,12 @@ enum Fuzzy {
         ("破掉", "破"), ("好多", "很多"), ("超多", "很多"), ("老是", "一直"), ("總是", "一直"), ("丟給我", "推給我"), ("改成", "轉成"), ("去哪換", "怎麼換"),
         ("吃太撐", "吃太飽"), ("剩下的菜", "剩菜"), ("偷走", "偷"), ("被人偷", "被偷"), ("筆記型電腦", "筆電"), ("嗆到", "換氣"), ("怎樣", "怎麼"),
         ("如何", "怎麼"), ("咋辦", "怎麼辦"), ("該怎麼辦", "怎麼辦"), ("要怎麼辦", "怎麼辦"),
+        ("趕走", "消滅"), ("趕跑", "消滅"), ("要買什麼", "要準備什麼"), ("好臭", "有臭味"), ("很臭", "有臭味"), ("臭臭的", "有臭味"), ("好貴", "太高"),
+        ("想不起來", "忘記"), ("想不起", "忘記"),
     ]
     /// 不帶內容的字詞：拿掉之後把句子切成幾段
     static let function = ["怎麼辦", "要怎麼", "該怎麼", "怎麼", "可以", "什麼", "哪裡", "哪些", "比較", "要", "該", "嗎", "呢", "啊", "了", "的", "我", "你", "很",
-                           "一直", "都", "是", "有", "去", "會", "才", "一下", "喔", "啦", "吧", "請問", "能不能", "能"]
+                           "一直", "都", "是", "有", "去", "會", "才", "一下", "喔", "啦", "吧", "請問", "能不能", "能", "好像", "一次"]
     /// 問的方向；第 0 組是「是不是、可不可以」這種是非題
     static let focusGroups: [[String]] = [["嗎", "要不要", "可不可以", "能不能"], ["多久", "幾天", "幾個月", "幾年", "多長"], ["多少錢", "多少", "幾元", "幾塊"],
                                           ["為什麼"], ["什麼時候", "何時", "哪一年", "哪年"], ["哪裡", "在哪"], ["是什麼", "什麼是", "什麼意思"], ["幾度"], ["幾個", "幾種", "幾次"]]
@@ -28,10 +30,14 @@ enum Fuzzy {
     static func normalize(_ t: String) -> String {
         var t = t.lowercased()
         for (a, b) in synonyms { t = t.replacingOccurrences(of: a, with: b) }
+        // 「去哪繳」「在哪買」＝哪裡
+        t = t.replacingOccurrences(of: "哪(?![裡些個一種位天年家邊])", with: "哪裡", options: .regularExpression)
         return t
     }
     static func focus(_ t: String) -> Set<Int> {
-        Set(focusGroups.indices.filter { i in focusGroups[i].contains { t.contains($0) } })
+        // 「便秘好幾天了」的「幾天」不是在問
+        let t = t.replacingOccurrences(of: "好幾", with: "")
+        return Set(focusGroups.indices.filter { i in focusGroups[i].contains { t.contains($0) } })
     }
     static func segments(_ t: String) -> [Segment] {
         var t = t.replacingOccurrences(of: #"[，,。.！!？?、；;：:\s~～…]+"#, with: " ", options: .regularExpression)
@@ -106,7 +112,8 @@ enum Fuzzy {
             guard ratio >= 0.75 || cov >= 0.999 else { continue }
             // 問的方向要一樣
             if !e.focus.isEmpty && e.focus.isDisjoint(with: qf) { continue }
-            let wh = e.isFact ? qwh : qwh.subtracting([5])   // 做法裡常常就有「去哪裡辦」
+            // 做法裡常常就有「去哪裡辦」；食譜裡就有要煮多久
+            let wh = e.isFact ? qwh : qwh.subtracting(e.entity.kind == "做法" ? [1, 5] : [5])
             if !wh.isEmpty && wh.isDisjoint(with: e.focus) { continue }
             // 是非題（「這樣正常嗎」）不能用一張做法清單回答，除非也在問怎麼做
             if qf.contains(0), !e.focus.contains(0), !askHow { continue }
@@ -116,9 +123,18 @@ enum Fuzzy {
         return best.map { ($0.entry.entity, $0.entry.alias) }
     }
 
+    /// 說出一個身體或東西的狀況（「睡覺落枕了」「腳抽筋好痛」「去海邊曬傷了」）：當成在問怎麼辦
+    static func problemStatement(_ raw: String, now: Date) -> String? {
+        let t = Talk.clean(raw)
+        guard (3...14).contains(t.count), !EchoEngine.isQuestion(raw.replacingOccurrences(of: "好幾", with: "很多")),
+              t.range(of: "痠|痛|癢|抽筋|曬傷|燙傷|割傷|扭到|落枕|便秘|拉肚子|當機|壞了|不見了|漏水|塞住|發霉|中毒|過敏|咳|流鼻血|腫|頭暈|睡不著|卡住|打不開|開不了", options: .regularExpression) != nil,
+              let a = Commonsense.answer(t + "怎麼辦", now: now), a.count >= 20 else { return nil }
+        return a
+    }
+
     /// 用最像的問法回答
     static func answer(_ raw: String, now: Date) -> String? {
-        guard let (e, alias) = match(raw) else { return nil }
+        guard let (e, alias) = match(raw) else { return problemStatement(raw, now: now) }
         if Commonsense.howtos.contains(where: { $0.name == e.name }) { return Commonsense.formatHowto(e) }
         return Commonsense.answer(alias, now: now)
     }

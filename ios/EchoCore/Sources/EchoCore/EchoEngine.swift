@@ -463,9 +463,10 @@ public final class EchoEngine {
            r.webQuery != nil || (Talk.chat(text) == nil && Talk.detailed(text) == nil),
            !(r.turn.source == .neural && !EchoEngine.isQuestion(text) && !asksMethod
              && text.range(of: "難過|傷心|壓力|焦慮|寂寞|孤單|想哭|好煩|很煩|崩潰|生氣|討厭|害怕|擔心|好累|很累|不開心|失落|心情|想死|自殺|沒有朋友|沒人理|身心俱疲|委屈|空虛|迷茫|沮喪", options: .regularExpression) != nil),
-           let (e, alias) = Fuzzy.match(text), let a = Fuzzy.answer(text, now: context.now) {
-            let sub = Commonsense.howtos.contains(where: { $0.name == e.name }) ? "" : (Commonsense.subject(alias) ?? "")
-            lastLocal = LocalContext(kind: "fact", subject: sub, extra: alias, answer: a, turn: history.count)
+           let a = Fuzzy.answer(text, now: context.now) {
+            let m = Fuzzy.match(text)
+            let sub = m.map { m in Commonsense.howtos.contains(where: { $0.name == m.entity.name }) ? "" : (Commonsense.subject(m.alias) ?? "") } ?? ""
+            lastLocal = LocalContext(kind: "fact", subject: sub, extra: m?.alias ?? text, answer: a, turn: history.count)
             r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
             return r
         }

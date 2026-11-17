@@ -216,6 +216,8 @@ public enum Commonsense {
         var t = out
         for w in ["一直", "應該", "常常", "總是", "老是", "真的", "到底", "一下", "裡面", "上面", "好吵", "好煩", "好可怕"] { t = t.replacingOccurrences(of: w, with: "") }
         t = t.replacingOccurrences(of: "要怎麼", with: "怎麼").replacingOccurrences(of: "該怎麼", with: "怎麼")
+        // 「落枕了怎麼辦」＝落枕怎麼辦
+        t = t.replacingOccurrences(of: "了(?=怎麼辦|怎麼處理)", with: "", options: .regularExpression)
         t = t.replacingOccurrences(of: #"^(我的|我家的|家裡的|我家)"#, with: "", options: .regularExpression)
         // 「狗吃巧克力會怎樣」「給狗吃巧克力可以嗎」→「狗可以吃巧克力嗎」
         if let g = RuleBook.match(t, #"^(?:給)?(.{1,4}?)吃(.{1,6}?)(?:會怎樣|會怎麼樣|會死嗎|會中毒嗎|有事嗎|沒關係嗎|OK嗎|ok嗎|可以嗎|好嗎)[？?]*$"#) {
