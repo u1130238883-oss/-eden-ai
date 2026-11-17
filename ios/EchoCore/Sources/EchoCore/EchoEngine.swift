@@ -299,6 +299,25 @@ public final class EchoEngine {
             text = cmd
             rewritten = true
         }
+        // 一次問兩三個（「台北101多高，富士山多高」「日本首都是哪裡？韓國呢？」）：每個自己答得出來就一起回答
+        if context.language == .zh, !rewritten, text.count <= 40,
+           let parts = Optional(text.components(separatedBy: CharacterSet(charactersIn: "，,？?；;")).map { $0.trimmingCharacters(in: .whitespaces) }.filter { $0.count >= 2 }),
+           (2...3).contains(parts.count), parts.allSatisfy({ EchoEngine.isQuestion($0) || $0.hasSuffix("呢") || $0.hasSuffix("嗎") }) {
+            var answers: [String] = []
+            var prev = ""
+            for p in parts {
+                if let a = Commonsense.answer(p, now: context.now) { answers.append(a); prev = p; continue }
+                if !prev.isEmpty, let sub = Commonsense.subject(prev), let f = Commonsense.followUp(p, subject: sub, previous: prev, now: context.now), f.local,
+                   let a = Commonsense.answer(f.text, now: context.now) { answers.append(a); prev = f.text; continue }
+                answers = []
+                break
+            }
+            if answers.count == parts.count, Set(answers).count == answers.count {
+                var r = Reply(turn: ChatTurn(role: .echo, text: answers.joined(separator: "\n\n"), source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+                r.turn.variant = "talk"
+                return r
+            }
+        }
         // 追問本地剛回答的東西：直接回答，或把問題補完整（「他還寫了什麼」→「曹雪芹還寫了什麼」、「結局呢」→「哈姆雷特的結局」）
         if context.language == .zh || Lang.detect(message, fallback: .zh) == .zh, let lc = lastLocal, history.count - lc.turn <= 4 {
             lastEchoAsked = history.last(where: { $0.role == .echo }).map { $0.text.contains("？") || $0.text.contains("?") } ?? false
@@ -469,6 +488,11 @@ public final class EchoEngine {
         if m.range(of: "^(我|你|他|她|我們|你們|他們)", options: .regularExpression) == nil,
            let r = m.range(of: #"(?<=是|在|位於|住在|去)那裡(?=(呢|啊)?[？?]*$)"#, options: .regularExpression) {
             m.replaceSubrange(r, with: "哪裡")
+        }
+        // 打招呼後面接問題（「早安，今天幾號」「你好，請問貓可以吃巧克力嗎」）：只看問題
+        if let r = m.range(of: #"^(早安|午安|晚安|你好|您好|哈囉|嗨|嘿|hi|Hi|hello|Hello|安安|早)[，,！!～~。 ]+"#, options: .regularExpression),
+           EchoEngine.isQuestion(String(m[r.upperBound...])) || m[r.upperBound...].hasPrefix("請問") {
+            m.removeSubrange(r)
         }
         // 開場白（「我問你喔，」「問你一個問題：」「想請教一下」「跟你說喔」「對了，」）不是問題的一部分
         m = m.replacingOccurrences(of: #"^(我問你喔|我問你哦|我問你|問你一個問題|問你個問題|問你一件事|想請教一下|想請教|請教一下|跟你說喔|跟你說|對了|話說|老實說|順便問一下|順便問|那個…|那個\.\.\.)[，,：:、 …!！]*(?=.{2,})"#, with: "", options: .regularExpression)
@@ -1350,7 +1374,8 @@ public final class EchoEngine {
             // 剛剛說考試考砸了，接著說科目（「數學」）
             if lc.subject.contains("考") || lc.extra.contains("考"), let a = Talk.examSubject(t) { return .answer(a) }
             // 補充細節（「主管很兇」「他昨天罵我」「數學」）：接住、換句話說、請對方多說——不要每句都一樣
-            if lastEchoAsked || nowTurn - lc.turn <= 2, (1...12).contains(t.count), !EchoEngine.isQuestion(message), Talk.chat(message) == nil, Talk.detailed(message) == nil,
+            // 沒被問的時候，只接中性的補充（「同事也不幫我」）；自己帶著強烈心情的新句子（「越想越氣」）照心情回應
+            if lastEchoAsked || (nowTurn - lc.turn <= 2 && Affect.detect(message) == .info), (1...12).contains(t.count), !EchoEngine.isQuestion(message), Talk.chat(message) == nil, Talk.detailed(message) == nil,
                // 開心的事（「我考上研究所了」→「台大」）交給回答我問題的那一段
                ![.goodNews, .proudEffort, .happy, .excitedPlan, .hope].contains(Affect.detect(lc.subject)),
                // 沒被問、自己就答得出來的（「睡不好」）照一般問題處理

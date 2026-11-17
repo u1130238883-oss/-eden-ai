@@ -174,4 +174,18 @@ final class FollowUpTests: XCTestCase {
         XCTAssertEqual(Hanzi.toTraditional("我只有一個皇后"), "我只有一個皇后")
         XCTAssertEqual(Hanzi.toTraditional("我的头发好干"), "我的頭髮好干")
     }
+
+    /// 一次問兩個、打招呼接問題、「拜拜」不是再見、地名加「有什麼好玩的」
+    func testCompoundGreetingAndWorship() throws {
+        let a = try run(["台北101多高，富士山多高"])[0]
+        XCTAssertTrue(a.turn.text.contains("508") && a.turn.text.contains("3776"), a.turn.text)
+        let b = try run(["日本首都是哪裡？韓國呢？"])[0]
+        XCTAssertTrue(b.turn.text.contains("東京") && b.turn.text.contains("首爾"), b.turn.text)
+        let c = try run(["早安，今天幾號"])[0]
+        XCTAssertTrue(c.turn.text.contains("今天是"), c.turn.text)
+        let d = try run(["拜拜要準備什麼"])[0]
+        XCTAssertFalse(d.turn.text.contains("下次聊") || d.turn.text.contains("掰掰"), d.turn.text)
+        let e = try run(["宜蘭有什麼好玩的"])[0]
+        XCTAssertFalse(e.turn.text.contains("學一道新菜"), e.turn.text)
+    }
 }

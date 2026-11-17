@@ -152,7 +152,8 @@ public enum Companion {
         if helpWords[idx].contains(text) || (hasF(text, capability[idx], L) && text.count <= (L == .zh ? 14 : 60)) { return capabilityReplies[idx] }
         if hasF(text, identity[idx], L) { return identityReplies[idx] }
         if short && hasF(text, thanks[idx], L) { return choose(thanksReplies[idx]) }
-        if short && hasF(text, bye[idx], L) { return choose(byeReplies[idx]) }
+        // 「拜拜要準備什麼」是拜拜（祭拜），不是掰掰
+        if short && hasF(text, bye[idx], L) && !(L == .zh && (EchoEngine.isQuestion(text) || text.range(of: "拜拜(要|的|用|需要|準備|拜)", options: .regularExpression) != nil)) { return choose(byeReplies[idx]) }
         if hasF(text, praise[idx], L) && !text.contains("?") { return choose(praiseReplies[idx]) }
 
         // 情緒陪伴
