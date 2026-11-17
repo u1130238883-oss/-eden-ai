@@ -448,6 +448,30 @@ public final class EchoEngine {
         // 剛剛在陪他聊心情（「今天好累」→「工作太多了」）：接著說的細節是在抒發，不是在問做法
         let moodChatBefore = lastLocal.map { $0.kind == "mood" && history.count - $0.turn <= 2 } ?? false
         var r = replyCore(to: text, history: history, context: context, onToken: onToken)
+        // 「那十年呢」「那55公斤呢」「那英文呢」「那後天呢」「那高雄呢」：把上一題裡對應的那個部分換掉再問一次
+        if context.language == .zh, let g = RuleBook.match(message.filter { !"，,。.！!？?～~、 ".contains($0) && !$0.isWhitespace }, #"^(?:那|那麼)(.{1,8}?)呢$"#),
+           let prev = history.suffix(2).last(where: { $0.role == .user })?.text,
+           r.webQuery != nil || r.turn.source == .neural || ((r.turn.source == .grounded || r.turn.source == .reader) && prev.contains("天氣")),
+           let cand = EchoEngine.swapInto(previous: Talk.clean(prev), with: g[0]), cand != Talk.clean(prev) {
+            let r2 = replyCore(to: cand, history: history, context: context, onToken: onToken)
+            if r2.webQuery == nil, r2.turn.source != .neural, r2.turn.card == nil { return r2 }
+            if r2.webQuery != nil { var w = r2; w.webQuery = cand; lastWebQuery = cand; lastWebTurn = history.count; w.turn.palace = nil; return w }
+        }
+        // 「要煮多久」「怎麼去」「哪一年」「要帶什麼」：沒說主詞的追問——帶上前一題的主題（說「他」就是前一個回答裡的人）再問一次
+        if context.language == .zh, EchoEngine.subjectless(message),
+           let prev = history.suffix(2).last(where: { $0.role == .user })?.text ?? (history.count - prevQuestionTurn <= 4 ? prevQuestion : nil),
+           let topic = EchoEngine.topicOf(prev, message: message, previousAnswer: history.last(where: { $0.role == .echo })?.text) {
+            let generic = message.range(of: "^(那)?(要|可以|需要|該)?(帶|準備|買|穿|吃|喝|注意)(什麼|哪些)", options: .regularExpression) != nil
+            if r.webQuery != nil || r.turn.source == .neural || (generic && r.turn.source == .knowledge && !r.turn.text.contains(topic)) {
+                let combined = EchoEngine.combineFollowUp(topic: topic, previous: prev, message: message)
+                let r2 = replyCore(to: combined, history: history, context: context, onToken: onToken)
+                if r2.webQuery == nil, r2.turn.source != .neural, r2.turn.card == nil { return r2 }
+                if r.webQuery != nil || r.turn.source == .neural {
+                    r = r2
+                    if r.webQuery != nil { r.webQuery = combined; lastWebQuery = combined; lastWebTurn = history.count; return r }
+                }
+            }
+        }
         // 一大段自己的心事被拿去上網查（整段當關鍵字查不到東西）：改成陪伴和做法
         // 只換掉在說自己困擾的話；一長串在問事情的（「我想知道為什麼…」）照樣上網查
         if context.language == .zh, r.webQuery != nil, text.count > 30, text.contains("我"), EchoEngine.explicitSearch(text) == nil, !EchoEngine.explicitFortune(text),
@@ -942,7 +966,8 @@ public final class EchoEngine {
             return done(Loc.s("webAsk", .zh), .tool, web: EchoEngine.searchQuery(text))
         }
         // 2.1) 心情：用你的生日看此刻的大運、流年、流月、日夜宮，說出處境和情緒，溫柔地安慰
-        if L == .zh, let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now,
+        // （「鄧麗君是怎麼過世的」是在問別人怎麼過世，不是在說心情）
+        if L == .zh, !EchoEngine.asksHowSomeoneDied(text), let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now,
                                 again: history.suffix(4).contains { $0.role == .echo && $0.text.contains("我看了你此刻走到的地方") }) {
             let p = core?.perceive(text)
             if let p { core?.remember(p) }
@@ -1336,6 +1361,79 @@ public final class EchoEngine {
     static let copingSteps = "我陪你一起想，可以先這樣：\n1. 先照顧好自己：今天好好吃飯、早點睡，累的時候什麼事都會看起來更難\n2. 把讓你難受的事寫下來，分成「我能做點什麼的」和「我控制不了的」\n3. 能做的挑一件最小的先做；控制不了的，先試著放下\n4. 找一個信任的人說說，不要一個人扛\n\n如果願意，跟我多說一點是哪件事最讓你煩，我可以幫你想更具體的做法。"
 
     /// 追問剛剛回答裡提到的東西（「搭高鐵要多久」「要放糖嗎」「那台鐵呢」）：從剛剛的回答裡找出那一段
+    /// 「那X呢」：把上一題裡和 X 同一類的部分換成 X（時間、語言、數量；不然就換掉開頭的主題）
+    static func swapInto(previous p: String, with x: String) -> String? {
+        let times = "今天|明天|後天|大後天|昨天|這週|下週|下禮拜|週末|這個月|下個月|今年|明年|去年"
+        if x.range(of: "^(\(times))$", options: .regularExpression) != nil, let r = p.range(of: times, options: .regularExpression) { return p.replacingCharacters(in: r, with: x) }
+        let langs = "英文|日文|韓文|中文|法文|德文|西班牙文|義大利文|泰文|越南文|台語|粵語|英語|日語|韓語|法語|德語"
+        if x.range(of: "^(\(langs))$", options: .regularExpression) != nil, let r = p.range(of: langs, options: .regularExpression) { return p.replacingCharacters(in: r, with: x) }
+        // 數量：同一類的單位（長度、重量、時間、錢）換掉第一個
+        let num = "[0-9０-９.]+|[零一二兩三四五六七八九十百千萬]+"
+        let groups = ["公里|公尺|英里|英尺|呎|公分|吋|米", "公斤|公克|台斤|磅|斤", "年|個月|天|小時|分鐘|週", "元|萬|塊"]
+        if let xu = RuleBook.match(x, "^(?:\(num))(\(groups.joined(separator: "|")))$")?.first, let grp = groups.first(where: { g in xu.range(of: "^(\(g))$", options: .regularExpression) != nil }) {
+            if let r = p.range(of: "(\(num))(\(grp))", options: .regularExpression) { return p.replacingCharacters(in: r, with: x) }
+            // 「身高160體重50」：沒寫單位的體重、身高
+            if grp.hasPrefix("公斤"), let r = p.range(of: "(?<=體重)[0-9.]+", options: .regularExpression) { return p.replacingCharacters(in: r, with: x) }
+            if grp.hasPrefix("公里"), let r = p.range(of: "(?<=身高)[0-9.]+", options: .regularExpression) { return p.replacingCharacters(in: r, with: x) }
+            return nil
+        }
+        // 換掉開頭的主題：「台北有什麼好玩的」→「高雄有什麼好玩的」、「貓的英文怎麼說」→「狗的英文怎麼說」
+        if let g = RuleBook.match(p, #"^(.{1,6}?)(的|有|是|在|要|可以|怎麼|多|幾|會|能|和|跟)(.+)$"#), !g[0].contains("我"), g[0].count <= 6 {
+            return x + g[1] + g[2]
+        }
+        return nil
+    }
+
+    /// 「鄧麗君是怎麼過世的」「愛因斯坦幾歲去世」：問別人（名人）怎麼過世，不是自己家人過世
+    static func asksHowSomeoneDied(_ t: String) -> Bool {
+        t.range(of: "(怎麼|如何|為什麼|什麼時候|哪一年|幾歲|是怎麼|因為什麼)(過世|去世|死|離世|逝世)", options: .regularExpression) != nil
+            && t.range(of: "我|爸|媽|爺|奶|外公|外婆|阿公|阿嬤|家|狗|貓|寵物|朋友|老公|老婆|男友|女友|同學|同事", options: .regularExpression) == nil
+    }
+
+    /// 「要煮多久」「怎麼去」「哪一年」「他幾歲」：很短、用動詞或問句詞開頭、句子裡沒有認得的東西——是接著上一題問的
+    static func subjectless(_ raw: String) -> Bool {
+        let t = Talk.clean(raw)
+        guard (2...10).contains(t.count), !t.contains("你"), !t.contains("我") else { return false }
+        // 要是在問問題（「是講一個機器人的故事」是在說，不是在問）
+        guard EchoEngine.isQuestion(raw) || raw.hasSuffix("嗎") || raw.hasSuffix("呢") || t.range(of: "什麼|怎麼|哪|幾|多|誰|為什麼", options: .regularExpression) != nil else { return false }
+        let s = t.replacingOccurrences(of: "^(那麼|那|所以|然後)", with: "", options: .regularExpression)
+        guard s.range(of: #"^(他|她|它|牠)?(要|可以|能|會|需要|該|應該|是|去|在|還有|有沒有|是不是|怎麼|為什麼|哪|什麼|多|幾|最|大概|大約|平常|有)"#, options: .regularExpression) != nil else { return false }
+        let c = Everyday.clean(s)
+        return Commonsense.realMentions(c, in: Commonsense.facts).isEmpty && Commonsense.mentions(c, in: Commonsense.howtos).isEmpty
+    }
+
+    /// 上一題在說什麼東西（「怎麼煮綠豆湯」→綠豆湯、「我想去露營」→露營、「我手機很慢」→手機）；說「他／她」就找前一個回答裡的人
+    static func topicOf(_ prev: String, message: String, previousAnswer: String?) -> String? {
+        if Talk.clean(message).range(of: "^(那)?(他|她)", options: .regularExpression) != nil, let a = previousAnswer {
+            let people = Commonsense.facts.filter { $0.kind == "人物" }
+            if let m = Commonsense.realMentions(Everyday.clean(a), in: people).min(by: { $0.range.lowerBound < $1.range.lowerBound }) { return m.entity.name }
+            return nil
+        }
+        var s = Understanding.frame(prev).subject
+        if s.isEmpty || s == Understanding.plain(prev) || s.count > 8 || s.hasPrefix("我") {
+            var p = Talk.clean(prev)
+            p = p.replacingOccurrences(of: #"^我(的)?(最近|現在|今天|明天|下週|下禮拜|好像|一直)?(很想|想要|想|要|打算|準備|正在|在)?(去|學|養|買|玩|考|做|吃|看)?"#, with: "", options: .regularExpression)
+            p = p.replacingOccurrences(of: #"(怎麼辦|要怎麼做|怎麼做|要注意什麼|注意什麼|在哪裡|在哪|是誰寫的|是誰|是什麼|很慢|好慢|壞了|不見了|好痛|很痛)$"#, with: "", options: .regularExpression)
+            s = p
+        }
+        guard (1...8).contains(s.count), s != Talk.clean(message), s.range(of: "什麼|怎麼|哪|誰|嗎", options: .regularExpression) == nil,
+              s.range(of: "^(很|好|超|真|太|有點|蠻|滿|挺|不)", options: .regularExpression) == nil else { return nil }
+        return s
+    }
+
+    /// 把主題接回追問：「電話」＋「哪一年」→「電話是哪一年發明的」；「綠豆湯」＋「要煮多久」→「綠豆湯要煮多久」
+    static func combineFollowUp(topic: String, previous: String, message: String) -> String {
+        var ask = Talk.clean(message).replacingOccurrences(of: "^(那麼|那|所以|然後)", with: "", options: .regularExpression)
+        ask = ask.replacingOccurrences(of: "^(他|她|它|牠)", with: "", options: .regularExpression)
+        // 「聖誕節」＋「還有幾天」→「距離聖誕節還有幾天」
+        if ask.range(of: "^(還有|還要|再)(幾天|多久|多少天)$", options: .regularExpression) != nil { return "距離" + topic + "還有幾天" }
+        if ask.range(of: "^(是)?(哪一年|哪年|什麼時候|幾年)$", options: .regularExpression) != nil,
+           let v = RuleBook.match(previous, "(發明|創立|成立|建造|蓋|寫|發現|拍|唱)")?.first {
+            return topic + "是哪一年" + v + "的"
+        }
+        return topic + ask
+    }
+
     static func fromPrevious(_ raw: String, answer: String) -> String? {
         let t = Talk.clean(raw)
         // 在問我自己的事（「你會日文嗎」）不是在問剛剛的回答
@@ -1352,6 +1450,28 @@ public final class EchoEngine {
             let clause = c.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^([0-9]+\.|⚠️|小提醒：)\s*"#, with: "", options: .regularExpression)
             return clause + (clause.hasSuffix("）") ? "" : "。")
         }
+        let parts = answer.components(separatedBy: CharacterSet(charactersIn: "。；\n")).map {
+            $0.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^([0-9]+\.|・|•|⚠️|小提醒：)\s*"#, with: "", options: .regularExpression)
+        }.filter { $0.count >= 4 }
+        // 「要煮多久」「要滷多久」：找剛剛說到時間的那一步（有那個動作的優先）
+        // （「要多久才學得會」問的是要練多久才會，不是做法裡某一步要幾分鐘）
+        if t.range(of: "多久|幾分鐘|幾小時|幾個小時|要多長", options: .regularExpression) != nil, t.count <= 8,
+           t.range(of: "才會|才能|學得會|學會|才可以|進步|上手", options: .regularExpression) == nil {
+            let timed = parts.filter { $0.range(of: #"[0-9０-９]+ ?(到 ?[0-9]+ ?)?(分鐘|小時|秒)"#, options: .regularExpression) != nil }
+            let cook = "[煮滷蒸烤炸煎燉炒泡燙醃燜]"
+            let verb = t.range(of: cook + "|[冰放曬洗]", options: .regularExpression).map { String(t[$0]) }
+            // 「要滷多久」：做法裡寫的是「小火燉 40 分鐘」也算
+            if let c = timed.first(where: { verb != nil && $0.contains(verb!) })
+                ?? (verb != nil && verb!.range(of: cook, options: .regularExpression) != nil ? timed.first(where: { $0.range(of: cook, options: .regularExpression) != nil }) : nil)
+                ?? (verb == nil ? timed.first : nil) { return "大概是這樣：" + c + "。" }
+        }
+        // 「還有幾天」：剛剛的回答裡已經算好「還有 38 天」
+        if t.range(of: "^(那)?(還有|還要|再)(幾天|多久|多少天)$", options: .regularExpression) != nil,
+           let c = parts.first(where: { $0.range(of: "還有 ?[0-9]+ ?天", options: .regularExpression) != nil }) { return c + "。" }
+        // 「水要幾度」：找說到溫度的那一步
+        if t.contains("幾度"), let c = parts.first(where: { $0.range(of: #"[0-9]+ ?(到 ?[0-9]+ ?)?(度|°C)"#, options: .regularExpression) != nil }) { return c + "。" }
+        // 「可以吃什麼」「要帶什麼」：找說到那個動作的那一步
+        if let g = RuleBook.match(t, "^(?:那)?(?:要|可以|需要|該)?(吃|喝|穿|帶|買|準備)(?:什麼|哪些)(?:東西)?$"), let c = parts.first(where: { $0.contains(g[0]) }) { return c + "。" }
         // 「那要打給誰」「電話幾號」：找剛剛說到的電話、專線
         if t.range(of: "打給誰|打幾號|電話幾號|電話多少|什麼電話|聯絡誰|要打電話|專線", options: .regularExpression) != nil, t.count <= 10,
            let c = answer.components(separatedBy: CharacterSet(charactersIn: "。；\n")).first(where: { $0.range(of: "[0-9]{3,}|[0-9]{2,}-[0-9]{3,}", options: .regularExpression) != nil && $0.range(of: "打|電話|專線|客服", options: .regularExpression) != nil }) {
@@ -1432,8 +1552,9 @@ public final class EchoEngine {
             if t.range(of: "^(誰寫的|是誰寫的|誰拍的|是誰拍的|作者是誰)$", options: .regularExpression) != nil { return .rewrite("\(lc.subject)的作者是誰") }
         case "smalltalk":
             if lc.subject.hasPrefix("旅行:") {
-                if t.range(of: #"(要|該)?(帶|換)多少(錢|現金)"#, options: .regularExpression) != nil { return .rewrite("出國要換多少錢") }
-                if t.range(of: #"^(要)?(帶|準備)(什麼|哪些)"#, options: .regularExpression) != nil { return .rewrite("出國要帶什麼") }
+                let abroad = Talk.isAbroad(String(lc.subject.dropFirst(3)))
+                if abroad, t.range(of: #"(要|該)?(帶|換)多少(錢|現金)"#, options: .regularExpression) != nil { return .rewrite("出國要換多少錢") }
+                if t.range(of: #"^(要)?(帶|準備)(什麼|哪些)"#, options: .regularExpression) != nil { return .rewrite(abroad ? "出國要帶什麼" : String(lc.subject.dropFirst(3)) + "要帶什麼") }
                 if t.range(of: #"(要|需要)簽證"#, options: .regularExpression) != nil { return .rewrite(String(lc.subject.dropFirst(3)) + "要簽證嗎") }
                 if t.range(of: #"^(有)?(什麼|哪些)好玩"#, options: .regularExpression) != nil { return .rewrite(String(lc.subject.dropFirst(3)) + "有什麼好玩的") }
                 // 「有什麼好吃的」「要住哪裡」「怎麼去」：補上那個地方

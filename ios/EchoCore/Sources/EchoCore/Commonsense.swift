@@ -145,6 +145,9 @@ public enum Commonsense {
             if m.alias == "人", prev == "的" { return false }
             guard let n = next else { return true }
             if compound.contains(n) { return false }
+            // 「台中歌劇院在哪裡」「台北火車站怎麼去」：地名後面接著一個地點，問的是那個地點，不是那座城市
+            if ["國家", "城市", "地標"].contains(m.entity.kind),
+               t[m.range.upperBound...].range(of: #"^\p{Han}{0,3}?(歌劇院|大學|中學|國中|國小|小學|醫院|夜市|機場|火車站|車站|高鐵站|捷運站|公園|大樓|百貨|商場|博物館|美術館|動物園|圖書館|體育館|老街|大橋|漁港|市場)"#, options: .regularExpression) != nil { return false }
             // 「挪威的森林」「人間失格」：名字後面接「的」再接一個不認得的東西，是更長的名稱
             if n == "的" {
                 let after = t.index(after: m.range.upperBound)
@@ -188,6 +191,9 @@ public enum Commonsense {
         }
         // 整句剛好是資料庫裡的一個問法（「為什麼會有流星」），前面的規則都沒接住：直接用那一筆
         if a == nil { a = exactAnswer(Everyday.clean(raw), now: now) ?? exactAnswer(Everyday.clean(loose), now: now) }
+        // 問價錢（「台北到高雄的高鐵票多少錢」）卻答不出價錢：交給上網查，不要答別的
+        if let x = a, raw.range(of: "多少錢|票價|價錢|價格|費用|收費|門票|多少元|幾塊錢|要錢嗎", options: .regularExpression) != nil,
+           x.range(of: "元|塊|台幣|新台幣|NT|\\$|美金|日幣|免費|價|費", options: .regularExpression) == nil { a = nil }
         memoLock.lock()
         if memo[key] == nil {
             memo[key] = a ?? ""
@@ -750,6 +756,11 @@ public enum Commonsense {
         // 「第二高」「最高的人」這種不是在問第一名的東西，交給上網
         if t.contains("第二") || t.contains("第三") { return nil }
         let scope = scopes.first { $0.1.contains { t.contains($0) } }?.0
+        // 「韓國最高的山」：問的是某個國家、城市裡的第一名，資料裡沒有那個範圍就不要用世界的答案
+        if scope == nil, let g = RuleBook.match(t, #"^(.{2,6}?)(?:的)?(?:最|人口最)"#),
+           facts.contains(where: { ["國家", "城市"].contains($0.kind) && $0.names.contains(g[0]) }) || g[0].range(of: "(國|省|市|縣|州|洲)$", options: .regularExpression) != nil {
+            return nil
+        }
         let rows = CommonsenseData.superlatives.split(separator: "\n").map { $0.split(separator: "|", omittingEmptySubsequences: false).map(String.init) }
         let cand = rows.filter { $0[1] == adj }
         // 問的東西：「山」「河流」「動物」…（長的先比）

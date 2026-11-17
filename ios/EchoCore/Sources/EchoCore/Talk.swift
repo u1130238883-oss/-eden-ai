@@ -44,6 +44,12 @@ public enum Talk {
     public static func answer(_ raw: String) -> String? { detailed(raw)?.text }
 
     /// 聊天：對方在說自己的事（不是問問題）——照說的內容接話、問下去，不拿宮位亂回（使用者 2026-10-28：「不要用宮位亂回」）
+    /// 「日本」「巴黎」是出國；「露營」「墾丁」「台南」不是
+    static func isAbroad(_ x: String) -> Bool {
+        let taiwan = x.range(of: "台灣|台北|新北|桃園|新竹|苗栗|台中|彰化|南投|雲林|嘉義|台南|高雄|屏東|宜蘭|花蓮|台東|澎湖|金門|馬祖|基隆|墾丁|九份|阿里山|日月潭|綠島|蘭嶼|小琉球", options: .regularExpression) != nil
+        return !taiwan && Commonsense.facts.contains { ["國家", "城市"].contains($0.kind) && $0.names.contains(x) }
+    }
+
     /// 剛剛閒聊的主題（看、吃、旅行:日本、下班、養寵物…），對方接著回答時用
     static var lastChatTopic = ""
 
@@ -269,7 +275,10 @@ public enum Talk {
             let x = g[0]
             lastChatTopic = "旅行:" + x
             let tip = Library.lists.contains(where: { $0.names.contains(x + "的景點") }) ? "想知道景點，問我「\(x)有什麼好玩的」；" : ""
-            return "去\(x)玩很棒耶！打算什麼時候去、去幾天？\(tip)要準備什麼，也可以問我「出國要帶什麼」。"
+            // 出國才建議「出國要帶什麼」；露營、海邊、台灣的地方就問那件事要帶什麼
+            let abroad = Talk.isAbroad(x)
+            let prep = abroad ? "要準備什麼，也可以問我「出國要帶什麼」。" : (Commonsense.answer(x + "要帶什麼") != nil ? "要準備什麼，也可以問我「\(x)要帶什麼」。" : "")
+            return "去\(x)玩很棒耶！打算什麼時候去、去幾天？\(tip)\(prep)"
         }
         // 好消息（「我今天升遷了」「我中發票了」「我被誇獎了」）
         if let g = m(#"^我?(?:今天|剛剛|剛|終於|居然)?(升遷|升職|加薪|中獎|中發票|中樂透|被誇獎|被稱讚|被表揚|被老闆稱讚|拿到offer|拿到獎學金|錄取|考過|通過面試|通過考試|領到年終)(?:了)?$"#) {

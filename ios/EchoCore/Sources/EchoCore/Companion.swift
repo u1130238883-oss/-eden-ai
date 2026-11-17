@@ -134,7 +134,9 @@ public enum Companion {
     public static func isSmallTalk(_ raw: String) -> Bool {
         let t = raw.replacingOccurrences(of: " ", with: "").lowercased()
         let idx = 0
-        if t.count <= 8 && (has(t, greet[idx]) || has(t, thanks[idx]) || has(t, bye[idx])) { return true }
+        // 「謝謝的日文怎麼說」「感謝卡怎麼寫」是在問「謝謝」這個詞，不是在道謝
+        let aboutTheWord = t.range(of: "怎麼說|怎麼講|怎麼寫|的意思|翻譯|[英日韓法德泰]文|[英日韓法德]語|台語|謝謝卡|感謝卡|感謝信|感謝函", options: .regularExpression) != nil
+        if t.count <= 8 && (has(t, greet[idx]) || (has(t, thanks[idx]) && !aboutTheWord) || has(t, bye[idx])) { return true }
         return has(t, identity[idx]) || (has(t, capability[idx]) && t.count <= 14) || helpWords[idx].contains(t)
     }
 
@@ -151,7 +153,7 @@ public enum Companion {
         if hasF(text, complaint[idx], L), L != .zh || !text.contains("我") || text.contains("你") { return choose(complaintReplies[idx]) }
         if helpWords[idx].contains(text) || (hasF(text, capability[idx], L) && text.count <= (L == .zh ? 14 : 60)) { return capabilityReplies[idx] }
         if hasF(text, identity[idx], L) { return identityReplies[idx] }
-        if short && hasF(text, thanks[idx], L) { return choose(thanksReplies[idx]) }
+        if short && hasF(text, thanks[idx], L), !(L == .zh && text.range(of: "怎麼說|怎麼講|怎麼寫|的意思|翻譯|[英日韓法德泰]文|[英日韓法德]語|台語|謝謝卡|感謝卡|感謝信|感謝函", options: .regularExpression) != nil) { return choose(thanksReplies[idx]) }
         // 「拜拜要準備什麼」是拜拜（祭拜），不是掰掰
         if short && hasF(text, bye[idx], L) && !(L == .zh && (EchoEngine.isQuestion(text) || text.range(of: "拜拜(要|的|用|需要|準備|拜)", options: .regularExpression) != nil)) { return choose(byeReplies[idx]) }
         if hasF(text, praise[idx], L) && !text.contains("?") { return choose(praiseReplies[idx]) }
