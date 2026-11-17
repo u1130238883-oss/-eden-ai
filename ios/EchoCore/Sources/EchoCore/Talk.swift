@@ -761,6 +761,9 @@ public enum Talk {
             // 猜一個答案（「水」「是硬幣嗎」）；新的問題（「台灣有幾個縣市」）不算猜
             let newQuestion = ["什麼", "幾", "怎麼", "為什麼", "誰", "哪", "多少", "多久", "多高", "多大", "如何"].contains(where: { t.contains($0) })
                 || (t.count >= 4 && Commonsense.answer(raw) != nil)
+                // 換一個要求（「跟我說一個有趣的事」「推薦一本書」）不是在猜
+                || t.range(of: "^(跟我說|跟我講|說一個|講一個|給我|幫我|告訴我|推薦|我想|我要|換一個|來點|說個|講個)", options: .regularExpression) != nil
+                || (t.count >= 5 && (Talk.detailed(raw) != nil || Talk.chat(raw) != nil))
             if !core.isEmpty, (1...10).contains(t.count), !newQuestion {
                 var g = t
                 for p in ["是不是", "是", "應該是", "我猜是", "我猜", "答案是"] where g.hasPrefix(p) && g.count > p.count { g.removeFirst(p.count); break }

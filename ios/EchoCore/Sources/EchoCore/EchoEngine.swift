@@ -742,6 +742,17 @@ public final class EchoEngine {
             return done("你的生日是 \(b.year) 年 \(b.month) 月 \(b.day) 日：太陽星座是\(sign)，生肖屬\(animal)（以農曆過年為界）。想看更完整的命盤，可以問我「我的命盤」。", .tool)
         }
 
+        // 2.0007) 只有月日的生日（「我的生日是5月20日」）：先告訴他星座，要排命盤再補年份
+        if L == .zh, let g = RuleBook.match(text.filter { !"？?。！!，, ".contains($0) }, #"^(?:我的?)?生日是?(\d{1,2})月(\d{1,2})[日號]?$"#),
+           let m = Int(g[0]), let d = Int(g[1]), (1...12).contains(m), (1...31).contains(d) {
+            let cuts = [20, 19, 21, 20, 21, 22, 23, 23, 23, 24, 23, 22]
+            let order = ["摩羯座", "水瓶座", "雙魚座", "牡羊座", "金牛座", "雙子座", "巨蟹座", "獅子座", "處女座", "天秤座", "天蠍座", "射手座"]
+            let sign = d >= cuts[m - 1] ? order[m % 12] : order[m - 1]
+            return done("\(m) 月 \(d) 日生日，太陽星座是\(sign)！🎂 如果再告訴我出生的年份（例如「我的生日是2000年\(m)月\(d)日」），我就能幫你看生肖、排命盤和運勢。", .tool)
+        }
+        // 2.0008) 小遊戲：擲骰子、丟硬幣、猜拳、隨便一個數字、幫我在兩個裡面選一個
+        if L == .zh, let a = EchoEngine.playful(text.filter { !"？?。！!".contains($0) }) { return done(a, .tool) }
+
         // 2.001) 有標準答案、用算的就知道的（某年生肖、干支、日期加減、地支沖合、按比例分、面積、利息、原子序）：引擎直接算
         if L == .zh, let a = QuickCalc.answer(text) { return done(a, .tool) }
 
@@ -1202,6 +1213,32 @@ public final class EchoEngine {
     /// 只處理在問「怎麼辦、要不要」或在說自己的困擾的話；最後在問事實（「…那邊天氣冷嗎」「…為什麼」）的不管
     static let narrativeAdviceAsk = "怎麼辦|該怎麼|要怎麼|怎麼做|要不要|需不需要|該不該|有什麼(方法|辦法|建議)|有沒有(方法|辦法|建議)|不想去?看醫生|不肯去?看醫生|不願意去?看醫生"
     static let narrativeYesNo = "是不是.{1,8}[了嗎]?[？?]*$|會不會.{1,8}[？?]*$|嗎[？?]*$"
+    /// 擲骰子、丟硬幣、猜拳、隨便給一個數字、「幫我決定要吃拉麵還是火鍋」
+    static func playful(_ t: String) -> String? {
+        if t.range(of: #"^(幫我|來|我們來)?(擲|丟|骰|搖)(一下|一個|個|一顆)?骰子(吧)?$|^骰子$"#, options: .regularExpression) != nil {
+            let n = Int.random(in: 1...6)
+            return "🎲 擲出來是…… \(["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"][n - 1]) \(n) 點！"
+        }
+        if t.range(of: #"^(幫我|來|我們來)?(丟|擲|拋)(一下|個|一個)?硬幣(吧)?$"#, options: .regularExpression) != nil {
+            return "🪙 丟出來是……\(Bool.random() ? "正面" : "反面")！"
+        }
+        if t.range(of: #"^(來|我們來|跟我)?(猜拳|剪刀石頭布|玩猜拳)(吧)?$"#, options: .regularExpression) != nil {
+            return "好啊！剪刀、石頭、布——我出「\(["✌️ 剪刀", "✊ 石頭", "🖐 布"].randomElement()!)」！你出什麼？"
+        }
+        if t.range(of: #"^(隨便|幫我)?(給我|選|挑|想)(一個)?數字$|^隨便(給我)?一個數字$|^(幫我)?從?1到100(選|挑|抽)(一個)?(數字)?$"#, options: .regularExpression) != nil {
+            return "給你一個數字：\(Int.random(in: 1...100))！"
+        }
+        // 「幫我決定要吃拉麵還是火鍋」「拉麵還是火鍋，你幫我選」
+        if let g = RuleBook.match(t, #"^(?:你)?(?:幫我|替我)(?:選|決定|做決定|挑|選一個)[：:，, ]*(?:要|我要|該)?(.{1,10}?)還是(.{1,10})$"#)
+            ?? RuleBook.match(t, #"^(?:我)?(?:要|該)?(.{1,10}?)還是(.{1,10}?)[，, ]*(?:你)?(?:幫我選|幫我決定|你選|幫我挑|你決定)(?:一個)?(?:吧)?$"#) {
+            var b = g[1]
+            for suf in ["好呢", "好", "呢", "比較好"] where b.hasSuffix(suf) && b.count > suf.count { b.removeLast(suf.count); break }
+            let pick = Bool.random() ? g[0] : b
+            return "我幫你選：\(pick)！\n（小撇步：真的猶豫的時候，聽到答案的那一秒，如果你心裡有點失望，那另一個才是你真正想要的 😉）"
+        }
+        return nil
+    }
+
     /// 明白在問命理的字（一大段心事裡出現「今天」「明天」不算）
     static func explicitFortune(_ text: String) -> Bool {
         BrainRoute.withoutEveryday(text).range(of: "運勢|運氣|命盤|命宮|八字|紫微|卦|流年|大運|流月|九型|第幾型|十二宮|星座|生肖|算命|占卜|塔羅|太歲|風水", options: .regularExpression) != nil
