@@ -447,6 +447,12 @@ public enum Commonsense {
         if hit == nil, let g = RuleBook.match(t, #"^(?:我的?)?(.{1,4}?)(?:要|該)?(?:怎麼|如何|怎樣)(.)"#) {
             hit = mentions(g[1] + g[0], in: howtos).first?.entity
         }
+        // 「蟑螂怎麼消滅」＝怎麼消滅蟑螂、「機車怎麼保養」＝機車保養：換個語序再找一次
+        if hit == nil, let g = RuleBook.match(t, #"^(?:我的?|家裡的?|我家的?)?(.{1,6}?)(?:要|該|應該)?(?:怎麼|如何|怎樣)(.{1,4}?)(?:才好|比較好|呢|啊|嗎)?$"#) {
+            for c in ["怎麼" + g[1] + g[0], g[1] + g[0], g[0] + g[1]] {
+                if let m = mentions(c, in: howtos).first(where: { $0.alias.count >= 3 }) { hit = m.entity; break }
+            }
+        }
         guard let e = hit else { return nil }
         let steps = (e.attr("步驟") ?? "").split(separator: "；").enumerated().map { "\($0.offset + 1). \($0.element)" }
         guard !steps.isEmpty else { return nil }
@@ -641,6 +647,7 @@ public enum Commonsense {
     static func superlative(_ t0: String) -> String? {
         var t = t0
         if t.contains("人口最多") { t = t.replacingOccurrences(of: "人口最多", with: "最多人") }
+        if t.contains("人最多") { t = t.replacingOccurrences(of: "人最多", with: "最多人") }
         guard let adj = adjectives.first(where: { t.contains($0) }) else { return nil }
         // 「第二高」「最高的人」這種不是在問第一名的東西，交給上網
         if t.contains("第二") || t.contains("第三") { return nil }
@@ -715,7 +722,7 @@ public enum Commonsense {
         ("登山", ["可以爬", "能爬", "怎麼爬", "爬上去", "登山", "爬得上去", "可以登"]),
         ("最佳季節", ["什麼時候去", "幾月去", "最佳季節", "什麼季節去", "哪個季節", "什麼時候最好", "幾月最好", "何時去"]),
         ("壞處", ["壞處", "缺點", "副作用", "危害", "對身體不好", "風險"]),
-        ("沸點", ["沸點", "沸騰", "燒開", "煮沸", "會滾", "煮開"]),
+        ("沸點", ["沸點", "沸騰", "燒開", "煮沸", "會滾", "煮開", "水滾", "滾是幾度", "滾了是幾度", "幾度滾", "幾度會開"]),
         ("冰點", ["冰點", "結冰", "凝固", "結成冰"]),
         ("高度", ["多高", "高度", "海拔", "有多高", "幾公尺高", "幾公尺", "幾米"]),
         ("長度", ["多長", "長度", "有多長", "幾公里長", "幾公里"]),

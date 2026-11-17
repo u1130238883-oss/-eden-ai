@@ -169,6 +169,15 @@ final class FollowUpTests: XCTestCase {
             let r = try run([q])[0]
             XCTAssertTrue(r.webQuery == nil && r.turn.text.contains(must), "\(q) → \(r.turn.text.prefix(60))")
         }
+        // 口氣詞開頭、全形數字、「你知不知道…」、英文公司名的大小寫
+        for (q, must) in [("嘿嘿 日本的首都是哪裡", "東京"), ("喂喂 貓可以吃巧克力嗎", "不"), ("好 那月亮離地球多遠", "38.4"), ("台北１０１多高", "508"),
+                          ("你知不知道日本首都在哪", "東京"), ("google是誰創立的", "佩吉"), ("Google是哪一年成立的", "1998"), ("youtube是誰創的", "陳士駿"),
+                          ("哪個國家人最多", "印度"), ("水滾是幾度", "100"), ("我想學python要怎麼開始", "Python")] {
+            let r = try run([q])[0]
+            XCTAssertTrue(r.webQuery == nil && r.turn.text.contains(must), "\(q) → \(r.turn.text.prefix(60))")
+        }
+        // 「google 台北101」還是叫我上網查
+        XCTAssertNotNil(try run(["google 台北101"])[0].webQuery)
         // 繁體的「公里」「皇后」「只有」不能被改掉
         XCTAssertEqual(Hanzi.toTraditional("台北到高雄幾公里"), "台北到高雄幾公里")
         XCTAssertEqual(Hanzi.toTraditional("我只有一個皇后"), "我只有一個皇后")
@@ -176,6 +185,32 @@ final class FollowUpTests: XCTestCase {
     }
 
     /// 一次問兩個、打招呼接問題、「拜拜」不是再見、地名加「有什麼好玩的」
+    /// 一大段在說自己的事、最後問「怎麼辦／要不要」：回答真正問的那件事，不是整段拿去上網查
+    func testLongPersonalMessages() throws {
+        let cases: [(String, String)] = [
+            ("我家的貓從昨天開始就一直吐，也不太吃東西，精神看起來也不好，我很擔心，要不要帶去看醫生", "獸醫"),
+            ("我男朋友最近都很晚回我訊息，問他在幹嘛他也只說在忙，我覺得他是不是不愛我了，我該怎麼辦", "不安"),
+            ("最近工作壓力很大，每天都加班到很晚，回家只想躺著，週末也提不起勁出門，我是不是生病了", "倦怠"),
+            ("我跟最好的朋友吵架了，因為她把我的秘密說出去，現在我們都不講話，我該怎麼辦", "和好"),
+            ("我今天在公司被主管當著大家的面罵，因為我報告裡有一個數字寫錯，我覺得很丟臉，回家之後一直想這件事，晚上也睡不著，不知道明天要怎麼面對大家", "主管"),
+            ("我媽最近一直咳嗽，已經咳了兩個禮拜了，她都說沒事不想去看醫生，我很擔心", "陪你去"),
+            ("我想要換工作，可是現在的工作很穩定，新的工作薪水比較高但是要常常加班，不知道該不該換", "加班"),
+        ]
+        for (q, must) in cases {
+            let r = try run([q])[0]
+            XCTAssertTrue(r.webQuery == nil && r.turn.text.contains(must) && r.turn.text.contains("\n1. "), "\(q.prefix(20)) → \(r.turn.text.prefix(80))")
+        }
+        // 很長但在問事情的，照常回答或上網查，不給心靈建議
+        let fact = try run(["我想知道為什麼天空是藍色的，還有晚上為什麼是黑的呢"])[0]
+        XCTAssertFalse(fact.turn.text.contains("抱抱你") || fact.turn.text.contains("我陪你一起想"), fact.turn.text)
+        let trip = try run(["我下個月要去日本東京玩五天，請問那邊現在天氣冷嗎"])[0]
+        XCTAssertNotNil(trip.webQuery, trip.turn.text)
+        // 「吉他」的「吉」不是在問運勢
+        let guitar = try run(["我最近在學吉他，這樣正常嗎"])[0]
+        XCTAssertNotEqual(guitar.turn.source, .grounded, guitar.turn.text)
+        XCTAssertFalse(guitar.turn.text.contains("生日"), guitar.turn.text)
+    }
+
     func testCompoundGreetingAndWorship() throws {
         let a = try run(["台北101多高，富士山多高"])[0]
         XCTAssertTrue(a.turn.text.contains("508") && a.turn.text.contains("3776"), a.turn.text)

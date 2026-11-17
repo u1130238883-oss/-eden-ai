@@ -173,7 +173,13 @@ public final class EchoEngine {
                       onToken: ((String) -> Void)? = nil) -> Reply {
         // 簡體字、異體字（「猫可以吃巧克力吗」「怎麽煮白飯」）先轉成繁體再理解
         // 自我介紹的名字（「我叫张伟」）照原樣，不轉
-        let message = message0.range(of: "^(我叫|叫我|你可以叫我|我的名字是|我的名字叫|請叫我|以後叫我)", options: .regularExpression) != nil ? message0 : Hanzi.toTraditional(message0)
+        // 全形的數字、英文字母（「台北１０１多高」）換成半形
+        let halfWidth = String(String.UnicodeScalarView(message0.unicodeScalars.map { u in
+            if (0xFF10...0xFF19).contains(u.value) || (0xFF21...0xFF3A).contains(u.value) || (0xFF41...0xFF5A).contains(u.value) { return Unicode.Scalar(u.value - 0xFEE0)! }
+            if u.value == 0x3000 { return " " }
+            return u
+        }))
+        let message = halfWidth.range(of: "^(我叫|叫我|你可以叫我|我的名字是|我的名字叫|請叫我|以後叫我)", options: .regularExpression) != nil ? halfWidth : Hanzi.toTraditional(halfWidth)
         var r = replyMain(to: message, history: history, context: context, onToken: onToken)
         // 問的是查表就能答的命理知識（「庚干的四化」「日主辛看癸是什麼十神」），引擎卻在要生日：直接用算好的答
         if r.lang == .zh, r.turn.text.contains("不知道你的生日") {
@@ -511,10 +517,21 @@ public final class EchoEngine {
            let r = m.range(of: #"(?<=是|在|位於|住在|去)那裡(?=(呢|啊)?[？?]*$)"#, options: .regularExpression) {
             m.replaceSubrange(r, with: "哪裡")
         }
-        // 打招呼後面接問題（「早安，今天幾號」「你好，請問貓可以吃巧克力嗎」）：只看問題
-        if let r = m.range(of: #"^(早安|午安|晚安|你好|您好|哈囉|嗨|嘿|hi|Hi|hello|Hello|安安|早)[，,！!～~。 ]+"#, options: .regularExpression),
-           EchoEngine.isQuestion(String(m[r.upperBound...])) || m[r.upperBound...].hasPrefix("請問") {
-            m.removeSubrange(r)
+        // 打招呼、口氣詞後面接問題（「早安，今天幾號」「你好，請問貓可以吃巧克力嗎」「嘿嘿 日本的首都是哪裡」「喂喂 貓可以吃巧克力嗎」「好 那月亮離地球多遠」）：只看問題
+        for _ in 0..<3 {
+            guard let r = m.range(of: #"^((早安|午安|晚安|你好|您好|哈囉|嗨+|嘿+|hi|Hi|hello|Hello|安安|早|欸+|誒+|喂+|嗯+|喔+|哦+|噢+|吼+|齁+|好|好啦|好喔|好的|OK|ok)[，,！!～~。 …]+|(嘿|欸|誒|喂|嗯|喔|哦|哈|嗨|吼|齁){2,}[，,！!～~。 …]*)"#, options: .regularExpression),
+                  r.upperBound < m.endIndex else { break }
+            let rest = String(m[r.upperBound...])
+            guard EchoEngine.isQuestion(rest) || rest.hasPrefix("請問") || rest.range(of: #"^(我問你|問你|想請教|請教|那個)"#, options: .regularExpression) != nil else { break }
+            m = rest
+        }
+        // 「你知不知道日本首都在哪」「你曉不曉得…」→ 直接是那個問題
+        if let g = RuleBook.match(m, #"^(?:你|妳)?(?:知不知道|知道不知道|曉不曉得|曉得)(.{2,30}?)(?:嗎|呢)?[？?]*$"#), EchoEngine.isQuestion(g[0]) || g[0].range(of: "在哪|是哪|多少|幾|誰|什麼", options: .regularExpression) != nil {
+            m = g[0]
+        }
+        // 「人口最多的國家是」：話沒說完的「是」＝是什麼
+        if m.range(of: #"最.{1,10}是[？?]*$"#, options: .regularExpression) != nil, let r = m.range(of: #"是[？?]*$"#, options: .regularExpression) {
+            m.replaceSubrange(r, with: "是什麼")
         }
         // 開場白（「我問你喔，」「問你一個問題：」「想請教一下」「跟你說喔」「對了，」）不是問題的一部分
         m = m.replacingOccurrences(of: #"^(我問你喔|我問你哦|我問你|問你一個問題|問你個問題|問你一件事|想請教一下|想請教|請教一下|跟你說喔|跟你說|對了|話說|老實說|順便問一下|順便問|那個…|那個\.\.\.)[，,：:、 …!！]*(?=.{2,})"#, with: "", options: .regularExpression)
@@ -1167,7 +1184,9 @@ public final class EchoEngine {
         for c in order {
             // 只是問「這樣正常嗎、是不是…」：要從說到困擾的那一句找，不要因為前面提到「在學吉他」就教怎麼學吉他
             if !advice, !distressStory(c) { continue }
-            for q in [c, c + "怎麼辦"] {
+            // 「跟最好的朋友吵架了」＝跟朋友吵架了
+            let plain = c.replacingOccurrences(of: "(最好的|很好的|要好的|最要好的)(朋友|同學|同事)", with: "$2", options: .regularExpression)
+            for q in [plain, plain + "怎麼辦"] {
                 if let a = Commonsense.answer(q, now: now), a.contains("\n1. ") {
                     return (a.hasPrefix("聽起來") ? (hurting ? "辛苦你了。" : "") : lead) + a
                 }
@@ -1567,13 +1586,15 @@ public final class EchoEngine {
     public static func explicitSearch(_ raw: String) -> String? {
         let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         let l = t.lowercased()
-        let prefixes = ["上網", "搜尋", "搜索", "查一下", "幫我查", "幫我搜", "幫我上網", "請上網", "請幫我查", "請幫我上網", "去網上", "網上查", "google",
+        let prefixes = ["上網", "搜尋", "搜索", "查一下", "幫我查", "幫我搜", "幫我上網", "請上網", "請幫我查", "請幫我上網", "去網上", "網上查",
                         "search ", "search for ", "look up ", "busca ", "buscar ", "cerca "]
         let inside = ["上網查", "上網搜", "上網找", "網路上查", "網上查", "上網看看"]
         // 「你可以幫我查一下明天天氣嗎」：請我幫忙查，查的是後面那一段
         if let g = RuleBook.match(t.trimmingCharacters(in: CharacterSet(charactersIn: "？?。！! ")), #"^(?:你|妳)?(?:可以|能不能|能|可不可以)?(?:幫我|幫忙)(?:上網)?(?:查|搜|找|搜尋)(?:一下|看看)?(.{2,30}?)(?:嗎|好嗎|好不好|呢)?$"#),
            !g[0].contains("我的"), !g[0].contains("運勢") { return g[0] }
-        guard prefixes.contains(where: { l.hasPrefix($0) }) || inside.contains(where: { t.contains($0) }) else { return nil }
+        // 「google 台北101」「google一下…」是叫我查；「Google是誰創立的」是在問 Google 這家公司
+        let googleVerb = l.range(of: #"^google\s*(一下|查|看看|搜尋|搜|找)|^google\s+\S"#, options: .regularExpression) != nil
+        guard prefixes.contains(where: { l.hasPrefix($0) }) || inside.contains(where: { t.contains($0) }) || googleVerb else { return nil }
         if t.contains("我的") || t.contains("運勢") || (t.contains("我") && ManticReader.wants(t)) { return nil }
         // 「你可以上網找資料嗎」「你會上網嗎」是在問 NineSun 的能力，不是要它去查
         if ["你可以", "你會", "你能", "你有辦法"].contains(where: { t.hasPrefix($0) }) && (t.hasSuffix("嗎") || t.hasSuffix("？") || t.hasSuffix("?")) { return nil }

@@ -64,7 +64,9 @@ public enum Library {
     public static func detailed(_ raw: String) -> Answered? {
         let t = bare(raw)
         guard t.count >= 3, t.count <= 40 else { return nil }
-        if ["上網查", "幫我查", "搜尋", "google", "Google"].contains(where: { raw.contains($0) }) { return nil }
+        // 叫我去查的才不答（「Google是誰創立的」是在問 Google 這家公司）
+        if ["上網查", "幫我查", "搜尋"].contains(where: { raw.contains($0) })
+            || raw.range(of: #"(?i)google\s*(一下|查|看看|搜尋|搜|找)|用google|幫我google|^google\s+"#, options: .regularExpression) != nil { return nil }
         if let a = author(t) {
             let w = authorWork(t)
             return Answered(text: a, kind: "author", subject: w?.name ?? "", extra: w.map(authorName) ?? "")
@@ -127,16 +129,37 @@ public enum Library {
             if let w = whos.first(where: { $0.names.contains(n) }) { return w }
             n.removeLast(s.count); break
         }
-        return whos.first { $0.names.contains(n) }
+        if let w = whos.first(where: { $0.names.contains(n) }) { return w }
+        // 「google」「youtube」：英文名字不分大小寫
+        let low = n.lowercased()
+        return low == n && n.range(of: "[a-z]", options: .regularExpression) == nil ? nil : whos.first { $0.names.contains { $0.lowercased() == low } }
     }
 
     static func whoDid(_ t: String) -> String? {
-        let verbs = "提出|發現|發明|創立|創辦|建立|成立|設計|開發|研發|創造|做出|發表|首創|開創|推出|製造"
+        let verbs = "提出|發現|發明|創立|創辦|建立|成立|設計|開發|研發|創造|做出|發表|首創|開創|推出|製造|發起|創"
         let pats = [#"^(.{1,20}?)(?:是|由)?誰(?:最早|最先|首先|第一個)?(?:"# + verbs + #")(?:的|了)?$"#,
                     #"^(.{1,20}?)的(?:創辦人|創始人|創立者|創辦者|提出者|發現者|發明者|發明人|開發者|設計者|創造者|老闆|爸爸|之父)(?:是誰|是哪位|是什麼人)?$"#,
                     #"^誰(?:"# + verbs + #")(?:了|的)?(.{1,20})$"#,
                     #"^(?:"# + verbs + #")(.{1,12}?)的(?:人|是誰|人是誰|是哪位)$"#,
                     #"^(.{1,20}?)是(?:誰|哪個人|哪位)(?:"# + verbs + #")的$"#]
+        // 「Google是哪一年成立的」「臉書什麼時候創立的」：問年份
+        let whenPats = [#"^(.{1,20}?)(?:是|在)?(?:哪一年|哪年|什麼時候|何時|幾年)(?:"# + verbs + #"|創|開始|出現|有的)(?:的|了)?$"#,
+                        #"^(.{1,20}?)(?:"# + verbs + #")(?:多久了|幾年了|於哪一年|在哪一年)$"#]
+        if let g = whenPats.lazy.compactMap({ RuleBook.match(t, $0) }).first, let w = whoItem(g[0]), let y = w.attr("年份") {
+            // 用問句裡的動詞（成立、提出、發明…），沒有就說「創立」
+            let asked = ["成立", "創立", "創辦", "提出", "發現", "發明", "設計", "開發", "研發", "推出", "發表", "建立", "製造", "發起"].first { t.contains($0) } ?? "創立"
+            let main = y.components(separatedBy: "（").first ?? y
+            let note = y.contains("（") ? "（" + y.components(separatedBy: "（").dropFirst().joined(separator: "（") : ""
+            let m0 = main.trimmingCharacters(in: .whitespaces)
+            var s = m0.first?.isNumber == true ? "\(w.name)是在 \(m0)\(asked)的\(note)" : "\(w.name)：\(y)"
+            if let who = w.attr("誰") {
+                let done = who.range(of: "(創立|創辦|提出|發現|發明|成立|推出|設計|開發)(的)?$", options: .regularExpression) != nil
+                s += "，由\(who)" + (done ? "" : asked)
+            }
+            s += "。"
+            if let i = w.attr("簡介") { s += "\n\(i)。" }
+            return s
+        }
         guard let g = pats.lazy.compactMap({ RuleBook.match(t, $0) }).first, let w = whoItem(g[0]), let who = w.attr("誰") else { return nil }
         var s = "\(w.name)：\(who)"
         if let y = w.attr("年份") { s += "，\(y)" }
