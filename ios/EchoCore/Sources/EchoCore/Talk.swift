@@ -358,6 +358,18 @@ public enum Talk {
             case "銀行", "郵局": return "去辦事嗎？記得帶好證件，順利喔～"
             default: break
             }
+            // 「要去旅行了」：還沒說去哪裡
+            if ["旅行", "旅遊", "玩", "度假", "出國"].contains(x) {
+                lastChatTopic = "旅行:"
+                return "要去\(x)了，好棒！去哪裡呢？想知道那邊有什麼好玩、要帶什麼，都可以問我。"
+            }
+            // 「週末要去露營」「明天要去看電影」：去做一件事，不是去一個地方
+            let place = x.range(of: "台灣|台北|新北|桃園|新竹|苗栗|台中|彰化|南投|雲林|嘉義|台南|高雄|屏東|宜蘭|花蓮|台東|澎湖|金門|馬祖|基隆|墾丁|九份|阿里山|日月潭|綠島|蘭嶼|小琉球|[市縣鄉鎮島山湖海灣站街路]$", options: .regularExpression) != nil
+                || Commonsense.facts.contains { ["國家", "城市", "地標"].contains($0.kind) && $0.names.contains(x) }
+            if !place, x.range(of: "^(露營|爬山|看電影|看展|唱歌|逛街|逛夜市|夜市|野餐|海邊|游泳|衝浪|潛水|釣魚|看演唱會|聽演唱會|約會|騎車|騎腳踏車|泡溫泉|溫泉|吃大餐|吃好料|聚餐|看球賽|打球|滑雪|動物園|遊樂園|水族館|博物館|美術館)$", options: .regularExpression) != nil {
+                lastChatTopic = "玩"
+                return "\(x)聽起來好好玩！要跟誰去？玩得開心，回來跟我說說～"
+            }
             lastChatTopic = "旅行:" + x
             var tip = ""
             if Library.lists.contains(where: { $0.names.contains(x + "的景點") }) { tip = "想知道那邊有什麼好玩的，問我「\(x)有什麼好玩的」。" }
@@ -441,6 +453,10 @@ public enum Talk {
             if positive { return "聽得我都餓了😋 下次也帶我（的螢幕）去吧！" }
             if negative { return "下次換一家試試～想要的話，問我「今天吃什麼」，我幫你想。" }
         case "買", "玩", "逛", "聽":
+            // 「週末要去露營」→「跟朋友」：說了跟誰去
+            if topic == "玩", let g = RuleBook.match(t, #"^(?:跟|和|與|帶)?(朋友|好朋友|家人|男友|女友|男朋友|女朋友|老公|老婆|同學|同事|爸媽|家人們|小孩|孩子|閨蜜|一個人|自己|大家)(?:一起)?(?:去)?(?:啊|喔|呀)?$"#) {
+                return ["一個人", "自己"].contains(g[0]) ? "一個人也很自在！注意安全，玩得開心～回來跟我說說。" : "跟\(g[0])一起，一定很好玩！記得多拍幾張照片，回來跟我分享～"
+            }
             if positive { return "太好了！開心最重要～" }
             if negative { return "有點可惜呢，下次會更好的！" }
         case "下班":
@@ -450,6 +466,14 @@ public enum Talk {
         case "養寵物":
             if t.count <= 6, !negative { return "\(t)很可愛！養之前可以先了解牠的個性、運動量、掉毛和常見的疾病；也可以考慮去收容所領養同品種或米克斯，一樣可愛。" }
         default:
+            // 「要去旅行了」→「日本」：說了要去哪裡
+            if topic == "旅行:", t.count <= 8,
+               Commonsense.facts.contains(where: { ["國家", "城市", "地標"].contains($0.kind) && $0.names.contains(t) })
+                || t.range(of: "^(台灣|台北|新北|桃園|新竹|苗栗|台中|彰化|南投|雲林|嘉義|台南|高雄|屏東|宜蘭|花蓮|台東|澎湖|金門|馬祖|基隆|墾丁|九份|阿里山|日月潭|綠島|蘭嶼|小琉球)$", options: .regularExpression) != nil {
+                lastChatTopic = "旅行:" + t
+                let tip = Library.lists.contains(where: { $0.names.contains(t + "的景點") }) ? "想知道景點，問我「\(t)有什麼好玩的」；想知道吃什麼，問我「\(t)有什麼好吃的」。" : "想知道那邊有什麼好玩的，可以問我。"
+                return "去\(t)！好棒～" + tip
+            }
             if topic.hasPrefix("旅行:") {
                 let place = String(topic.dropFirst(3))
                 if t.contains("玩") || t.contains("旅行") || t.contains("旅遊") || t.contains("度假") {
