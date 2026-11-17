@@ -554,6 +554,8 @@ public final class EchoEngine {
             let q = g[0] + "有什麼好玩的"
             if Library.detailed(q) != nil || Commonsense.answer(q) != nil { m = q }
         }
+        // 「什麼叫做區塊鏈」「什麼叫通膨」＝什麼是
+        m = m.replacingOccurrences(of: "^什麼叫(做)?", with: "什麼是", options: .regularExpression)
         // 「人口最多的國家是」：話沒說完的「是」＝是什麼
         if m.range(of: #"最.{1,10}是[？?]*$"#, options: .regularExpression) != nil, let r = m.range(of: #"是[？?]*$"#, options: .regularExpression) {
             m.replaceSubrange(r, with: "是什麼")

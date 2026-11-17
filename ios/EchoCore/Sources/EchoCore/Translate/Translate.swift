@@ -133,6 +133,9 @@ public enum Translate {
         // 結尾的「～」「~」只是口氣
         q = q.replacingOccurrences(of: #"[～~]+$"#, with: "", options: .regularExpression)
         guard !q.isEmpty, q.count <= 600 else { return nil }
+        // 「GDP是什麼意思」「CPI是什麼」：認得的英文縮寫是在問概念，不是要翻譯
+        if let g = RuleBook.match(q, #"^([A-Z][A-Za-z0-9]{1,5})(?:是什麼意思|的意思是什麼|代表什麼|是什麼)[？?]*$"#),
+           Commonsense.all.contains(where: { $0.names.contains(g[0]) }) { return nil }
         // 問怎麼「學」一種語言（「怎麼學好英文」「學日文推薦什麼方法」「英文要怎麼進步」）不是要翻譯
         // （「學習的英文是什麼」「英文：學會」是要翻譯「學習」「學會」：只看「學…」後面直接接語言名稱的）
         if !["翻", "譯", "怎麼說", "怎麼講", "怎麼寫", "怎麼念", "怎麼唸", "是什麼意思", "：", ":"].contains(where: { q.contains($0) }),
