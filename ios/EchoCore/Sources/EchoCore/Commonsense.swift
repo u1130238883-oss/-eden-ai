@@ -126,6 +126,47 @@ public enum Commonsense {
     // MARK: - 入口
 
     public static func answer(_ raw: String, now: Date = Date()) -> String? {
+        if let a = answerCore(raw, now: now) { return a }
+        // 換個寬鬆的說法再試一次（「iphone怎麼截圖」「WiFi一直斷線」「每天應該喝多少水」「家裡的wifi連不到」）
+        let loose = loosen(raw)
+        return loose != raw ? answerCore(loose, now: now) : nil
+    }
+
+    /// 名字裡的英文字（iPhone、WiFi、LINE、YouBike）：小寫打的也認得
+    static let latinCanon: [String: String] = {
+        var m: [String: String] = [:]
+        for e in all {
+            for n in e.names {
+                var w = ""
+                for ch in n + " " {
+                    if ch.isASCII && ch.isLetter { w.append(ch); continue }
+                    if w.count >= 2, m[w.lowercased()] == nil { m[w.lowercased()] = w }
+                    w = ""
+                }
+            }
+        }
+        return m
+    }()
+
+    static func loosen(_ raw: String) -> String {
+        var out = "", w = ""
+        for ch in raw + "\u{0}" {
+            if ch.isASCII && ch.isLetter { w.append(ch); continue }
+            if !w.isEmpty { out += latinCanon[w.lowercased()] ?? w; w = "" }
+            if ch != "\u{0}" { out.append(ch) }
+        }
+        var t = out
+        for w in ["一直", "應該", "常常", "總是", "老是", "真的", "到底", "一下"] { t = t.replacingOccurrences(of: w, with: "") }
+        t = t.replacingOccurrences(of: "要怎麼", with: "怎麼").replacingOccurrences(of: "該怎麼", with: "怎麼")
+        t = t.replacingOccurrences(of: #"^(我的|我家的|家裡的|我家)"#, with: "", options: .regularExpression)
+        // 「狗吃巧克力會怎樣」「給狗吃巧克力可以嗎」→「狗可以吃巧克力嗎」
+        if let g = RuleBook.match(t, #"^(?:給)?(.{1,4}?)吃(.{1,6}?)(?:會怎樣|會怎麼樣|會死嗎|會中毒嗎|有事嗎|沒關係嗎|OK嗎|ok嗎|可以嗎|好嗎)[？?]*$"#) {
+            t = "\(g[0])可以吃\(g[1])嗎"
+        }
+        return t
+    }
+
+    static func answerCore(_ raw: String, now: Date = Date()) -> String? {
         var t = Everyday.clean(raw)
         // 「人總共有幾顆牙齒」「一共有幾個」：「總共」「一共」不影響問什麼
         for w in ["總共有", "一共有"] where t.contains(w) && !t.contains("國家") { t = t.replacingOccurrences(of: w, with: "有") }
@@ -617,8 +658,8 @@ public enum Commonsense {
         ("壞處", ["壞處", "缺點", "副作用", "危害", "對身體不好", "風險"]),
         ("沸點", ["沸點", "沸騰", "燒開", "煮沸", "會滾", "煮開"]),
         ("冰點", ["冰點", "結冰", "凝固", "結成冰"]),
-        ("高度", ["多高", "高度", "海拔", "有多高", "幾公尺高"]),
-        ("長度", ["多長", "長度", "有多長", "幾公里長"]),
+        ("高度", ["多高", "高度", "海拔", "有多高", "幾公尺高", "幾公尺", "幾米"]),
+        ("長度", ["多長", "長度", "有多長", "幾公里長", "幾公里"]),
         ("距離", ["多遠", "距離", "離地球", "離我們", "遠嗎"]),
         ("溫度", ["多熱", "溫度", "幾度", "多冷", "多燙"]),
         ("年齡", ["幾歲", "多老", "年齡", "存在多久", "多少年了", "多少歲"]),
@@ -648,7 +689,7 @@ public enum Commonsense {
             return "\(said)的發明者：\(v)。"
         }
         let ms = realMentions(t, in: facts)
-        let whyAsk = ["為什麼", "為何", "怎麼會", "原因", "為啥", "幹嘛", "何以", "怎麼來的", "怎麼發生", "如何發生", "怎麼形成", "如何形成", "怎麼產生", "如何產生", "怎麼運作", "如何運作", "原理"].contains(where: { t.contains($0) })
+        let whyAsk = ["為什麼", "為何", "怎麼會", "原因", "為啥", "幹嘛", "何以", "怎麼來的", "怎麼發生", "如何發生", "怎麼形成", "如何形成", "怎麼產生", "如何產生", "怎麼運作", "如何運作", "原理", "成因", "起因"].contains(where: { t.contains($0) })
         guard let first = ms.first else {
             if let a = reverseCapital(t) { return a }
             if whyAsk { return globalWhy(t) }
@@ -701,8 +742,8 @@ public enum Commonsense {
         if let q = ms.dropFirst().first(where: { ["常識", "健康常識"].contains($0.entity.kind) && $0.alias.count >= 5 }), let intro = q.entity.attr("簡介") {
             return intro + "。" + (q.entity.attr("說明").map { "\n" + $0 + "。" } ?? "")
         }
-        // 「水的沸點」「人的體溫」：沒有問句，但就是「東西的屬性」
-        if !asking.contains(where: { t.contains($0) }), !t.hasSuffix("嗎") {
+        // 「水的沸點」「人的體溫」：沒有問句，但就是「東西的屬性」（「颱風形成的原因」是在問為什麼，往下走）
+        if !asking.contains(where: { t.contains($0) }), !t.hasSuffix("嗎"), !whyAsk {
             let after0 = String(t[first.range.upperBound...])
             if after0.hasPrefix("的"), let v = e.attr(String(after0.dropFirst())), !after0.dropFirst().hasPrefix("因:") {
                 return phrase(e, String(after0.dropFirst()), v, now: now)

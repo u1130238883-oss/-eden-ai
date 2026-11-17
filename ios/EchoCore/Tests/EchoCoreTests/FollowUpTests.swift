@@ -158,4 +158,20 @@ final class FollowUpTests: XCTestCase {
         XCTAssertNil(b[3].webQuery, b[3].turn.text)
         XCTAssertFalse(b[2].turn.text.contains("運勢"), b[2].turn.text)
     }
+
+    /// 不同的打法：簡體字、異體字、開場白、句尾的 XD、大小寫、多打的字
+    func testInputVariants() throws {
+        let cases: [(String, String)] = [("猫可以吃巧克力吗", "不"), ("怎么煮白饭", "米"), ("番茄炒蛋怎麽做", "蛋"), ("台湾最高的山是哪座", "玉山"),
+                                          ("我問你喔，台北101有多高", "508"), ("台北101有多高XD", "508"), ("iphone怎麼截圖", "截圖"),
+                                          ("WiFi一直斷線", "Wi-Fi"), ("每天應該喝多少水", "毫升"), ("狗吃巧克力會怎樣", "不"),
+                                          ("颱風形成的原因", "海水"), ("富士山在那裡", "日本"), ("可以告訴我牙齒痛怎麼辦嗎", "牙"), ("長頸鹿要如何睡覺", "睡")]
+        for (q, must) in cases {
+            let r = try run([q])[0]
+            XCTAssertTrue(r.webQuery == nil && r.turn.text.contains(must), "\(q) → \(r.turn.text.prefix(60))")
+        }
+        // 繁體的「公里」「皇后」「只有」不能被改掉
+        XCTAssertEqual(Hanzi.toTraditional("台北到高雄幾公里"), "台北到高雄幾公里")
+        XCTAssertEqual(Hanzi.toTraditional("我只有一個皇后"), "我只有一個皇后")
+        XCTAssertEqual(Hanzi.toTraditional("我的头发好干"), "我的頭髮好干")
+    }
 }

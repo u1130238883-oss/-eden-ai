@@ -169,8 +169,10 @@ public final class EchoEngine {
     }
 
     /// 逐字產生回覆。`onToken` 每產生一個字就回呼一次。
-    public func reply(to message: String, history: [ChatTurn] = [], context: Context,
+    public func reply(to message0: String, history: [ChatTurn] = [], context: Context,
                       onToken: ((String) -> Void)? = nil) -> Reply {
+        // 簡體字、異體字（「猫可以吃巧克力吗」「怎麽煮白飯」）先轉成繁體再理解
+        let message = Hanzi.toTraditional(message0)
         var r = replyMain(to: message, history: history, context: context, onToken: onToken)
         // 問的是查表就能答的命理知識（「庚干的四化」「日主辛看癸是什麼十神」），引擎卻在要生日：直接用算好的答
         if r.lang == .zh, r.turn.text.contains("不知道你的生日") {
@@ -462,6 +464,26 @@ public final class EchoEngine {
         var m = m
         // 「如果講不好怎麼辦」「萬一地震怎麼辦」→「講不好怎麼辦」
         if let r = m.range(of: #"^(如果|萬一|要是|假如)(?=.{2,14}(怎麼辦|該怎麼辦|要怎麼辦)[？?]*$)"#, options: .regularExpression) { m.removeSubrange(r) }
+        // 「富士山在那裡」「首都是那裡」：打錯的「哪裡」（「我在那裡」是在說自己，不算）
+        if m.range(of: "^(我|你|他|她|我們|你們|他們)", options: .regularExpression) == nil,
+           let r = m.range(of: #"(?<=是|在|位於|住在|去)那裡(?=(呢|啊)?[？?]*$)"#, options: .regularExpression) {
+            m.replaceSubrange(r, with: "哪裡")
+        }
+        // 開場白（「我問你喔，」「問你一個問題：」「想請教一下」「跟你說喔」「對了，」）不是問題的一部分
+        m = m.replacingOccurrences(of: #"^(我問你喔|我問你哦|我問你|問你一個問題|問你個問題|問你一件事|想請教一下|想請教|請教一下|跟你說喔|跟你說|對了|話說|老實說|順便問一下|順便問|那個…|那個\.\.\.)[，,：:、 …!！]*(?=.{2,})"#, with: "", options: .regularExpression)
+        // 「可以告訴我牙齒痛怎麼辦嗎」→「牙齒痛怎麼辦」
+        if let g = RuleBook.match(m, #"^(?:可以|能不能|能|可不可以|你可以|你能)(?:告訴我|跟我說|說說|講講|教我)(.{3,30}?)(?:嗎)?[？?]*$"#),
+           EchoEngine.isQuestion(g[0]) { m = g[0] }
+        // 問題後面的「XD」「哈哈」「😂」只是語氣
+        if let r = m.range(of: #"\s*(哈哈+|呵呵+|XD+|xd+|Xd+|😂+|🤣+|😆+|lol|LOL|www+)\s*$"#, options: .regularExpression), EchoEngine.isQuestion(String(m[..<r.lowerBound])) {
+            m.removeSubrange(r)
+        }
+        // 「番茄炒蛋怎樣做」「怎樣存錢」→「怎麼」（句尾的「怎樣」、「怎樣的人」不換）
+        m = m.replacingOccurrences(of: #"怎樣(?=[^\s的？?。！!，,呢啊])"#, with: "怎麼", options: .regularExpression)
+        // 「可以吃巧克力嗎呢」：多打的語氣詞
+        m = m.replacingOccurrences(of: #"嗎呢(?=[？?！!。～~]*$)"#, with: "嗎", options: .regularExpression)
+        // 「長頸鹿要如何睡覺」「該如何存錢」→「怎麼」（句尾的「運勢如何」不換）
+        m = m.replacingOccurrences(of: #"(要|該|應該)?如何(?!是好)(?=\p{Han})"#, with: "怎麼", options: .regularExpression)
         guard m.range(of: "啥|蝦米|三小|咋|甚麼|神馬|什么|到底|怎麼樣才能|怎樣才能|要怎麼樣|是什麼東西", options: .regularExpression) != nil else { return m }
         var t = m
         for (a, b) in [("到底", ""), ("要怎麼樣才能", "要怎麼"), ("怎麼樣才能", "怎麼"), ("怎樣才能", "怎麼"), ("要怎麼樣", "要怎麼"), ("是什麼東西", "是什麼"),("蝦米", "什麼"), ("三小", "什麼"), ("神馬", "什麼"), ("甚麼", "什麼"), ("什么", "什麼"), ("咋辦", "怎麼辦"), ("咋麼", "怎麼"), ("咋", "怎麼"), ("為啥", "為什麼"), ("幹啥", "做什麼"), ("啥", "什麼")] {
