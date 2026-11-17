@@ -629,6 +629,8 @@ public enum Commonsense {
                    "哪裡好玩", "養什麼", "有什麼好看", "有什麼好聽", "有什麼好玩", "有什麼好吃", "吃啥", "要吃什麼",
                    "可以做什麼", "能做什麼", "要做什麼", "做什麼好", "送什麼", "什麼禮物", "玩什麼", "可以去哪"].contains { t.contains($0) }
             && !["好處", "壞處", "為什麼"].contains(where: { t.contains($0) })
+            // 整句就是推薦類的一個問法（「週末要幹嘛」「放假要幹嘛」）
+            || recommends.contains(where: { $0.aliases.contains(t) && t.count >= 4 })
         guard cue, realMentions(t, in: facts).isEmpty, let e = mentions(t, in: recommends).first?.entity else { return nil }
         let items = (e.attr("項目") ?? "").split(separator: "；").map(String.init)
         guard !items.isEmpty else { return nil }
