@@ -85,6 +85,7 @@ enum Fuzzy {
         for s in qs { for t in s.tokens { qt.insert(t.text) }; for c in s.text { qchars.insert(String(c)) } }
         let qf = focus(q)
         let qwh = qf.subtracting([0])
+        let askHow = q.range(of: "怎麼|如何|要注意|方法|辦法|建議|步驟", options: .regularExpression) != nil
         var best: (score: (Double, Int, Double, Int), entry: Entry)?
         for e in index {
             let m = e.tokens.filter { qt.contains($0) || ($0.count == 1 && qchars.contains($0)) }
@@ -107,6 +108,8 @@ enum Fuzzy {
             if !e.focus.isEmpty && e.focus.isDisjoint(with: qf) { continue }
             let wh = e.isFact ? qwh : qwh.subtracting([5])   // 做法裡常常就有「去哪裡辦」
             if !wh.isEmpty && wh.isDisjoint(with: e.focus) { continue }
+            // 是非題（「這樣正常嗎」）不能用一張做法清單回答，除非也在問怎麼做
+            if qf.contains(0), !e.focus.contains(0), !askHow { continue }
             let score = (cov, m.count, ratio, e.alias.count)
             if best == nil || score > best!.score { best = (score, e) }
         }

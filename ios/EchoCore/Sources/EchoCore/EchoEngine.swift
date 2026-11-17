@@ -1230,7 +1230,9 @@ public final class EchoEngine {
             // 「跟最好的朋友吵架了」＝跟朋友吵架了
             let plain = c.replacingOccurrences(of: "(最好的|很好的|要好的|最要好的)(朋友|同學|同事)", with: "$2", options: .regularExpression)
             for q in [plain, plain + "怎麼辦"] {
-                if let a = Commonsense.answer(q, now: now), a.contains("\n1. ") {
+                if var a = Commonsense.answer(q, now: now), a.contains("\n1. ") {
+                    // 「我想要換工作」的回答開頭是「好啊，我陪你！」，接在「我懂你的狀況。」後面就重複了
+                    a = a.replacingOccurrences(of: #"^(好啊|好呀|好喔|好)[，,]?我陪你[！!]"#, with: "", options: .regularExpression)
                     return (a.hasPrefix("聽起來") ? (hurting ? "辛苦你了。" : "") : lead) + a
                 }
             }
