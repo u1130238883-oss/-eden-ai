@@ -73,7 +73,8 @@ public enum Everyday {
     // MARK: - 金額的百分比、N 天後、幾歲、直角三角形
 
     static func calcMore(_ t0: String, _ now: Date) -> String? {
-        let t = digitize(t0)
+        // 「五千一年」是「五千」＋「一年」，不是五千一（5100）
+        let t = digitize(t0.replacingOccurrences(of: "(?<=[零一二三四五六七八九十百千萬兩])一年", with: "，一年", options: .regularExpression))
         func num(_ s: String) -> Double? { Double(s.replacingOccurrences(of: ",", with: "")) }
         // 「3000元的15%是多少」「500塊的兩成」
         if let g = RuleBook.match(t, #"^([\d,.]+)(?:元|塊錢|塊|美元|台幣)?的([\d.]+)%(?:是|等於)?(?:多少|多少錢|幾元)?$"#), let a = num(g[0]), let p = num(g[1]) {
@@ -91,6 +92,35 @@ public enum Everyday {
             let c = ymd(now)
             guard y <= c.y, y > 1900 else { return nil }
             return "\(y) 年出生，今年（\(c.y) 年）生日過了是 \(c.y - y) 歲，還沒過生日是 \(c.y - y - 1) 歲（實歲）；如果算虛歲大約是 \(c.y - y + 1) 歲。"
+        }
+        // 「三千塊的八折」「500元的75折」
+        if let g = RuleBook.match(t, #"^([\d,.]+)(?:元|塊錢|塊)?的([\d.]+)折(?:是|等於)?(?:多少|多少錢|幾元)?$"#), let a = num(g[0]), let z = num(g[1]), z > 0, z < 100 {
+            let rate = z >= 10 ? z / 100 : z / 10
+            return "\(fmt(a)) 打 \(g[1]) 折是 \(fmt(a * rate))（\(fmt(a)) × \(fmt(rate))），省了 \(fmt(a - a * rate))。"
+        }
+        // 「一個月存五千一年存多少」「每個月花3000一年花多少」
+        if let g = RuleBook.match(t, #"^(?:一個月|1個月|每個月|每月)(存|賺|花|領|繳)?([\d,.]+)(?:元|塊錢|塊)?[，, ]?(?:那)?(?:一年|整年|1年)(?:可以|會|要)?(?:存|賺|花|領|繳)?(?:是)?(?:多少|幾)(?:錢)?$"#), let a = num(g[1]) {
+            let verb = g[0].isEmpty ? "" : g[0]
+            return "每個月\(verb) \(fmt(a))，一年 12 個月就是 \(fmt(a * 12))（\(fmt(a)) × 12）。"
+        }
+        // 「月薪三萬年薪多少」
+        if let g = RuleBook.match(t, #"^月薪([\d,.]+)(?:元|塊)?[，, ]?(?:那)?(?:年薪|一年)(?:是|有|大概|大約)?(?:多少|幾)(?:錢)?$"#), let a = num(g[0]) {
+            return "月薪 \(fmt(a)) × 12 個月 = 年薪 \(fmt(a * 12))；如果有年終獎金（例如 2 個月），就算 14 個月：\(fmt(a * 14))。"
+        }
+        // 「5呎7吋是幾公分」：英制身高
+        if let g = RuleBook.match(t, #"^([\d.]+)(?:呎|英尺|feet|ft)([\d.]+)(?:吋|英寸|inch|in)(?:是|等於)?(?:幾|多少)(?:公分|cm)$"#), let f = num(g[0]), let i = num(g[1]) {
+            let cm = f * 30.48 + i * 2.54
+            return "\(fmt(f)) 呎 \(fmt(i)) 吋 ≈ \(fmt((cm * 10).rounded() / 10)) 公分（1 呎 = 30.48 公分，1 吋 = 2.54 公分）。"
+        }
+        // 「這個月有幾天」「二月有幾天」
+        if let g = RuleBook.match(t, #"^(這個月|下個月|上個月|今年(\d{1,2})月|(\d{1,2})月)(?:有|總共有|一共有)?(?:幾天|多少天)$"#) {
+            let c = ymd(now)
+            var y = c.y, m = c.m
+            if g[0] == "下個月" { m += 1 } else if g[0] == "上個月" { m -= 1 } else if let n = Int(g[1]) ?? Int(g[2]) { m = n }
+            if m > 12 { m = 1; y += 1 } else if m < 1 { m = 12; y -= 1 }
+            guard (1...12).contains(m), let first = make(y, m, 1), let range = cal.range(of: .day, in: .month, for: first) else { return nil }
+            let label = ["這個月", "下個月", "上個月"].contains(g[0]) ? "\(g[0])（\(m) 月）" : "\(y) 年 \(m) 月"
+            return "\(label)有 \(range.count) 天。" + (m == 2 ? (range.count == 29 ? "今年是閏年，2 月有 29 天。" : "平年的 2 月有 28 天，閏年 29 天。") : "")
         }
         // 「直角三角形兩邊3和4斜邊是多少」
         if t.contains("直角三角形") || t.contains("斜邊"), t.contains("斜邊"),
@@ -239,7 +269,10 @@ public enum Everyday {
 
     // MARK: - 離某一天還有幾天
 
-    static func countdown(_ t: String, _ now: Date) -> String? {
+    static func countdown(_ t0: String, _ now: Date) -> String? {
+        var t = t0
+        // 「還有幾天過年」「還要多久才到聖誕節」＝離過年還有幾天
+        if let g = RuleBook.match(t, #"^(?:還有|還剩|還要)(幾天|多久|多少天)(?:才)?(?:到|是|就)?(.{2,8}?)(?:了)?$"#) { t = "離\(g[1])還有\(g[0])" }
         guard let g = RuleBook.match(t, #"^(?:距離|離|到)?(.+?)(?:還有|剩下|剩|還剩)(?:幾天|多少天|多久|幾個月|幾週)"#) else { return nil }
         var target = g[0]
         for s in ["只", "大概"] where target.hasSuffix(s) { target.removeLast(s.count) }
