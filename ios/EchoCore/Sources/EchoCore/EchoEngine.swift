@@ -450,6 +450,25 @@ public final class EchoEngine {
             r.turn.variant = "talk"
             return r
         }
+        // 換句話說的問題（「手機被人偷走了」「家裡好多蚊子」「告白被打槍了」）：本來要上網查、或只能回一句客套話的，
+        // 先看看是不是自己知道的事換了個說法；在說心情的話（「最近壓力好大」）照樣陪他聊
+        // 剛剛是用陪伴的話回心情（「我沒有朋友」「沒人理我」）：除非是身體不舒服、或明白在問方法，不要改成一張做法清單
+        let moodReply = lastLocal?.kind == "mood" && lastLocal?.turn == history.count
+        let asksMethod = text.range(of: "怎麼辦|建議|該怎麼|要怎麼|有什麼方法|有什麼辦法|怎麼做|怎麼處理|要注意", options: .regularExpression) != nil
+        if context.language == .zh, r.webQuery != nil || r.turn.source == .neural, (4...40).contains(text.count),
+           EchoEngine.explicitSearch(text) == nil, !EchoEngine.explicitFortune(text), !Commonsense.talksFeelings(text),
+           !moodReply || Affect.detect(text) == .sick || asksMethod,
+           // 已經給了做法、或是閒聊本來就有好好接的話（「我在學吉他」→「學吉他很棒！學多久了？」）就不換
+           !r.turn.text.contains("\n1. "),
+           r.webQuery != nil || (Talk.chat(text) == nil && Talk.detailed(text) == nil),
+           !(r.turn.source == .neural && !EchoEngine.isQuestion(text) && !asksMethod
+             && text.range(of: "難過|傷心|壓力|焦慮|寂寞|孤單|想哭|好煩|很煩|崩潰|生氣|討厭|害怕|擔心|好累|很累|不開心|失落|心情|想死|自殺|沒有朋友|沒人理|身心俱疲|委屈|空虛|迷茫|沮喪", options: .regularExpression) != nil),
+           let (e, alias) = Fuzzy.match(text), let a = Fuzzy.answer(text, now: context.now) {
+            let sub = Commonsense.howtos.contains(where: { $0.name == e.name }) ? "" : (Commonsense.subject(alias) ?? "")
+            lastLocal = LocalContext(kind: "fact", subject: sub, extra: alias, answer: a, turn: history.count)
+            r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+            return r
+        }
         // 沒有主語的問題不能當成「上一題的主題」
         if Understanding.missingSubject(text) == nil,
            r.webQuery != nil || (EchoEngine.isQuestion(text) && !EchoEngine.fortuneIntent(text) && r.turn.card == nil) {
@@ -546,7 +565,18 @@ public final class EchoEngine {
         m = m.replacingOccurrences(of: #"怎樣(?=[^\s的？?。！!，,呢啊])"#, with: "怎麼", options: .regularExpression)
         // 注音打錯的字：「富士山再哪裡」→ 在哪裡；句尾當問號用的「麼」→ 嗎；「白飯煮法」→ 白飯怎麼煮
         m = m.replacingOccurrences(of: "再哪", with: "在哪")
-        m = m.replacingOccurrences(of: #"(?<![什怎那這多要])麼(?=[？?]*$)"#, with: "嗎", options: .regularExpression)
+        m = m.replacingOccurrences(of: #"(?<![什怎那這多要甚])麼(?=[？?]*$)"#, with: "嗎", options: .regularExpression)
+        // 常見的打錯字：「我以經吃飽了」「明天因該會下雨嗎」「在見」「台北101在那」；注音當語助詞：「可以ㄇ」「好ㄉ」
+        m = m.replacingOccurrences(of: #"以經(?![濟驗典營歷])"#, with: "已經", options: .regularExpression)
+        m = m.replacingOccurrences(of: #"(?<![原起病基成主誘死近遠前])因該"#, with: "應該", options: .regularExpression)
+        m = m.replacingOccurrences(of: #"^((?:那|好|好啦|就這樣|掰掰)?[，, ]*)在見(?=(囉|啦|喔|了)?[!！~～。]*$)"#, with: "$1再見", options: .regularExpression)
+        if m.range(of: "^(我|你|他|她|我們|你們|他們)", options: .regularExpression) == nil {
+            m = m.replacingOccurrences(of: #"(?<=是|在|位於|住在)那(?=(呢|啊)?[？?]*$)"#, with: "哪", options: .regularExpression)
+        }
+        m = m.replacingOccurrences(of: #"ㄇ(?=[？?！!～~]*$)"#, with: "嗎", options: .regularExpression)
+        m = m.replacingOccurrences(of: #"ㄅ(?=[？?！!～~]*$)"#, with: "吧", options: .regularExpression)
+        m = m.replacingOccurrences(of: #"ㄋ(?=[？?！!～~]*$)"#, with: "呢", options: .regularExpression)
+        m = m.replacingOccurrences(of: "ㄉ", with: "的")
         if let g = RuleBook.match(m, #"^(.{1,8}?)(?:的)?(煮法|炒法|烤法|滷法)[？?]*$"#) { m = g[0] + "怎麼" + String(g[1].prefix(1)) }
         // 「可以吃巧克力嗎呢」：多打的語氣詞
         m = m.replacingOccurrences(of: #"嗎呢(?=[？?！!。～~]*$)"#, with: "嗎", options: .regularExpression)
@@ -604,6 +634,19 @@ public final class EchoEngine {
 
     /// 追問：「那這些國家都是哪些國家」→「歐洲 國家 哪些國家 列表」
     static func resolveFollowUp(_ text: String, query q: String, previous: String?, gap: Int) -> String {
+        // 沒說主詞的追問（「小孩可以用嗎」「多少錢」「哪裡買」）：接著上一題查的東西問（「防蚊液要用哪一種」→ 防蚊液 小孩可以用嗎）
+        if let prev = previous, gap <= 2 {
+            let t = Talk.clean(text).replacingOccurrences(of: #"^(那麼|那|所以|還有|那如果)"#, with: "", options: .regularExpression)
+            let implicitAsk = t.count <= 10 && (
+                t.range(of: #"^(小孩|小朋友|大人|孕婦|老人|長輩|寶寶|嬰兒|狗|貓|狗狗|貓咪)?(也)?(可以|能|要|會|該|適合)(用|吃|喝|買|擦|噴|帶|戴|穿|洗|泡|搭|開|去|做)?(嗎|呢)?$"#, options: .regularExpression) != nil
+                || t.range(of: #"^(大概)?(多少錢|貴嗎|貴不貴|有效嗎|安全嗎|好用嗎|有用嗎|哪裡買|去哪買|在哪買|怎麼買|怎麼用|哪裡有賣|有副作用嗎|副作用呢|要多久|多久|價格|價錢|要錢嗎|免費嗎)(呢|啊)?$"#, options: .regularExpression) != nil)
+            if implicitAsk {
+                // 上一題的主題：問句詞前面那一段名詞（「防蚊液要用哪一種」→ 防蚊液、「日本首相是誰」→ 日本首相）
+                let p = prev.trimmingCharacters(in: .whitespaces)
+                let topic = String(p.prefix { !"要該可能會怎如哪什多幾是嗎呢的在有".contains($0) }).trimmingCharacters(in: .whitespaces)
+                if topic.count >= 2, !text.contains(topic) { return topic + " " + Talk.clean(text) }
+            }
+        }
         var cur = q
         // 「那些年，我們一起追的女孩」是片名，不是在指上一題
         let refers = anaphora.contains { text.contains($0) } && !text.contains("那些年") && !text.contains("那些日子")
@@ -1191,6 +1234,10 @@ public final class EchoEngine {
                     return (a.hasPrefix("聽起來") ? (hurting ? "辛苦你了。" : "") : lead) + a
                 }
             }
+            // 換個說法的（「手機被人偷走了」）
+            if plain.count >= 4, let a = Fuzzy.answer(plain, now: now), a.contains("\n1. ") {
+                return (a.hasPrefix("聽起來") ? (hurting ? "辛苦你了。" : "") : lead) + a
+            }
         }
         if advice, let h = Commonsense.howtoMentioned(text), let a = Commonsense.answer(h + "怎麼辦", now: now) ?? Commonsense.answer("怎麼" + h, now: now) {
             return lead + a
@@ -1228,6 +1275,15 @@ public final class EchoEngine {
         let clauses = answer.components(separatedBy: CharacterSet(charactersIn: "。；\n"))
             .map { $0.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^([0-9]+\.|・|•)\s*"#, with: "", options: .regularExpression) }
             .filter { $0.count >= 4 }
+        // 說法不一樣但意思一樣（「要報警嗎」↔ 回答裡的「到警察局報案」）
+        let same: [String: [String]] = ["報警": ["報案", "警察"], "警察": ["報案", "報警"], "看醫生": ["就醫", "醫生"], "重灌": ["重新安裝", "重灌"],
+                                        "打電話": ["電話", "打給"], "叫救護車": ["119", "救護車"], "退錢": ["退款", "退費"], "找誰": ["師傅", "專業的人", "醫生", "客服"]]
+        for (k, alts) in same where core.contains(k) {
+            if let c = clauses.first(where: { c in alts.contains { c.contains($0) } }) {
+                let lead = t.hasPrefix("要") && t.hasSuffix("嗎") ? "要，" : (t.hasPrefix("可以") && t.hasSuffix("嗎") ? "可以，" : "")
+                return lead + c + (c.hasSuffix("）") || c.hasSuffix("」") ? "" : "。")
+            }
+        }
         let chars = Array(core)
         for len in stride(from: min(chars.count, 6), through: 1, by: -1) {
             // 問的東西大部分都要對得上（「台北人口多少」只對到「台北」不算）

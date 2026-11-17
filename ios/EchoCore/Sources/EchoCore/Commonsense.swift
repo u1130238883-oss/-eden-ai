@@ -253,9 +253,7 @@ public enum Commonsense {
             || raw.range(of: #"(?i)google(一下|查|看看|搜尋|找)|用google(查|搜尋|找|搜)|幫我google"#, options: .regularExpression) != nil
             || raw.range(of: #"(?<![檢調審考盤普探巡抽核清追偵複待])查(?!詢|看看?是)"#, options: .regularExpression) != nil { return nil }
         // 在說心情（「我難過到睡不著怎麼辦」）：先陪他，不是給方法
-        if ["到睡不著", "難過", "傷心", "孤單", "寂寞", "害怕", "失落", "低落", "生氣", "煩惱", "好煩", "很煩", "焦慮", "憂鬱", "想哭", "心情"]
-            .contains(where: { t.contains($0) }) && t.contains("我")
-            && !["教我", "怎麼緩解", "如何緩解", "緩解", "方法", "減輕", "怎麼讓自己", "如何讓自己", "容易", "控制", "脾氣"].contains(where: { t.contains($0) }) { return nil }
+        if talksFeelings(t) { return nil }
         // 只打了一個名字（「咖啡」「黑洞」「番茄炒蛋」「電影」）：介紹它、給做法或推薦
         if t.count <= 8, !fortuneish(t), !asking.contains(where: { t.contains($0) }), !["好處", "壞處", "原因", "由來"].contains(where: { t.contains($0) }) {
             if let e = facts.first(where: { $0.names.contains(t) }), e.kind != "常識", let d = define(e, now: now) { return d }
@@ -454,6 +452,18 @@ public enum Commonsense {
             }
         }
         guard let e = hit else { return nil }
+        return formatHowto(e)
+    }
+
+    /// 在說自己的心情（「我難過到睡不著怎麼辦」「我好孤單」）：先陪他，不是給方法；明白問方法的（「怎麼緩解焦慮」）不算
+    static func talksFeelings(_ t: String) -> Bool {
+        ["到睡不著", "難過", "傷心", "孤單", "寂寞", "害怕", "失落", "低落", "生氣", "煩惱", "好煩", "很煩", "焦慮", "憂鬱", "想哭", "心情"]
+            .contains(where: { t.contains($0) }) && t.contains("我")
+            && !["教我", "怎麼緩解", "如何緩解", "緩解", "方法", "減輕", "怎麼讓自己", "如何讓自己", "容易", "控制", "脾氣"].contains(where: { t.contains($0) })
+    }
+
+    /// 把一個做法排成「開頭＋步驟＋提醒」
+    static func formatHowto(_ e: Entity) -> String? {
         let steps = (e.attr("步驟") ?? "").split(separator: "；").enumerated().map { "\($0.offset + 1). \($0.element)" }
         guard !steps.isEmpty else { return nil }
         let symptom = ["感冒", "發燒", "頭痛", "睡不著", "拉肚子"].contains(e.name)

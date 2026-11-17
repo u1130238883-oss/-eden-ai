@@ -211,6 +211,24 @@ final class FollowUpTests: XCTestCase {
         XCTAssertFalse(guitar.turn.text.contains("生日"), guitar.turn.text)
     }
 
+    /// 換句話說也認得：本來要上網查或只會回客套話的，對到自己知道的事；不像的不能硬套
+    func testParaphrasesFindKnownAnswers() throws {
+        let cases: [(String, String)] = [("手機被人偷走了", "尋找"), ("家裡好多蚊子", "積水"), ("告白被打槍了", "拒絕"), ("馬桶堵住了要怎麼通", "吸盤"),
+                                          ("騎摩托車要小心什麼", "安全帽"), ("我的電腦好卡", "電腦"), ("退租押金沒拿回來", "存證信函"), ("同事老是把他的工作丟給我", "拒絕"),
+                                          ("孩子都不好好吃飯", "零食"), ("健保卡弄丟了要去哪裡補", "工本費")]
+        for (q, must) in cases {
+            let r = try run([q])[0]
+            XCTAssertTrue(r.webQuery == nil && r.turn.text.contains(must), "\(q) → \(r.turn.text.prefix(60))")
+        }
+        // 長得有點像、但問的是別的事
+        for q in ["老闆不給加班費違法嗎", "iPhone 17 多少錢", "信用卡年費多少", "世界上第二高的山是哪一座"] {
+            XCTAssertNil(Fuzzy.match(q), q)
+        }
+        // 「被偷走了」不是有人過世
+        XCTAssertNotEqual(Affect.detect("手機被人偷走了"), .grief)
+        XCTAssertEqual(Affect.detect("我阿公上個月走了"), .grief)
+    }
+
     func testCompoundGreetingAndWorship() throws {
         let a = try run(["台北101多高，富士山多高"])[0]
         XCTAssertTrue(a.turn.text.contains("508") && a.turn.text.contains("3776"), a.turn.text)
