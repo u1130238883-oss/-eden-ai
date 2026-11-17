@@ -275,6 +275,8 @@ public enum FortuneRouter {
         let fortune = containsAny(BrainRoute.withoutEveryday(text), fortuneWords)
         // 純概念問題（「流年是什麼」「5宮是什麼意思」）交給資料庫
         if containsAny(text, knowledgeMarkers) && !hasTime && !personal { return nil }
+        // 「生命靈數怎麼算」：問的是算法（西方數字占卜），不是要我用九型命盤算
+        if text.contains("靈數") && containsAny(text, ["怎麼算", "怎麼計算", "如何計算", "要怎麼算"]) && !personal { return nil }
         // 問的是世界上的事（「今年經濟好嗎」「明年房價會漲嗎」），不是自己的運
         if containsAny(text, ["經濟", "景氣", "房價", "股市", "匯率", "油價", "物價", "政府", "選舉", "疫情", "天氣", "颱風", "簽證"]),
            !personal, !text.contains("運") { return nil }
