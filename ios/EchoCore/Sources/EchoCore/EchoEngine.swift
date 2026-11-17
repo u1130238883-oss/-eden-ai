@@ -616,6 +616,9 @@ public final class EchoEngine {
             let q = g[0] + "有什麼好玩的"
             if Library.detailed(q) != nil || Commonsense.answer(q) != nil { m = q }
         }
+        // 「我是什麼樣的人」＝我的個性；「我的貴人是誰」＝貴人運
+        m = m.replacingOccurrences(of: #"^我(到底)?是(一個)?(什麼樣|怎樣|怎麼樣)的人(呢|啊)?(?=[？?]*$)"#, with: "我的個性是怎樣", options: .regularExpression)
+        m = m.replacingOccurrences(of: #"^(我的貴人是誰|誰是我的貴人|我的貴人在哪裡?|我會遇到貴人嗎|我的貴人什麼時候(會)?出現|我有沒有貴人)(呢|啊)?(?=[？?]*$)"#, with: "我的貴人運怎麼樣", options: .regularExpression)
         // 「什麼叫做區塊鏈」「什麼叫通膨」＝什麼是
         m = m.replacingOccurrences(of: "^什麼叫(做)?", with: "什麼是", options: .regularExpression)
         // 「人口最多的國家是」：話沒說完的「是」＝是什麼
@@ -811,6 +814,58 @@ public final class EchoEngine {
             return done("你的生日是 \(b.year) 年 \(b.month) 月 \(b.day) 日：太陽星座是\(sign)，生肖屬\(animal)（以農曆過年為界）。想看更完整的命盤，可以問我「我的命盤」。", .tool)
         }
 
+        // 2.00065) 「我的星座」「我幾歲」「我的生日是哪天」：用存好的生日回答
+        let bare = text.filter { !"？?。！!，, ".contains($0) }
+        let asksSign = bare.range(of: #"^(?:那|那麼)?我的(?:星座|生肖)(?:是什麼|是哪個|是)?(?:呢|啊)?$|^(?:那|那麼)?我是什麼星的(?:呢|啊)?$"#, options: .regularExpression) != nil
+        let asksAge = bare.range(of: #"^(?:那|那麼)?我(?:今年|現在|目前)?(?:幾歲|多大|多少歲)(?:了)?(?:呢|啊)?$"#, options: .regularExpression) != nil
+        let asksBirthday = bare.range(of: #"^(?:那|那麼)?(?:我的生日(?:是)?(?:哪天|哪一天|幾號|幾月幾號|什麼時候)|我(?:是)?(?:什麼時候|哪天|哪一天|幾月幾號)(?:生日|出生的?|生的))(?:呢|啊)?$"#, options: .regularExpression) != nil
+        if L == .zh, asksSign || asksAge || asksBirthday {
+            guard let b = ctx.profile.birthday else { return done("我還不知道你的生日。告訴我（例如「我的生日是2000年1月1日」），我就能幫你算星座、生肖和年紀，也能排命盤。", .tool) }
+            let cal = Calendar(identifier: .gregorian)
+            let now = cal.dateComponents([.year, .month, .day], from: ctx.now)
+            let ny = now.year ?? b.year, nm = now.month ?? 1, nd = now.day ?? 1
+            let cuts = [20, 19, 21, 20, 21, 22, 23, 23, 23, 24, 23, 22]
+            let order = ["摩羯座", "水瓶座", "雙魚座", "牡羊座", "金牛座", "雙子座", "巨蟹座", "獅子座", "處女座", "天秤座", "天蠍座", "射手座"]
+            let sign = b.day >= cuts[b.month - 1] ? order[b.month % 12] : order[b.month - 1]
+            let lunarYear = LunarCalendar.shared.lunar(b.year, b.month, b.day).year
+            let animal = ["鼠", "牛", "虎", "兔", "龍", "蛇", "馬", "羊", "猴", "雞", "狗", "豬"][((lunarYear - 4) % 12 + 12) % 12]
+            let passed = (nm, nd) >= (b.month, b.day)
+            let age = ny - b.year - (passed ? 0 : 1)
+            var next = cal.date(from: DateComponents(year: passed ? ny + 1 : ny, month: b.month, day: b.day)) ?? ctx.now
+            if nm == b.month && nd == b.day { next = ctx.now }
+            let today = cal.date(from: DateComponents(year: ny, month: nm, day: nd)) ?? ctx.now
+            let left = cal.dateComponents([.day], from: today, to: next).day ?? 0
+            let soon = left == 0 ? "今天就是你的生日，生日快樂！🎂" : "離下次生日還有 \(left) 天。"
+            if asksAge { return done("你是 \(b.year) 年 \(b.month) 月 \(b.day) 日生的，現在 \(age) 歲（足歲）。" + soon, .tool) }
+            if asksBirthday { return done("你的生日是 \(b.year) 年 \(b.month) 月 \(b.day) 日（\(sign)，屬\(animal)）。" + soon, .tool) }
+            return done("你的生日是 \(b.year) 年 \(b.month) 月 \(b.day) 日：太陽星座是\(sign)，生肖屬\(animal)（以農曆過年為界）。想看更完整的命盤，可以問我「我的命盤」。", .tool)
+        }
+        // 2.00066) 「摩羯座和射手座合嗎」「我跟射手座合不合」：用四大元素看個性合不合（只當參考）
+        if L == .zh, let g = RuleBook.match(bare, #"^(?:那|那麼)?(我|[\p{Han}]{2}座)(?:和|跟|與)([\p{Han}]{2}座)(?:的人)?(?:合嗎|合不合|速配嗎|配嗎|相配嗎|適合嗎|合得來嗎|的配對|配對|配不配|適不適合|會合嗎)(?:呢|啊)?$"#) {
+            let order = ["摩羯座", "水瓶座", "雙魚座", "牡羊座", "金牛座", "雙子座", "巨蟹座", "獅子座", "處女座", "天秤座", "天蠍座", "射手座"]
+            let element: [String: String] = ["牡羊座": "火", "獅子座": "火", "射手座": "火", "金牛座": "土", "處女座": "土", "摩羯座": "土",
+                                             "雙子座": "風", "天秤座": "風", "水瓶座": "風", "巨蟹座": "水", "天蠍座": "水", "雙魚座": "水"]
+            var a = g[0]
+            if a == "我" {
+                guard let b = ctx.profile.birthday else { return done("我還不知道你的生日，不知道你是什麼星座。告訴我（例如「我的生日是2000年1月1日」），我再幫你看合不合。", .tool) }
+                let cuts = [20, 19, 21, 20, 21, 22, 23, 23, 23, 24, 23, 22]
+                a = b.day >= cuts[b.month - 1] ? order[b.month % 12] : order[b.month - 1]
+            }
+            let bSign = g[1]
+            if let ea = element[a], let eb = element[bSign] {
+                let pair = Set([ea, eb])
+                let verdict: String
+                if ea == eb { verdict = "都是\(ea)象星座，個性和步調很像，很容易懂對方；要小心缺點也一樣，兩個人一起固執或一起情緒化。" }
+                else if pair == ["火", "風"] { verdict = "火象和風象互相助長：風讓火燒得更旺，一個有行動力、一個有想法，在一起很有活力，聊得來。" }
+                else if pair == ["土", "水"] { verdict = "土象和水象互相滋養：一個給安全感、一個給溫柔，關係穩定又貼心。" }
+                else if pair == ["火", "水"] { verdict = "火象和水象個性差很多：一個直接衝動、一個細膩敏感，容易誤會，但互相學習的話，一個能帶來熱情，一個能帶來體貼。" }
+                else if pair == ["土", "風"] { verdict = "土象和風象步調不太一樣：一個務實穩重、一個自由多變，要多溝通、尊重彼此的節奏。" }
+                else if pair == ["火", "土"] { verdict = "火象和土象一個想衝、一個想穩，常常意見不同；如果能互補，一個帶動、一個踩煞車，反而是好搭檔。" }
+                else { verdict = "風象和水象一個重理性、一個重感受，需要多一點耐心理解對方的表達方式。" }
+                let who = g[0] == "我" ? "你是\(a)，" : ""
+                return done(who + "\(a)（\(ea)象）和\(bSign)（\(eb)象）：" + verdict + "\n\n星座配對可以當作聊天和認識個性的參考，兩個人合不合，最後還是看相處和溝通。想看更準的，可以用兩個人的生日問我「合盤」。", .knowledge)
+            }
+        }
         // 2.0007) 只有月日的生日（「我的生日是5月20日」）：先告訴他星座，要排命盤再補年份
         if L == .zh, let g = RuleBook.match(text.filter { !"？?。！!，, ".contains($0) }, #"^(?:我的?)?生日是?(\d{1,2})月(\d{1,2})[日號]?$"#),
            let m = Int(g[0]), let d = Int(g[1]), (1...12).contains(m), (1...31).contains(d) {
@@ -900,7 +955,11 @@ public final class EchoEngine {
             // 問問題但不是要建議（「我壓力大的時候會怎樣」問的是九型人格）：交給原本的路
             let asksAdvice = ["怎麼辦", "建議", "該怎麼", "要怎麼", "如何是好", "你覺得呢", "你覺得", "你說呢", "怎麼想", "怎麼可能"].contains(where: { text.contains($0) })
             _ = positive
-            if moods.contains(mood), !(EchoEngine.isQuestion(text) && !asksAdvice),
+            // 「我今天心情為什麼這麼差」「為什麼我一直想哭」：問自己為什麼難過，是在抒發，不是在問知識
+            let venting = [.sad, .lonely, .tired, .frustrated, .anxious, .angry, .regret].contains(mood) && text.contains("我")
+                && text.range(of: "為什麼|為何|為啥|怎麼(會)?(這麼|那麼|老是|總是|一直)", options: .regularExpression) != nil
+                && text.range(of: "原因是什麼|科學|研究|症狀|是什麼病", options: .regularExpression) == nil
+            if moods.contains(mood), !(EchoEngine.isQuestion(text) && !asksAdvice && !venting),
                Talk.chat(text) == nil {
                 // 擔心別人（「我姊姊心情不好」）：不是在說自己的心情，不用安慰自己的那一套
                 if mood != .worryOther, let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now,

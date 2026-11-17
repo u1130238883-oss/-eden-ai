@@ -8,6 +8,7 @@ public enum Everyday {
         let t = clean(raw)
         guard !t.isEmpty, t.count <= 40 else { return nil }
         if let a = clock(t, now) { return a }
+        if let a = clockShift(t, now) { return a }
         if let a = dayQuestion(t, now) { return a }
         if let a = yearQuestion(t, now) { return a }
         if let a = dateWeekday(t) { return a }
@@ -228,6 +229,37 @@ public enum Everyday {
         let part = h < 5 ? "凌晨" : h < 11 ? "早上" : h < 13 ? "中午" : h < 18 ? "下午" : "晚上"
         let h12 = h % 12 == 0 ? 12 : h % 12
         return String(format: "現在是 %02d:%02d，", h, mi) + "\(part) \(h12) 點" + (mi == 0 ? "整" : " \(mi) 分") + "。"
+    }
+
+    /// 「3小時後是幾點」「再過90分鐘幾點」「兩個半小時前是幾點」：從現在往前、往後算
+    static func clockShift(_ t: String, _ now: Date) -> String? {
+        guard let g0 = RuleBook.match(t, #"^(?:從現在|現在)?(再過|過|往後|往前)?([0-9一二兩三四五六七八九十半]+)(個)?(半)?(小時|鐘頭|分鐘|分)(後|以後|之後|前|以前|之前)?(?:是|會是)?(?:幾點|幾點幾分|幾點鐘|什麼時候|什麼時間)(?:了)?(?:呢|啊)?$"#),
+              !g0[0].isEmpty || !g0[5].isEmpty else { return nil }
+        // g：數字、個、半、單位、前後
+        let g = [g0[1], g0[2], g0[3], g0[4], g0[5].isEmpty ? (g0[0] == "往前" ? "前" : "後") : g0[5]]
+        let nums: [Character: Int] = ["一": 1, "二": 2, "兩": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9]
+        var n: Double
+        if g[0] == "半" { n = 0.5 }
+        else if let v = Int(g[0]) { n = Double(v) }
+        else if g[0] == "十" { n = 10 }
+        else if g[0].hasPrefix("十"), let d = g[0].last.flatMap({ nums[$0] }) { n = Double(10 + d) }
+        else if g[0].count == 2, let a = g[0].first.flatMap({ nums[$0] }), g[0].last == "十" { n = Double(a * 10) }
+        else if g[0].count == 3, let a = g[0].first.flatMap({ nums[$0] }), let d = g[0].last.flatMap({ nums[$0] }) { n = Double(a * 10 + d) }
+        else if g[0].count == 1, let a = g[0].first.flatMap({ nums[$0] }) { n = Double(a) }
+        else { return nil }
+        if g[2] == "半" { n += 0.5 }
+        let minutes = Int((g[3] == "小時" || g[3] == "鐘頭" ? n * 60 : n).rounded())
+        guard minutes > 0, minutes <= 60 * 24 * 7 else { return nil }
+        let later = g[4].hasSuffix("後")
+        guard let d = cal.date(byAdding: .minute, value: later ? minutes : -minutes, to: now) else { return nil }
+        let c = cal.dateComponents([.hour, .minute], from: d)
+        let h = c.hour!, mi = c.minute!
+        let part = h < 5 ? "凌晨" : h < 11 ? "早上" : h < 13 ? "中午" : h < 18 ? "下午" : "晚上"
+        let h12 = h % 12 == 0 ? 12 : h % 12
+        let dayDiff = cal.dateComponents([.day], from: cal.startOfDay(for: now), to: cal.startOfDay(for: d)).day ?? 0
+        let dayWord = dayDiff == 0 ? "" : dayDiff == 1 ? "明天" : dayDiff == -1 ? "昨天" : dayDiff > 0 ? "\(dayDiff) 天後的" : "\(-dayDiff) 天前的"
+        let span = minutes % 60 == 0 ? "\(minutes / 60) 小時" : minutes >= 60 ? "\(minutes / 60) 小時 \(minutes % 60) 分鐘" : "\(minutes) 分鐘"
+        return "\(span)\(later ? "後" : "前")是" + dayWord + String(format: " %02d:%02d（", h, mi) + "\(part) \(h12) 點" + (mi == 0 ? "整" : " \(mi) 分") + "）。"
     }
 
     // MARK: - 今天幾號、明天星期幾、今天農曆幾號
