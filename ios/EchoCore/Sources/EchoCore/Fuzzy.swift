@@ -194,7 +194,8 @@ enum Fuzzy {
     /// 用最像的問法回答
     static func answer(_ raw: String, now: Date) -> String? {
         guard let (e, alias) = match(raw) else { return problemStatement(raw, now: now) }
-        if Commonsense.howtos.contains(where: { $0.name == e.name }) { return Commonsense.formatHowto(e) }
-        return Commonsense.answer(alias, now: now)
+        let a = Commonsense.howtos.contains(where: { $0.name == e.name }) ? Commonsense.formatHowto(e) : Commonsense.answer(alias, now: now)
+        if let x = a, Commonsense.mismatch(raw, x) { return nil }
+        return a
     }
 }

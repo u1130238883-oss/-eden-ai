@@ -191,6 +191,7 @@ public enum Commonsense {
         }
         // 整句剛好是資料庫裡的一個問法（「為什麼會有流星」），前面的規則都沒接住：直接用那一筆
         if a == nil { a = exactAnswer(Everyday.clean(raw), now: now) ?? exactAnswer(Everyday.clean(loose), now: now) }
+        if let x = a, mismatch(raw, x) { a = nil }
         // 問價錢（「台北到高雄的高鐵票多少錢」）卻答不出價錢：交給上網查，不要答別的
         if let x = a, raw.range(of: "多少錢|票價|價錢|價格|費用|收費|門票|多少元|幾塊錢|要錢嗎", options: .regularExpression) != nil,
            x.range(of: "元|塊|台幣|新台幣|NT|\\$|美金|日幣|免費|價|費", options: .regularExpression) == nil { a = nil }
@@ -202,6 +203,17 @@ public enum Commonsense {
         }
         memoLock.unlock()
         return a
+    }
+
+    /// 答案沒有回答到問題裡的限定（型號、第幾任）：
+    /// 「iPhone 17什麼時候出」卻答「智慧型手機出現在2007年」、「台灣第一任總統是誰」卻答現任總統 → 交給上網查
+    public static func mismatch(_ raw: String, _ x: String) -> Bool {
+        if let r = raw.range(of: #"(?i)[a-z]+ ?[0-9]{1,4}(?![0-9])"#, options: .regularExpression),
+           raw.range(of: "什麼時候|何時|哪一年|哪年|幾月|上市|發表|發售|推出|出了嗎|會出|多少錢|價格|售價|規格|新功能", options: .regularExpression) != nil,
+           let num = raw[r].range(of: "[0-9]+", options: .regularExpression).map({ String(raw[r][$0]) }), !x.contains(num) { return true }
+        if let q = raw.range(of: #"第[一二三四五六七八九十0-9]+(任|位|屆|代)|首任|上一任|前一任|前任|下一任|歷任|第一個"#, options: .regularExpression),
+           !x.contains(String(raw[q])), x.contains("現任") { return true }
+        return false
     }
 
     /// 名字裡的英文字（iPhone、WiFi、LINE、YouBike）：小寫打的也認得
