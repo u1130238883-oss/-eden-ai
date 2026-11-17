@@ -481,6 +481,10 @@ public final class EchoEngine {
         }
         // 「番茄炒蛋怎樣做」「怎樣存錢」→「怎麼」（句尾的「怎樣」、「怎樣的人」不換）
         m = m.replacingOccurrences(of: #"怎樣(?=[^\s的？?。！!，,呢啊])"#, with: "怎麼", options: .regularExpression)
+        // 注音打錯的字：「富士山再哪裡」→ 在哪裡；句尾當問號用的「麼」→ 嗎；「白飯煮法」→ 白飯怎麼煮
+        m = m.replacingOccurrences(of: "再哪", with: "在哪")
+        m = m.replacingOccurrences(of: #"(?<![什怎那這多要])麼(?=[？?]*$)"#, with: "嗎", options: .regularExpression)
+        if let g = RuleBook.match(m, #"^(.{1,8}?)(?:的)?(煮法|炒法|烤法|滷法)[？?]*$"#) { m = g[0] + "怎麼" + String(g[1].prefix(1)) }
         // 「可以吃巧克力嗎呢」：多打的語氣詞
         m = m.replacingOccurrences(of: #"嗎呢(?=[？?！!。～~]*$)"#, with: "嗎", options: .regularExpression)
         // 「長頸鹿要如何睡覺」「該如何存錢」→「怎麼」（句尾的「運勢如何」不換）
