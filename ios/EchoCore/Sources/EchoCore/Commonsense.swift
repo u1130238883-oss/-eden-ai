@@ -43,10 +43,37 @@ public enum Commonsense {
     static let recommends = all.filter { $0.kind == "推薦" }
 
     /// 句子裡提到的東西（長的名字先比對，不重疊），照出現的順序
+    /// 每一組東西的名字，依第一個字分好（找名字時只看句子裡出現過的字開頭的，不用每次比幾千個名字）
+    static var nameBuckets: [Int: [Character: [(Entity, String, Int)]]] = [:]
+    static let bucketLock = NSLock()
+
+    static func buckets(_ pool: [Entity]) -> [Character: [(Entity, String, Int)]] {
+        var h = Hasher()
+        h.combine(pool.count)
+        if let f = pool.first { h.combine(f.name) }
+        if let l = pool.last { h.combine(l.name) }
+        if pool.count > 2 { h.combine(pool[pool.count / 2].name) }
+        let key = h.finalize()
+        bucketLock.lock()
+        if let b = nameBuckets[key] { bucketLock.unlock(); return b }
+        bucketLock.unlock()
+        var b: [Character: [(Entity, String, Int)]] = [:]
+        var i = 0
+        for e in pool { for n in e.names where !n.isEmpty { b[n.first!, default: []].append((e, n, i)); i += 1 } }
+        bucketLock.lock()
+        nameBuckets[key] = b
+        bucketLock.unlock()
+        return b
+    }
+
     static func mentions(_ t: String, in pool: [Entity]) -> [(entity: Entity, range: Range<String.Index>, alias: String)] {
         var found: [(Entity, Range<String.Index>, String)] = []
-        let names = pool.flatMap { e in e.names.map { (e, $0) } }.filter { !$0.1.isEmpty }.sorted { $0.1.count > $1.1.count }
-        for (e, n) in names {
+        let b = buckets(pool)
+        var names: [(Entity, String, Int)] = []
+        for ch in Set(t) { if let xs = b[ch] { names += xs.filter { t.contains($0.1) } } }
+        // 長的名字先；一樣長的照資料裡的順序（每次結果都一樣）
+        names.sort { $0.1.count != $1.1.count ? $0.1.count > $1.1.count : $0.2 < $1.2 }
+        for (e, n, _) in names {
             var from = t.startIndex
             while let r = t.range(of: n, range: from..<t.endIndex) {
                 if !found.contains(where: { $0.1.overlaps(r) }) { found.append((e, r, n)) }
@@ -77,6 +104,17 @@ public enum Commonsense {
         return w
     }()
     static let protectedWords = protected.keys.sorted { $0.count > $1.count }
+    static let protectedBuckets: [Character: [String]] = {
+        var b: [Character: [String]] = [:]
+        for w in protectedWords where !w.isEmpty { b[w.first!, default: []].append(w) }
+        return b
+    }()
+    /// 句子裡出現的保護詞（長的先）
+    static func protectedIn(_ t: String) -> [String] {
+        var ws: [String] = []
+        for ch in Set(t) { if let xs = protectedBuckets[ch] { ws += xs.filter { t.contains($0) } } }
+        return ws.sorted { $0.count != $1.count ? $0.count > $1.count : $0 < $1 }
+    }
 
     /// 名字後面可以接的字（「貓會」「鯨魚是」「月亮離」），單字的名字（人、象、光）後面一定要是這些，才是在講它
     static let follow = Set("的是會有可能為在和跟與還都也不要吃住喝怎幾多哪呢嗎吧啊一每離從用說講叫被到最真屬怕愛喜就算比")
@@ -87,13 +125,13 @@ public enum Commonsense {
 
     static func realMentions(_ t: String, in pool: [Entity]) -> [(entity: Entity, range: Range<String.Index>, alias: String)] {
         var covers: [(Range<String.Index>, Set<String>)] = []
-        for w in protectedWords where t.contains(w) {
+        for w in protectedIn(t) {
             var from = t.startIndex
             while let r = t.range(of: w, range: from..<t.endIndex) { covers.append((r, protected[w]!)); from = r.upperBound }
         }
         func startsProtected(_ i: String.Index) -> Bool {
             let tail = t[i...]
-            return protectedWords.contains { tail.hasPrefix($0) } || ["什麼", "哪", "誰", "多", "幾", "怎"].contains { tail.hasPrefix($0) }
+            return (tail.first.flatMap { protectedBuckets[$0] }?.contains { tail.hasPrefix($0) } ?? false) || ["什麼", "哪", "誰", "多", "幾", "怎"].contains { tail.hasPrefix($0) }
         }
         return mentions(t, in: pool).filter { m in
             if covers.contains(where: { c, owners in
@@ -125,11 +163,31 @@ public enum Commonsense {
 
     // MARK: - 入口
 
+    /// 同一句話在一次回覆裡會被問好幾次（心情、追問、常識各問一次）：記住最近的答案，不重算
+    static var memo: [String: String] = [:]
+    static var memoOrder: [String] = []
+    static let memoLock = NSLock()
+
     public static func answer(_ raw: String, now: Date = Date()) -> String? {
-        if let a = answerCore(raw, now: now) { return a }
+        let key = raw + "|\(Int(now.timeIntervalSince1970 / 86400))"
+        memoLock.lock()
+        let hit = memo[key]
+        memoLock.unlock()
+        if let v = hit { return v.isEmpty ? nil : v }
+        var a = answerCore(raw, now: now)
         // 換個寬鬆的說法再試一次（「iphone怎麼截圖」「WiFi一直斷線」「每天應該喝多少水」「家裡的wifi連不到」）
-        let loose = loosen(raw)
-        return loose != raw ? answerCore(loose, now: now) : nil
+        if a == nil {
+            let loose = loosen(raw)
+            if loose != raw { a = answerCore(loose, now: now) }
+        }
+        memoLock.lock()
+        if memo[key] == nil {
+            memo[key] = a ?? ""
+            memoOrder.append(key)
+            if memoOrder.count > 256 { memo.removeValue(forKey: memoOrder.removeFirst()) }
+        }
+        memoLock.unlock()
+        return a
     }
 
     /// 名字裡的英文字（iPhone、WiFi、LINE、YouBike）：小寫打的也認得

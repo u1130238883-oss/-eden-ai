@@ -154,10 +154,10 @@ public final class EchoEngine {
     /// 「要買什麼」「一天要吃多少」「要怎麼慶祝」：接上前幾句說的事（「我想學游泳」「我想減肥」「我明天生日」）再問一次
     func composeWithRecent(_ message: String, now: Date) -> String? {
         let plain = Talk.clean(message)
+        guard !recentUser.isEmpty, (2...10).contains(plain.count), EchoEngine.isQuestion(message) || plain.hasSuffix("嗎"),
+              plain.range(of: "^(要|該|可以|能|需要|會|還要|那要|那該|一天|每天|每個月)", options: .regularExpression) != nil else { return nil }
         // 自己就答得出來的（「一天要走幾步」）不用接
         guard Commonsense.answer(message, now: now) == nil else { return nil }
-        guard (2...10).contains(plain.count), EchoEngine.isQuestion(message) || plain.hasSuffix("嗎"),
-              plain.range(of: "^(要|該|可以|能|需要|會|還要|那要|那該|一天|每天|每個月)", options: .regularExpression) != nil else { return nil }
         for prev in recentUser.prefix(3) where prev.count >= 2 && prev.count <= 20 {
             let p = prev.replacingOccurrences(of: #"[。！!？?～~]+$"#, with: "", options: .regularExpression)
             let prevAnswer = Commonsense.answer(p, now: now)
@@ -319,7 +319,8 @@ public final class EchoEngine {
             }
         }
         // 追問本地剛回答的東西：直接回答，或把問題補完整（「他還寫了什麼」→「曹雪芹還寫了什麼」、「結局呢」→「哈姆雷特的結局」）
-        if context.language == .zh || Lang.detect(message, fallback: .zh) == .zh, let lc = lastLocal, history.count - lc.turn <= 4 {
+        // 追問要有對話（沒有歷史的一句話是新的問題，不接上一個人、上一次的話題）
+        if context.language == .zh || Lang.detect(message, fallback: .zh) == .zh, let lc = lastLocal, !history.isEmpty, history.count - lc.turn <= 4 {
             lastEchoAsked = history.last(where: { $0.role == .echo }).map { $0.text.contains("？") || $0.text.contains("?") } ?? false
             nowTurn = history.count
             recentUser = history.filter { $0.role == .user }.suffix(4).reversed().map { $0.text }
@@ -339,7 +340,9 @@ public final class EchoEngine {
             }
         }
         // 「我該怎麼辦」「那怎麼辦」：沒有接上剛剛的話題時，照前面幾句說的事給做法
-        if !rewritten, context.language == .zh,
+        // （剛剛是命盤解讀的話，交給解讀的追問：怎麼做比較好）
+        let readingJustNow = (last != nil && history.count - lastTurn <= 6) || history.last(where: { $0.role == .echo }).map { [.reader, .grounded].contains($0.source) } == true
+        if !rewritten, context.language == .zh, !readingJustNow,
            plain.range(of: #"^(那|所以|可是|但是)?(我)?(真的|現在)?(不知道|不曉得)?(現在)?(要|該|應該)?(怎麼辦|怎麼做|如何是好|怎麼處理|怎麼解決|有什麼方法|有什麼辦法|有什麼建議|有沒有方法|有沒有辦法|能做什麼|可以做什麼|能幫什麼|可以幫什麼|能為他做什麼|可以為他做什麼|能做些什麼|可以做些什麼)(才好)?(呢|啊|嗎)?$"#, options: .regularExpression) != nil {
             let said = history.filter { $0.role == .user }.suffix(4).reversed().map { $0.text }
             // 「牠很愛叫」：牠是前面說的狗
@@ -376,7 +379,8 @@ public final class EchoEngine {
             rewritten = true
         }
         // 短短的追問沒有主角（「要怎麼慶祝」「要穿什麼」「要放哪裡」）：接上前一句說的事再問一次
-        if !rewritten, context.language == .zh, Commonsense.answer(message, now: context.now) == nil {
+        if !rewritten, context.language == .zh, history.contains(where: { $0.role == .user }), (2...10).contains(plain.count),
+           plain.range(of: "^(要|該|可以|能|需要|會|還要|那要|那該|一天|每天|每個月)", options: .regularExpression) != nil {
             recentUser = history.filter { $0.role == .user }.suffix(4).reversed().map { $0.text }
             if let c = composeWithRecent(message, now: context.now) { text = c; rewritten = true }
         }
@@ -1365,7 +1369,7 @@ public final class EchoEngine {
                 return .answer("沒關係，說不出原因的時候反而更難受。先不用急著找答案，我們先讓身體放鬆一點：慢慢吸氣、再慢慢吐氣，做幾次。最近生活有沒有什麼變化，或一直壓在心上的事？想到什麼都可以跟我說。如果這種感覺持續很久、影響到睡眠和生活，也可以找身心科或心理師聊聊。")
             }
             // 擔心家人（「我爸住院了」→「心臟的問題」）：接住擔心，問對方的狀況
-            if Affect.detect(lc.subject) == .worryOther, (1...14).contains(t.count), !EchoEngine.isQuestion(message) {
+            if nowTurn > 0, Affect.detect(lc.subject) == .worryOther, [.info, .worryOther].contains(Affect.detect(message)), (1...14).contains(t.count), !EchoEngine.isQuestion(message) {
                 let n = lc.shown.components(separatedBy: "\u{1}").count
                 let lines = ["一定很擔心吧。醫生怎麼說？", "你這麼在乎他，他一定感受得到。現在他的狀況穩定嗎？",
                              "照顧家人的同時，也別忘了照顧自己。你今天有好好吃飯嗎？", "會擔心很正常。有需要的話，可以問我「家人住院我能做什麼」，我們一起想。"]
@@ -1375,7 +1379,7 @@ public final class EchoEngine {
             if lc.subject.contains("考") || lc.extra.contains("考"), let a = Talk.examSubject(t) { return .answer(a) }
             // 補充細節（「主管很兇」「他昨天罵我」「數學」）：接住、換句話說、請對方多說——不要每句都一樣
             // 沒被問的時候，只接中性的補充（「同事也不幫我」）；自己帶著強烈心情的新句子（「越想越氣」）照心情回應
-            if lastEchoAsked || (nowTurn - lc.turn <= 2 && Affect.detect(message) == .info), (1...12).contains(t.count), !EchoEngine.isQuestion(message), Talk.chat(message) == nil, Talk.detailed(message) == nil,
+            if lastEchoAsked || (nowTurn > 0 && nowTurn - lc.turn <= 2 && Affect.detect(message) == .info), (1...12).contains(t.count), !EchoEngine.isQuestion(message), Talk.chat(message) == nil, Talk.detailed(message) == nil,
                // 開心的事（「我考上研究所了」→「台大」）交給回答我問題的那一段
                ![.goodNews, .proudEffort, .happy, .excitedPlan, .hope].contains(Affect.detect(lc.subject)),
                // 沒被問、自己就答得出來的（「睡不好」）照一般問題處理
