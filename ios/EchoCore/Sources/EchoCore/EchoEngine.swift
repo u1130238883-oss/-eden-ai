@@ -596,6 +596,8 @@ public final class EchoEngine {
             guard let r = m.range(of: #"^((早安|午安|晚安|你好|您好|哈囉|嗨+|嘿+|hi|Hi|hello|Hello|安安|早|欸+|誒+|喂+|嗯+|喔+|哦+|噢+|吼+|齁+|好|好啦|好喔|好的|OK|ok)[，,！!～~。 …]+|(嘿|欸|誒|喂|嗯|喔|哦|哈|嗨|吼|齁){2,}[，,！!～~。 …]*)"#, options: .regularExpression),
                   r.upperBound < m.endIndex else { break }
             let rest = String(m[r.upperBound...])
+            // 「晚安!？」「哈囉!？」：後面只剩標點，就還是在打招呼
+            guard rest.filter({ $0.isLetter || $0.isNumber }).count >= 2 else { break }
             guard EchoEngine.isQuestion(rest) || rest.hasPrefix("請問") || rest.range(of: #"^(我問你|問你|想請教|請教|那個)"#, options: .regularExpression) != nil else { break }
             m = rest
         }
