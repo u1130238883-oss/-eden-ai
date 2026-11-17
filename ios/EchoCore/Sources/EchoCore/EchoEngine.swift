@@ -1344,21 +1344,25 @@ public final class EchoEngine {
         var rest = clauses.reversed().map { $0 }
         if rest.count >= 3, let firstClause = clauses.first { rest.removeLast(); rest.insert(firstClause, at: 1) }
         for c in rest where !order.contains(c) { order.append(c) }
-        for c in order {
-            // 只是問「這樣正常嗎、是不是…」：要從說到困擾的那一句找，不要因為前面提到「在學吉他」就教怎麼學吉他
-            if !advice, !distressStory(c) { continue }
-            // 「跟最好的朋友吵架了」＝跟朋友吵架了
-            let plain = c.replacingOccurrences(of: "(最好的|很好的|要好的|最要好的)(朋友|同學|同事)", with: "$2", options: .regularExpression)
-            for q in [plain, plain + "怎麼辦"] {
-                if var a = Commonsense.answer(q, now: now), a.contains("\n1. ") {
-                    // 「我想要換工作」的回答開頭是「好啊，我陪你！」，接在「我懂你的狀況。」後面就重複了
-                    a = a.replacingOccurrences(of: #"^(好啊|好呀|好喔|好)[，,]?我陪你[！!]"#, with: "", options: .regularExpression)
+        // 先每一句都用資料庫裡的說法找（「提不起勁」→ 倦怠），都找不到才用換句話說（「壓力很大」→ 放鬆），免得前面一句籠統的先搶走
+        for pass in 0..<2 {
+            for c in order {
+                // 只是問「這樣正常嗎、是不是…」：要從說到困擾的那一句找，不要因為前面提到「在學吉他」就教怎麼學吉他
+                if !advice, !distressStory(c) { continue }
+                // 「跟最好的朋友吵架了」＝跟朋友吵架了
+                let plain = c.replacingOccurrences(of: "(最好的|很好的|要好的|最要好的)(朋友|同學|同事)", with: "$2", options: .regularExpression)
+                if pass == 0 {
+                    for q in [plain, plain + "怎麼辦"] {
+                        if var a = Commonsense.answer(q, now: now), a.contains("\n1. ") {
+                            // 「我想要換工作」的回答開頭是「好啊，我陪你！」，接在「我懂你的狀況。」後面就重複了
+                            a = a.replacingOccurrences(of: #"^(好啊|好呀|好喔|好)[，,]?我陪你[！!]"#, with: "", options: .regularExpression)
+                            return (a.hasPrefix("聽起來") ? (hurting ? "辛苦你了。" : "") : lead) + a
+                        }
+                    }
+                } else if plain.count >= 4, let a = Fuzzy.answer(plain, now: now), a.contains("\n1. ") {
+                    // 換個說法的（「手機被人偷走了」）
                     return (a.hasPrefix("聽起來") ? (hurting ? "辛苦你了。" : "") : lead) + a
                 }
-            }
-            // 換個說法的（「手機被人偷走了」）
-            if plain.count >= 4, let a = Fuzzy.answer(plain, now: now), a.contains("\n1. ") {
-                return (a.hasPrefix("聽起來") ? (hurting ? "辛苦你了。" : "") : lead) + a
             }
         }
         if advice, let h = Commonsense.howtoMentioned(text), let a = Commonsense.answer(h + "怎麼辦", now: now) ?? Commonsense.answer("怎麼" + h, now: now) {
