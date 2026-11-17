@@ -1305,7 +1305,19 @@ public final class EchoEngine {
         guard asks else { return nil }
         // 問句裡真正在問的東西
         var core = t
-        for w in ["那麼", "那", "請問", "所以", "大概", "大約", "需要", "要不要", "可不可以", "會不會", "能不能", "可以", "應該", "要", "會", "能", "該",
+        // 「要多少錢」「要錢嗎」：找剛剛說到費用的那段
+        if t.range(of: "多少錢|要錢嗎|收費|費用|價錢|要花多少|免費嗎|要付錢", options: .regularExpression) != nil, t.count <= 10,
+           let c = answer.components(separatedBy: CharacterSet(charactersIn: "。；\n")).first(where: { $0.range(of: "[0-9０-９]+ ?(元|塊)|免費|工本費|費用", options: .regularExpression) != nil }) {
+            let clause = c.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^([0-9]+\.|⚠️|小提醒：)\s*"#, with: "", options: .regularExpression)
+            return clause + (clause.hasSuffix("）") ? "" : "。")
+        }
+        // 「那要打給誰」「電話幾號」：找剛剛說到的電話、專線
+        if t.range(of: "打給誰|打幾號|電話幾號|電話多少|什麼電話|聯絡誰|要打電話|專線", options: .regularExpression) != nil, t.count <= 10,
+           let c = answer.components(separatedBy: CharacterSet(charactersIn: "。；\n")).first(where: { $0.range(of: "[0-9]{3,}|[0-9]{2,}-[0-9]{3,}", options: .regularExpression) != nil && $0.range(of: "打|電話|專線|客服", options: .regularExpression) != nil }) {
+            let clause = c.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^([0-9]+\.|⚠️|小提醒：)\s*"#, with: "", options: .regularExpression)
+            return clause + (clause.hasSuffix("）") ? "" : "。")
+        }
+        for w in ["那麼", "那", "請問", "所以", "大概", "大約", "需要", "要不要", "可不可以", "會不會", "能不能", "可以", "應該", "要", "會", "能", "該", "辦", "申請", "去", "到",
                   "多久", "多少", "多長", "幾分鐘", "幾小時", "幾個小時", "幾天", "幾個", "幾", "什麼", "怎麼", "如何", "哪裡", "哪個", "嗎", "呢", "啊", "是",
                   "有", "的", "搭", "坐", "用", "加", "放", "吃", "我", "你", "一定", "還", "也", "時間", "要花"] {
             core = core.replacingOccurrences(of: w, with: "")
@@ -1494,6 +1506,12 @@ public final class EchoEngine {
                         q.replaceSubrange(r, with: x)
                         if Commonsense.answer(q) != nil { return .rewrite(q) }
                     }
+                }
+                // 「那喪禮呢」（上一題「結婚要包多少」）：把上一題開頭的主題換掉，換完自己答得出來才算
+                if (2...6).contains(x.count), !EchoEngine.isQuestion(x),
+                   let head = RuleBook.match(lc.extra, #"^(.{2,6}?)(?:要|可以|能|該|是|有|會|怎麼|多少|幾|的)"#)?[0], head != x, !x.contains(head) {
+                    let q = x + lc.extra.dropFirst(head.count)
+                    if Commonsense.answer(q) != nil || Fuzzy.match(q) != nil { return .rewrite(q) }
                 }
             }
             // 「誰比較大」「哪個比較高」：比剛剛問的兩個東西
