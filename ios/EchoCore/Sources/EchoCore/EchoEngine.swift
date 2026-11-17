@@ -287,7 +287,7 @@ public final class EchoEngine {
             return r
         }
         if plain.range(of: #"^(可以|能不能|請)?(再)?(說|講|解釋|寫)?(得)?(簡單|白話|簡短|短|精簡|清楚)(一點|一些|點)(嗎)?$|^(簡單說|長話短說|太長了|太長|重點是什麼|說重點|講重點|講白話|白話文|說白話)$"#, options: .regularExpression) != nil,
-           let prevAnswer = history.filter({ $0.role == .echo }).suffix(3).reversed().first(where: { !$0.text.hasPrefix("抱歉") && !$0.text.hasPrefix("簡單說：") })?.text, prevAnswer.count > 60 {
+           let prevAnswer = history.filter({ $0.role == .echo }).suffix(3).reversed().first(where: { !$0.text.hasPrefix("抱歉") && !$0.text.hasPrefix("簡單說：") && !$0.text.hasPrefix("我知道的重點大概就是這些了") && $0.text.count > 60 })?.text {
             let body = prevAnswer.hasPrefix("換個說法：") ? String(prevAnswer.dropFirst(5)) : prevAnswer
             var r = Reply(turn: ChatTurn(role: .echo, text: "簡單說：" + EchoEngine.gist(body), source: .knowledge), profile: nil, rules: nil, webQuery: nil)
             r.turn.variant = "talk"
@@ -1180,6 +1180,14 @@ public final class EchoEngine {
 
     /// 一段回答的重點：拿掉標題、項目符號，留最前面一兩句完整的話
     static func gist(_ text: String) -> String {
+        // 做法清單：挑前三點，每點只留第一小句
+        if text.contains("\n1. ") {
+            let items = text.split(separator: "\n").map(String.init).filter { $0.range(of: #"^[0-9]+\. "#, options: .regularExpression) != nil }.prefix(3).map { line -> String in
+                let body = line.replacingOccurrences(of: #"^[0-9]+\. "#, with: "", options: .regularExpression)
+                return String(body.prefix { !"，；。".contains($0) })
+            }
+            if !items.isEmpty { return "重點是：" + items.joined(separator: "；") + "。" }
+        }
         let lines = text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty && !$0.hasPrefix("📌") && !$0.hasPrefix("💬") && !$0.hasPrefix("來源") && !$0.hasPrefix("【") && $0.count > 6 }
         let body = lines.joined(separator: "")
@@ -1440,9 +1448,20 @@ public final class EchoEngine {
                 return .answer("如果要我選，我最喜歡\(w)！每次聽到都覺得很有感覺。你呢？你最喜歡哪一個？")
             }
             // 「你覺得呢」：主角有我的看法就說
-            if t.range(of: #"^(那)?你(覺得呢|覺得怎麼樣|覺得如何|的看法呢|怎麼看|怎麼想)$"#, options: .regularExpression) != nil,
+            if t.range(of: #"^(那)?你(覺得|覺得呢|覺得怎麼樣|覺得如何|的看法|的看法呢|怎麼看|怎麼想)$"#, options: .regularExpression) != nil,
                let e = Commonsense.facts.first(where: { $0.name == lc.subject }), let v = e.attr("看法") {
                 return .answer("我的看法：" + v + "。")
+            }
+            // 做法清單之後的「最重要的是哪一個」「你覺得呢」「先做哪個」：說第一點，有看法再補上看法
+            let listItems = lc.answer.split(separator: "\n").map(String.init).filter { $0.range(of: #"^[0-9]+\. "#, options: .regularExpression) != nil }
+                .map { $0.replacingOccurrences(of: #"^[0-9]+\. "#, with: "", options: .regularExpression) }
+            let opinion = lc.answer.split(separator: "\n").map(String.init).last(where: { l in
+                !l.isEmpty && l.range(of: #"^[0-9]+\. |^小提醒|^⚠️|可以這樣|：$"#, options: .regularExpression) == nil && l.count >= 10 })
+            if !listItems.isEmpty,
+               t.range(of: #"^(那)?(最重要|最關鍵|最有用|最有效|最推薦|最優先|最需要)(的)?(是)?(哪一個|哪個|哪一點|哪點|什麼|哪一步|哪步)?(呢)?$|^(那)?(要)?(先做哪一個|先做哪個|先從哪裡開始|先做什麼|從哪一個開始|從哪個開始)(呢)?$|^(那)?你(覺得|覺得呢|覺得怎麼樣|覺得如何|的看法|的看法呢|怎麼看|推薦哪個|推薦哪一個)$"#, options: .regularExpression) != nil {
+                var a = "我覺得最值得先做的是第一點：\(listItems[0])。"
+                if let o = opinion, !o.hasPrefix(listItems[0]) { a += "\n" + o }
+                return .answer(a)
             }
             // 「舉個例子」：剛剛的回答裡有「例如…」「像…」就拿出來
             if t.range(of: #"^(可以|能)?(舉個?|舉一個|給我一個|有沒有)(例子|例)(嗎|呢)?$|^(例子呢|比如說呢|比如呢|像是什麼)$"#, options: .regularExpression) != nil, !lc.answer.isEmpty {
@@ -1457,6 +1476,11 @@ public final class EchoEngine {
                 return lc.subject.isEmpty ? nil : .rewrite(lc.subject + "的例子")
             }
             // 「為什麼」「為什麼不行」：剛剛的回答裡已經有原因（「不會。企鵝不會飛。企鵝的翅膀演化成…」）→ 把原因說出來
+            // 做法清單之後只問「為什麼」：清單裡的每一點不是原因，不要拿第一點當「因為」
+            if !listItems.isEmpty, t.range(of: #"^(那)?(為什麼|為何|為啥|怎麼說)(要這樣|呢)?$"#, options: .regularExpression) != nil {
+                if let o = opinion, o.count >= 10 { return .answer(o.hasSuffix("。") ? o : o + "。") }
+                return .answer("這幾點是一般比較安全、有效的做法。想知道其中哪一點的原因，跟我說是第幾點；或說「說詳細一點」，我上網幫你找更完整的資料。")
+            }
             if t.range(of: #"^(那)?(為什麼|為何|為啥|怎麼說|怎麼會)(不是|不行|不會|不能|會|是|這樣|呢)?$"#, options: .regularExpression) != nil, !lc.answer.isEmpty {
                 let parts = lc.answer.components(separatedBy: CharacterSet(charactersIn: "。\n")).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
                 let head = parts.first ?? ""
