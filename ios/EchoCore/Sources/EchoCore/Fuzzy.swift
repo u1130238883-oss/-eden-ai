@@ -15,13 +15,29 @@ enum Fuzzy {
         ("如何", "怎麼"), ("咋辦", "怎麼辦"), ("該怎麼辦", "怎麼辦"), ("要怎麼辦", "怎麼辦"),
         ("趕走", "消滅"), ("趕跑", "消滅"), ("要買什麼", "要準備什麼"), ("好臭", "有臭味"), ("很臭", "有臭味"), ("臭臭的", "有臭味"), ("好貴", "太高"),
         ("想不起來", "忘記"), ("想不起", "忘記"),
+        // 比較兩個東西：「內向跟外向差在哪裡」＝內向和外向的差別
+        ("差在哪裡", "的差別"), ("差在哪", "的差別"), ("有什麼不一樣", "的差別"), ("有什麼不同", "的差別"), ("哪裡不一樣", "的差別"), ("有何不同", "的差別"),
+        ("差異", "差別"), ("跟", "和"), ("與", "和"),
+        ("每個國家", "各國"), ("各個國家", "各國"), ("上班", "工作"), ("需要", "要"), ("小嬰兒", "嬰兒"), ("寶寶", "嬰兒"),
+        ("刺破", "弄破"), ("戳破", "弄破"), ("挑破", "弄破"), ("擠破", "弄破"), ("越來越卡", "很慢"), ("越來越慢", "很慢"), ("越來越", "很"),
+        ("找到吃的", "找到食物"), ("找吃的", "找食物"), ("有什麼好處", "有什麼用"), ("有什麼優惠", "有什麼用"), ("有什麼福利", "有什麼用"),
+        ("型態", "狀態"), ("儲值", "加值"), ("照顧", "保養"), ("哪一種", "什麼"), ("哪種", "什麼"), ("要怎麼做", "怎麼辦"), ("該怎麼做", "怎麼辦"), ("什麼東西", "什麼"), ("是啥", "是什麼"), ("啥", "什麼"),
     ]
     /// 不帶內容的字詞：拿掉之後把句子切成幾段
-    static let function = ["怎麼辦", "要怎麼", "該怎麼", "怎麼", "可以", "什麼", "哪裡", "哪些", "比較", "要", "該", "嗎", "呢", "啊", "了", "的", "我", "你", "很",
-                           "一直", "都", "是", "有", "去", "會", "才", "一下", "喔", "啦", "吧", "請問", "能不能", "能", "好像", "一次"]
+    static let function = ["怎麼辦", "要怎麼", "該怎麼", "怎麼", "可以", "為什麼", "什麼", "哪裡", "哪些", "比較", "要", "該", "嗎", "呢", "啊", "了", "的", "我", "你",
+                           "是", "有", "去", "會", "才", "一下", "喔", "啦", "吧", "請問", "能不能", "能", "一次"]
+    /// 加強、進行的字：拿掉但不切開（「壓力很大」＝壓力大、「手機一直當機」＝手機當機）
+    static let joinWords = ["一直在", "正在", "還在", "一直", "好像", "很", "都"]
     /// 問的方向；第 0 組是「是不是、可不可以」這種是非題
-    static let focusGroups: [[String]] = [["嗎", "要不要", "可不可以", "能不能"], ["多久", "幾天", "幾個月", "幾年", "多長"], ["多少錢", "多少", "幾元", "幾塊"],
-                                          ["為什麼"], ["什麼時候", "何時", "哪一年", "哪年"], ["哪裡", "在哪"], ["是什麼", "什麼是", "什麼意思"], ["幾度"], ["幾個", "幾種", "幾次"]]
+    static let focusGroups: [[String]] = [["嗎", "要不要", "可不可以", "能不能"],
+                                          ["多久", "幾天", "幾個月", "幾年", "多長", "幾小時", "幾個小時", "幾分鐘", "幾秒", "幾週", "幾個禮拜", "幾個星期"],
+                                          ["多少錢", "多少", "幾元", "幾塊"],
+                                          // 「第一次世界大戰是怎麼開始的」＝為什麼開始；「流星是怎麼形成的」
+                                          ["為什麼", "怎麼形成", "怎麼來的", "怎麼開始", "怎麼發生", "怎麼產生", "怎麼出現", "原因"],
+                                          ["什麼時候", "何時", "哪一年", "哪年"], ["哪裡", "在哪"], ["是什麼", "什麼是", "什麼意思"], ["幾度"],
+                                          // 「一天可以喝幾杯咖啡」＝喝多少
+                                          ["幾個", "幾種", "幾次", "多少", "幾杯", "幾碗", "幾顆", "幾片", "幾瓶", "幾罐", "幾隻", "幾張", "幾份", "幾餐", "幾步",
+                                           "幾公斤", "幾克", "幾斤", "幾公分", "幾公尺", "幾毫升", "幾歲", "幾人", "幾位", "幾樣", "幾條", "幾本", "幾件", "幾台"]]
 
     struct Token { let text: String; let lo: Int; let hi: Int }
     struct Segment { let text: [Character]; let tokens: [Token] }
@@ -30,8 +46,12 @@ enum Fuzzy {
     static func normalize(_ t: String) -> String {
         var t = t.lowercased()
         for (a, b) in synonyms { t = t.replacingOccurrences(of: a, with: b) }
-        // 「去哪繳」「在哪買」＝哪裡
-        t = t.replacingOccurrences(of: "哪(?![裡些個一種位天年家邊])", with: "哪裡", options: .regularExpression)
+        // 「頭髮好油」「最近變胖」＝很油、很胖
+        t = t.replacingOccurrences(of: "(好|變)(?=[油乾胖瘦黑黃腫癢痛累酸痠悶脹吵臭濕慢])", with: "很", options: .regularExpression)
+        // 「台灣飛日本要多久」＝台灣到日本
+        t = t.replacingOccurrences(of: "(台灣|台北|桃園|高雄|台中|日本|東京|大阪|香港|韓國|首爾|泰國|曼谷|新加坡|美國|歐洲)飛", with: "$1到", options: .regularExpression)
+        // 「去哪繳」「在哪買」＝哪裡（「哪幾種」「哪三個」「哪兒」不是）
+        t = t.replacingOccurrences(of: "哪(?![裡些個一二三四五六七八九十幾兒種位天年家邊])", with: "哪裡", options: .regularExpression)
         return t
     }
     static func focus(_ t: String) -> Set<Int> {
@@ -41,7 +61,11 @@ enum Fuzzy {
     }
     static func segments(_ t: String) -> [Segment] {
         var t = t.replacingOccurrences(of: #"[，,。.！!？?、；;：:\s~～…]+"#, with: " ", options: .regularExpression)
+        // 「第一次世界大戰」的「一次」不是虛詞
+        t = t.replacingOccurrences(of: "第一次", with: "第一回")
+        for w in joinWords { t = t.replacingOccurrences(of: w, with: "") }
         for w in function { t = t.replacingOccurrences(of: w, with: " ") }
+        t = t.replacingOccurrences(of: "第一回", with: "第一次")
         return t.split(separator: " ").map { seg in
             let cs = Array(seg)
             var toks: [Token] = []
@@ -69,7 +93,8 @@ enum Fuzzy {
             for a in Set(e.names) where a.count >= 3 {
                 let an = normalize(a)
                 let f = focus(an)
-                if fact && f.isEmpty { continue }   // 事實只用問句型的問法（「剩菜可以放多久」），不用光名字
+                // 事實只用問句型的問法（「剩菜可以放多久」「悠遊卡怎麼加值」），不用光名字
+                if fact && f.isEmpty && an.range(of: "怎麼|如何|要注意|方法|辦法|步驟|什麼|哪些|哪個|哪裡|誰", options: .regularExpression) == nil { continue }
                 let segs = segments(an)
                 let toks = Set(segs.flatMap { $0.tokens.map(\.text) })
                 guard toks.count >= 2 else { continue }
@@ -88,7 +113,9 @@ enum Fuzzy {
         let qs = segments(q)
         var qt = Set<String>()
         var qchars = Set<String>()
-        for s in qs { for t in s.tokens { qt.insert(t.text) }; for c in s.text { qchars.insert(String(c)) } }
+        var qlast = Set<String>()   // 每一段的最後一個字（「哪種貓」的「貓」）
+        for s in qs { for t in s.tokens { qt.insert(t.text) }; for c in s.text { qchars.insert(String(c)) }; if let l = s.text.last { qlast.insert(String(l)) } }
+        let qlen = qs.reduce(0) { $0 + $1.text.count }
         let qf = focus(q)
         let qwh = qf.subtracting([0])
         let askHow = q.range(of: "怎麼|如何|要注意|方法|辦法|建議|步驟", options: .regularExpression) != nil
@@ -99,8 +126,18 @@ enum Fuzzy {
             // 每一段最後的重點詞一定要對到（「老闆不給加薪」的「加薪」）
             if e.segments.contains(where: { s in
                 guard let last = s.tokens.last else { return false }
-                return !m.contains(last.text) || (last.text.count == 1 && !qt.contains(last.text))
+                return !m.contains(last.text) || (last.text.count == 1 && !qt.contains(last.text) && !qlast.contains(last.text))
             }) { continue }
+            // 比較兩個東西的問句，內容大部分都要用到（「金融卡跟信用卡有什麼不一樣」不是「信用卡怎麼辦」）；
+            // 一般的長句常夾著「說真的」「嗚嗚」這類沒內容的話，不這樣要求
+            var qcovered = 0
+            for s in qs {
+                var on = [Bool](repeating: false, count: s.text.count)
+                for t in s.tokens where m.contains(t.text) { for k in t.lo..<t.hi { on[k] = true } }
+                if s.tokens.count == 1, s.text.count == 1, m.contains(String(s.text[0])) { on[0] = true }
+                qcovered += on.filter { $0 }.count
+            }
+            if q.contains("和"), !e.alias.contains("和"), Double(qcovered) / Double(max(qlen, 1)) < 0.4 { continue }
             var covered = 0
             for s in e.segments {
                 var on = [Bool](repeating: false, count: s.text.count)
@@ -113,7 +150,9 @@ enum Fuzzy {
             // 問的方向要一樣
             if !e.focus.isEmpty && e.focus.isDisjoint(with: qf) { continue }
             // 做法裡常常就有「去哪裡辦」；食譜裡就有要煮多久
-            let wh = e.isFact ? qwh : qwh.subtracting(e.entity.kind == "做法" ? [1, 5] : [5])
+            // （事實的問法如果是「怎麼…」：「悠遊卡怎麼加值」也回答了在哪裡加值）
+            let howAlias = e.alias.range(of: "怎麼|如何", options: .regularExpression) != nil
+            let wh = e.isFact && !howAlias ? qwh : qwh.subtracting(e.entity.kind == "做法" ? [1, 5] : [5])
             if !wh.isEmpty && wh.isDisjoint(with: e.focus) { continue }
             // 是非題（「這樣正常嗎」）不能用一張做法清單回答，除非也在問怎麼做
             if qf.contains(0), !e.focus.contains(0), !askHow { continue }

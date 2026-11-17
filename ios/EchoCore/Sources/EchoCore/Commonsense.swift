@@ -174,12 +174,20 @@ public enum Commonsense {
         let hit = memo[key]
         memoLock.unlock()
         if let v = hit { return v.isEmpty ? nil : v }
-        var a = answerCore(raw, now: now)
+        let loose = loosen(raw)
+        // 寬鬆的說法剛好就是資料庫裡的一個問法（「QR code要怎麼掃」＝QR code怎麼掃）：先用它，不要只抓到「QR code」這個名字
+        let exact = loose != raw && all.contains { e in e.names.contains(Everyday.clean(loose)) }
+        var a = exact ? answerCore(loose, now: now) : nil
+        if a == nil { a = answerCore(raw, now: now) }
         // 換個寬鬆的說法再試一次（「iphone怎麼截圖」「WiFi一直斷線」「每天應該喝多少水」「家裡的wifi連不到」）
-        if a == nil {
-            let loose = loosen(raw)
-            if loose != raw { a = answerCore(loose, now: now) }
+        if a == nil, loose != raw, !exact { a = answerCore(loose, now: now) }
+        // 「清朝的最後一位皇帝是誰」：名字中間的「的」拿掉再試（只在問問題的時候）
+        if a == nil, raw.range(of: "是誰|是什麼|是哪|在哪|多少|幾|多久|多高|多大|多遠|什麼時候|哪一年", options: .regularExpression) != nil {
+            let noDe = loose.replacingOccurrences(of: "(?<![我你他她它們])的(?=\\p{Han})", with: "", options: .regularExpression)
+            if noDe != loose { a = answerCore(noDe, now: now) }
         }
+        // 整句剛好是資料庫裡的一個問法（「為什麼會有流星」），前面的規則都沒接住：直接用那一筆
+        if a == nil { a = exactAnswer(Everyday.clean(raw), now: now) ?? exactAnswer(Everyday.clean(loose), now: now) }
         memoLock.lock()
         if memo[key] == nil {
             memo[key] = a ?? ""
@@ -206,6 +214,31 @@ public enum Commonsense {
         return m
     }()
 
+    /// 整句就是某一筆的問法：做法給步驟；事實給簡介（和說明）
+    static func exactAnswer(_ t: String, now: Date) -> String? {
+        guard t.count >= 3, !fortuneish(t) else { return nil }
+        if let e = howtos.first(where: { $0.names.contains(t) }) { return formatHowto(e) }
+        if let e = facts.first(where: { $0.kind != "推薦" && $0.names.contains(t) }) {
+            if ["常識", "健康常識", "生活"].contains(e.kind), let intro = e.attr("簡介") {
+                return intro + "。" + (e.attr("說明").map { "\n" + $0 + "。" } ?? "")
+            }
+            return define(e, now: now)
+        }
+        return nil
+    }
+
+    /// 「金融卡跟信用卡有什麼不一樣」「內向和外向差在哪」：資料庫裡有一筆同時講這兩個的，就用它
+    static func difference(_ t: String) -> String? {
+        guard let g = RuleBook.match(t, #"^(.{1,10}?)(?:跟|和|與|還有)(.{1,10}?)(?:有什麼不一樣|有什麼不同|有哪些不同|有哪裡不同|哪裡不一樣|哪裡不同|差在哪裡|差在哪|差別在哪|的差別|的差異|的不同|有什麼差別|有什麼差異|有什麼區別|的區別|有差嗎|差很多嗎|一樣嗎|是一樣的嗎)$"#) else { return nil }
+        let a = g[0], b = g[1]
+        guard a.count >= 2, b.count >= 2, a != b else { return nil }
+        let pool = facts.filter { $0.kind != "推薦" } + howtos
+        guard let e = pool.first(where: { e in e.names.contains { n in n.contains(a) && n.contains(b) } || (e.name.contains(a) && e.name.contains(b)) }) else { return nil }
+        if howtos.contains(where: { $0.name == e.name }) { return formatHowto(e) }
+        guard let intro = e.attr("簡介") else { return nil }
+        return intro + "。" + (e.attr("說明").map { "\n" + $0 + "。" } ?? "")
+    }
+
     static func loosen(_ raw: String) -> String {
         var out = "", w = ""
         for ch in raw + "\u{0}" {
@@ -216,8 +249,17 @@ public enum Commonsense {
         var t = out
         for w in ["一直", "應該", "常常", "總是", "老是", "真的", "到底", "一下", "裡面", "上面", "好吵", "好煩", "好可怕"] { t = t.replacingOccurrences(of: w, with: "") }
         t = t.replacingOccurrences(of: "要怎麼", with: "怎麼").replacingOccurrences(of: "該怎麼", with: "怎麼")
+        // 「QR碼是什麼東西」「VPN是啥」＝是什麼
+        t = t.replacingOccurrences(of: "是什麼東西", with: "是什麼").replacingOccurrences(of: "是啥", with: "是什麼")
+        // 「台灣飛日本要多久」＝台灣到日本；「新手適合養哪種貓」＝養什麼貓
+        t = t.replacingOccurrences(of: "(台灣|台北|桃園|高雄|台中|日本|東京|大阪|香港|韓國|首爾|泰國|曼谷|新加坡|美國|歐洲)飛", with: "$1到", options: .regularExpression)
+        t = t.replacingOccurrences(of: "哪一種|哪種", with: "什麼", options: .regularExpression)
+        // 「我想把菸戒掉」＝我想戒菸
+        t = t.replacingOccurrences(of: "把(.{1,3})戒掉", with: "戒$1", options: .regularExpression)
+        t = t.replacingOccurrences(of: "戒掉(?=.)", with: "戒", options: .regularExpression)
         // 「彩虹是怎麼來的」：自然現象沒有「由來」，是在問怎麼形成
         t = t.replacingOccurrences(of: "(是)?怎麼來的", with: "怎麼形成", options: .regularExpression)
+        t = t.replacingOccurrences(of: "是怎麼形成的", with: "怎麼形成")
         // 「冥王星還是行星嗎」＝冥王星是行星嗎
         t = t.replacingOccurrences(of: "還是(?=.{1,6}嗎$)", with: "是", options: .regularExpression)
         // 「落枕了怎麼辦」＝落枕怎麼辦
@@ -276,10 +318,28 @@ public enum Commonsense {
         if let g = RuleBook.match(t, #"^我(?:的)?(?:好像|一直|有點|今天|最近|又|突然|常常|很容易)?(.{2,8}?)(?:了|好幾天了|很久了)?$"#) {
             let x = g[0].replacingOccurrences(of: #"(好|很|超|一直|有點)"#, with: "", options: .regularExpression)
             // 「我很怕打針」是害怕，不是身體不舒服
-            if x.count >= 2, !x.contains("怕"), let e = howtos.first(where: { $0.kind == "健康" && $0.names.contains(where: { $0 == x || $0 == x + "怎麼辦" }) }),
+            if x.count >= 2, !x.contains("怕"), !x.hasPrefix("想"), !x.hasPrefix("要"), let e = howtos.first(where: { $0.kind == "健康" && $0.names.contains(where: { $0 == x || $0 == x + "怎麼辦" }) }),
                let a = howto(e.name + "怎麼辦") ?? howto("怎麼" + e.name) {
                 return "辛苦了，身體不舒服要好好照顧自己。\n" + a
             }
+        }
+        if let a = difference(t) { return a }
+        // 「東京到大阪要多久」「台北到高雄要坐多久」：兩地之間的資料裡就有交通時間
+        if t.range(of: "多久|幾個小時|幾小時|要坐|要飛|要開", options: .regularExpression) != nil,
+           let m = realMentions(t, in: facts).first(where: { $0.entity.kind == "距離" }), let d = m.entity.attr("距離") {
+            return "\(m.entity.name)：\(d)。"
+        }
+        // 「流星是怎麼形成的」「為什麼會有彩虹」：沒有另外寫成因的，簡介本身就在說它是怎麼來的
+        if let g = RuleBook.match(t, #"^(?:為什麼會有)(.{1,8}?)(?:呢)?$"#) ?? RuleBook.match(t, #"^(.{1,8}?)(?:是)?怎麼(?:形成|產生|出現)(?:的)?(?:呢)?$"#),
+           let e = facts.first(where: { $0.names.contains(g[0]) && ["天體", "自然", "科學", "環境", "生物"].contains($0.kind) }),
+           e.attr("形成") == nil, e.attr("原因") == nil, let d = define(e, now: now) {
+            return d
+        }
+        // 「QR碼是什麼」：名字是一個「怎麼做」的條目（裡面就在介紹它）
+        if let g = RuleBook.match(t, #"^(?:什麼是)?(.{2,12}?)(?:是什麼|是什麼意思|是什麼東西|是啥)?$"#), g[0] != t || t.hasPrefix("什麼是"),
+           !facts.contains(where: { $0.names.contains(g[0]) }),
+           let e = howtos.first(where: { $0.kind == "生活" && $0.names.contains(g[0]) && ($0.attr("開頭") ?? "").contains("是") }) {
+            return formatHowto(e)
         }
         if let a = compareNumbers(t) { return a }
         // 「台灣和日本哪個大」「台北101跟晴空塔誰比較高」→ 台灣比日本大嗎

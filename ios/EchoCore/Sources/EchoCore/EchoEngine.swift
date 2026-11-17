@@ -463,7 +463,7 @@ public final class EchoEngine {
         // 先看看是不是自己知道的事換了個說法；在說心情的話（「最近壓力好大」）照樣陪他聊
         // 剛剛是用陪伴的話回心情（「我沒有朋友」「沒人理我」）：除非是身體不舒服、或明白在問方法，不要改成一張做法清單
         let moodReply = lastLocal?.kind == "mood" && lastLocal?.turn == history.count
-        let asksMethod = text.range(of: "怎麼辦|建議|該怎麼|要怎麼|有什麼方法|有什麼辦法|怎麼做|怎麼處理|要注意", options: .regularExpression) != nil
+        let asksMethod = text.range(of: "怎麼辦|建議|該怎麼|要怎麼|有什麼方法|有什麼辦法|怎麼做|怎麼處理|要注意|怎麼面對|如何面對|怎麼克服|怎麼走出|怎麼改善|怎麼調適|怎麼放下", options: .regularExpression) != nil
         if context.language == .zh, r.webQuery != nil || r.turn.source == .neural, (4...40).contains(text.count),
            EchoEngine.explicitSearch(text) == nil, !EchoEngine.explicitFortune(text), !Commonsense.talksFeelings(text),
            // 擔心別人：只有毛孩、小孩的症狀（「狗狗拉肚子」）直接給做法；家人住院、開刀這種大事先陪他聊
@@ -480,7 +480,10 @@ public final class EchoEngine {
             let m = Fuzzy.match(text)
             let sub = m.map { m in Commonsense.howtos.contains(where: { $0.name == m.entity.name }) ? "" : (Commonsense.subject(m.alias) ?? "") } ?? ""
             lastLocal = LocalContext(kind: "fact", subject: sub, extra: m?.alias ?? text, answer: a, turn: history.count)
-            r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+            // 帶著心情問方法（「工作壓力很大怎麼辦」）：先接住心情，再給方法
+            let feeling = text.range(of: "壓力|好累|很累|難過|焦慮|好煩|很煩|害怕|擔心|委屈|崩潰|心情不好", options: .regularExpression) != nil
+            let lead = feeling && !a.hasPrefix("辛苦") && !a.hasPrefix("你") && !a.hasPrefix("聽起來") ? "聽起來真的很辛苦，我陪你一起想辦法。\n" : ""
+            r = Reply(turn: ChatTurn(role: .echo, text: lead + a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
             return r
         }
         // 沒有主語的問題不能當成「上一題的主題」
@@ -810,6 +813,8 @@ public final class EchoEngine {
         }
         // 2.054) 自己有看法的比較題（「天氣和氣候有什麼不同」「病毒和細菌的差別」）：先用自己知道的，不當成近義詞
         if L == .zh, let a = Commonsense.compare(Everyday.clean(text)) { return done(a, .knowledge) }
+        // 「金融卡跟信用卡有什麼不一樣」：資料庫裡有一筆講這兩個的差別（不是在問兩個詞是不是近義詞）
+        if L == .zh, let a = Commonsense.difference(Everyday.clean(text)) { return done(a, .knowledge) }
         // 2.055) 反義詞：「開心的反義詞是什麼」「大和小是反義詞嗎」——詞庫裡有就直接回答，沒有就上網查
         if L == .zh, let ask = Antonyms.parse(text) {
             if let a = Antonyms.answer(ask) { return done(a, .knowledge) }
@@ -1088,7 +1093,8 @@ public final class EchoEngine {
             return done(out.text, .reader, card: out.card)
         }
         // 6.6) 主題問句：感情、事業、財運、健康……（本命 + 大運方面 + 流年引動 + 流月）
-        if let tp = TopicRouter.parse(text, L: .zh, now: ctx.now) {
+        // （「請事假會扣薪水嗎」問的是規定，不是財運：資料庫答得出來、又沒有算命的字，就不算命）
+        if let tp = TopicRouter.parse(text, L: .zh, now: ctx.now), !EchoEngine.knowledgeNotFortune(text) {
             guard let bd = ctx.profile.birthday else {
                 return done("我還不知道你的生日，沒辦法看這個主題。直接告訴我，例如：我的生日是2000年1月1日，或到右上角「調頻台」選好日期（會自動儲存）。", .tool)
             }
@@ -1969,6 +1975,14 @@ public final class EchoEngine {
 
     /// 「我的健康要注意什麼」→「我的健康怎麼樣」（交給主題路由）；不是這種問法回傳 nil。
     /// 有症狀（「我的身體一直發燒」）、問方法（「怎麼讓身體變好」）的不算
+    /// 「請事假會扣薪水嗎」「薪水怎麼算」：問規定、常識，不是問自己的運——資料庫答得出來、又沒有算命的字，就不算命
+    static func knowledgeNotFortune(_ t: String) -> Bool {
+        if t.range(of: "運|命|算命|算算|幫我算|幫我看|占卜|星盤|宮|流年|順不順|順利|好不好", options: .regularExpression) != nil { return false }
+        let rules = t.range(of: "請假|事假|病假|特休|扣薪|扣錢|違法|合法|規定|勞基法|罰|繳稅|要繳|補助|津貼|申請|怎麼算|怎麼計算", options: .regularExpression) != nil
+        if t.contains("我") && !rules { return false }
+        return Commonsense.answer(t) != nil || Fuzzy.match(t) != nil
+    }
+
     static func myTopic(_ raw: String) -> String? {
         let t = raw.filter { !"？?。！!，, ".contains($0) }
         guard let g = RuleBook.match(t, #"^我(?:的|今年的|最近的)?(健康|身體|錢財|財運|金錢|錢|感情|愛情|桃花|事業|工作|婚姻|朋友|人際關係|人際|家庭|家人|學業|考運)(?:運|運勢|方面)?(?:要|該|需要|應該)?(注意什麼|注意些什麼|注意哪些|小心什麼|怎麼樣|如何|好不好|好嗎|會好嗎|順不順|怎樣)$"#) else { return nil }
