@@ -473,6 +473,19 @@ public enum Commonsense {
             && !["教我", "怎麼緩解", "如何緩解", "緩解", "方法", "減輕", "怎麼讓自己", "如何讓自己", "容易", "控制", "脾氣"].contains(where: { t.contains($0) })
     }
 
+    /// 「番茄炒蛋要放糖嗎」「滷肉可以加蛋嗎」：看那道菜的做法裡有沒有這樣東西
+    public static func recipeIngredient(_ raw: String) -> String? {
+        let t = Everyday.clean(raw)
+        guard let g = RuleBook.match(t, #"^(.{2,8}?)(?:要不要|要|可以|需要|該|能)(?:放|加)(.{1,4}?)(?:嗎|呢)?$"#),
+              let e = howtos.first(where: { $0.kind == "做法" && ($0.name == g[0] || $0.aliases.contains(g[0])) }) else { return nil }
+        let item = g[1]
+        let lines = ((e.attr("步驟") ?? "").split(separator: "；").map(String.init)) + [e.attr("提醒") ?? ""]
+        if let hit = lines.first(where: { $0.contains(item) }) {
+            return "要，\(hit)。"
+        }
+        return "\(e.name)的基本做法裡沒有特別放\(item)，想加的話少量試試看，照自己的口味調整就好。"
+    }
+
     /// 把一個做法排成「開頭＋步驟＋提醒」
     static func formatHowto(_ e: Entity) -> String? {
         let steps = (e.attr("步驟") ?? "").split(separator: "；").enumerated().map { "\($0.offset + 1). \($0.element)" }
@@ -525,6 +538,8 @@ public enum Commonsense {
         for p in ["那麼", "那", "所以", "還有", "另外"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); break }
         for p in ["它們的", "它們", "他們的", "他們", "牠們的", "牠們", "她們的", "她們", "它的", "它", "他的", "他", "她的", "她", "牠的", "牠", "這個的", "這個", "那個"] where t.hasPrefix(p) && t.count > p.count { t.removeFirst(p.count); pointed = true; break }
         if t.hasPrefix(subject) { return nil }
+        // 「那邊現在冷嗎」（剛剛的主題是「出國旅遊準備」這種做法）：「那邊」指的是要去的地方，不是做法
+        if pointed, !facts.contains(where: { $0.name == subject }) { return nil }
         if ["你", "我", "妳"].contains(where: { t.contains($0) }) || fortuneish(t) { return nil }
         let ms = realMentions(t, in: facts) + realMentions(t, in: howtos)
         // 「那葡萄呢」（葡萄不是認得的東西）：換掉上一題動詞後面的東西
