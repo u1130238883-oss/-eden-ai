@@ -322,6 +322,7 @@ public enum Commonsense {
             if recommends.contains(where: { $0.names.contains(t) }), let a = recommend(t) ?? recommend("推薦" + t) { return a }
         }
         if let a = whichClinic(t) { return a }
+        if let a = healthConcern(t) { return a }
         // 「我膝蓋痛」「我嘴破了」「我便秘」：說了身體的狀況 → 關心一句，給做法
         if let g = RuleBook.match(t, #"^我(?:的)?(?:好像|一直|有點|今天|最近|又|突然|常常|很容易)?(.{2,8}?)(?:了|好幾天了|很久了)?$"#) {
             let x = g[0].replacingOccurrences(of: #"(好|很|超|一直|有點)"#, with: "", options: .regularExpression)
@@ -449,6 +450,36 @@ public enum Commonsense {
             return "\(x)可以看\(clinic)。不知道要看哪一科的時候，先掛家醫科，醫生會幫你判斷要不要轉診。"
         }
         return "不知道要看哪一科的話，可以先掛家醫科（家庭醫學科），醫生會幫你判斷要不要轉到專科。大醫院也有服務台可以問。"
+    }
+
+    /// 症狀的追問（「頭痛會死嗎」「拉肚子要看醫生嗎」「咳嗽嚴重嗎」「頭痛可以吃什麼」）：照那個做法裡「什麼時候要看醫生」、和吃的那幾步回答
+    static func healthConcern(_ t: String) -> String? {
+        let serious = #"(?:會死嗎|會不會死|會死掉嗎|會致命嗎|嚴重嗎|很嚴重嗎|會很嚴重嗎|會不會很嚴重|危險嗎|會有危險嗎|要緊嗎|要不要緊|(?:需要|要不要|要|該|應該|一定要)(?:去)?(?:看醫生|就醫|去醫院|看醫師)(?:嗎)?|什麼時候(?:要|該|需要|應該)(?:去)?(?:看醫生|就醫|去醫院))"#
+        let food = #"(?:的時候|的話)?(?:可以|要|該|應該|能|適合|最好)?(?:吃|喝)(?:什麼|哪些)(?:東西|食物)?(?:比較好|好|呢)?"#
+        func entity(_ raw: String) -> Entity? {
+            let x = raw.replacingOccurrences(of: #"^(一直|常常|最近|突然|有點|很|好)+"#, with: "", options: .regularExpression)
+                .replacingOccurrences(of: #"(好|很|超|一直|有點)(?=[痛癢痠酸脹暈])"#, with: "", options: .regularExpression)
+                .replacingOccurrences(of: #"(很久|好幾天|好幾週|好幾個禮拜|一直|不停|都沒好|沒好|不會好)$"#, with: "", options: .regularExpression)
+            guard x.count >= 2 else { return nil }
+            if let e = howtos.first(where: { $0.kind == "健康" && $0.names.contains(where: { $0 == x || $0 == x + "怎麼辦" }) }) { return e }
+            if let hit = Fuzzy.exactIndex[x], hit.entity.kind == "健康" { return hit.entity }
+            return nil
+        }
+        if let g = RuleBook.match(t, "^(?:我的?|他的?|她的?)?(.{2,8}?)(?:的話|這樣|的情況)?" + serious + "[？?]*$"), let e = entity(g[0]), let doc = e.attr("就醫") {
+            var s = "\(e.name)要看原因和嚴重的程度。\n⚠️ 出現這些情況要看醫生：\(doc)。"
+            let steps = (e.attr("步驟") ?? "").split(separator: "；").prefix(4).enumerated().map { "\($0.offset + 1). \($0.element)" }
+            if !steps.isEmpty { s += "\n\n沒有這些情況的話，可以先這樣照顧自己：\n" + steps.joined(separator: "\n") }
+            return s
+        }
+        if let g = RuleBook.match(t, "^(?:我的?)?(.{2,8}?)" + food + "[？?]*$"), let e = entity(g[0]) {
+            let lines = ((e.attr("步驟") ?? "").split(separator: "；").map(String.init) + [e.attr("提醒") ?? ""])
+                .filter { $0.range(of: "吃|喝|食物|飲|水分|湯|粥|餐", options: .regularExpression) != nil }
+            guard !lines.isEmpty else { return nil }
+            var s = "\(e.name)的時候，吃喝可以這樣：\n" + lines.map { "・" + $0 }.joined(separator: "\n")
+            if let doc = e.attr("就醫") { s += "\n\n⚠️ 什麼時候要看醫生：\(doc)。" }
+            return s
+        }
+        return nil
     }
 
     /// 中國朝代的順序：「唐朝之後是什麼朝代」「中國最後一個朝代」「宋朝的前一個朝代」

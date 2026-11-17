@@ -108,11 +108,29 @@ enum Fuzzy {
         return out
     }()
 
+    /// 拿掉虛詞、加強語氣之後剩下的核心（「最近頭一直很痛怎麼辦」→「頭痛」）對到做法的問法：只有一個說法對到才算
+    static let exactIndex: [String: (entity: Commonsense.Entity, alias: String)] = {
+        var m: [String: (entity: Commonsense.Entity, alias: String)] = [:]
+        var clash = Set<String>()
+        for e in Commonsense.howtos {
+            for a in Set(e.names) {
+                let segs = segments(normalize(a))
+                guard segs.count == 1, segs[0].text.count >= 2 else { continue }
+                let key = String(segs[0].text)
+                if let old = m[key], old.entity.name != e.name { clash.insert(key) } else { m[key] = (e, a) }
+            }
+        }
+        for k in clash { m.removeValue(forKey: k) }
+        return m
+    }()
+
     /// 最像的那個問法（對不到就 nil）
     static func match(_ raw: String) -> (entity: Commonsense.Entity, alias: String)? {
         let q = normalize(raw)
         guard (3...40).contains(q.count) else { return nil }
         let qs = segments(q)
+        // 核心剛好就是某個做法（只問怎麼辦，不是問多久、為什麼、是不是）
+        if qs.count == 1, focus(q).isEmpty, let hit = exactIndex[String(qs[0].text)] { return hit }
         var qt = Set<String>()
         var qchars = Set<String>()
         var qlast = Set<String>()   // 每一段的最後一個字（「哪種貓」的「貓」）

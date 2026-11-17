@@ -976,7 +976,8 @@ public final class EchoEngine {
         }
         // 2.1) 心情：用你的生日看此刻的大運、流年、流月、日夜宮，說出處境和情緒，溫柔地安慰
         // （「鄧麗君是怎麼過世的」是在問別人怎麼過世，不是在說心情）
-        if L == .zh, !EchoEngine.asksHowSomeoneDied(text), let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now,
+        // （「頭痛會死嗎」「頭痛可以運動嗎」「拉肚子多久會好」是在問身體的事，不是在說心情）
+        if L == .zh, !EchoEngine.asksHowSomeoneDied(text), !EchoEngine.asksHealthInfo(text), let s = Solace.reply(text, birthday: ctx.profile.birthday, now: ctx.now,
                                 again: history.suffix(4).contains { $0.role == .echo && $0.text.contains("我看了你此刻走到的地方") }) {
             let p = core?.perceive(text)
             if let p { core?.remember(p) }
@@ -1418,6 +1419,15 @@ public final class EchoEngine {
     }
 
     /// 「鄧麗君是怎麼過世的」「愛因斯坦幾歲去世」：問別人（名人）怎麼過世，不是自己家人過世
+    /// 問身體狀況的事（會不會很嚴重、要不要看醫生、可以吃什麼、可不可以運動、多久會好）：是問題，不是在說心情
+    static func asksHealthInfo(_ t: String) -> Bool {
+        isQuestion(t)
+            && t.range(of: "痛|咳|燒|拉肚子|腹瀉|便秘|吐|暈|癢|腫|流鼻|鼻塞|過敏|感冒|發炎|疹|傷口|流血|出血|抽筋|麻|喘|生病|不舒服|受傷|扭傷|骨折|中暑", options: .regularExpression) != nil
+            && t.range(of: "心(好|很|真的|真|超)?痛|心碎|難過|傷心|心情|孤單|寂寞|焦慮|憂鬱|壓力|煩|失戀|分手|吵架", options: .regularExpression) == nil
+            && t.range(of: "會死|致命|嚴重嗎|嚴重|危險嗎|要緊|看醫生|就醫|去醫院|看醫師|急診|可以(吃|喝|運動|洗澡|洗頭|喝酒|上班|上學|游泳|搭飛機|吹冷氣|喝咖啡|喝牛奶|吃冰|曬太陽|跑步|按摩|熱敷|冰敷)|能不能|能(吃|喝)|(吃|喝)什麼|多久(會|才會|能|才能)?好|幾天(會|才會)?好|會傳染|正常嗎|吃什麼藥|擦什麼|看哪一?科|掛哪一?科|是什麼病|原因|為什麼會", options: .regularExpression) != nil
+            && t.range(of: "好痛苦|好難受|好怕|很怕|害怕|好想哭|受不了", options: .regularExpression) == nil
+    }
+
     static func asksHowSomeoneDied(_ t: String) -> Bool {
         t.range(of: "(怎麼|如何|為什麼|什麼時候|哪一年|幾歲|是怎麼|因為什麼)(過世|去世|死|離世|逝世)", options: .regularExpression) != nil
             && t.range(of: "我|爸|媽|爺|奶|外公|外婆|阿公|阿嬤|家|狗|貓|寵物|朋友|老公|老婆|男友|女友|同學|同事", options: .regularExpression) == nil
