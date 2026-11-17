@@ -216,6 +216,10 @@ public enum Commonsense {
         var t = out
         for w in ["一直", "應該", "常常", "總是", "老是", "真的", "到底", "一下", "裡面", "上面", "好吵", "好煩", "好可怕"] { t = t.replacingOccurrences(of: w, with: "") }
         t = t.replacingOccurrences(of: "要怎麼", with: "怎麼").replacingOccurrences(of: "該怎麼", with: "怎麼")
+        // 「彩虹是怎麼來的」：自然現象沒有「由來」，是在問怎麼形成
+        t = t.replacingOccurrences(of: "(是)?怎麼來的", with: "怎麼形成", options: .regularExpression)
+        // 「冥王星還是行星嗎」＝冥王星是行星嗎
+        t = t.replacingOccurrences(of: "還是(?=.{1,6}嗎$)", with: "是", options: .regularExpression)
         // 「落枕了怎麼辦」＝落枕怎麼辦
         t = t.replacingOccurrences(of: "了(?=怎麼辦|怎麼處理)", with: "", options: .regularExpression)
         t = t.replacingOccurrences(of: #"^(我的|我家的|家裡的|我家)"#, with: "", options: .regularExpression)
@@ -256,6 +260,11 @@ public enum Commonsense {
             || raw.range(of: #"(?<![檢調審考盤普探巡抽核清追偵複待])查(?!詢|看看?是)"#, options: .regularExpression) != nil { return nil }
         // 在說心情（「我難過到睡不著怎麼辦」）：先陪他，不是給方法
         if talksFeelings(t) { return nil }
+        // 「貓一天要睡多久」：問的是那個動物的睡眠，不是人要睡幾個小時
+        if t.contains("睡"), t.range(of: "多久|幾個小時|幾小時|多少|多長", options: .regularExpression) != nil,
+           let m = realMentions(t, in: facts).first(where: { $0.entity.kind == "動物" && $0.entity.attr("睡眠") != nil }), let v = m.entity.attr("睡眠") {
+            return "\(m.entity.name)\(v)。"
+        }
         // 只打了一個名字（「咖啡」「黑洞」「番茄炒蛋」「電影」）：介紹它、給做法或推薦
         if t.count <= 8, !fortuneish(t), !asking.contains(where: { t.contains($0) }), !["好處", "壞處", "原因", "由來"].contains(where: { t.contains($0) }) {
             if let e = facts.first(where: { $0.names.contains(t) }), e.kind != "常識", let d = define(e, now: now) { return d }
@@ -396,7 +405,7 @@ public enum Commonsense {
     static let fortuneNames: [String] = all.flatMap { $0.names }.filter { n in n.count >= 2 && ["宮", "屬", "卦", "星座", "運"].contains(where: { n.contains($0) }) }.sorted { $0.count > $1.count }
 
     static let asking = ["嗎", "呢", "還是", "什麼", "幾", "多少", "哪", "誰", "怎麼", "如何", "為什麼", "為何", "是不是", "會不會", "有沒有", "能不能",
-                         "可不可以", "可以", "介紹", "多久", "多遠", "多高", "多大", "多長", "多深", "多快", "多熱", "多冷", "多重", "多好", "多靈", "多強", "多厲害", "位於", "解釋", "意思", "指的是"]
+                         "可不可以", "可以", "介紹", "多久", "多遠", "多高", "多大", "多長", "多深", "多快", "多熱", "多冷", "多重", "多好", "多靈", "多強", "多厲害", "位於", "解釋", "意思", "指的是", "幹嘛", "幹什麼"]
 
     // MARK: - 聊到某個東西
 
@@ -703,7 +712,7 @@ public enum Commonsense {
         ("語言", ["什麼語言", "哪種語言", "哪些語言", "說什麼話", "講什麼話", "官方語言", "說什麼語", "講什麼語", "語言", "說哪種", "講哪種"]),
         ("貨幣", ["貨幣", "什麼錢", "用什麼幣", "錢叫什麼", "什麼幣", "哪種錢"]),
         ("日期", ["幾月幾號", "幾月幾日", "幾號", "哪一天", "哪天", "什麼時候", "幾月", "日期", "是星期幾"]),
-        ("習俗", ["習俗", "要做什麼", "做什麼", "有什麼活動", "怎麼過", "傳統", "慶祝"]),
+        ("習俗", ["習俗", "要做什麼", "做什麼", "有什麼活動", "怎麼過", "傳統", "慶祝", "要幹嘛", "幹嘛", "幹什麼"]),
         ("由來", ["由來", "起源", "典故", "為什麼要過", "怎麼來的", "傳說", "紀念誰", "紀念什麼", "是哪裡的", "哪裡來的", "發源地", "從哪裡來"]),
         ("吃", ["吃什麼", "吃些什麼", "吃哪些", "食物", "以什麼為食", "吃啥", "愛吃", "喜歡吃", "要吃"]),
         ("住", ["住在哪", "住哪", "生活在哪", "棲息", "在哪裡生活", "哪裡有", "分布", "住在什麼地方", "在哪裡", "在哪"]),
@@ -768,6 +777,8 @@ public enum Commonsense {
         }
         let ms = realMentions(t, in: facts)
         let whyAsk = ["為什麼", "為何", "怎麼會", "原因", "為啥", "幹嘛", "何以", "怎麼來的", "怎麼發生", "如何發生", "怎麼形成", "如何形成", "怎麼產生", "如何產生", "怎麼運作", "如何運作", "原理", "成因", "起因"].contains(where: { t.contains($0) })
+            // 句尾的「要幹嘛」（「中秋節要幹嘛」）是問要做什麼，不是問為什麼
+            && !(t.range(of: "幹嘛[呢啊？?]*$", options: .regularExpression) != nil && ["為什麼", "為何", "怎麼會", "原因", "為啥"].allSatisfy { !t.contains($0) })
         guard let first = ms.first else {
             if let a = reverseCapital(t) { return a }
             if whyAsk { return globalWhy(t) }

@@ -549,6 +549,11 @@ public final class EchoEngine {
         if let g = RuleBook.match(m, #"^(?:你|妳)?(?:知不知道|知道不知道|曉不曉得|曉得)(.{2,30}?)(?:嗎|呢)?[？?]*$"#), EchoEngine.isQuestion(g[0]) || g[0].range(of: "在哪|是哪|多少|幾|誰|什麼", options: .regularExpression) != nil {
             m = g[0]
         }
+        // 「花蓮好玩嗎」「九份值得去嗎」：自己有那個地方的景點清單，就當成問有什麼好玩的
+        if let g = RuleBook.match(m, #"^(.{2,6}?)(?:好玩嗎|好不好玩|好玩不好玩|值得去嗎|值不值得去)[？?]*$"#) {
+            let q = g[0] + "有什麼好玩的"
+            if Library.detailed(q) != nil || Commonsense.answer(q) != nil { m = q }
+        }
         // 「人口最多的國家是」：話沒說完的「是」＝是什麼
         if m.range(of: #"最.{1,10}是[？?]*$"#, options: .regularExpression) != nil, let r = m.range(of: #"是[？?]*$"#, options: .regularExpression) {
             m.replaceSubrange(r, with: "是什麼")
