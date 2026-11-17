@@ -1539,6 +1539,8 @@ public final class EchoEngine {
     static func combineFollowUp(topic: String, previous: String, message: String) -> String {
         var ask = Talk.clean(message).replacingOccurrences(of: "^(那麼|那|所以|然後)", with: "", options: .regularExpression)
         ask = ask.replacingOccurrences(of: "^(他|她|它|牠)", with: "", options: .regularExpression)
+        // 好消息（考上、升職、結婚）之後的「要怎麼慶祝」：給慶祝的點子；生日有自己的過法
+        if ask.contains("慶祝"), !topic.contains("生日") { return "我要怎麼慶祝" }
         // 「聖誕節」＋「還有幾天」→「距離聖誕節還有幾天」
         if ask.range(of: "^(還有|還要|再)(幾天|多久|多少天)$", options: .regularExpression) != nil { return "距離" + topic + "還有幾天" }
         if ask.range(of: "^(是)?(哪一年|哪年|什麼時候|幾年)$", options: .regularExpression) != nil,
