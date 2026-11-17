@@ -450,7 +450,9 @@ public final class EchoEngine {
         var r = replyCore(to: text, history: history, context: context, onToken: onToken)
         // 「那十年呢」「那55公斤呢」「那英文呢」「那後天呢」「那高雄呢」：把上一題裡對應的那個部分換掉再問一次
         if context.language == .zh, let g = RuleBook.match(message.filter { !"，,。.！!？?～~、 ".contains($0) && !$0.isWhitespace }, #"^(?:那|那麼)(.{1,8}?)呢$"#),
-           let prev = history.suffix(2).last(where: { $0.role == .user })?.text,
+           let prev0 = history.suffix(2).last(where: { $0.role == .user })?.text,
+           // 上一句自己沒說主題（「要帶傘嗎」），往前找有主題的那一句（「台北明天天氣」）來換
+           case let prev = EchoEngine.swapBase(prev0, history: history),
            r.webQuery != nil || r.turn.source == .neural || ((r.turn.source == .grounded || r.turn.source == .reader) && prev.contains("天氣")),
            let cand = EchoEngine.swapInto(previous: Talk.clean(prev), with: g[0]), cand != Talk.clean(prev) {
             let r2 = replyCore(to: cand, history: history, context: context, onToken: onToken)
@@ -1368,6 +1370,15 @@ public final class EchoEngine {
     static let copingSteps = "我陪你一起想，可以先這樣：\n1. 先照顧好自己：今天好好吃飯、早點睡，累的時候什麼事都會看起來更難\n2. 把讓你難受的事寫下來，分成「我能做點什麼的」和「我控制不了的」\n3. 能做的挑一件最小的先做；控制不了的，先試著放下\n4. 找一個信任的人說說，不要一個人扛\n\n如果願意，跟我多說一點是哪件事最讓你煩，我可以幫你想更具體的做法。"
 
     /// 追問剛剛回答裡提到的東西（「搭高鐵要多久」「要放糖嗎」「那台鐵呢」）：從剛剛的回答裡找出那一段
+    /// 「那X呢」要換的那一句：上一句自己沒說主題（「要帶傘嗎」）、再上一句是以地名開頭（「台北明天天氣」），就用再上一句
+    static func swapBase(_ prev0: String, history: [ChatTurn]) -> String {
+        guard Talk.clean(prev0).range(of: "^(要|可以|能|會|需要|該|應該|是|在|有|去|怎麼|多|幾|為什麼|什麼|哪)", options: .regularExpression) != nil,
+              let e = history.dropLast(2).suffix(4).last(where: { $0.role == .user })?.text else { return prev0 }
+        let c = Talk.clean(e)
+        let startsWithPlace = Commonsense.realMentions(c, in: Commonsense.facts).contains { $0.range.lowerBound == c.startIndex && ["國家", "城市", "地標"].contains($0.entity.kind) }
+        return startsWithPlace ? e : prev0
+    }
+
     /// 「那X呢」：把上一題裡和 X 同一類的部分換成 X（時間、語言、數量；不然就換掉開頭的主題）
     static func swapInto(previous p: String, with x: String) -> String? {
         let times = "今天|明天|後天|大後天|昨天|這週|下週|下禮拜|週末|這個月|下個月|今年|明年|去年"
@@ -1383,6 +1394,10 @@ public final class EchoEngine {
             if grp.hasPrefix("公斤"), let r = p.range(of: "(?<=體重)[0-9.]+", options: .regularExpression) { return p.replacingCharacters(in: r, with: x) }
             if grp.hasPrefix("公里"), let r = p.range(of: "(?<=身高)[0-9.]+", options: .regularExpression) { return p.replacingCharacters(in: r, with: x) }
             return nil
+        }
+        // 開頭就是一個認得的地方或東西（「台北明天天氣」）：換掉它
+        if let m = Commonsense.realMentions(p, in: Commonsense.facts).first(where: { $0.range.lowerBound == p.startIndex }), m.alias.count >= 2, m.range.upperBound < p.endIndex {
+            return x + p[m.range.upperBound...]
         }
         // 「什麼是黑洞」→「什麼是白洞」
         if let g = RuleBook.match(p, #"^(?:請問)?什麼是(.+)$"#), !g[0].isEmpty { return "什麼是" + x }
