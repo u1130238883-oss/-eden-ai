@@ -111,9 +111,9 @@ public enum Affect {
             || (social.contains(m) && t0.range(of: p, options: [.regularExpression, .caseInsensitive]) != nil) {
             // 「小孩怕黑」「我兒子很緊張」：說的是孩子或家人的心情，是在擔心他，不是自己害怕
             if [.scared, .anxious, .sad, .angry, .tired, .lonely, .frustrated].contains(m),
-               t.range(of: "^(我的?|我家的?)?(小孩|孩子|寶寶|兒子|女兒|小朋友|弟弟|妹妹|小孫子|孫子|孫女)", options: .regularExpression) != nil { return .worryOther }
+               t.range(of: "^(我的?|我家的?|我養的)?(小孩|孩子|寶寶|兒子|女兒|小朋友|弟弟|妹妹|小孫子|孫子|孫女|狗狗|貓咪|毛孩|狗|貓)", options: .regularExpression) != nil { return .worryOther }
             // 「喪禮要包多少」「那喪禮呢」「告別式要穿什麼」：問禮俗，不是剛失去親人
-            if m == .grief, t.range(of: "過世|去世|走了|離世|往生|死|不在了|彩虹橋", options: .regularExpression) == nil,
+            if m == .grief, t.range(of: "過世|去世|走了|離世|離開人世|往生|死|不在了|彩虹橋|逝世|病逝|驟逝|仙逝|離開我們", options: .regularExpression) == nil,
                t.range(of: "包多少|要包|要穿|穿什麼|要注意|注意什麼|要準備|怎麼|呢$|嗎$|禮俗|習俗", options: .regularExpression) != nil
                 || t0.range(of: "^(那|那麼)?.{1,6}(呢|嗎)$", options: .regularExpression) != nil { return .info }
             // 「電子發票中獎怎麼領」「中獎要去哪裡領」：在問怎麼領獎，不是在報喜
