@@ -750,9 +750,9 @@ public final class EchoEngine {
                let e = Idioms.random(seed: Calendar.current.component(.minute, from: ctx.now) &+ history.count &* 7) {
                 return done("「\(e.idiom)」：\(e.meaning)。" + (e.en.first.map { "\n英文可以說：\($0)" } ?? "") + "\n想要形容某種情況的成語，可以問我「形容很努力的成語」。", .knowledge)
             }
-            if tt.range(of: #"^(來|我們來|陪我)?(玩)?成語接龍(吧)?$"#, options: .regularExpression) != nil, let e = Idioms.random(seed: history.count &+ 3) {
+            if tt.range(of: #"^(來|我們來|陪我|跟我|一起|我想)?(玩)?(成語接龍|文字接龍|接龍)(吧|好不好|好嗎|嗎)?$"#, options: .regularExpression) != nil, let e = Idioms.random(seed: history.count &+ 3) {
                 lastLocal = LocalContext(kind: "接龍", subject: e.idiom, extra: e.idiom, turn: history.count)
-                return done("好啊！我先來：「\(e.idiom)」（\(e.meaning)）。\n換你接一個「\(e.idiom.last!)」開頭的成語！", .knowledge)
+                return done("好啊！我們來玩成語接龍，我先：「\(e.idiom)」（\(e.meaning)）。\n換你接一個「\(e.idiom.last!)」開頭的成語！（想結束就說「不玩了」）", .knowledge)
             }
         }
         // 2.0005) 記得使用者教過的事（「你記得我叫什麼嗎」「我喜歡什麼顏色」）
@@ -1464,12 +1464,18 @@ public final class EchoEngine {
             if !EchoEngine.isQuestion(message), !EchoEngine.fortuneIntent(message), let a = Talk.chatAnswer(message, topic: lc.subject) { return .answer(a) }
         case "接龍":
             let w = t.filter { !"「」".contains($0) }
+            if t.range(of: "輸了|認輸|你贏了|想不到|接不下去", options: .regularExpression) != nil, let last = lc.subject.last {
+                lastLocal = nil
+                let hint = Idioms.chain(from: last, avoid: Set(lc.extra.components(separatedBy: ","))).map { "，像「\($0.idiom)」" } ?? ""
+                return .answer("沒關係，能接到這裡已經很厲害了！「\(last)」開頭的成語\(hint.isEmpty ? "真的很難" : "可以接" + hint.dropFirst())。想再玩隨時說「成語接龍」😄")
+            }
             if w.count == 4, let last = lc.subject.last {
                 guard w.first == last else { return .answer("「\(w)」不是「\(last)」開頭喔～再想一個「\(last)」開頭的成語？（不玩了可以說「不玩了」）") }
                 let used = Set(lc.extra.components(separatedBy: ",")).union([w])
                 if let e = Idioms.chain(from: w.last!, avoid: used) {
                     lastLocal = LocalContext(kind: "接龍", subject: e.idiom, extra: lc.extra + "," + w + "," + e.idiom, turn: lc.turn + 2)
-                    return .answer("接得好！我接「\(e.idiom)」（\(e.meaning)）。\n換你接「\(e.idiom.last!)」開頭的！")
+                    let praise = Idioms.chainKnown.contains(w) ? "接得好！" : "好，「\(w)」！"
+                    return .answer("\(praise)我接「\(e.idiom)」\(e.meaning.isEmpty ? "" : "（\(e.meaning)）")。\n換你接「\(e.idiom.last!)」開頭的！")
                 }
                 lastLocal = nil
                 return .answer("「\(w)」接得好！我想不到「\(w.last!)」開頭的成語了，你贏了 🎉 要再玩一次嗎？說「成語接龍」就可以。")

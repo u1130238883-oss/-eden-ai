@@ -113,9 +113,45 @@ public enum Everyday {
             return "\(fmt(f)) 呎 \(fmt(i)) 吋 ≈ \(fmt((cm * 10).rounded() / 10)) 公分（1 呎 = 30.48 公分，1 吋 = 2.54 公分）。"
         }
         // 「時速60公里開2小時多遠」：距離 = 速度 × 時間
-        if let g = RuleBook.match(t, #"^時速([\d.]+)(?:公里|km)?[，, ]?(?:開|騎|走|跑|坐)?(?:了)?([\d.]+)(?:個)?(?:小時|鐘頭)(?:會|可以|能)?(?:走|開|跑|騎)?(?:多遠|幾公里|多少公里|多長)$"#),
+        if let g = RuleBook.match(t, #"^時速([\d.]+)(?:公里|km)?[，, ]?(?:開|騎|走|跑|坐)?(?:了)?([\d.]+)(?:個)?(?:小時|鐘頭)(?:會|可以|能)?(?:走|開|跑|騎|到)?(?:多遠|幾公里|多少公里|多長)$"#),
            let v = num(g[0]), let h = num(g[1]) {
             return "距離 = 速度 × 時間 = \(fmt(v)) × \(fmt(h)) = \(fmt(v * h)) 公里。"
+        }
+        // 「身高170體重70的BMI是多少」「170公分65公斤BMI」
+        if t.range(of: "(?i)bmi|身體質量指數", options: .regularExpression) != nil {
+            var h = RuleBook.match(t, #"身高([\d.]+)"#).flatMap { num($0[0]) }
+            var w = RuleBook.match(t, #"體重([\d.]+)"#).flatMap { num($0[0]) }
+            if h == nil || w == nil, let g = RuleBook.match(t, #"([\d.]+)(?:公分|cm)?[，, 、]*(?:的)?([\d.]+)(?:公斤|kg)?"#), let a = num(g[0]), let b = num(g[1]) {
+                h = max(a, b); w = min(a, b)
+            }
+            if var hh = h, let ww = w, hh > 0, ww > 0 {
+                if hh < 3 { hh *= 100 }   // 1.7 公尺
+                let bmi = ww / ((hh / 100) * (hh / 100))
+                let r = (bmi * 10).rounded() / 10
+                let level = bmi < 18.5 ? "過輕" : bmi < 24 ? "正常範圍" : bmi < 27 ? "過重" : "肥胖"
+                return "BMI = 體重 ÷ 身高（公尺）的平方 = \(fmt(ww)) ÷ \(fmt(hh / 100))² ≈ \(fmt(r))。\n台灣的標準：18.5 以下過輕、18.5 到 24 正常、24 到 27 過重、27 以上肥胖，所以是「\(level)」。BMI 只是參考，肌肉多的人也可能偏高。"
+            }
+        }
+        // 「100萬存定存利率2%一年利息多少」「50萬年利率1.5%存3年有多少利息」
+        if t.contains("利息") || (t.contains("利率") && t.range(of: "多少|幾", options: .regularExpression) != nil),
+           let pg = RuleBook.match(t, #"([\d.]+)(萬|千)?(?:元|塊)?"#), let p0 = num(pg[0]),
+           let rg = RuleBook.match(t, #"([\d.]+)%"#), let rate = num(rg[0]), rate > 0, rate < 30 {
+            let p = p0 * (pg[1] == "萬" ? 10000 : pg[1] == "千" ? 1000 : 1)
+            let years = RuleBook.match(t, #"([\d.]+)(?:個)?年"#).flatMap { num($0[0]) } ?? 1
+            guard p >= 100, p != rate else { return nil }
+            let yearly = p * rate / 100
+            var out = "一年的利息 = \(fmt(p)) × \(fmt(rate))% = \(fmt((yearly).rounded())) 元。"
+            if years > 1 {
+                let compound = p * pow(1 + rate / 100, years) - p
+                out += "\n存 \(fmt(years)) 年：單利大約 \(fmt((yearly * years).rounded())) 元；如果每年把利息一起續存（複利），大約 \(fmt(compound.rounded())) 元。"
+            }
+            out += "\n（實際利率看銀行公告；單筆利息超過 2 萬元會被扣二代健保補充保費。）"
+            return out
+        }
+        // 「1000乘以1.05的10次方」
+        if let g = RuleBook.match(t, #"^([\d.]+)(?:乘以|乘|×|x|\*)([\d.]+)的([\d]+)次方(?:是|等於)?(?:多少)?$"#), let a = num(g[0]), let b = num(g[1]), let n = num(g[2]), n <= 100 {
+            let v = a * pow(b, n)
+            return "\(fmt(a)) × \(fmt(b))^\(fmt(n)) ≈ \(fmt((v * 100).rounded() / 100))。"
         }
         // 「100公尺跑12秒時速多少」：速度 = 距離 ÷ 時間
         if let g = RuleBook.match(t, #"^([\d.]+)(?:公尺|米)跑?(?:了)?([\d.]+)秒[，, ]?(?:的)?(?:時速|速度)(?:是|有)?(?:多少|幾公里|多快)?$"#),

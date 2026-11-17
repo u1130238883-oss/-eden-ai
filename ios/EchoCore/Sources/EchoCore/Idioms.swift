@@ -261,8 +261,14 @@ public enum Idioms {
 
     /// 成語接龍：找一個用這個字開頭的成語
     public static func chain(from ch: Character, avoid: Set<String>) -> Entry? {
-        all.filter { $0.idiom.first == ch && !avoid.contains($0.idiom) }.min(by: { $0.idiom < $1.idiom })
+        // 先用有解釋的成語；沒有的話用接龍用的常見成語表（沒有解釋）
+        if let e = all.filter({ $0.idiom.first == ch && !avoid.contains($0.idiom) }).min(by: { $0.idiom < $1.idiom }) { return e }
+        let more = ChainIdioms.text.filter { $0.first == ch && !avoid.contains($0) && byName[$0] == nil }
+        guard let w = more.randomElement() else { return nil }
+        return Entry(idiom: w, meaning: "", en: [], es: [], it: [], tones: [])
     }
+    /// 接龍時認得的成語（有解釋的＋常見成語表）
+    static let chainKnown: Set<String> = Set(all.map(\.idiom) + ChainIdioms.text)
 
     /// 用成語說自己的毛病：上網找改善的方法，用意思去查（「三天打魚兩天曬網」→「怎麼改善做事沒有恆心」）
     public static func problemQuery(_ idiom: String) -> String? {
