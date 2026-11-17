@@ -460,10 +460,14 @@ public final class EchoEngine {
             if r2.webQuery != nil { var w = r2; w.webQuery = cand; lastWebQuery = cand; lastWebTurn = history.count; w.turn.palace = nil; return w }
         }
         // 「要煮多久」「怎麼去」「哪一年」「要帶什麼」：沒說主詞的追問——帶上前一題的主題（說「他」就是前一個回答裡的人）再問一次
+        // 上一句也是追問（「說簡單一點」「會死嗎」）：主題在更前面那一句（「什麼是黑洞」「頭痛怎麼辦」）
+        let lastUser = history.suffix(2).last(where: { $0.role == .user })?.text
+        let topicTurn = lastUser == nil ? nil : history.filter { $0.role == .user }.suffix(4).reversed().map(\.text)
+            .first(where: { !EchoEngine.isMetaFollowUp($0) && !EchoEngine.subjectless($0) })
         if context.language == .zh, EchoEngine.subjectless(message),
-           let prev = history.suffix(2).last(where: { $0.role == .user })?.text ?? (history.count - prevQuestionTurn <= 4 ? prevQuestion : nil),
+           let prev = topicTurn ?? lastUser ?? (history.count - prevQuestionTurn <= 4 ? prevQuestion : nil),
            let topic = EchoEngine.topicOf(prev, message: message, previousAnswer: history.last(where: { $0.role == .echo })?.text) {
-            let generic = message.range(of: "^(那)?(要|可以|需要|該)?(帶|準備|買|穿|吃|喝|注意)(什麼|哪些)", options: .regularExpression) != nil
+            let generic = message.range(of: "^(那)?(要|可以|需要|該)?(帶|準備|買|穿|吃|喝|注意)(什麼|哪些)|^(那)?(要|該|應該)?(看|掛)(哪一科|哪科|什麼科)", options: .regularExpression) != nil
             if r.webQuery != nil || r.turn.source == .neural || (generic && r.turn.source == .knowledge && !r.turn.text.contains(topic)) {
                 let combined = EchoEngine.combineFollowUp(topic: topic, previous: prev, message: message)
                 let r2 = replyCore(to: combined, history: history, context: context, onToken: onToken)
@@ -513,7 +517,7 @@ public final class EchoEngine {
             return r
         }
         // 沒有主語的問題不能當成「上一題的主題」
-        if Understanding.missingSubject(text) == nil,
+        if Understanding.missingSubject(text) == nil, !EchoEngine.isMetaFollowUp(message),
            r.webQuery != nil || (EchoEngine.isQuestion(text) && !EchoEngine.fortuneIntent(text) && r.turn.card == nil) {
             lastQuestion = text
             lastQuestionTurn = history.count
@@ -1436,6 +1440,12 @@ public final class EchoEngine {
     }
 
     /// 「要煮多久」「怎麼去」「哪一年」「他幾歲」：很短、用動詞或問句詞開頭、句子裡沒有認得的東西——是接著上一題問的
+    /// 只是對剛剛的回答說話（「說簡單一點」「舉個例子」「為什麼」「還有嗎」「謝謝」）：本身沒有主題
+    static func isMetaFollowUp(_ raw: String) -> Bool {
+        let t = Talk.clean(raw).replacingOccurrences(of: #"[，,。！!？?～~、\s]"#, with: "", options: .regularExpression)
+        return t.range(of: #"^(那)?(可以|能|請|再)?(說|講|解釋|講解)?(得)?(簡單|詳細|清楚|白話|仔細|具體)(一點|些)?(嗎|呢|好嗎)?$|^(那)?(再說一次|再講一次|再說一遍|說詳細一點|說清楚一點|講簡單一點|白話一點|舉個?例子|舉一個例子|給我一個例子|例子呢|比如說呢|比如呢|為什麼|為何|為啥|怎麼說|真的嗎|真的假的|然後呢|然後|還有呢|還有嗎|還有別的嗎|還有其他的嗎|所以呢|什麼意思|聽不懂|看不懂|不懂|好|好的|嗯|喔|哦|噢|謝謝|謝啦|謝謝你|感謝|了解|知道了|原來如此|原來是這樣|是喔|對|沒錯|酷|太酷了|好厲害|厲害)$"#, options: .regularExpression) != nil
+    }
+
     static func subjectless(_ raw: String) -> Bool {
         let t = Talk.clean(raw)
         guard (2...10).contains(t.count), !t.contains("你"), !t.contains("我") else { return false }
@@ -1676,7 +1686,11 @@ public final class EchoEngine {
                 if let ex = parts.first(where: { $0.contains("例如") || $0.hasPrefix("像") || $0.contains("例句") || $0.contains("比如") }) {
                     return .answer("舉個例子：" + ex.replacingOccurrences(of: #"^.*?(例如|比如)[，：]?"#, with: "", options: .regularExpression) + "。")
                 }
-                if let ex = parts.first(where: { $0.contains("，像") || $0.contains("：") }), let r = ex.range(of: "，像") ?? ex.range(of: "：") {
+                // 「比特幣就是建立在區塊鏈上」：說某個具體的東西「就是」這樣的那一句
+                if let ex = parts.dropFirst().first(where: { p in p.range(of: #"^\S{2,8}?就是"#, options: .regularExpression) != nil }) {
+                    return .answer("舉個例子：" + ex + "。")
+                }
+                if let ex = parts.first(where: { $0.contains("，像") || ($0.contains("：") && $0.contains("、")) }), let r = ex.range(of: "，像") ?? ex.range(of: "：") {
                     return .answer("舉個例子：" + ex[r.upperBound...] + "。")
                 }
                 if let e = Commonsense.facts.first(where: { $0.name == lc.subject }), let ex = e.attr("例子") { return .answer("舉個例子：" + ex + "。") }
@@ -1848,6 +1862,11 @@ public final class EchoEngine {
                 return .answer(lines[n % lines.count] + asks[n % asks.count])
             }
         case "recommend":
+            // 「這本在講什麼」「那部電影的內容是什麼」：問的是剛剛最推薦的那一個
+            if let title = RuleBook.match(lc.extra, "《(.{1,20}?)》")?.first,
+               t.range(of: #"^(那|所以)?(這|那|你說的那|你推薦的那)(本|部|首|個|齣|款)(書|電影|歌|片|劇|小說|動畫|遊戲)?(的)?(在)?(講|說|是|內容|故事|劇情|大綱)(什麼|啥|在講什麼|是什麼)?(的)?(呢|啊|嗎)?$"#, options: .regularExpression) != nil {
+                return .rewrite(title + "在講什麼")
+            }
             if !lc.extra.isEmpty, t.range(of: #"^(真的)?(好看|好聽|好玩|好吃|值得看|值得讀|推薦)(嗎)?$"#, options: .regularExpression) != nil {
                 return .answer("真的推薦！我最推薦的是\(lc.extra)" + (lc.extra.hasSuffix("。") ? "" : "。"))
             }

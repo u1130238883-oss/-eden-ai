@@ -649,7 +649,7 @@ public enum Talk {
         case .bored:
             return "無聊的時候可以叫我講個笑話、推薦一部電影，或問我一個你一直好奇的問題；想動一動的話，出門走走、整理一個小角落也很好。"
         case .thanks:
-            return raw.contains("陪") ? "能陪你聊天，我也很開心。" : "能幫上忙就好！"
+            return raw.contains("陪") ? "能陪你聊天，我也很開心。" : "不客氣！能幫上忙我很開心😊"
         case .praiseAI:
             return "你這樣說我會更努力的！還有什麼想聊的嗎？"
         default:
