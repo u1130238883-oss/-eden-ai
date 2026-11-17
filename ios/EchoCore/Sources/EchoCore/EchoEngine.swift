@@ -417,6 +417,13 @@ public final class EchoEngine {
             r.turn.variant = "talk"
             return r
         }
+        // 一大段在說自己的事、最後問了問題（「…要不要帶去看醫生」「…我該怎麼辦」）：先給最相關的做法
+        if !rewritten, context.language == .zh, text.count > 30, !EchoEngine.explicitFortune(text), EchoEngine.explicitSearch(text) == nil,
+           let a = EchoEngine.narrativeAdvice(text, now: context.now) {
+            var r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+            r.turn.variant = "talk"
+            return r
+        }
         // 「牠很愛叫」：牠是前面說的狗或貓
         if !rewritten, context.language == .zh, text.hasPrefix("牠"), text.count >= 3 {
             let recent = history.filter { $0.role == .user }.suffix(6).map { $0.text }.joined()
@@ -426,6 +433,17 @@ public final class EchoEngine {
         if !rewritten, let prev = lastQuestion, history.count - lastQuestionTurn <= 8,
            let t = EchoEngine.substituteAnaphor(message, previous: prev) { text = t }
         var r = replyCore(to: text, history: history, context: context, onToken: onToken)
+        // 一大段自己的心事被拿去上網查（整段當關鍵字查不到東西）：改成陪伴和做法
+        // 只換掉在說自己困擾的話；一長串在問事情的（「我想知道為什麼…」）照樣上網查
+        if context.language == .zh, r.webQuery != nil, text.count > 30, text.contains("我"), EchoEngine.explicitSearch(text) == nil, !EchoEngine.explicitFortune(text),
+           EchoEngine.distressStory(text),
+           let lastClause = text.components(separatedBy: CharacterSet(charactersIn: "，,。！!？?；;、\n")).last(where: { $0.trimmingCharacters(in: .whitespaces).count >= 2 }),
+           lastClause.range(of: "為什麼|是什麼|多少|幾[個點號歲公年月天次度]|哪裡|哪個|哪一|誰|什麼時候", options: .regularExpression) == nil {
+            let a = EchoEngine.narrativeAdvice(text, now: context.now) ?? ("聽起來你心裡壓著好多事，謝謝你願意說出來。" + EchoEngine.copingSteps)
+            r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+            r.turn.variant = "talk"
+            return r
+        }
         // 沒有主語的問題不能當成「上一題的主題」
         if Understanding.missingSubject(text) == nil,
            r.webQuery != nil || (EchoEngine.isQuestion(text) && !EchoEngine.fortuneIntent(text) && r.turn.card == nil) {
@@ -1112,6 +1130,55 @@ public final class EchoEngine {
     enum LocalFollow { case answer(String), rewrite(String) }
 
     static var chatRotation = 0
+    /// 一大段在說自己的事（「我家的貓從昨天開始一直吐…要不要帶去看醫生」）：從句子裡找最相關的做法，從後面（問題在的地方）往前找。
+    /// 只處理在問「怎麼辦、要不要」或在說自己的困擾的話；最後在問事實（「…那邊天氣冷嗎」「…為什麼」）的不管
+    static let narrativeAdviceAsk = "怎麼辦|該怎麼|要怎麼|怎麼做|要不要|需不需要|該不該|有什麼(方法|辦法|建議)|有沒有(方法|辦法|建議)|不想去?看醫生|不肯去?看醫生|不願意去?看醫生"
+    static let narrativeYesNo = "是不是.{1,8}[了嗎]?[？?]*$|會不會.{1,8}[？?]*$|嗎[？?]*$"
+    /// 明白在問命理的字（一大段心事裡出現「今天」「明天」不算）
+    static func explicitFortune(_ text: String) -> Bool {
+        BrainRoute.withoutEveryday(text).range(of: "運勢|運氣|命盤|命宮|八字|紫微|卦|流年|大運|流月|九型|第幾型|十二宮|星座|生肖|算命|占卜|塔羅|太歲|風水", options: .regularExpression) != nil
+    }
+    static func distressStory(_ text: String) -> Bool {
+        text.range(of: "擔心|難過|丟臉|好煩|很煩|壓力|害怕|好怕|很怕|痛苦|不開心|想哭|哭了|焦慮|緊張|生氣|委屈|不安|崩潰|受不了|好累|很累|一直|每天都|最近都|好幾天|老是|總是|沒精神|不舒服|沒用|不聽|不理我|睡不著|提不起勁|沒動力|沒力氣|加班", options: .regularExpression) != nil
+    }
+    static func narrativeAdvice(_ text: String, now: Date) -> String? {
+        guard text.count > 24, text.contains("我") else { return nil }
+        let advice = text.range(of: narrativeAdviceAsk, options: .regularExpression) != nil
+        let yesNo = text.range(of: narrativeYesNo, options: .regularExpression) != nil
+        let story = distressStory(text)
+        guard advice || (yesNo && story) else { return nil }
+        let clauses = text.components(separatedBy: CharacterSet(charactersIn: "，,。！!？?；;、\n")).map { $0.trimmingCharacters(in: .whitespaces) }.filter { $0.count >= 3 }
+        if !advice, let lastClause = clauses.last, lastClause.range(of: "為什麼|是什麼|多少|幾[個點號歲公年月天次度]|哪裡|哪個|哪一|誰|什麼時候", options: .regularExpression) != nil { return nil }
+        // 毛孩生病：說到貓狗又說到症狀
+        if text.range(of: "貓|狗|寵物|毛孩", options: .regularExpression) != nil,
+           text.range(of: "吐|拉肚子|腹瀉|不吃|沒精神|精神不好|抽搐|很喘|一直喘|血|尿不出來", options: .regularExpression) != nil,
+           let a = Commonsense.answer("貓咪不舒服", now: now) {
+            return "聽起來牠真的不太舒服，你一定很擔心。" + a
+        }
+        // 有說到難過、擔心的話先接住心情；只是說明狀況就直接給做法
+        let hurting = text.range(of: "擔心|難過|丟臉|好煩|很煩|壓力|害怕|好怕|很怕|痛苦|不開心|想哭|哭了|焦慮|緊張|生氣|委屈|不安|崩潰|受不了|好累|很累", options: .regularExpression) != nil
+        let lead = hurting ? "聽起來真的很不好受，先抱抱你。" : "我懂你的狀況。"
+        // 先看最後的問題，再看第一句（通常是發生了什麼事），最後才是中間的細節（「晚上也睡不著」只是附帶的）
+        // 真正在問的那一句（「她都說沒事不想去看醫生」）最優先
+        var order = clauses.reversed().filter { $0.range(of: narrativeAdviceAsk, options: .regularExpression) != nil }
+        var rest = clauses.reversed().map { $0 }
+        if rest.count >= 3, let firstClause = clauses.first { rest.removeLast(); rest.insert(firstClause, at: 1) }
+        for c in rest where !order.contains(c) { order.append(c) }
+        for c in order {
+            // 只是問「這樣正常嗎、是不是…」：要從說到困擾的那一句找，不要因為前面提到「在學吉他」就教怎麼學吉他
+            if !advice, !distressStory(c) { continue }
+            for q in [c, c + "怎麼辦"] {
+                if let a = Commonsense.answer(q, now: now), a.contains("\n1. ") {
+                    return (a.hasPrefix("聽起來") ? (hurting ? "辛苦你了。" : "") : lead) + a
+                }
+            }
+        }
+        if advice, let h = Commonsense.howtoMentioned(text), let a = Commonsense.answer(h + "怎麼辦", now: now) ?? Commonsense.answer("怎麼" + h, now: now) {
+            return lead + a
+        }
+        return nil
+    }
+
     static let copingSteps = "我陪你一起想，可以先這樣：\n1. 先照顧好自己：今天好好吃飯、早點睡，累的時候什麼事都會看起來更難\n2. 把讓你難受的事寫下來，分成「我能做點什麼的」和「我控制不了的」\n3. 能做的挑一件最小的先做；控制不了的，先試著放下\n4. 找一個信任的人說說，不要一個人扛\n\n如果願意，跟我多說一點是哪件事最讓你煩，我可以幫你想更具體的做法。"
 
     /// 追問剛剛回答裡提到的東西（「搭高鐵要多久」「要放糖嗎」「那台鐵呢」）：從剛剛的回答裡找出那一段
