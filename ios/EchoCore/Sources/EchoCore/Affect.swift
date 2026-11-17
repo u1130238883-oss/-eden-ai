@@ -116,6 +116,8 @@ public enum Affect {
             if m == .grief, t.range(of: "過世|去世|走了|離世|往生|死|不在了|彩虹橋", options: .regularExpression) == nil,
                t.range(of: "包多少|要包|要穿|穿什麼|要注意|注意什麼|要準備|怎麼|呢$|嗎$|禮俗|習俗", options: .regularExpression) != nil
                 || t0.range(of: "^(那|那麼)?.{1,6}(呢|嗎)$", options: .regularExpression) != nil { return .info }
+            // 「電子發票中獎怎麼領」「中獎要去哪裡領」：在問怎麼領獎，不是在報喜
+            if m == .goodNews, t.range(of: "怎麼領|如何領|去哪裡領|哪裡領|去哪領|怎麼兌換|怎麼對獎|兌獎|領獎|怎麼領取|要繳稅嗎|扣稅", options: .regularExpression) != nil { return .info }
             // 「老闆不給我加薪」「沒考上」不是好消息
             if m == .goodNews, t.range(of: "(不|沒|沒有)(給我|讓我)?(加薪|升職|錄取|考上|通過|上榜)", options: .regularExpression) != nil { continue }
             // 別人的好消息（「我朋友要結婚了」）：開心，但不是「這是你努力換來的」
