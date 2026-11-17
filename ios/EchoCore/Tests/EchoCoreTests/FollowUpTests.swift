@@ -246,6 +246,17 @@ final class FollowUpTests: XCTestCase {
         XCTAssertFalse(rs[1].turn.text.contains("答案是"), rs[1].turn.text)
         // 運動完腳痠不是生病
         XCTAssertNotEqual(Affect.detect("腳好痠"), .sick)
+        // 家人住院：先陪他聊，接著說的細節（「心臟的問題」）也接得住，不是丟一張清單或上網查
+        let hosp = try run(["我爸住院了", "心臟的問題"])
+        XCTAssertFalse(hosp[0].turn.text.contains("\n1. "), hosp[0].turn.text)
+        XCTAssertNil(hosp[1].webQuery, hosp[1].turn.text)
+        // 毛孩的症狀：關心＋判斷的做法
+        let pet = try run(["狗狗拉肚子"])[0]
+        XCTAssertTrue(pet.turn.text.contains("獸醫"), pet.turn.text)
+        // 做法清單之後問「最重要的是哪一個」「為什麼」
+        let fall = try run(["怎麼預防跌倒", "最重要的是哪一個", "為什麼"])
+        XCTAssertTrue(fall[1].webQuery == nil && fall[1].turn.text.contains("第一點"), fall[1].turn.text)
+        XCTAssertFalse(fall[2].turn.text.hasPrefix("因為1."), fall[2].turn.text)
     }
 
     func testCompoundGreetingAndWorship() throws {
