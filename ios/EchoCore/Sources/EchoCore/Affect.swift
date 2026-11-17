@@ -123,6 +123,9 @@ public enum Affect {
             if m == .grief, t.range(of: "過世|去世|走了|離世|離開人世|往生|死|不在了|彩虹橋|逝世|病逝|驟逝|仙逝|離開我們", options: .regularExpression) == nil,
                t.range(of: "包多少|要包|要穿|穿什麼|要注意|注意什麼|要準備|怎麼|呢$|嗎$|禮俗|習俗", options: .regularExpression) != nil
                 || t0.range(of: "^(那|那麼)?.{1,6}(呢|嗎)$", options: .regularExpression) != nil { return .info }
+            // 「明天要去面試」「下週要去考試」是讓人緊張的事；「明天要去上班」「明天要去看醫生」只是在說行程
+            if m == .excitedPlan, t.range(of: "(去|要)(面試|考試|考|比賽|報告|簡報|開刀|手術|動手術)", options: .regularExpression) != nil { return .anxious }
+            if m == .excitedPlan, t.range(of: "(去|要)(上班|上課|上學|看醫生|看牙|醫院|健檢|抽血|打針|打疫苗|回診|加班)", options: .regularExpression) != nil { return .info }
             // 「電子發票中獎怎麼領」「中獎要去哪裡領」：在問怎麼領獎，不是在報喜
             if m == .goodNews, t.range(of: "怎麼領|如何領|去哪裡領|哪裡領|去哪領|怎麼兌換|怎麼對獎|兌獎|領獎|怎麼領取|要繳稅嗎|扣稅", options: .regularExpression) != nil { return .info }
             // 「老闆不給我加薪」「沒考上」不是好消息
