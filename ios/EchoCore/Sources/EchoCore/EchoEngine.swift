@@ -1377,8 +1377,15 @@ public final class EchoEngine {
             if grp.hasPrefix("公里"), let r = p.range(of: "(?<=身高)[0-9.]+", options: .regularExpression) { return p.replacingCharacters(in: r, with: x) }
             return nil
         }
+        // 「什麼是黑洞」→「什麼是白洞」
+        if let g = RuleBook.match(p, #"^(?:請問)?什麼是(.+)$"#), !g[0].isEmpty { return "什麼是" + x }
+        // 上一句自己就沒說主題（「要花多少錢」）：把 X 放在前面（「貓要花多少錢」）
+        if p.range(of: "^(要|可以|能|會|需要|該|應該|是|在|有|去|怎麼|多|幾|為什麼|什麼|哪)", options: .regularExpression) != nil { return x + p }
         // 換掉開頭的主題：「台北有什麼好玩的」→「高雄有什麼好玩的」、「貓的英文怎麼說」→「狗的英文怎麼說」
-        if let g = RuleBook.match(p, #"^(.{1,6}?)(的|有|是|在|要|可以|怎麼|多|幾|會|能|和|跟)(.+)$"#), !g[0].contains("我"), g[0].count <= 6 {
+        // （「咖啡和茶哪個好」這種比較兩個的，不知道要換哪一個，就不換）
+        if p.range(of: "和|跟|與|還是", options: .regularExpression) == nil,
+           let g = RuleBook.match(p, #"^(.{1,6}?)(的|有|是|在|要|可以|怎麼|多|幾|會|能)(.+)$"#), !g[0].contains("我"), g[0].count <= 6,
+           g[0].range(of: "什麼|怎麼|為什麼|哪|誰|多少|幾", options: .regularExpression) == nil {
             return x + g[1] + g[2]
         }
         return nil
