@@ -457,7 +457,10 @@ public final class EchoEngine {
         let asksMethod = text.range(of: "怎麼辦|建議|該怎麼|要怎麼|有什麼方法|有什麼辦法|怎麼做|怎麼處理|要注意", options: .regularExpression) != nil
         if context.language == .zh, r.webQuery != nil || r.turn.source == .neural, (4...40).contains(text.count),
            EchoEngine.explicitSearch(text) == nil, !EchoEngine.explicitFortune(text), !Commonsense.talksFeelings(text),
-           !moodReply || [.sick, .worryOther].contains(Affect.detect(text)) || asksMethod,
+           // 擔心別人：只有毛孩、小孩的症狀（「狗狗拉肚子」）直接給做法；家人住院、開刀這種大事先陪他聊
+           !moodReply || Affect.detect(text) == .sick || asksMethod
+             || (Affect.detect(text) == .worryOther && text.range(of: "狗|貓|寵物|毛孩|寶寶|小孩|孩子|兒子|女兒", options: .regularExpression) != nil
+                 && text.range(of: "住院|開刀|手術|車禍|過世|急診|加護", options: .regularExpression) == nil),
            // 已經給了做法、或是閒聊本來就有好好接的話（「我在學吉他」→「學吉他很棒！學多久了？」）就不換
            !r.turn.text.contains("\n1. "),
            r.webQuery != nil || (Talk.chat(text) == nil && Talk.detailed(text) == nil),
