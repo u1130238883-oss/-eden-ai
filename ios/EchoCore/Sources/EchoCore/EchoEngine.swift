@@ -1352,7 +1352,7 @@ public final class EchoEngine {
             let clause = c.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^([0-9]+\.|⚠️|小提醒：)\s*"#, with: "", options: .regularExpression)
             return clause + (clause.hasSuffix("）") ? "" : "。")
         }
-        for w in ["那麼", "那", "請問", "所以", "大概", "大約", "需要", "要不要", "可不可以", "會不會", "能不能", "可以", "應該", "要", "會", "能", "該", "辦", "申請", "去", "到",
+        for w in ["那麼", "那", "請問", "所以", "大概", "大約", "需要", "要不要", "可不可以", "會不會", "能不能", "可以", "應該", "要", "會", "能", "該", "辦", "申請", "去", "到", "一直", "如果", "多大", "多高", "多遠",
                   "多久", "多少", "多長", "幾分鐘", "幾小時", "幾個小時", "幾天", "幾個", "幾", "什麼", "怎麼", "如何", "哪裡", "哪個", "嗎", "呢", "啊", "是",
                   "有", "的", "搭", "坐", "用", "加", "放", "吃", "我", "你", "一定", "還", "也", "時間", "要花"] {
             core = core.replacingOccurrences(of: w, with: "")
@@ -1387,7 +1387,7 @@ public final class EchoEngine {
             for i in 0...(chars.count - len) {
                 let piece = String(chars[i..<(i + len)])
                 if len == 1, !singleOK.contains(piece) { continue }
-                if let c = clauses.first(where: { $0.contains(piece) && (!wantsNumber || $0.contains(where: { $0.isNumber }) || $0.range(of: amountWords, options: .regularExpression) != nil) }) {
+                if let c = clauses.first(where: { $0.replacingOccurrences(of: " ", with: "").contains(piece) && (!wantsNumber || $0.contains(where: { $0.isNumber }) || $0.range(of: amountWords, options: .regularExpression) != nil) }) {
                     let lead = t.hasPrefix("要") && t.hasSuffix("嗎") ? "要，" : (t.hasPrefix("可以") && t.hasSuffix("嗎") ? "可以，" : "")
                     return lead + c + (c.hasSuffix("）") || c.hasSuffix("」") ? "" : "。")
                 }
@@ -1601,10 +1601,13 @@ public final class EchoEngine {
                 return .rewrite(tr.place + q)
             }
             // 「人口多少」「說什麼語言」（上一題在問日本）、「那葡萄呢」（上一題「貓可以吃巧克力嗎」）：補上主題
-            let f = Talk.detailed(message) == nil ? Commonsense.followUp(message, subject: lc.subject, previous: lc.extra) : nil
+            // 本身就是一個完整、自己答得出來的問題（「實支實付是什麼」）：不要跟上一題混在一起
+            let selfContained = Commonsense.answer(message) != nil && t.count >= 4 && t.range(of: "^(那|那麼|所以|還有)", options: .regularExpression) == nil
+            let f = Talk.detailed(message) == nil && !selfContained ? Commonsense.followUp(message, subject: lc.subject, previous: lc.extra) : nil
             if let f, f.local { return .rewrite(f.text) }
-            // 「搭高鐵要多久」「要放糖嗎」「那台鐵呢」：剛剛的回答裡就有
-            if let a = EchoEngine.fromPrevious(message, answer: lc.answer) { return .answer(a) }
+            // 「搭高鐵要多久」「要放糖嗎」「那台鐵呢」：剛剛的回答裡就有（問「X是什麼」而且自己答得出來的，直接回答 X）
+            if !(selfContained && t.range(of: "是什麼|什麼是|什麼意思", options: .regularExpression) != nil),
+               let a = EchoEngine.fromPrevious(message, answer: lc.answer) { return .answer(a) }
             // 食譜：「可以加洋蔥嗎」——剛剛的做法裡沒有，也可以照自己的口味加
             if lc.answer.contains("的步驟"), let g = RuleBook.match(t, #"^(?:那)?(?:可以|能|要不要|可不可以|能不能)(?:加|放|用|加點|放點)(.{1,6}?)(?:嗎|呢)?$"#) {
                 return .answer("可以呀！家常菜沒有標準答案，喜歡\(g[0])就加。比較硬、比較耐煮的食材先下鍋炒軟，再照原本的步驟做就好。")
