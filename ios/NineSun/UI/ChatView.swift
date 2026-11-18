@@ -127,14 +127,19 @@ struct ChatView: View {
             })
             .onPreferenceChange(ChatViewportHeightKey.self) { h in track.viewport = h }
             .onPreferenceChange(ChatContentFrameKey.self) { f in
-                // 內容的上緣動了 = 捲動了（使用者在滑，或程式捲到最下面）；只是字變多（上緣不動）不算。
-                // 捲動後離最下面很近就跟著新的字，滑上去看前面的就停在那裡
-                let moved = abs(f.minY - track.lastTop) > 1
+                // 回答每 0.018 秒多幾個字：只要往上滑一點點（內容往下移）就馬上停止跟著，不能等滑超過某個距離——
+                // 不然下一個字一出來又被拉回去（第 493 版就是這樣）。往下滑回到最下面才再跟著。只是字變多（上緣不動）不算捲動。
+                let dy = f.minY - track.lastTop
                 track.lastTop = f.minY
-                guard moved, Date() >= track.ignoreUntil else { return }
-                let atBottom = f.maxY - track.viewport < 80
-                if atBottom != follow { follow = atBottom }
+                guard abs(dy) > 0.5, Date() >= track.ignoreUntil else { return }
+                if dy > 0 {
+                    if follow { follow = false }
+                } else if f.maxY - track.viewport < 40, !track.dragging {
+                    if !follow { follow = true }
+                }
             }
+            // iOS 18 以上：直接用系統的捲動狀態——手指在滑就不跟；放開時人在最下面才再跟
+            .modifier(ChatScrollPhaseWatcher(follow: $follow, track: track))
             .scrollDismissesKeyboard(.immediately)
             .onChange(of: vm.turns.count) { _ in
                 // 自己送出新訊息：回到最下面、跟著回答；回答寫完時，只有本來就在最下面才捲
@@ -356,6 +361,41 @@ private struct ChatViewportHeightKey: PreferenceKey {
 private final class ChatScrollTrack {
     var lastTop: CGFloat = 0
     var viewport: CGFloat = 0
+    /// 手指正在滑（iOS 18 以上才知道）
+    var dragging = false
+    /// 人在最下面（iOS 18 以上由系統的捲動位置算）
+    var atBottom = true
     /// 程式自己有動畫地捲到最下面時，這段時間的位置變化不算使用者滑走
     var ignoreUntil = Date.distantPast
+}
+
+/// iOS 18 以上用系統的捲動狀態判斷使用者是不是在滑；舊的系統什麼都不做（靠上面的位置判斷）
+private struct ChatScrollPhaseWatcher: ViewModifier {
+    @Binding var follow: Bool
+    let track: ChatScrollTrack
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content
+                .onScrollGeometryChange(for: Bool.self, of: { g in
+                    g.visibleRect.maxY >= g.contentSize.height - 40
+                }, action: { _, bottom in
+                    track.atBottom = bottom
+                })
+                .onScrollPhaseChange { _, phase in
+                    switch phase {
+                    case .tracking, .interacting:
+                        track.dragging = true
+                        if follow { follow = false }
+                    case .idle:
+                        track.dragging = false
+                        if track.atBottom, !follow { follow = true }
+                    default:
+                        track.dragging = false
+                    }
+                }
+        } else {
+            content
+        }
+    }
 }
