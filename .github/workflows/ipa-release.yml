@@ -1,0 +1,43 @@
+name: Release IPA
+
+# 只在建立 ninetwelve-ipa-* 分支時跑（Ubuntu，很省額度）。
+# 推送時 commit 訊息加 [skip ci]，Build IPA 就不會重編；create 事件不受 [skip ci] 影響。
+# 等 Build IPA 把這個版本（c755bdc）的 IPA 編好，再放到 Release，給一個不用解壓、不用登入的 .ipa 直接下載連結。
+on: create
+
+jobs:
+  release:
+    if: github.ref_type == 'branch' && startsWith(github.ref_name, 'ninetwelve-ipa-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: 等 Build IPA 把 IPA 上傳好
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 1 90); do
+            run=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ios-build.yml/runs?head_sha=c755bdcd70e4bf27333253113b2206e3b13cf6ac" \
+                    --jq '.workflow_runs[0].id // empty')
+            if [ -n "$run" ]; then
+              n=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$run/artifacts" \
+                    --jq '[.artifacts[] | select(.name == "NineTwelve-4lang-FREE-ipa")] | length')
+              if [ "$n" -gt 0 ]; then echo "RUN_ID=$run" >> "$GITHUB_ENV"; exit 0; fi
+            fi
+            sleep 20
+          done
+          exit 1
+      - name: 下載 IPA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download "$RUN_ID" --repo "${GITHUB_REPOSITORY}" --name NineTwelve-4lang-FREE-ipa
+      - name: 建立 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -lh NineTwelve-4lang-free.ipa
+          gh release create "${GITHUB_REF_NAME}" NineTwelve-4lang-free.ipa \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "Nine & Twelve 四語解鎖版 IPA（2026-11-18，引動本命標籤同大小）" \
+            --notes "Build IPA run $RUN_ID"
