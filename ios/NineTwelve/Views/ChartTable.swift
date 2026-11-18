@@ -423,10 +423,11 @@ private struct TriggerCard: View {
                 ForEach(Array(triggers.items.enumerated()), id: \.offset) { idx, item in
                     // 有「被影響」時，第二項起每一項上面再標一次「引動本命」，免得看成上一項的被影響
                     if idx > 0 && !triggers.affected.isEmpty {
+                        // 跟卡片最上面的「引動本命」同樣大小
                         Text(title)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .font(.headline)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 8)
                     }
                     itemLink(item)
 
