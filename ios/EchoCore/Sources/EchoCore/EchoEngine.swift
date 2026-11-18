@@ -619,6 +619,10 @@ public final class EchoEngine {
         // 「跟我說說你自己」「說說你的故事」「自我介紹一下」＝你是誰；「我想了解我自己」＝我的個性
         m = m.replacingOccurrences(of: #"^((可以|能不能)?(跟我|和我)?(說說|講講|聊聊|介紹|介紹一下)(一下)?(你自己|你|妳自己|你的故事|妳的故事)|說說你的故事|講講你的故事|自我介紹(一下)?)(吧|嗎|好嗎|好不好)?(?=[？?！!]*$)"#, with: "你是誰", options: .regularExpression)
         m = m.replacingOccurrences(of: #"^我(想|很想|想要)(多)?(了解|認識|知道)(一下)?(我自己|自己)(多一點)?(?=[？?！!]*$)"#, with: "我的個性是怎樣", options: .regularExpression)
+        // 「他是射手座」「我男朋友是天蠍座的」：說了對方的星座 → 看我們兩個星座合不合
+        m = m.replacingOccurrences(of: #"^(他|她|對方|我男友|我女友|我男朋友|我女朋友|我老公|我老婆|男友|女友|男朋友|女朋友|我喜歡的人|我暗戀的人)(是|是個)([\p{Han}]{2}座)(的)?(喔|耶|啦)?(?=[？?！!。]*$)"#, with: "我跟$3合嗎", options: .regularExpression)
+        // 「好吧我去吃泡麵了」「那我去吃飯囉」：開頭的口氣詞不影響
+        m = m.replacingOccurrences(of: #"^(好吧|好啦|好喔|好|那|那我|嗯)[，, ]*(?=我?(要|先|準備)?去(吃|睡|洗澡))"#, with: "", options: .regularExpression)
         // 「我是什麼樣的人」＝我的個性；「我的貴人是誰」＝貴人運
         m = m.replacingOccurrences(of: #"^我(到底)?是(一個)?(什麼樣|怎樣|怎麼樣)的人(呢|啊)?(?=[？?]*$)"#, with: "我的個性是怎樣", options: .regularExpression)
         m = m.replacingOccurrences(of: #"^(我的貴人是誰|誰是我的貴人|我的貴人在哪裡?|我會遇到貴人嗎|我的貴人什麼時候(會)?出現|我有沒有貴人)(呢|啊)?(?=[？?]*$)"#, with: "我的貴人運怎麼樣", options: .regularExpression)
@@ -1763,6 +1767,11 @@ public final class EchoEngine {
                 var a = "我覺得最值得先做的是第一點：\(listItems[0])。"
                 if let o = opinion, !o.hasPrefix(listItems[0]) { a += "\n" + o }
                 return .answer(a)
+            }
+            // 做法清單之後的「要怎麼教」「那要怎麼做」：做法就是剛剛那幾步，先從前兩點開始（不要拿整句去上網查）
+            if listItems.count >= 2,
+               t.range(of: #"^(那|所以)?(我)?(要|該|應該)?(怎麼|如何)(教|做|處理|辦|改善|訓練|開始|執行|進行)(牠|他|她|它)?(呢|啊|才好|比較好)?$"#, options: .regularExpression) != nil {
+                return .answer("就是剛剛那幾步，可以先從前兩點開始：\n1. \(listItems[0])\n2. \(listItems[1])\n每天有耐心地做，有新的狀況再跟我說。")
             }
             // 「舉個例子」：剛剛的回答裡有「例如…」「像…」就拿出來
             if t.range(of: #"^(可以|能)?(舉個?|舉一個|給我一個|有沒有)(例子|例)(嗎|呢)?$|^(例子呢|比如說呢|比如呢|像是什麼)$"#, options: .regularExpression) != nil, !lc.answer.isEmpty {
