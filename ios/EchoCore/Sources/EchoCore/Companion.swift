@@ -227,6 +227,10 @@ public enum Companion {
         // 使用者說過「不要用宮位亂回」。接住話題、請對方多說，想看運勢再提供問法
         if L == .zh && D == nil {
             // 聽得出是好事還是難受的事：跟著那個心情接話；中性的一句話才順便提運勢的問法（難受的時候提運勢很突兀）
+            // 問我自己的事（「你有喜歡的人嗎」「你最喜歡的數字」）卻沒有現成的回答：老實說還沒想好，反問對方
+            if text.contains("你"), text.range(of: "嗎|呢|什麼|哪|誰|幾|[？?]|最喜歡|會不會|有沒有", options: .regularExpression) != nil {
+                return choose(["這個問題我還沒想好要怎麼回答耶～你呢？你怎麼想？", "好問題！我得想一想。換你先說說看？"])
+            }
             let good = text.range(of: "可愛|好吃|好看|好玩|好聽|開心|高興|好棒|很棒|超棒|喜歡|讚|順利|成功|有趣|快樂|幸福|期待|完成了|做到了", options: .regularExpression) != nil
             let hard = text.range(of: "累|煩|難過|討厭|糟|爛|痛|哭|生氣|擔心|害怕|不想|不舒服|麻煩|壓力|失望|委屈|吵架|分手|失敗|被罵", options: .regularExpression) != nil
             if good && !hard { return choose(["聽起來很不錯！想多說一點嗎？我很想聽～", "真好！是怎麼樣的？說給我聽聽～"]) }
