@@ -100,6 +100,23 @@ public enum BaZiReading {
         }
     }
 
+    /// 「五行缺什麼」的直接回答：五行分數、缺／最弱／最旺，喜用神和忌神
+    public static func elementsSummary(_ b: BaZi) -> String {
+        let c = b.elementCounts(), fa = favAndAvoid(b), dm = BaZi.stemEl[b.dayMaster]
+        let counts = (0..<5).map { "\(W[$0])\(String(format: "%.1f", c[$0]))" }.joined(separator: " ")
+        let most = (0..<5).max { c[$0] < c[$1] }!
+        let missing = (0..<5).filter { c[$0] < 0.5 }
+        let weakest = (0..<5).min { c[$0] < c[$1] }!
+        var s = "你的五行：\(counts)。"
+        s += missing.isEmpty ? "五行都有，沒有完全缺的；最弱的是\(W[weakest])，最旺的是\(W[most])。"
+                             : "缺" + missing.map { W[$0] }.joined(separator: "、") + "；最旺的是\(W[most])。"
+        let fav = fa.fav.map { "\(W[$0])（\(godGroups[Astro.pmod($0 - dm, 5)])）" }.joined(separator: "、")
+        let avoid = fa.avoid.map { "\(W[$0])（\(godGroups[Astro.pmod($0 - dm, 5)])）" }.joined(separator: "、")
+        s += "\n不過八字看的不只是缺什麼，更重要的是「喜用神」：對你有幫助的是\(fav)；要少碰的忌神是\(avoid)。"
+        s += "想知道怎麼補，可以問我「要怎麼補」。"
+        return s
+    }
+
     // MARK: - 本命
 
     public static func natal(_ b: BaZi, male: Bool?, nowYear: Int, birthYear: Int) -> String {

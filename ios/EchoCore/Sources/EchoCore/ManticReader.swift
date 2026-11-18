@@ -128,6 +128,10 @@ public enum ManticReader {
                 body = BaZiReading.year(b, male: prof.male, y: y, birthYear: bd.year).text
             } else {
                 body = BaZiReading.natal(b, male: prof.male, nowYear: nowYear, birthYear: bd.year)
+                // 「五行缺什麼」「喜用神是什麼」：先直接回答，再附完整命盤
+                if has(text, ["缺什麼", "缺哪", "缺不缺", "五行", "喜用神", "喜用", "補什麼", "要補"]) {
+                    body = BaZiReading.elementsSummary(b) + "\n\n━━━━━━\n\n" + body
+                }
             }
             if who != "你" { body = "以\(who)來看：\n" + personalize(body, raw) }
             var out = Output(text: body, card: card, needs: nil)
