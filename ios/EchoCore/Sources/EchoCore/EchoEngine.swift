@@ -1357,7 +1357,7 @@ public final class EchoEngine {
             let cal = Calendar(identifier: .gregorian).dateComponents([.month, .day], from: ctx.now)
             let dn = ctx.profile.birthday.map { Destiny($0).day(month: cal.month!, day: cal.day!) }
             raw = Companion.life(L: L, reader: Reader(L, i18n: i18n), perceived: p, day: dn?.day, night: dn?.night, choose: choose,
-                                 destiny: ctx.profile.birthday.map { Destiny($0) }, now: ctx.now)
+                                 destiny: ctx.profile.birthday.map { Destiny($0) }, now: ctx.now, text: text)
             if let bd = ctx.profile.birthday, L == .zh {
                 let y = Calendar(identifier: .gregorian).component(.year, from: ctx.now)
                 let D = Destiny(bd)

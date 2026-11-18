@@ -221,11 +221,16 @@ public enum Companion {
     ]
 
     public static func life(L: Lang, reader R: Reader, perceived p: Int, day: Int?, night: Int?, choose: ([String]) -> String,
-                            destiny D: Destiny? = nil, now: Date = Date()) -> String {
+                            destiny D: Destiny? = nil, now: Date = Date(), text: String = "") -> String {
         let idx = [Lang.zh, .en, .es, .it].firstIndex(of: L)!
         // 中文：一般的一句話（「在公司附近」「我剛搬家」）不拿宮位的關鍵字硬套（「鬱悶、壓抑、消極」）——
         // 使用者說過「不要用宮位亂回」。接住話題、請對方多說，想看運勢再提供問法
         if L == .zh && D == nil {
+            // 聽得出是好事還是難受的事：跟著那個心情接話；中性的一句話才順便提運勢的問法（難受的時候提運勢很突兀）
+            let good = text.range(of: "可愛|好吃|好看|好玩|好聽|開心|高興|好棒|很棒|超棒|喜歡|讚|順利|成功|有趣|快樂|幸福|期待|完成了|做到了", options: .regularExpression) != nil
+            let hard = text.range(of: "累|煩|難過|討厭|糟|爛|痛|哭|生氣|擔心|害怕|不想|不舒服|麻煩|壓力|失望|委屈|吵架|分手|失敗|被罵", options: .regularExpression) != nil
+            if good && !hard { return choose(["聽起來很不錯！想多說一點嗎？我很想聽～", "真好！是怎麼樣的？說給我聽聽～"]) }
+            if hard { return choose(["嗯，聽起來不太容易。想多說一點的話，我在聽。", "我在，想說什麼都可以慢慢說，不用急。"]) }
             let openers = ["嗯嗯，我在聽。可以多說一點嗎？", "原來是這樣。後來呢？想多說一點的話，我在聽。", "我在，想說什麼都可以慢慢說。"]
             return choose(openers) + "（想看看最近的運勢走向，可以問我「這個月運勢」。）"
         }
