@@ -10,6 +10,9 @@ import Foundation
 /// 「月亮會發光嗎」→ 關於月亮發光的解釋裡寫著「自己不會發光」→ 不會。
 /// 查不到、推不出來就回傳 nil，交給上網查。
 public enum Commonsense {
+    /// 遇到不好的事（「我今天被老闆罵」）時，做法前面先接住心情的那一句；接下來說原因、細節時照心情的對話接（`EchoEngine.localFollowUp`）
+    static let hurtLead = "聽起來真的很不好受，先抱抱你。"
+
     struct Entity {
         let name: String
         let aliases: [String]
@@ -360,7 +363,7 @@ public enum Commonsense {
             // 「我被裁員了」「我被霸凌了」：遇到不好的事 → 先接住心情，再給做法
             if x.hasPrefix("被"), x.count >= 3, let e = howtos.first(where: { $0.kind == "生活" && $0.names.contains(where: { $0 == x || $0 == x + "怎麼辦" || $0 == x + "了怎麼辦" }) }),
                let a = formatHowto(e) {
-                return "聽起來真的很不好受，先抱抱你。\n" + a
+                return hurtLead + "\n" + a
             }
         }
         // 「我爸最近記性很差」「阿嬤常常忘東忘西」：長輩記性變差，先提醒失智的警訊和記憶門診，不是一般的健忘小撇步

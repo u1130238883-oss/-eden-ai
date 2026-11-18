@@ -337,7 +337,7 @@ public final class EchoEngine {
                 var r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
                 r.turn.variant = "talk"
                 lastLocal?.turn = history.count
-                if lc.kind == "mood" { lastLocal?.shown += "\u{1}" + message }
+                if lc.kind == "mood" || (lc.kind == "fact" && lc.answer.hasPrefix(Commonsense.hurtLead)) { lastLocal?.shown += "\u{1}" + message }
                 // 謎語、笑話：記住最新的一題，追問「答案是什麼」才對得上
                 if lc.kind == "笑話" { lastLocal?.answer = a }
                 return r
@@ -1921,6 +1921,13 @@ public final class EchoEngine {
             }
             if t.range(of: "不玩|結束|算了|不想玩|換別的", options: .regularExpression) != nil { lastLocal = nil; return .answer("好，不玩了～你很厲害！想再玩隨時說「成語接龍」。") }
         case "fact":
+            // 「我今天被老闆罵」（先接住心情、再給做法）之後說原因、細節（「因為報告寫錯」「他當著大家的面罵」）：
+            // 還是在說心情，照心情的對話接；問句和「說簡單一點」這種追問照原本的方式回答
+            if lc.answer.hasPrefix(Commonsense.hurtLead), !EchoEngine.isQuestion(message), !EchoEngine.isMetaFollowUp(message) {
+                var m = lc
+                m.kind = "mood"; m.subject = lc.extra; m.extra = ""
+                if let r = localFollowUp(message, m) { return r }
+            }
             // 「你最喜歡哪一首」（剛剛在聊周杰倫）：從代表作挑一個
             if RuleBook.match(t, #"^(?:那)?你(?:最)?喜歡(?:哪一首|哪首|哪一部|哪部|哪一本|哪本|哪一個|哪個|哪一幅|哪幅)(?:歌|電影|書|作品)?$"#) != nil,
                let e = Commonsense.facts.first(where: { $0.name == lc.subject }), let works = e.attr("代表作"),
@@ -1936,7 +1943,9 @@ public final class EchoEngine {
             let listItems = lc.answer.split(separator: "\n").map(String.init).filter { $0.range(of: #"^[0-9]+\. "#, options: .regularExpression) != nil }
                 .map { $0.replacingOccurrences(of: #"^[0-9]+\. "#, with: "", options: .regularExpression) }
             let opinion = lc.answer.split(separator: "\n").map(String.init).last(where: { l in
-                !l.isEmpty && l.range(of: #"^[0-9]+\. |^小提醒|^⚠️|可以這樣|：$"#, options: .regularExpression) == nil && l.count >= 10 })
+                !l.isEmpty && l.range(of: #"^[0-9]+\. |^小提醒|^⚠️|可以這樣|：$"#, options: .regularExpression) == nil && l.count >= 10
+                    // 開頭接住心情的那一句不是看法
+                    && l != Commonsense.hurtLead && !l.hasPrefix("辛苦了，身體不舒服") })
             if !listItems.isEmpty,
                t.range(of: #"^(那)?(最重要|最關鍵|最有用|最有效|最推薦|最優先|最需要)(的)?(是)?(哪一個|哪個|哪一點|哪點|什麼|哪一步|哪步)?(呢)?$|^(那)?(要)?(先做哪一個|先做哪個|先從哪裡開始|先做什麼|從哪一個開始|從哪個開始|從哪裡開始|從哪開始|第一步是什麼|第一步要做什麼|第一步)(呢)?$|^(那)?你(覺得|覺得呢|覺得怎麼樣|覺得如何|的看法|的看法呢|怎麼看|推薦哪個|推薦哪一個)$"#, options: .regularExpression) != nil {
                 var a = "我覺得最值得先做的是第一點：\(listItems[0])。"
@@ -2095,7 +2104,9 @@ public final class EchoEngine {
             // 「因為報告寫錯」：在說原因，接住它
             if let g = RuleBook.match(t, #"^(?:因為|就是|原因是|主要是)(.{2,30})$"#), !EchoEngine.isQuestion(message) {
                 let why = g[0].replacingOccurrences(of: "我", with: "你")
-                return .answer("原來是\(why)。會這麼在意，代表你很認真看待這件事，不是你不夠好。想聽聽我的建議，還是先讓我陪你說說？")
+                // 剛剛已經給過做法的話，不用再問要不要聽建議
+                let ask = lc.answer.contains("\n1. ") ? "想多說一點當時的情況嗎？我在聽。" : "想聽聽我的建議，還是先讓我陪你說說？"
+                return .answer("原來是\(why)。會這麼在意，代表你很認真看待這件事，不是你不夠好。" + ask)
             }
             // 「不知道為什麼」：說不出原因
             if t.range(of: #"^(我)?(也|就是)?(不知道|說不上來|不曉得)(為什麼|原因|怎麼了|耶|欸|啦)?$"#, options: .regularExpression) != nil {
