@@ -209,6 +209,8 @@ public final class EchoEngine {
 
     func replyMain(to message: String, history: [ChatTurn] = [], context: Context,
                    onToken: ((String) -> Void)? = nil) -> Reply {
+        // 「你可以再說一次嗎」「能不能說簡單一點」：客氣的包裝拿掉，就是對剛剛回答的追問（不是在問我會不會）
+        let message = history.isEmpty ? message : EchoEngine.unwrapPoliteFollowUp(message)
         // 追問（「那這些國家都是哪些國家」）：先把代名詞換回上一題的主題，再照一般問題處理
         let prevQuestion = lastQuestion, prevQuestionTurn = lastQuestionTurn
         var text = EchoEngine.normalizeSlang(message)
@@ -595,6 +597,11 @@ public final class EchoEngine {
     }
 
     /// 口語的問句詞換成一般說法：「日本首都是啥」「蝦米是黑洞」「咋辦」
+    static func unwrapPoliteFollowUp(_ m: String) -> String {
+        guard let g = RuleBook.match(m.trimmingCharacters(in: .whitespacesAndNewlines), #"^(?:你|妳)?(?:可以|能|能不能|可不可以|麻煩|麻煩你|請|請你)(?:你)?(再說一次|再講一次|再說一遍|再講一遍|說簡單一點|講簡單一點|說詳細一點|講詳細一點|說清楚一點|講清楚一點|說慢一點|講慢一點|舉個例子|舉一個例子|白話一點)(?:嗎|好嗎|呢|吧)?[？?]*$"#) else { return m }
+        return g[0].replacingOccurrences(of: "慢一點", with: "簡單一點")
+    }
+
     static func normalizeSlang(_ m: String) -> String {
         var m = m
         // 「如果講不好怎麼辦」「萬一地震怎麼辦」→「講不好怎麼辦」
@@ -686,6 +693,20 @@ public final class EchoEngine {
         m = m.replacingOccurrences(of: #"ㄅ(?=[？?！!～~]*$)"#, with: "吧", options: .regularExpression)
         m = m.replacingOccurrences(of: #"ㄋ(?=[？?！!～~]*$)"#, with: "呢", options: .regularExpression)
         m = m.replacingOccurrences(of: "ㄉ", with: "的")
+        // 注音選錯的同音字（只在這個字前後的固定組合裡改，正確的「前途」「通順」「那裡很遠」不會被改到）
+        for (p, r) in [(#"(存|賺|花|省|借|還|找|領|付|變有|沒有|多少|有沒有)前(?![途科景面後方進任輩提言線])"#, "$1錢"),
+                       (#"中讀(?=了|怎麼|要|嗎|$)"#, "中毒"),
+                       (#"抄(?=蛋|飯|麵|菜|米粉|高麗菜|青菜|肉)"#, "炒"),
+                       (#"(頭|肚子|牙齒|牙|胃|腳|手|腰|背|喉嚨|眼睛|耳朵|肩膀|膝蓋)(很|好|超|一直|有點)?通(?![順暢過知勤訊常話車])"#, "$1$2痛"),
+                       (#"有多搞(?=[？?]*$)"#, "有多高"), (#"多搞(?=[？?]*$)"#, "多高"),
+                       (#"的?手都(?=是|在)"#, "的首都"),
+                       ("區快鏈", "區塊鏈"), ("吉它", "吉他"),
+                       (#"(?<=\p{Han})歐(?=[！!～~。]*$)"#, "喔"), (#"(?<=謝謝|愛|想|喜歡)泥(?=[！!～~。]*$)"#, "你"),
+                       (#"^(早|晚)ㄢ(?=[！!～~。]*$)"#, "$1安"), (#"\s*ㄏㄏ+$"#, ""),
+                       (#"(?<=可以|能|請|麻煩)在(?=說一次|講一次|說一遍|講一遍|來一次|試一次)"#, "再"), (#"^(我)?在也(?=不)"#, "$1再也"),
+                       (#"^那裡(?=有|可以|能|買|找|好玩|好吃)"#, "哪裡")] {
+            m = m.replacingOccurrences(of: p, with: r, options: .regularExpression)
+        }
         // 「什摸是區塊鏈」「手機沒電了怎摸辦」「信用卡被盜用怎麼半」：注音選錯字
         // 「手機好lag」：英文的 lag＝卡
         m = m.replacingOccurrences(of: #"(?i)(?<![A-Za-z])lag(?![A-Za-z])"#, with: "卡", options: .regularExpression)
