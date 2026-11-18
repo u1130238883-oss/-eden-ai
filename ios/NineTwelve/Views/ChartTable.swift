@@ -421,6 +421,13 @@ private struct TriggerCard: View {
         Card(title: title, subtitle: triggers.span) {
             VStack(spacing: 10) {
                 ForEach(Array(triggers.items.enumerated()), id: \.offset) { idx, item in
+                    // 有「被影響」時，第二項起每一項上面再標一次「引動本命」，免得看成上一項的被影響
+                    if idx > 0 && !triggers.affected.isEmpty {
+                        Text(title)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     itemLink(item)
 
                     // 被影響：這一宮再影響到的大運方面
