@@ -410,6 +410,13 @@ public final class EchoEngine {
             r.turn.variant = "talk"
             return r
         }
+        // 剛剛問「最近過得好嗎？」：回答「很好啊」「不太好」不是道別或要上網查
+        if !rewritten, context.language == .zh, let prevEcho = history.last(where: { $0.role == .echo }),
+           let a = Talk.wellbeingReply(message, asked: prevEcho.text) {
+            var r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+            r.turn.variant = "talk"
+            return r
+        }
         // 回答我剛剛問的問題（「牠叫什麼名字？」→「叫小白」）：接住，不拿去上網查
         if !rewritten, context.language == .zh, let prevEcho = history.last(where: { $0.role == .echo }),
            Talk.chat(message) == nil, Talk.detailed(message) == nil, Commonsense.answer(message, now: context.now) == nil,
@@ -2047,6 +2054,10 @@ public final class EchoEngine {
                 return .answer(lines[n % lines.count] + asks[n % asks.count])
             }
         case "recommend":
+            // 「很好看」「超好聽」（不是問句）：在說推薦的東西很棒
+            if t.range(of: #"^(真的|對啊)?(很|超|好|蠻|滿|真的很)(好看|好聽|好玩|好吃|讚|棒)(耶|欸|喔|啊|呀)?$"#, options: .regularExpression) != nil {
+                return .answer("對吧！你最喜歡哪一個？想要類似的，跟我說「還有嗎」，我再推薦幾個。")
+            }
             // 「這本在講什麼」「那部電影的內容是什麼」：問的是剛剛最推薦的那一個
             if let title = RuleBook.match(lc.extra, "《(.{1,20}?)》")?.first,
                t.range(of: #"^(那|所以)?(這|那|你說的那|你推薦的那)(本|部|首|個|齣|款)(書|電影|歌|片|劇|小說|動畫|遊戲)?(的)?(在)?(講|說|是|內容|故事|劇情|大綱)(什麼|啥|在講什麼|是什麼)?(的)?(呢|啊|嗎)?$"#, options: .regularExpression) != nil {

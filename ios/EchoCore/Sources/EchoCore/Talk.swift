@@ -506,6 +506,23 @@ public enum Talk {
         return "\(s)啊，\(s)真的不容易，這次沒考好不代表你學不會。可以先找出錯最多的是哪一種題目，把那個觀念補起來就會進步很多。" + tip
     }
 
+    /// NineSun 剛問「最近過得好嗎？」「今天過得怎麼樣？」：對方簡短回答好、普通或不好
+    public static func wellbeingReply(_ raw: String, asked prev: String) -> String? {
+        guard prev.range(of: "過得好嗎|過得怎麼樣|過得如何|最近好嗎|今天好嗎|還好嗎|心情怎麼樣|今天怎麼樣|最近怎麼樣", options: .regularExpression) != nil else { return nil }
+        let t = clean(raw)
+        guard (1...8).contains(t.count) else { return nil }
+        if t.range(of: #"^(不好|不太好|很不好|很糟|好糟|很爛|好爛|很差|好累|很累|超累|不開心|很難過|爛透了|一團糟)(啊|耶|喔)?$"#, options: .regularExpression) != nil {
+            return "辛苦了，聽起來最近不太輕鬆。想說說發生了什麼事嗎？說出來會舒服一點。"
+        }
+        if t.range(of: #"^(普通|還好|還可以|馬馬虎虎|一般|老樣子|就那樣)(啊|耶|喔|吧)?$"#, options: .regularExpression) != nil {
+            return "那就好！平平淡淡也是一種好。今天有什麼讓你印象深刻的事嗎？"
+        }
+        if t.range(of: #"^(很好|還不錯|不錯|很棒|超好|挺好|蠻好|滿好|很開心|開心|好啊|超棒|很讚|很順利)(啊|耶|喔|呀|欸)?$"#, options: .regularExpression) != nil {
+            return "那就好！聽你這樣說我也開心～有什麼開心的事想跟我分享嗎？"
+        }
+        return nil
+    }
+
     public static func replyToMyQuestion(_ raw: String, asked prev: String) -> String? {
         let t = clean(raw)
         guard (1...16).contains(t.count) else { return nil }
@@ -529,6 +546,10 @@ public enum Talk {
         if isDuration, q.contains("多久") || q.contains("幾歲") || pet {
             if pet { return "\(x)，正是最黏人、最可愛的時候～記得定期帶牠打預防針、做健康檢查喔！" }
             return "\(x)！能堅持這麼久真的很不容易，你很棒。"
+        }
+        // 「三年了」：沒被問多久，但說了一段時間
+        if isDuration, t.count <= 6, t.range(of: #"^(已經|都|快|差不多)?[0-9一二兩三四五六七八九十半幾]+(年|個月)(多)?(了)?$"#, options: .regularExpression) != nil {
+            return "\(x)，真的不是一段短的時間！這一路上一定有很多故事，想說的話我在聽。"
         }
         // 「最近在看哪一部？」→「黑暗榮耀」
         if q.contains("哪一部") || q.contains("看什麼") || q.contains("在看什麼") {
