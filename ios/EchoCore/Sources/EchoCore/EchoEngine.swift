@@ -1289,7 +1289,8 @@ public final class EchoEngine {
         }
 
         // 7) 九型十二宮（含設定生日）
-        if let q = FortuneRouter.route(text, birthday: ctx.profile.birthday, now: ctx.now, i18n: i18n) {
+        // （「晚上吃水果好嗎」「早上喝咖啡好嗎」問的是生活習慣，不是今晚的運勢）
+        if !EchoEngine.everydayNotFortune(text), let q = FortuneRouter.route(text, birthday: ctx.profile.birthday, now: ctx.now, i18n: i18n) {
             var prof: UserProfile?
             if let b = q.newBirthday { var p = ctx.profile; p.birthday = b; prof = p; ctx.profile = p }
             if let c = q.composed {
@@ -2393,6 +2394,13 @@ public final class EchoEngine {
     /// 「我的健康要注意什麼」→「我的健康怎麼樣」（交給主題路由）；不是這種問法回傳 nil。
     /// 有症狀（「我的身體一直發燒」）、問方法（「怎麼讓身體變好」）的不算
     /// 「請事假會扣薪水嗎」「薪水怎麼算」：問規定、常識，不是問自己的運——資料庫答得出來、又沒有算命的字，就不算命
+    /// 生活習慣的問題（吃、喝、洗澡、運動、睡覺），句子裡又沒有算命的字：不是在問運勢
+    static func everydayNotFortune(_ t: String) -> Bool {
+        t.range(of: "吃|喝|洗澡|洗頭|泡澡|運動|跑步|散步|健身|曬太陽|吹冷氣|開冷氣|滑手機|午睡|熬夜", options: .regularExpression) != nil
+            && t.range(of: "運|命|宮|卦|八字|紫微|星座|生肖|吉|凶|宜|忌|適合|幸運|塔羅|算", options: .regularExpression) == nil
+            && t.count <= 20
+    }
+
     static func knowledgeNotFortune(_ t: String) -> Bool {
         if t.range(of: "運|命|算命|算算|幫我算|幫我看|占卜|星盤|宮|流年|順不順|順利|好不好", options: .regularExpression) != nil { return false }
         let rules = t.range(of: "請假|事假|病假|特休|扣薪|扣錢|違法|合法|規定|勞基法|罰|繳稅|要繳|補助|津貼|申請|怎麼算|怎麼計算", options: .regularExpression) != nil
