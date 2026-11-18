@@ -64,7 +64,12 @@ final class ScreenshotTests: XCTestCase {
     /// 「五行是什麼東西」的「東西」是口語，不是主題（截圖：搜到「什麼東西五行屬土」）
     func testFillerWords() throws {
         XCTAssertEqual(Understanding.frame("五行是什麼東西？").subject, "五行")
-        XCTAssertEqual(try engine().reply(to: "五行是什麼東西？", history: [], context: me).webQuery, "五行是什麼")
+        // 「五行是什麼」NineSun 自己會回答了（2026-11-18）：不上網，直接講五行；
+        // 「東西」去掉後上網查的，換成還不知道的「弦理論」
+        let wx = try engine().reply(to: "五行是什麼東西？", history: [], context: me)
+        XCTAssertNil(wx.webQuery, wx.turn.text)
+        XCTAssertTrue(wx.turn.text.contains("木、火、土、金、水"), wx.turn.text)
+        XCTAssertEqual(try engine().reply(to: "弦理論是什麼東西？", history: [], context: me).webQuery, "弦理論是什麼")
         XCTAssertEqual(Understanding.clean("區塊鏈是個什麼玩意"), "區塊鏈是什麼")
         // 「東西」是問題本身的不動
         XCTAssertEqual(Understanding.clean("五行屬土的東西有哪些"), "五行屬土的東西有哪些")
