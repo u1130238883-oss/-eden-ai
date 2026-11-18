@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var gender = 0          // 0 未設定 1 男 2 女
     @State private var dateTouched = false
     @State private var isLoading = true
+    @State private var pendingSave: DispatchWorkItem?
     @State private var confirmClear = false
     @ObservedObject private var store = ModelStore.shared
     @State private var confirmAdult = false
@@ -48,6 +49,11 @@ struct SettingsView: View {
         }
         .preferredColorScheme(.dark)
         .onAppear(perform: load)
+        // 滑完馬上關掉這一頁：還沒存的生日現在存
+        .onDisappear {
+            if let w = pendingSave, !w.isCancelled { w.cancel(); saveProfile() }
+            pendingSave = nil
+        }
         .alert(T("你已經滿 18 歲了嗎？", "Are you 18 or older?", "¿Tienes 18 años o más?", "Hai almeno 18 anni?"), isPresented: $confirmAdult) {
             Button(T("我已滿 18 歲", "I'm 18 or older", "Tengo 18 o más", "Ho almeno 18 anni")) { vm.adultMode = true }
             Button(T("取消", "Cancel", "Cancelar", "Annulla"), role: .cancel) {}
@@ -143,13 +149,19 @@ struct SettingsView: View {
                        "Nessun compleanno: scegli una data e si salva da sola; l'IA non lo chiederà più."))
                     .font(.system(size: 13, weight: .bold)).foregroundColor(Theme.orange)
             }
+            // 生日用滾輪：年、月、日各自滑，不用打開小月曆再找年份（小月曆在這一頁常常點不到、會卡）；
+            // 停下來半秒才存，不要每滑一格就整個畫面重畫
+            Text(T("生日", "Birthday", "Cumpleaños", "Compleanno")).font(.system(size: 15, weight: .bold)).foregroundColor(Theme.paper)
             DatePicker(T("生日", "Birthday", "Cumpleaños", "Compleanno"), selection: $date, in: range, displayedComponents: .date)
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                .frame(maxWidth: .infinity)
                 .environment(\.locale, Locale(identifier: ["zh": "zh_Hant", "en": "en", "es": "es", "it": "it"][vm.language.rawValue] ?? "en"))
-                .foregroundColor(Theme.paper).tint(Theme.hazard)
+                .tint(Theme.hazard)
                 .onChange(of: date) { _ in
                     guard !isLoading else { return }
                     dateTouched = true
-                    saveProfile()
+                    saveSoon()
                 }
             Toggle(isOn: $knowsTime) { label(T("知道出生時間（八字時柱、紫微需要）", "I know my birth time (needed for BaZi hour & Zi Wei)", "Sé mi hora de nacimiento (para BaZi y Zi Wei)", "So l'ora di nascita (serve per BaZi e Zi Wei)"), "") }.tint(Theme.hazard)
                 .onChange(of: knowsTime) { _ in if !isLoading { saveProfile() } }
@@ -200,6 +212,14 @@ struct SettingsView: View {
     }
 
     /// 生日、時間、性別一有更動就存進去；沒選過日期就不會擅自寫入 2000/1/1
+    /// 滾輪停下來半秒後才存（一直滑的時候不要一直存、一直重畫）
+    private func saveSoon() {
+        pendingSave?.cancel()
+        let w = DispatchWorkItem { saveProfile() }
+        pendingSave = w
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: w)
+    }
+
     private func saveProfile() {
         let cal = Calendar(identifier: .gregorian)
         var p = vm.profile

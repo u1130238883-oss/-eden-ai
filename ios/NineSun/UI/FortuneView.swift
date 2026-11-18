@@ -67,9 +67,15 @@ struct FortuneView: View {
 
     private var setup: some View {
         section(T("先輸入生日", "Your birthday", "Tu cumpleaños", "Il tuo compleanno") + " · SETUP") {
-            DatePicker(T("生日", "Birthday", "Cumpleaños", "Compleanno"), selection: $newBirth, displayedComponents: .date)
+            // 生日用滾輪（年、月、日各自滑），比小月曆好點
+            DatePicker(T("生日", "Birthday", "Cumpleaños", "Compleanno"), selection: $newBirth,
+                       in: (Calendar(identifier: .gregorian).date(from: DateComponents(year: 1900, month: 1, day: 1)) ?? .distantPast)...Date(),
+                       displayedComponents: .date)
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                .frame(maxWidth: .infinity)
                 .environment(\.locale, Locale(identifier: "zh_Hant_TW"))
-                .foregroundColor(Theme.paper)
+                .tint(Theme.hazard)
             button(T("看我的命盤 ▶", "Show my chart ▶", "Ver mi carta ▶", "Vedi il mio tema ▶")) {
                 let c = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: newBirth)
                 var p = vm.profile
