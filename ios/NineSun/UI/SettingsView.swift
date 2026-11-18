@@ -49,7 +49,7 @@ struct SettingsView: View {
         }
         .preferredColorScheme(.dark)
         .onAppear(perform: load)
-        // 滑完馬上關掉這一頁：還沒存的生日現在存
+        // 選完馬上關掉這一頁：還沒存的生日現在存
         .onDisappear {
             if let w = pendingSave, !w.isCancelled { w.cancel(); saveProfile() }
             pendingSave = nil
@@ -142,22 +142,19 @@ struct SettingsView: View {
                 Text(T("✓ 已記住生日 ", "✓ Birthday saved: ", "✓ Cumpleaños guardado: ", "✓ Compleanno salvato: ") + b.display
                      + (vm.profile.hour.map { String(format: "  %02d:%02d", $0, vm.profile.minute ?? 0) } ?? ""))
                     .font(.system(size: 13, weight: .bold)).foregroundColor(Theme.hazard)
+                    .lineLimit(2).frame(maxWidth: .infinity, minHeight: 36, alignment: .topLeading)
             } else {
                 Text(T("尚未設定生日：選好日期後會自動儲存，AI 就不會再問你。",
                        "No birthday yet: pick a date and it saves automatically, so the AI won't ask again.",
                        "Aún sin cumpleaños: elige una fecha y se guarda sola; la IA no volverá a preguntar.",
                        "Nessun compleanno: scegli una data e si salva da sola; l'IA non lo chiederà più."))
                     .font(.system(size: 13, weight: .bold)).foregroundColor(Theme.orange)
+                    .lineLimit(2).frame(maxWidth: .infinity, minHeight: 36, alignment: .topLeading)
             }
-            // 生日用滾輪：年、月、日各自滑，不用打開小月曆再找年份（小月曆在這一頁常常點不到、會卡）；
-            // 停下來半秒才存，不要每滑一格就整個畫面重畫
-            Text(T("生日", "Birthday", "Cumpleaños", "Compleanno")).font(.system(size: 15, weight: .bold)).foregroundColor(Theme.paper)
             DatePicker(T("生日", "Birthday", "Cumpleaños", "Compleanno"), selection: $date, in: range, displayedComponents: .date)
-                .datePickerStyle(.wheel)
-                .labelsHidden()
-                .frame(maxWidth: .infinity)
                 .environment(\.locale, Locale(identifier: ["zh": "zh_Hant", "en": "en", "es": "es", "it": "it"][vm.language.rawValue] ?? "en"))
-                .tint(Theme.hazard)
+                .foregroundColor(Theme.paper).tint(Theme.hazard)
+                // 選日期時不要每點一下就存、整個畫面重畫（月曆開著時會卡、點不到）：停下來半秒才存
                 .onChange(of: date) { _ in
                     guard !isLoading else { return }
                     dateTouched = true
@@ -211,8 +208,7 @@ struct SettingsView: View {
         DispatchQueue.main.async { isLoading = false }
     }
 
-    /// 生日、時間、性別一有更動就存進去；沒選過日期就不會擅自寫入 2000/1/1
-    /// 滾輪停下來半秒後才存（一直滑的時候不要一直存、一直重畫）
+    /// 選日期停下來半秒後才存（一直點的時候不要一直存、一直重畫）
     private func saveSoon() {
         pendingSave?.cancel()
         let w = DispatchWorkItem { saveProfile() }
@@ -220,6 +216,7 @@ struct SettingsView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: w)
     }
 
+    /// 生日、時間、性別一有更動就存進去；沒選過日期就不會擅自寫入 2000/1/1
     private func saveProfile() {
         let cal = Calendar(identifier: .gregorian)
         var p = vm.profile
