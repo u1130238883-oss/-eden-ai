@@ -277,6 +277,8 @@ public enum Commonsense {
         // 「我想把菸戒掉」＝我想戒菸
         t = t.replacingOccurrences(of: "把(.{1,3})戒掉", with: "戒$1", options: .regularExpression)
         t = t.replacingOccurrences(of: "戒掉(?=.)", with: "戒", options: .regularExpression)
+        // 「七夕是什麼節」「重陽是什麼節日」＝是什麼
+        t = t.replacingOccurrences(of: "是什麼節(日)?(?=[？?]*$)", with: "是什麼", options: .regularExpression)
         // 「彩虹是怎麼來的」：自然現象沒有「由來」，是在問怎麼形成
         t = t.replacingOccurrences(of: "(是)?怎麼來的", with: "怎麼形成", options: .regularExpression)
         t = t.replacingOccurrences(of: "是怎麼形成的", with: "怎麼形成")
