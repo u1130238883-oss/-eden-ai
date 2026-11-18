@@ -2397,7 +2397,7 @@ public final class EchoEngine {
     /// 生活習慣的問題（吃、喝、洗澡、運動、睡覺），句子裡又沒有算命的字：不是在問運勢
     static func everydayNotFortune(_ t: String) -> Bool {
         t.range(of: "吃|喝|洗澡|洗頭|泡澡|運動|跑步|散步|健身|曬太陽|吹冷氣|開冷氣|滑手機|午睡|熬夜", options: .regularExpression) != nil
-            && t.range(of: "運|命|宮|卦|八字|紫微|星座|生肖|吉|凶|宜|忌|適合|幸運|塔羅|算", options: .regularExpression) == nil
+            && t.range(of: "運(?!動)|命|宮|卦|八字|紫微|星座|生肖|吉|凶|宜|忌|適合|幸運|塔羅|算", options: .regularExpression) == nil
             && t.count <= 20
     }
 
