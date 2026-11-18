@@ -623,6 +623,8 @@ public final class EchoEngine {
             let q = g[0] + "有什麼好玩的"
             if Library.detailed(q) != nil || Commonsense.answer(q) != nil { m = q }
         }
+        // 「再寫一首春天的」「那來一首關於海的」：接著要一首那個主題的詩
+        m = m.replacingOccurrences(of: #"^(?:那|可以|好|那可以)?(?:再|幫我再|再幫我|也)?(?:寫|來|作)(?:一首|首)(?:關於)?(.{1,6}?)的(?:詩)?(?:吧|嗎|好嗎|呢)?(?=[？?！!。]*$)"#, with: "寫一首關於$1的詩", options: .regularExpression)
         // 「跟我說說你自己」「說說你的故事」「自我介紹一下」＝你是誰；「我想了解我自己」＝我的個性
         m = m.replacingOccurrences(of: #"^((可以|能不能)?(跟我|和我)?(說說|講講|聊聊|介紹|介紹一下)(一下)?(你自己|你|妳自己|你的故事|妳的故事)|說說你的故事|講講你的故事|自我介紹(一下)?)(吧|嗎|好嗎|好不好)?(?=[？?！!]*$)"#, with: "你是誰", options: .regularExpression)
         m = m.replacingOccurrences(of: #"^我(想|很想|想要)(多)?(了解|認識|知道)(一下)?(我自己|自己)(多一點)?(?=[？?！!]*$)"#, with: "我的個性是怎樣", options: .regularExpression)
@@ -1917,7 +1919,10 @@ public final class EchoEngine {
             let f = Talk.detailed(message) == nil && !selfContained ? Commonsense.followUp(message, subject: lc.subject, previous: lc.extra) : nil
             if let f, f.local { return .rewrite(f.text) }
             // 「搭高鐵要多久」「要放糖嗎」「那台鐵呢」：剛剛的回答裡就有（問「X是什麼」而且自己答得出來的，直接回答 X）
-            if !(selfContained && t.range(of: "是什麼|什麼是|什麼意思", options: .regularExpression) != nil),
+            // 自己答得出來、又說了剛剛的回答裡沒有的東西（「台灣的夏天幾度」接在「為什麼會有四季」後面）：是新的問題，不從剛剛的回答裡找
+            let newSubject = selfContained && Commonsense.realMentions(Everyday.clean(message), in: Commonsense.facts)
+                .contains { !lc.answer.contains($0.alias) && !lc.answer.contains($0.entity.name) }
+            if !(selfContained && t.range(of: "是什麼|什麼是|什麼意思", options: .regularExpression) != nil), !newSubject,
                let a = EchoEngine.fromPrevious(message, answer: lc.answer) { return .answer(a) }
             // 食譜：「可以加洋蔥嗎」——剛剛的做法裡沒有，也可以照自己的口味加
             if lc.answer.contains("的步驟"), let g = RuleBook.match(t, #"^(?:那)?(?:可以|能|要不要|可不可以|能不能)(?:加|放|用|加點|放點)(.{1,6}?)(?:嗎|呢)?$"#) {
