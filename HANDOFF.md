@@ -1028,3 +1028,5 @@ brief; still wrong: "鐵達尼號講的是什麼" (gets the ship: the film's art
 **交付**：IPA build 493（commit dbe2e27，沒簽名）：`https://github.com/u1130238883-oss/-eden-ai/raw/ninesun-ipa/build-493/NineSun.ipa`。中間 build 491 排隊 15 分鐘沒有 Mac 被取消，重編。
 
 **後來（使用者回報 build 493 往上滑還是會被拉回去）**：原因是回答每 0.018 秒打幾個字，第 493 版要「一次滑開超過 80 點」才停止跟著，正常的滑動在兩個字之間根本滑不到那麼遠，所以一直被拉回。改成：只要往上滑一點點就停止跟著（看方向，不看距離）；iOS 18 以上再用系統的捲動狀態（手指在畫面上就不跟，放開時在最下面才再跟）；回答寫完、游標拿掉時內容變短不算使用者在滑。交付 build 497（commit 46e6987）：`https://github.com/u1130238883-oss/-eden-ai/raw/ninesun-ipa/build-497/NineSun.ipa`。一樣只在 Mac 上編譯過，沒有在手機上實際滑過。
+
+**再後來（使用者要求）**：大腦清單拿掉官方原版「Gemma 4 E4B」，只留「Gemma 4 E4B Mahou NSFW」（`ModelStore.models`）。手機裡選了舊模型的會自動改選 Mahou；舊模型的檔案打開 App 時刪掉；還沒下載完的會取消。
