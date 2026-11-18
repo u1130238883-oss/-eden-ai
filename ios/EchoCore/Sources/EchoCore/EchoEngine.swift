@@ -616,9 +616,32 @@ public final class EchoEngine {
             let q = g[0] + "有什麼好玩的"
             if Library.detailed(q) != nil || Commonsense.answer(q) != nil { m = q }
         }
+        // 「跟我說說你自己」「說說你的故事」「自我介紹一下」＝你是誰；「我想了解我自己」＝我的個性
+        m = m.replacingOccurrences(of: #"^((可以|能不能)?(跟我|和我)?(說說|講講|聊聊|介紹|介紹一下)(一下)?(你自己|你|妳自己|你的故事|妳的故事)|說說你的故事|講講你的故事|自我介紹(一下)?)(吧|嗎|好嗎|好不好)?(?=[？?！!]*$)"#, with: "你是誰", options: .regularExpression)
+        m = m.replacingOccurrences(of: #"^我(想|很想|想要)(多)?(了解|認識|知道)(一下)?(我自己|自己)(多一點)?(?=[？?！!]*$)"#, with: "我的個性是怎樣", options: .regularExpression)
         // 「我是什麼樣的人」＝我的個性；「我的貴人是誰」＝貴人運
         m = m.replacingOccurrences(of: #"^我(到底)?是(一個)?(什麼樣|怎樣|怎麼樣)的人(呢|啊)?(?=[？?]*$)"#, with: "我的個性是怎樣", options: .regularExpression)
         m = m.replacingOccurrences(of: #"^(我的貴人是誰|誰是我的貴人|我的貴人在哪裡?|我會遇到貴人嗎|我的貴人什麼時候(會)?出現|我有沒有貴人)(呢|啊)?(?=[？?]*$)"#, with: "我的貴人運怎麼樣", options: .regularExpression)
+        // 「跟我說說黑洞」「我想了解通膨」「介紹一下光年」：認得的東西就當成問它是什麼
+        if let g = RuleBook.match(m, #"^(?:可以|能不能|請|你可以)?(?:跟我|和我|幫我|為我)?(?:說說|講講|聊聊|介紹|說明|解釋|科普)(?:一下)?(?:看)?(.{2,10}?)(?:吧|嗎|好嗎|好不好|給我聽)?[？?！!]*$|^我(?:想|想要|很想)(?:了解|知道|認識|多了解|多知道)(?:一下)?(.{2,10}?)(?:是什麼)?[？?！!]*$"#) {
+            let x = g[0].isEmpty ? g[1] : g[0]
+            if !x.contains("你"), !x.hasPrefix("我"), Commonsense.facts.contains(where: { $0.kind != "推薦" && $0.names.contains(x) }),
+               Commonsense.answer(x + "是什麼") != nil { m = x + "是什麼" }
+        }
+        // 「台北 好玩」「日本 美食」：兩個關鍵字＝那個地方有什麼好玩的、好吃的
+        if let g = RuleBook.match(m, #"^(.{2,6}?)\s+(好玩|景點|旅遊|玩什麼|去哪玩)[？?]*$"#) {
+            let q = g[0] + "有什麼好玩的"
+            if Library.detailed(q) != nil || Commonsense.answer(q) != nil { m = q }
+        } else if let g = RuleBook.match(m, #"^(.{2,6}?)\s+(美食|好吃|小吃|吃什麼)[？?]*$"#) {
+            let q = g[0] + "有什麼好吃的"
+            if Library.detailed(q) != nil || Commonsense.answer(q) != nil { m = q }
+        }
+        // 「玉山的海拔」「長江 長度」：東西＋屬性，沒有問句也是在問那個數字
+        if let g = RuleBook.match(m, #"^(.{1,8}?)(?:的|\s+)(高度|海拔|面積|人口|首都|語言|貨幣|年齡|長度|重量|溫度|速度|距離|壽命|位置|由來|好處|壞處|特色)[？?]*$"#),
+           Commonsense.facts.contains(where: { $0.names.contains(g[0]) }) {
+            let ask = ["高度", "海拔"].contains(g[1]) ? g[0] + "有多高" : ["首都", "語言", "貨幣", "位置", "由來", "好處", "壞處", "特色"].contains(g[1]) ? g[0] + "的" + g[1] + "是什麼" : g[0] + "的" + g[1] + "是多少"
+            if Commonsense.answer(ask) != nil { m = ask }
+        }
         // 「什麼叫做區塊鏈」「什麼叫通膨」＝什麼是
         m = m.replacingOccurrences(of: "^什麼叫(做)?", with: "什麼是", options: .regularExpression)
         // 「人口最多的國家是」：話沒說完的「是」＝是什麼
