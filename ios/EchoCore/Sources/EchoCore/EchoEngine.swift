@@ -849,6 +849,16 @@ public final class EchoEngine {
                let e = Idioms.random(seed: Calendar.current.component(.minute, from: ctx.now) &+ history.count &* 7) {
                 return done("「\(e.idiom)」：\(e.meaning)。" + (e.en.first.map { "\n英文可以說：\($0)" } ?? "") + "\n想要形容某種情況的成語，可以問我「形容很努力的成語」。", .knowledge)
             }
+            // 小遊戲：猜數字（終極密碼）、猜拳——要記得進行到哪裡
+            if tt.range(of: #"^(來|我們來|陪我|跟我|一起|我想)?(玩)?(猜數字|猜數字遊戲|終極密碼)(吧|好不好|好嗎|嗎)?$"#, options: .regularExpression) != nil {
+                let n = Int.random(in: 1...100)
+                lastLocal = LocalContext(kind: "猜數字", subject: "\(n)", extra: "1,100", shown: "0", turn: history.count)
+                return done("好啊！我想好一個 1 到 100 之間的數字了，猜猜看是多少？（想結束就說「不玩了」）", .knowledge)
+            }
+            if tt.range(of: #"^(來|我們來|陪我|跟我|一起|我想)?(玩)?(猜拳|剪刀石頭布)(吧|好不好|好嗎|嗎)?$"#, options: .regularExpression) != nil {
+                lastLocal = LocalContext(kind: "猜拳", turn: history.count)
+                return done("好啊！剪刀、石頭、布——你先出！（說「剪刀」「石頭」或「布」）", .knowledge)
+            }
             if tt.range(of: #"^(來|我們來|陪我|跟我|一起|我想)?(玩)?(成語接龍|文字接龍|接龍)(吧|好不好|好嗎|嗎)?$"#, options: .regularExpression) != nil, let e = Idioms.random(seed: history.count &+ 3) {
                 lastLocal = LocalContext(kind: "接龍", subject: e.idiom, extra: e.idiom, turn: history.count)
                 return done("好啊！我們來玩成語接龍，我先：「\(e.idiom)」（\(e.meaning)）。\n換你接一個「\(e.idiom.last!)」開頭的成語！（想結束就說「不玩了」）", .knowledge)
@@ -1775,6 +1785,36 @@ public final class EchoEngine {
                 return .rewrite("怎麼學" + lc.subject.dropFirst(2))
             }
             if !EchoEngine.isQuestion(message), !EchoEngine.fortuneIntent(message), let a = Talk.chatAnswer(message, topic: lc.subject) { return .answer(a) }
+        case "猜數字":
+            if t.range(of: "不玩|結束|算了|放棄|不想玩|答案是什麼|答案是多少|告訴我答案|公布答案", options: .regularExpression) != nil {
+                lastLocal = nil
+                return .answer("答案是 \(lc.subject)！下次再玩～想再挑戰就說「猜數字」。")
+            }
+            let digits = t.filter { $0.isASCII && $0.isNumber }
+            if !digits.isEmpty, t.count <= 8, let g = Int(digits), let n = Int(lc.subject) {
+                let parts = lc.extra.split(separator: ",").compactMap { Int($0) }
+                var lo = parts.first ?? 1, hi = parts.last ?? 100
+                let tries = (Int(lc.shown) ?? 0) + 1
+                if g == n {
+                    lastLocal = nil
+                    return .answer("答對了！就是 \(n)！🎉 你猜了 \(tries) 次\(tries <= 7 ? "，很厲害！" : "。")要再玩一次嗎？說「猜數字」就可以。")
+                }
+                if g < lo || g > hi { return .answer("答案在 \(lo) 到 \(hi) 之間喔，再猜一次～") }
+                if g < n { lo = g + 1 } else { hi = g - 1 }
+                lastLocal = LocalContext(kind: "猜數字", subject: lc.subject, extra: "\(lo),\(hi)", shown: "\(tries)", turn: lc.turn + 2)
+                return .answer(g < n ? "再大一點！（\(lo) 到 \(hi) 之間）" : "再小一點！（\(lo) 到 \(hi) 之間）")
+            }
+        case "猜拳":
+            if t.range(of: "不玩|結束|算了|不想玩", options: .regularExpression) != nil { lastLocal = nil; return .answer("好，不玩了～想再玩隨時說「猜拳」。") }
+            let hands = ["剪刀", "石頭", "布"]
+            if t.count <= 6, let mine = hands.first(where: { t.contains($0) }) ?? (t.contains("✌") ? "剪刀" : t.contains("✊") ? "石頭" : t.contains("🖐") ? "布" : nil) {
+                let me = hands.randomElement()!
+                let icon = ["剪刀": "✌️", "石頭": "✊", "布": "🖐"]
+                let beats = ["剪刀": "布", "石頭": "剪刀", "布": "石頭"]
+                let result = me == mine ? "平手！再來一次？" : beats[mine] == me ? "你贏了！🎉 再來一局？" : "我贏了！😆 再來一局？"
+                lastLocal = LocalContext(kind: "猜拳", turn: lc.turn + 2)
+                return .answer("你出\(icon[mine]!)\(mine)，我出\(icon[me]!)\(me)——\(result)（不玩了可以說「不玩了」）")
+            }
         case "接龍":
             let w = t.filter { !"「」".contains($0) }
             if t.range(of: "輸了|認輸|你贏了|想不到|接不下去", options: .regularExpression) != nil, let last = lc.subject.last {

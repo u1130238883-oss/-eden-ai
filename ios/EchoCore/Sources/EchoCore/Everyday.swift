@@ -9,6 +9,8 @@ public enum Everyday {
         guard !t.isEmpty, t.count <= 40 else { return nil }
         if let a = clock(t, now) { return a }
         if let a = clockShift(t, now) { return a }
+        if let a = worldClock(t, now) { return a }
+        if let a = splitBill(t) { return a }
         if let a = dayQuestion(t, now) { return a }
         if let a = yearQuestion(t, now) { return a }
         if let a = dateWeekday(t) { return a }
@@ -229,6 +231,62 @@ public enum Everyday {
         let part = h < 5 ? "凌晨" : h < 11 ? "早上" : h < 13 ? "中午" : h < 18 ? "下午" : "晚上"
         let h12 = h % 12 == 0 ? 12 : h % 12
         return String(format: "現在是 %02d:%02d，", h, mi) + "\(part) \(h12) 點" + (mi == 0 ? "整" : " \(mi) 分") + "。"
+    }
+
+    /// 世界時間：「日本現在幾點」「美國現在幾點」「英國跟台灣差幾個小時」（用時區算，會自己處理夏令時間）
+    static let worldZones: [(names: [String], zones: [(String, String)])] = [
+        (["日本", "東京", "大阪"], [("日本", "Asia/Tokyo")]), (["韓國", "首爾"], [("韓國", "Asia/Seoul")]),
+        (["中國", "北京", "上海"], [("中國", "Asia/Shanghai")]), (["香港"], [("香港", "Asia/Hong_Kong")]),
+        (["新加坡"], [("新加坡", "Asia/Singapore")]), (["泰國", "曼谷"], [("泰國", "Asia/Bangkok")]),
+        (["印度"], [("印度", "Asia/Kolkata")]), (["杜拜"], [("杜拜", "Asia/Dubai")]),
+        (["英國", "倫敦"], [("英國", "Europe/London")]), (["法國", "巴黎"], [("法國", "Europe/Paris")]),
+        (["德國", "柏林"], [("德國", "Europe/Berlin")]), (["義大利", "羅馬"], [("義大利", "Europe/Rome")]),
+        (["西班牙", "馬德里"], [("西班牙", "Europe/Madrid")]), (["俄羅斯", "莫斯科"], [("莫斯科", "Europe/Moscow")]),
+        (["美國"], [("美東（紐約）", "America/New_York"), ("美西（洛杉磯）", "America/Los_Angeles")]),
+        (["紐約"], [("紐約", "America/New_York")]), (["洛杉磯", "舊金山"], [("美西", "America/Los_Angeles")]),
+        (["加拿大", "多倫多"], [("多倫多", "America/Toronto"), ("溫哥華", "America/Vancouver")]), (["溫哥華"], [("溫哥華", "America/Vancouver")]),
+        (["澳洲", "雪梨"], [("雪梨", "Australia/Sydney")]), (["巴西"], [("巴西（聖保羅）", "America/Sao_Paulo")]),
+    ]
+
+    static func worldClock(_ t: String, _ now: Date) -> String? {
+        let place: String, diffAsk: Bool
+        if let g = RuleBook.match(t, #"^(?:現在)?(.{2,4}?)(?:現在|那邊|當地)?(?:是)?(?:幾點|幾點了|幾點鐘|的時間|時間是幾點)(?:呢|啊)?$"#) { place = g[0]; diffAsk = false }
+        else if let g = RuleBook.match(t, #"^(.{2,4}?)(?:和|跟|與)台灣(?:的)?(?:時差|差幾個小時|差幾小時|差多少時間|差多久)(?:是多少|多少)?(?:呢)?$"#)
+                    ?? RuleBook.match(t, #"^台灣(?:和|跟|與)(.{2,4}?)(?:的)?(?:時差|差幾個小時|差幾小時|差多少時間|差多久)(?:是多少|多少)?(?:呢)?$"#) { place = g[0]; diffAsk = true }
+        else { return nil }
+        guard let entry = worldZones.first(where: { $0.names.contains(place) }), let tw = TimeZone(identifier: "Asia/Taipei") else { return nil }
+        var twCal = Calendar(identifier: .gregorian); twCal.timeZone = tw
+        let twDay = twCal.component(.day, from: now)
+        var parts: [String] = []
+        for (label, id) in entry.zones {
+            guard let tz = TimeZone(identifier: id) else { continue }
+            var c = Calendar(identifier: .gregorian); c.timeZone = tz
+            let d = c.dateComponents([.month, .day, .hour, .minute], from: now)
+            let diff = Double(tz.secondsFromGMT(for: now) - tw.secondsFromGMT(for: now)) / 3600
+            let hours = diff == diff.rounded() ? String(Int(abs(diff))) : String(format: "%.1f", abs(diff))
+            let rel = diff == 0 ? "和台灣一樣" : diff > 0 ? "比台灣快 \(hours) 小時" : "比台灣慢 \(hours) 小時"
+            let dayNote = d.day! == twDay ? "" : "（當地是 \(d.month!) 月 \(d.day!) 日）"
+            parts.append(diffAsk ? "\(label)\(rel)" : "\(label)現在是 " + String(format: "%02d:%02d", d.hour!, d.minute!) + dayNote + "，\(rel)")
+        }
+        guard !parts.isEmpty else { return nil }
+        return parts.joined(separator: "；") + "。" + (entry.zones.contains { ["America", "Europe", "Australia"].contains(String($0.1.prefix { $0 != "/" })) } ? "（有夏令時間的地方，時差會隨季節差 1 小時，我已經照現在的季節算好了。）" : "")
+    }
+
+    /// 「三個人吃飯1500元一人多少」「1500元四個人分」
+    static func splitBill(_ t: String) -> String? {
+        let nums: [Character: Int] = ["一": 1, "二": 2, "兩": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10]
+        func people(_ s: String) -> Int? { Int(s) ?? (s.count == 1 ? s.first.flatMap { nums[$0] } : s == "十一" ? 11 : s == "十二" ? 12 : nil) }
+        var p: Int?, total: Double?
+        if let g = RuleBook.match(t, #"([0-9]{1,2}|[一二兩三四五六七八九十]{1,2})個?人.{0,10}?([0-9][0-9,]*(?:\.[0-9]+)?)\s*(?:元|塊)?.{0,8}?(?:一人|每人|每個人|一個人|平分|各|均分).{0,6}$"#) {
+            p = people(g[0]); total = Double(g[1].replacingOccurrences(of: ",", with: ""))
+        } else if let g = RuleBook.match(t, #"([0-9][0-9,]*(?:\.[0-9]+)?)\s*(?:元|塊).{0,6}?([0-9]{1,2}|[一二兩三四五六七八九十]{1,2})個?人(?:平分|分|均分|付|出)"#) {
+            total = Double(g[0].replacingOccurrences(of: ",", with: "")); p = people(g[1])
+        }
+        guard let n = p, n >= 2, let sum = total, sum > 0 else { return nil }
+        let each = sum / Double(n)
+        let f = NumberFormatter(); f.numberStyle = .decimal; f.maximumFractionDigits = 1
+        let s = f.string(from: NSNumber(value: each)) ?? String(each), total0 = f.string(from: NSNumber(value: sum)) ?? String(sum)
+        return "\(total0) 元 \(n) 個人分，一個人 \(s) 元。" + (each != each.rounded() ? "（有零頭的話，可以一人付 \(Int(each.rounded(.up))) 元，多的當下次的飲料錢 😄）" : "")
     }
 
     /// 「3小時後是幾點」「再過90分鐘幾點」「兩個半小時前是幾點」：從現在往前、往後算
