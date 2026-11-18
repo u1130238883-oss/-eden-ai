@@ -376,8 +376,13 @@ public enum Commonsense {
         // 「流星是怎麼形成的」「為什麼會有彩虹」：沒有另外寫成因的，簡介本身就在說它是怎麼來的
         if let g = RuleBook.match(t, #"^(?:為什麼會有)(.{1,8}?)(?:呢)?$"#) ?? RuleBook.match(t, #"^(.{1,8}?)(?:是)?怎麼(?:形成|產生|出現)(?:的)?(?:呢)?$"#),
            let e = facts.first(where: { $0.names.contains(g[0]) && ["天體", "自然", "科學", "環境", "生物"].contains($0.kind) }),
-           e.attr("形成") == nil, e.attr("原因") == nil, let d = define(e, now: now) {
-            return d
+           e.attr("形成") == nil, e.attr("原因") == nil {
+            // 有寫成因（「因:四季/季節=地球的自轉軸傾斜…」）就用成因；別的條目整句寫了這個問法（「為什麼會有四季」）就用那一筆
+            if let why = e.attrs.first(where: { $0.key.hasPrefix("因:") && $0.key.dropFirst(2).split(separator: "/").contains(where: { e.names.contains(String($0)) }) }) {
+                return why.value.hasSuffix("。") ? why.value : why.value + "。"
+            }
+            if let x = exactAnswer(t, now: now) { return x }
+            if let d = define(e, now: now) { return d }
         }
         // 「QR碼是什麼」：名字是一個「怎麼做」的條目（裡面就在介紹它）
         if let g = RuleBook.match(t, #"^(?:什麼是)?(.{2,12}?)(?:是什麼|是什麼意思|是什麼東西|是啥)?$"#), g[0] != t || t.hasPrefix("什麼是"),

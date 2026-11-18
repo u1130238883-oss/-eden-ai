@@ -72,7 +72,9 @@ public enum Library {
             return Answered(text: a, kind: "author", subject: w?.name ?? "", extra: w.map(authorName) ?? "")
         }
         if let a = whoDid(t) { return Answered(text: a, kind: "who", subject: "", extra: "") }
-        if let a = list(t) { return Answered(text: a, kind: "list", subject: lastListName ?? "", extra: "") }
+        // 「為什麼會有四季」「四季是怎麼形成的」問的是原因，不是清單上有哪些
+        if t.range(of: "為什麼|為何|為啥|怎麼形成|怎麼來的|原因|成因", options: .regularExpression) == nil,
+           let a = list(t) { return Answered(text: a, kind: "list", subject: lastListName ?? "", extra: "") }
         if let a = category(t) { return Answered(text: a, kind: "category", subject: "", extra: "") }
         return nil
     }
