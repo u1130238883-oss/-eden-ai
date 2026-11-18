@@ -444,7 +444,8 @@ private struct TriggerCard: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
-                    if idx < triggers.items.count - 1 {
+                    // 有「被影響」時不畫分隔線（每一項上面已經有「引動本命」標籤）
+                    if idx < triggers.items.count - 1 && triggers.affected.isEmpty {
                         Rectangle()
                             .fill(Theme.hairline)
                             .frame(height: 1)
