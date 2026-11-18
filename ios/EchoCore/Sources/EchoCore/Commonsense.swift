@@ -783,6 +783,8 @@ public enum Commonsense {
                    "哪裡好玩", "養什麼", "有什麼好看", "有什麼好聽", "有什麼好玩", "有什麼好吃", "吃啥", "要吃什麼",
                    "可以做什麼", "能做什麼", "要做什麼", "做什麼好", "送什麼", "什麼禮物", "玩什麼", "可以去哪"].contains { t.contains($0) }
             && !["好處", "壞處", "為什麼"].contains(where: { t.contains($0) })
+            // 「怎麼拍出好看的照片」「怎麼畫出好看的字」：問做法，不是要推薦電影
+            && t.range(of: "(怎麼|如何|怎樣|要怎麼)(才能|才會)?(拍|做|煮|畫|寫|弄|讓|變|穿|搭|擺|拿|剪|修|調)", options: .regularExpression) == nil
             // 整句就是推薦類的一個問法（「週末要幹嘛」「放假要幹嘛」）
             || recommends.contains(where: { $0.aliases.contains(t) && t.count >= 4 })
         guard cue, realMentions(t, in: facts).isEmpty, let e = mentions(t, in: recommends).first?.entity else { return nil }
