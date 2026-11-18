@@ -475,11 +475,22 @@ public final class EchoEngine {
             if r2.webQuery == nil, r2.turn.source != .neural, r2.turn.card == nil { return r2 }
             if r2.webQuery != nil { var w = r2; w.webQuery = cand; lastWebQuery = cand; lastWebTurn = history.count; w.turn.palace = nil; return w }
         }
+        // 「第二高的呢」「那第三大的呢」（上一題「台灣最高的山是哪座」）：把「最高」換成「第二高」再問一次
+        if context.language == .zh, let g = RuleBook.match(Talk.clean(message), #"^(?:那|那麼)?第([二三四五])(高|大|長|多|深|小|遠|快|重|冷|熱)的?(?:呢|是哪個|是什麼|是哪座|是哪裡|是哪一個)?$"#),
+           let prevQ = history.filter({ $0.role == .user }).suffix(3).reversed().map(\.text).first(where: { $0.contains("最" + g[1]) }) {
+            let q = prevQ.replacingOccurrences(of: "最" + g[1], with: "第" + g[0] + g[1])
+            let r2 = replyCore(to: q, history: history, context: context, onToken: onToken)
+            if r2.webQuery == nil, r2.turn.source != .neural { return r2 }
+            var w = r2; w.webQuery = q; w.turn.text = Loc.s("webAsk", .zh); w.turn.source = .tool; w.turn.palace = nil
+            lastWebQuery = q; lastWebTurn = history.count
+            return w
+        }
         // 「要煮多久」「怎麼去」「哪一年」「要帶什麼」：沒說主詞的追問——帶上前一題的主題（說「他」就是前一個回答裡的人）再問一次
         // 上一句也是追問（「說簡單一點」「會死嗎」）：主題在更前面那一句（「什麼是黑洞」「頭痛怎麼辦」）
         let lastUser = history.suffix(2).last(where: { $0.role == .user })?.text
         let topicTurn = lastUser == nil ? nil : history.filter { $0.role == .user }.suffix(4).reversed().map(\.text)
-            .first(where: { !EchoEngine.isMetaFollowUp($0) && !EchoEngine.subjectless($0) })
+            .first(where: { !EchoEngine.isMetaFollowUp($0) && !EchoEngine.subjectless($0)
+                && Talk.clean($0).range(of: "^(那|那麼)?(那裡|那邊|這裡|這邊|那個|這個|它|他|她|牠|那間|那家)", options: .regularExpression) == nil })
         if context.language == .zh, EchoEngine.subjectless(message),
            let prev = topicTurn ?? lastUser ?? (history.count - prevQuestionTurn <= 4 ? prevQuestion : nil),
            let topic = EchoEngine.topicOf(prev, message: message, previousAnswer: history.last(where: { $0.role == .echo })?.text) {
@@ -1604,7 +1615,7 @@ public final class EchoEngine {
         // 要是在問問題（「是講一個機器人的故事」是在說，不是在問）
         guard EchoEngine.isQuestion(raw) || raw.hasSuffix("嗎") || raw.hasSuffix("呢") || t.range(of: "什麼|怎麼|哪|幾|多|誰|為什麼", options: .regularExpression) != nil else { return false }
         let s = t.replacingOccurrences(of: "^(那麼|那|所以|然後)", with: "", options: .regularExpression)
-        guard s.range(of: #"^(他|她|它|牠)?(要|可以|能|會|需要|該|應該|是|去|在|還有|有沒有|是不是|怎麼|為什麼|哪|什麼|多|幾|最|大概|大約|平常|有)"#, options: .regularExpression) != nil else { return false }
+        guard s.range(of: #"^(他|她|它|牠)?(要|可以|能|會|需要|該|應該|是|去|在|還有|有沒有|是不是|怎麼|為什麼|哪|什麼|多|幾|最|大概|大約|平常|有)|^(是)?誰(第一個|最先|最早|發明|寫|畫|唱|設計|建造|創立|蓋|拍|導演|演|說的|做的|贏)"#, options: .regularExpression) != nil else { return false }
         let c = Everyday.clean(s)
         return Commonsense.realMentions(c, in: Commonsense.facts).isEmpty && Commonsense.mentions(c, in: Commonsense.howtos).isEmpty
     }
@@ -1743,7 +1754,14 @@ public final class EchoEngine {
         case "笑話", "選擇", "自己", "看法":
             return Talk.followUp(message, kind: lc.kind, last: lc.answer, name: lc.subject).map { .answer($0) }
         case "list":
-            return Library.listFollowUp(message, list: lc.subject).map { .answer($0) }
+            if let a = Library.listFollowUp(message, list: lc.subject) { return .answer(a) }
+            // 「日本的景點」之後問「人口多少」「首都是哪裡」：問的是那個地方
+            if let g = RuleBook.match(lc.subject, #"^(.{2,6}?)(?:的)?(?:景點|美食|小吃|夜市|名產|好玩的地方)$"#),
+               Commonsense.facts.contains(where: { ["國家", "城市", "地標"].contains($0.kind) && $0.names.contains(g[0]) }),
+               t.count <= 10, t.range(of: "^(那)?(人口|面積|首都|貨幣|語言|天氣|氣候|時差|在哪|位置|有多大|說什麼|用什麼|冬天|夏天|幾點)", options: .regularExpression) != nil {
+                return .rewrite(g[0] + t.replacingOccurrences(of: "^(那|那麼)", with: "", options: .regularExpression))
+            }
+            return nil
         case "author":
             // 「他還寫了什麼」「她是哪裡人」「作者是誰」：代名詞換成作者
             guard !lc.extra.isEmpty, t.count <= 16 else { return nil }
@@ -1859,7 +1877,7 @@ public final class EchoEngine {
             let opinion = lc.answer.split(separator: "\n").map(String.init).last(where: { l in
                 !l.isEmpty && l.range(of: #"^[0-9]+\. |^小提醒|^⚠️|可以這樣|：$"#, options: .regularExpression) == nil && l.count >= 10 })
             if !listItems.isEmpty,
-               t.range(of: #"^(那)?(最重要|最關鍵|最有用|最有效|最推薦|最優先|最需要)(的)?(是)?(哪一個|哪個|哪一點|哪點|什麼|哪一步|哪步)?(呢)?$|^(那)?(要)?(先做哪一個|先做哪個|先從哪裡開始|先做什麼|從哪一個開始|從哪個開始)(呢)?$|^(那)?你(覺得|覺得呢|覺得怎麼樣|覺得如何|的看法|的看法呢|怎麼看|推薦哪個|推薦哪一個)$"#, options: .regularExpression) != nil {
+               t.range(of: #"^(那)?(最重要|最關鍵|最有用|最有效|最推薦|最優先|最需要)(的)?(是)?(哪一個|哪個|哪一點|哪點|什麼|哪一步|哪步)?(呢)?$|^(那)?(要)?(先做哪一個|先做哪個|先從哪裡開始|先做什麼|從哪一個開始|從哪個開始|從哪裡開始|從哪開始|第一步是什麼|第一步要做什麼|第一步)(呢)?$|^(那)?你(覺得|覺得呢|覺得怎麼樣|覺得如何|的看法|的看法呢|怎麼看|推薦哪個|推薦哪一個)$"#, options: .regularExpression) != nil {
                 var a = "我覺得最值得先做的是第一點：\(listItems[0])。"
                 if let o = opinion, !o.hasPrefix(listItems[0]) { a += "\n" + o }
                 return .answer(a)
@@ -2054,6 +2072,10 @@ public final class EchoEngine {
                 return .answer(lines[n % lines.count] + asks[n % asks.count])
             }
         case "recommend":
+            // 「你覺得呢」「你最推薦哪一個」：說最推薦的那一個
+            if !lc.extra.isEmpty, t.range(of: #"^(那)?(你覺得呢|你覺得|你推薦哪個|你推薦哪一個|你最推薦哪一個|你最推薦哪個|哪一個最好|哪個最好|你選哪個|你會選哪個)(呢)?$"#, options: .regularExpression) != nil {
+                return .answer("我最推薦的是\(lc.extra)" + (lc.extra.hasSuffix("。") ? "" : "。"))
+            }
             // 「很好看」「超好聽」（不是問句）：在說推薦的東西很棒
             if t.range(of: #"^(真的|對啊)?(很|超|好|蠻|滿|真的很)(好看|好聽|好玩|好吃|讚|棒)(耶|欸|喔|啊|呀)?$"#, options: .regularExpression) != nil {
                 return .answer("對吧！你最喜歡哪一個？想要類似的，跟我說「還有嗎」，我再推薦幾個。")
