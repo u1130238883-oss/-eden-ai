@@ -410,6 +410,13 @@ public final class EchoEngine {
             r.turn.variant = "talk"
             return r
         }
+        // 剛剛貼了一段文字，接著說「整理重點」「解釋一下」：照那段文字做
+        if !rewritten, context.language == .zh, let pasted = history.last(where: { $0.role == .user })?.text,
+           let a = EchoEngine.pastedTextHelp(message, pasted: pasted, now: context.now) {
+            var r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+            r.turn.variant = "talk"
+            return r
+        }
         // 剛剛問「最近過得好嗎？」：回答「很好啊」「不太好」不是道別或要上網查
         if !rewritten, context.language == .zh, let prevEcho = history.last(where: { $0.role == .echo }),
            let a = Talk.wellbeingReply(message, asked: prevEcho.text) {
@@ -615,6 +622,38 @@ public final class EchoEngine {
     }
 
     /// 口語的問句詞換成一般說法：「日本首都是啥」「蝦米是黑洞」「咋辦」
+    /// 貼上來的一段文字之後的「整理重點」「解釋一下」
+    static func pastedTextHelp(_ message: String, pasted: String, now: Date) -> String? {
+        guard pasted.count >= 40, !pasted.contains("我"), !pasted.contains("你") else { return nil }
+        let t = Talk.clean(message).replacingOccurrences(of: #"[？?。！!]"#, with: "", options: .regularExpression)
+        let wantsPoints = t.range(of: #"^(幫我|請|可以)?(整理|整理一下|整理重點|摘要|總結|重點是什麼|重點|講重點|列重點|抓重點|簡單說|說重點)(一下)?(吧|嗎|好嗎)?$"#, options: .regularExpression) != nil
+        let wantsExplain = t.range(of: #"^(幫我|請|可以)?(解釋|解釋一下|說明一下|說明|看不懂|什麼意思|這是什麼意思|這段是什麼意思)(吧|嗎|好嗎)?$"#, options: .regularExpression) != nil
+        guard wantsPoints || wantsExplain else { return nil }
+        // 拆成一個一個重點：「是…」「被…」開頭的接回前一句
+        var points: [String] = []
+        for raw in pasted.components(separatedBy: CharacterSet(charactersIn: "，,；;。\n")) {
+            let c = raw.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^[①②③④⑤⑥⑦⑧⑨⑩0-9]+[.、)]?\s*"#, with: "", options: .regularExpression)
+            guard c.count >= 2 else { continue }
+            if let last = points.last, c.range(of: "^(是|被|也|並|且|而且|還|就|都)", options: .regularExpression) != nil || last.count <= 6 {
+                points[points.count - 1] = last + (last.count <= 6 ? "" : "，") + c
+            } else { points.append(c) }
+        }
+        guard !points.isEmpty else { return nil }
+        if wantsPoints {
+            return "重點整理：\n" + points.prefix(6).map { "・" + $0 }.joined(separator: "\n")
+        }
+        // 解釋：找出段落裡我認得的名詞，一個一個說明
+        let terms = Commonsense.realMentions(Everyday.clean(pasted), in: Commonsense.facts)
+        var seen = Set<String>(), lines: [String] = []
+        for m in terms where !seen.contains(m.entity.name) {
+            seen.insert(m.entity.name)
+            if let d = Commonsense.answer(m.entity.name + "是什麼", now: now) { lines.append("・" + d.components(separatedBy: "\n")[0]) }
+            if lines.count >= 3 { break }
+        }
+        if lines.isEmpty { return "這段在說：\n" + points.prefix(4).map { "・" + $0 }.joined(separator: "\n") + "\n\n哪個詞看不懂，可以直接問我「X是什麼」。" }
+        return "這段裡面的幾個名詞：\n" + lines.joined(separator: "\n") + "\n\n其他看不懂的詞，可以直接問我「X是什麼」。"
+    }
+
     static func unwrapPoliteFollowUp(_ m: String) -> String {
         guard let g = RuleBook.match(m.trimmingCharacters(in: .whitespacesAndNewlines), #"^(?:你|妳)?(?:可以|能|能不能|可不可以|麻煩|麻煩你|請|請你)(?:你)?(再說一次|再講一次|再說一遍|再講一遍|說簡單一點|講簡單一點|說詳細一點|講詳細一點|說清楚一點|講清楚一點|說慢一點|講慢一點|舉個例子|舉一個例子|白話一點)(?:嗎|好嗎|呢|吧)?[？?]*$"#) else { return m }
         return g[0].replacingOccurrences(of: "慢一點", with: "簡單一點")
