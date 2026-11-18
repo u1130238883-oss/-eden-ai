@@ -8,6 +8,9 @@ struct ChatView: View {
     @State private var showChart = false
     @State private var showLangPicker = false
     @FocusState private var focused: Bool
+    /// 回答寫到一半往上滑去看前面：不要一直把畫面拉回最新的字；滑回最下面、按「↓」或送出新訊息時才再跟著
+    @State private var follow = true
+    @State private var track = ChatScrollTrack()
 
     private var quick: [String] {
         switch vm.language {
@@ -113,17 +116,62 @@ struct ChatView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
+                // 內容在可見範圍裡的位置：用來知道使用者是不是還在最下面
+                .background(GeometryReader { g in
+                    Color.clear.preference(key: ChatContentFrameKey.self, value: g.frame(in: .named("chatScroll")))
+                })
+            }
+            .coordinateSpace(name: "chatScroll")
+            .background(GeometryReader { g in
+                Color.clear.preference(key: ChatViewportHeightKey.self, value: g.size.height)
+            })
+            .onPreferenceChange(ChatViewportHeightKey.self) { h in track.viewport = h }
+            .onPreferenceChange(ChatContentFrameKey.self) { f in
+                // 內容的上緣動了 = 捲動了（使用者在滑，或程式捲到最下面）；只是字變多（上緣不動）不算。
+                // 捲動後離最下面很近就跟著新的字，滑上去看前面的就停在那裡
+                let moved = abs(f.minY - track.lastTop) > 1
+                track.lastTop = f.minY
+                guard moved, Date() >= track.ignoreUntil else { return }
+                let atBottom = f.maxY - track.viewport < 80
+                if atBottom != follow { follow = atBottom }
             }
             .scrollDismissesKeyboard(.immediately)
-            .onChange(of: vm.turns.count) { _ in scrollDown(proxy) }
-            .onChange(of: vm.streaming) { _ in scrollDown(proxy, animated: false) }
+            .onChange(of: vm.turns.count) { _ in
+                // 自己送出新訊息：回到最下面、跟著回答；回答寫完時，只有本來就在最下面才捲
+                if vm.turns.last?.role == .user { follow = true }
+                if follow { scrollDown(proxy) }
+            }
+            .onChange(of: vm.streaming) { _ in
+                if follow { scrollDown(proxy, animated: false) }
+            }
             .onAppear { scrollDown(proxy, animated: false) }
+            // 往上滑在看前面的內容時：右下角的「↓」一按就回到最新的地方
+            .overlay(alignment: .bottomTrailing) {
+                if !follow {
+                    Button {
+                        follow = true
+                        scrollDown(proxy)
+                    } label: {
+                        Image(systemName: "arrow.down")
+                            .font(.system(size: 18, weight: .heavy))
+                            .foregroundColor(.black)
+                            .frame(width: 44, height: 44)
+                            .background(Circle().fill(Theme.hazard))
+                            .shadow(color: .black.opacity(0.5), radius: 6, y: 2)
+                    }
+                    .padding(.trailing, 16)
+                    .padding(.bottom, 12)
+                    .accessibilityLabel("回到最新的訊息")
+                }
+            }
             // 點聊天內容或上下捲動都會把鍵盤收起來；按鈕照常可按
             .simultaneousGesture(TapGesture().onEnded { focused = false })
         }
     }
 
     private func scrollDown(_ proxy: ScrollViewProxy, animated: Bool = true) {
+        // 有動畫的捲動途中，位置一格一格變：這段時間不要拿來判斷「使用者滑走了」
+        if animated { track.ignoreUntil = Date().addingTimeInterval(0.45) }
         if animated {
             withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo("bottom", anchor: .bottom) }
         } else {
@@ -288,4 +336,26 @@ struct SignalBars: View {
         }
         .onReceive(Timer.publish(every: 0.15, on: .main, in: .common).autoconnect()) { _ in t += 1 }
     }
+}
+
+// MARK: - 捲動位置（回答寫到一半往上滑時，不要一直被拉回最下面）
+
+/// 聊天內容在可見範圍裡的位置（座標系是捲動區本身）
+private struct ChatContentFrameKey: PreferenceKey {
+    static let defaultValue: CGRect = .zero
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
+}
+
+/// 捲動區看得到的高度
+private struct ChatViewportHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+}
+
+/// 捲動時一直在變、但不需要重畫畫面的數字（放在 class 裡，改了不會觸發重畫）
+private final class ChatScrollTrack {
+    var lastTop: CGFloat = 0
+    var viewport: CGFloat = 0
+    /// 程式自己有動畫地捲到最下面時，這段時間的位置變化不算使用者滑走
+    var ignoreUntil = Date.distantPast
 }

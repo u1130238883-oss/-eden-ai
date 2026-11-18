@@ -179,7 +179,9 @@ public final class EchoEngine {
             if u.value == 0x3000 { return " " }
             return u
         }))
-        let message = halfWidth.range(of: "^(我叫|叫我|你可以叫我|我的名字是|我的名字叫|請叫我|以後叫我)", options: .regularExpression) != nil ? halfWidth : Hanzi.toTraditional(halfWidth)
+        let message1 = halfWidth.range(of: "^(我叫|叫我|你可以叫我|我的名字是|我的名字叫|請叫我|以後叫我)", options: .regularExpression) != nil ? halfWidth : Hanzi.toTraditional(halfWidth)
+        // 語音輸入常有的開頭（「就是說」「那個」「然後」「我想問一下」「我跟你說喔」）：拿掉再理解
+        let message = EchoEngine.dropFillers(message1)
         var r = replyMain(to: message, history: history, context: context, onToken: onToken)
         // 問的是查表就能答的命理知識（「庚干的四化」「日主辛看癸是什麼十神」），引擎卻在要生日：直接用算好的答
         if r.lang == .zh, r.turn.text.contains("不知道你的生日") {
@@ -209,6 +211,16 @@ public final class EchoEngine {
 
     func replyMain(to message: String, history: [ChatTurn] = [], context: Context,
                    onToken: ((String) -> Void)? = nil) -> Reply {
+        // 安全最優先：說想死、活著很痛苦的話，不當成上一題的追問、不改寫，直接給安全的回應；
+        // 剛給過求助電話的接下來幾句也一樣（「我也不知道」不能被當成上一題的書名）
+        if Safety.isCrisis(message) {
+            lastLocal = nil
+            return replyCore(to: message, history: history, context: context, onToken: onToken)
+        }
+        if history.suffix(6).contains(where: { $0.role == .echo && Safety.isCareReply($0.text) }) {
+            lastLocal = nil
+            return replyCore(to: message, history: history, context: context, onToken: onToken)
+        }
         // 「你可以再說一次嗎」「能不能說簡單一點」：客氣的包裝拿掉，就是對剛剛回答的追問（不是在問我會不會）
         let message = history.isEmpty ? message : EchoEngine.unwrapPoliteFollowUp(message)
         // 追問（「那這些國家都是哪些國家」）：先把代名詞換回上一題的主題，再照一般問題處理
@@ -659,8 +671,23 @@ public final class EchoEngine {
         return g[0].replacingOccurrences(of: "慢一點", with: "簡單一點")
     }
 
+    /// 語音輸入常有的開頭：「就是說我想問一下台北明天天氣怎麼樣」→「台北明天天氣怎麼樣」、「然後那個我想知道現在幾點」→「我想知道現在幾點」。
+    /// 只拿掉句子開頭的；拿掉後太短（「然後呢」「那個呢」）或變成「一個問題」就照原樣
+    static func dropFillers(_ m: String) -> String {
+        let pat = #"^(?:(?:欸|誒|嗯|呃|喂|(?:那個|就是)(?=[，,、\s]|我|你|就是|然後|那個|想問|請問|嗯|欸)|就是說|然後|對了|我跟你說|跟你說|我想問你|我想問一下|想問一下|我想問|請問一下|說真的|你知道嗎)(?:喔|啊|啦|耶|呀|哦)?[，,、\s]*)+"#
+        let t = m.replacingOccurrences(of: pat, with: "", options: .regularExpression)
+        if t == m { return m }
+        let core = t.replacingOccurrences(of: #"[^\p{L}\p{N}]"#, with: "", options: .regularExpression)
+        if core.count < 3 || t.range(of: "^(一個問題|個問題|一件事|件事|喔|啊|呢|嗎)", options: .regularExpression) != nil { return m }
+        return t
+    }
+
     static func normalizeSlang(_ m: String) -> String {
         var m = m
+        // 「我想要減肥然後不知道要吃什麼」「感冒了不知道該吃什麼」：問的是那個情況下的飲食，不是推薦餐廳、菜色
+        if let g = RuleBook.match(m, #"^(?:我)?(?:最近)?(?:想要|想|要|在|正在|開始)?(減肥|瘦身|增肌|健身|感冒|發燒|拉肚子|腹瀉|便秘|貧血|胃痛|懷孕)(?:了)?[，, ]*(?:然後|但是|可是)?(?:我)?(?:不知道|不曉得)(?:要|該)?吃(?:什麼|啥)(?:比較好)?[？?]*$"#) {
+            m = g[0] + "要吃什麼"
+        }
         // 「如果講不好怎麼辦」「萬一地震怎麼辦」→「講不好怎麼辦」
         if let r = m.range(of: #"^(如果|萬一|要是|假如)(?=.{2,14}(怎麼辦|該怎麼辦|要怎麼辦)[？?]*$)"#, options: .regularExpression) { m.removeSubrange(r) }
         // 「富士山在那裡」「首都是那裡」：打錯的「哪裡」（「我在那裡」是在說自己，不算）
@@ -891,6 +918,15 @@ public final class EchoEngine {
         // 0) 安全：說想死、不想活的時候，先好好接住，不算命、不上網、不套規則
         if let care = Safety.crisisReply(text, L) {
             var r = Reply(turn: ChatTurn(role: .echo, text: care, source: .tool), profile: nil, rules: nil, webQuery: nil)
+            r.lang = L
+            return r
+        }
+
+        // 0.1) 剛剛才給過求助電話（說了想死、活著很痛苦、撐不下去）：接下來幾句不算命、不加成語、不用開心的語氣，好好陪他說
+        if L == .zh, let i = history.lastIndex(where: { $0.role == .echo && Safety.isCareReply($0.text) }), history.count - i <= 6,
+           let a = Safety.afterCare(text, first: i == history.count - 1) {
+            var r = Reply(turn: ChatTurn(role: .echo, text: a, source: .neural), profile: nil, rules: nil, webQuery: nil)
+            r.turn.variant = "talk"
             r.lang = L
             return r
         }
