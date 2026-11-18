@@ -1481,6 +1481,13 @@ public final class EchoEngine {
             ("上台|報告|演講|在很多人面前|在大家面前|簡報", "怕|緊張|腦袋空白|發抖|不敢", "上台緊張怎麼辦"),
             ("小孩|孩子|寶寶|兒子|女兒|小朋友", "不肯睡|不睡覺|不想睡|很晚睡|不肯上床|一直要玩", "小孩不肯睡覺"),
         ]
+        // 想幫別人：「同事被裁員了要跟他說什麼」「朋友家人過世要說什麼」：給安慰別人的方法，不是安慰自己
+        let other = "朋友|同事|同學|家人|爸爸|媽媽|爸|媽|男朋友|女朋友|男友|女友|老公|老婆|室友|哥哥|姊姊|姐姐|弟弟|妹妹|親戚|長輩"
+        if text.count >= 6, text.range(of: other, options: .regularExpression) != nil,
+           text.range(of: "(要|該|可以|能)?(跟他|對他|跟她|對她|跟他們|對他們)?(說什麼|講什麼|說些什麼)|怎麼安慰|要怎麼安慰|能做什麼|可以做什麼|能幫什麼|怎麼幫(他|她)", options: .regularExpression) != nil {
+            let ask = text.range(of: "過世|去世|走了|往生|離開人世|喪禮|告別式", options: .regularExpression) != nil ? "朋友家人過世要說什麼" : "怎麼安慰朋友"
+            if let a = Commonsense.answer(ask, now: now), a.contains("\n1. ") { return (lead ?? "你願意為他想這麼多，他一定感受得到。\n") + a }
+        }
         guard text.count >= 12, text.range(of: narrativeAdviceAsk + "|不知道(要|該)?怎麼|怎麼跟|有什麼方法|好累|好煩|很煩|受不了|好困擾|很困擾", options: .regularExpression) != nil else { return nil }
         let hurting = text.range(of: "擔心|難過|好煩|很煩|壓力|害怕|好怕|很怕|痛苦|焦慮|緊張|生氣|委屈|崩潰|受不了|好累|很累|困擾", options: .regularExpression) != nil
         let lead = lead ?? (hurting ? "聽起來真的很不好受，先抱抱你。" : "我懂你的狀況。")
