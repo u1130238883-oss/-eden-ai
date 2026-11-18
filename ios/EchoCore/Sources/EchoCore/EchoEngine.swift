@@ -423,6 +423,13 @@ public final class EchoEngine {
             r.turn.variant = "talk"
             return r
         }
+        // 常見的困擾故事（被室友吵、怕上台、小孩不肯睡）：照故事的根源給做法，不要被句子裡附帶的「睡不著」帶走
+        if !rewritten, context.language == .zh, !EchoEngine.explicitFortune(text), EchoEngine.explicitSearch(text) == nil,
+           let a = EchoEngine.storyAdvice(text, now: context.now) {
+            var r = Reply(turn: ChatTurn(role: .echo, text: a, source: .knowledge), profile: nil, rules: nil, webQuery: nil)
+            r.turn.variant = "talk"
+            return r
+        }
         // 一大段在說自己的事、最後問了問題（「…要不要帶去看醫生」「…我該怎麼辦」）：先給最相關的做法
         if !rewritten, context.language == .zh, text.count > 30, !EchoEngine.explicitFortune(text), EchoEngine.explicitSearch(text) == nil,
            let a = EchoEngine.narrativeAdvice(text, now: context.now) {
@@ -1414,6 +1421,24 @@ public final class EchoEngine {
     static func distressStory(_ text: String) -> Bool {
         text.range(of: "擔心|難過|丟臉|好煩|很煩|壓力|害怕|好怕|很怕|痛苦|不開心|想哭|哭了|焦慮|緊張|生氣|委屈|不安|崩潰|受不了|好累|很累|一直|每天都|最近都|好幾天|老是|總是|沒精神|不舒服|沒用|不聽|不理我|睡不著|提不起勁|沒動力|沒力氣|加班", options: .regularExpression) != nil
     }
+    /// 幾種常見的故事，困擾的根源不是句子裡附帶提到的症狀：
+    /// 「室友很吵…我睡不好」要的是怎麼跟室友說，不是失眠的做法；「很怕上台…」要的是上台緊張，不是怎麼做簡報
+    static func storyAdvice(_ text: String, now: Date, lead: String? = nil) -> String? {
+        let stories: [(who: String, what: String, ask: String)] = [
+            ("室友", "吵|噪音|很晚回來|大聲|聲音", "室友很吵"),
+            ("鄰居|樓上|隔壁", "吵|噪音|大聲|聲音|走路", "鄰居很吵怎麼辦"),
+            ("上台|報告|演講|在很多人面前|在大家面前|簡報", "怕|緊張|腦袋空白|發抖|不敢", "上台緊張怎麼辦"),
+            ("小孩|孩子|寶寶|兒子|女兒|小朋友", "不肯睡|不睡覺|不想睡|很晚睡|不肯上床|一直要玩", "小孩不肯睡覺"),
+        ]
+        guard text.count >= 12, text.range(of: narrativeAdviceAsk + "|不知道(要|該)?怎麼|怎麼跟|有什麼方法|好累|好煩|很煩|受不了|好困擾|很困擾", options: .regularExpression) != nil else { return nil }
+        let hurting = text.range(of: "擔心|難過|好煩|很煩|壓力|害怕|好怕|很怕|痛苦|焦慮|緊張|生氣|委屈|崩潰|受不了|好累|很累|困擾", options: .regularExpression) != nil
+        let lead = lead ?? (hurting ? "聽起來真的很不好受，先抱抱你。" : "我懂你的狀況。")
+        for st in stories where text.range(of: st.who, options: .regularExpression) != nil && text.range(of: st.what, options: .regularExpression) != nil {
+            if let a = Commonsense.answer(st.ask, now: now), a.contains("\n1. ") { return lead + a }
+        }
+        return nil
+    }
+
     static func narrativeAdvice(_ text: String, now: Date) -> String? {
         guard text.count > 24, text.contains("我") else { return nil }
         let advice = text.range(of: narrativeAdviceAsk, options: .regularExpression) != nil
@@ -1431,6 +1456,7 @@ public final class EchoEngine {
         // 有說到難過、擔心的話先接住心情；只是說明狀況就直接給做法
         let hurting = text.range(of: "擔心|難過|丟臉|好煩|很煩|壓力|害怕|好怕|很怕|痛苦|不開心|想哭|哭了|焦慮|緊張|生氣|委屈|不安|崩潰|受不了|好累|很累", options: .regularExpression) != nil
         let lead = hurting ? "聽起來真的很不好受，先抱抱你。" : "我懂你的狀況。"
+        if let a = storyAdvice(text, now: now, lead: lead) { return a }
         // 先看最後的問題，再看第一句（通常是發生了什麼事），最後才是中間的細節（「晚上也睡不著」只是附帶的）
         // 真正在問的那一句（「她都說沒事不想去看醫生」）最優先
         var order = clauses.reversed().filter { $0.range(of: narrativeAdviceAsk, options: .regularExpression) != nil }
