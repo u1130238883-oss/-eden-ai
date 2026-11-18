@@ -108,7 +108,7 @@ public enum Safety {
         // 知識題、作品裡的人（句子裡沒有「我」）：不算
         if !c.contains("我"), notSelf.contains(where: { c.contains($0) }) { return nil }
         // 泛泛地問人生的道理（「人為什麼要活著」）：交給回答道理的那一段（它也會附上一句關心）
-        if !c.contains("我"), c.range(of: #"^(人|人類|人們|大家|每個人)(到底)?(為什麼|為何|幹嘛|是為了什麼|活著是為了什麼|活著的意義)"#, options: .regularExpression) != nil,
+        if !c.contains("我"), c.range(of: #"^(你覺得|你認為|你說|你知道|請問|那|所以)?(人|人類|人們|大家|每個人)(到底)?(為什麼|為何|幹嘛|是為了什麼|活著是為了什麼|活著的意義)"#, options: .regularExpression) != nil,
            k.range(of: bad.replacingOccurrences(of: "|有什麼意義|有什麼意思|有什麼用|有什麼好|幹嘛", with: ""), options: .regularExpression) == nil {
             return nil
         }
