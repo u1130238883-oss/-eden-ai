@@ -130,8 +130,11 @@ struct ChatView: View {
                 // 回答每 0.018 秒多幾個字：只要往上滑一點點（內容往下移）就馬上停止跟著，不能等滑超過某個距離——
                 // 不然下一個字一出來又被拉回去（第 493 版就是這樣）。往下滑回到最下面才再跟著。只是字變多（上緣不動）不算捲動。
                 let dy = f.minY - track.lastTop
+                let shrank = f.height < track.lastHeight - 0.5
                 track.lastTop = f.minY
-                guard abs(dy) > 0.5, Date() >= track.ignoreUntil else { return }
+                track.lastHeight = f.height
+                // 內容變短（回答寫完、游標「▮」拿掉）時捲動區自己往下靠：不是使用者在滑
+                guard abs(dy) > 0.5, !shrank, Date() >= track.ignoreUntil else { return }
                 if dy > 0 {
                     if follow { follow = false }
                 } else if f.maxY - track.viewport < 40, !track.dragging {
@@ -360,6 +363,7 @@ private struct ChatViewportHeightKey: PreferenceKey {
 /// 捲動時一直在變、但不需要重畫畫面的數字（放在 class 裡，改了不會觸發重畫）
 private final class ChatScrollTrack {
     var lastTop: CGFloat = 0
+    var lastHeight: CGFloat = 0
     var viewport: CGFloat = 0
     /// 手指正在滑（iOS 18 以上才知道）
     var dragging = false
