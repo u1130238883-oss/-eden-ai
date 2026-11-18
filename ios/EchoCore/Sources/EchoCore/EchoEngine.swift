@@ -750,6 +750,19 @@ public final class EchoEngine {
         m = m.replacingOccurrences(of: #"ㄅ(?=[？?！!～~]*$)"#, with: "吧", options: .regularExpression)
         m = m.replacingOccurrences(of: #"ㄋ(?=[？?！!～~]*$)"#, with: "呢", options: .regularExpression)
         m = m.replacingOccurrences(of: "ㄉ", with: "的")
+        // 中英夾雜（「推薦一部movie」「我的boss很兇」「今天好hot」）：句子是中文時，常見的英文字換成中文再理解
+        if m.range(of: "\\p{Han}", options: .regularExpression) != nil, m.range(of: "[A-Za-z]{2,}", options: .regularExpression) != nil {
+            let words: [(String, String)] = [("movies", "電影"), ("movie", "電影"), ("film", "電影"), ("coding", "寫程式"), ("programming", "寫程式"),
+                ("boss", "老闆"), ("shopping", "逛街"), ("cute", "可愛"), ("dessert", "甜點"), ("desserts", "甜點"), ("hot", "熱"), ("cold", "冷"),
+                ("happy", "開心"), ("sad", "難過"), ("tired", "累"), ("gym", "健身房"), ("music", "音樂"), ("song", "歌"), ("songs", "歌"),
+                ("book", "書"), ("books", "書"), ("game", "遊戲"), ("games", "遊戲"), ("homework", "功課"), ("meeting", "開會"),
+                ("salary", "薪水"), ("breakfast", "早餐"), ("lunch", "午餐"), ("dinner", "晚餐"), ("boyfriend", "男朋友"), ("girlfriend", "女朋友"),
+                ("weekend", "週末"), ("travel", "旅行"), ("trip", "旅行"), ("cake", "蛋糕"), ("pizza", "披薩")]
+            for (en, zh) in words {
+                m = m.replacingOccurrences(of: "(?i)(?<![A-Za-z])" + en + "(?![A-Za-z])", with: zh, options: .regularExpression)
+            }
+            m = m.replacingOccurrences(of: #"(?i)追(Netflix|網飛|Disney\+?|HBO|愛奇藝)"#, with: "追劇", options: .regularExpression)
+        }
         // 注音選錯的同音字（只在這個字前後的固定組合裡改，正確的「前途」「通順」「那裡很遠」不會被改到）
         for (p, r) in [(#"(存|賺|花|省|借|還|找|領|付|變有|沒有|多少|有沒有)前(?![途科景面後方進任輩提言線])"#, "$1錢"),
                        (#"中讀(?=了|怎麼|要|嗎|$)"#, "中毒"),
