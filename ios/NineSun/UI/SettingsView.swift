@@ -294,6 +294,11 @@ struct SettingsView: View {
                     Spacer()
                     button(T("取消", "Cancel", "Cancelar", "Annulla"), color: Theme.panelHi) { store.cancel(m) }
                 }
+                Text(T("可以離開 App 做別的事，會在背景繼續下載，下載好會通知你。網路斷了會自動接著下載；從多工畫面把 App 滑掉會暫停，下次打開 App 會從斷掉的地方接著下載。",
+                       "You can leave the app: it keeps downloading in the background and notifies you when done. If the connection drops it resumes by itself; if you swipe the app away it pauses and resumes next time you open it.",
+                       "Puedes salir de la app: sigue descargando en segundo plano y te avisa al terminar.",
+                       "Puoi uscire dall'app: continua a scaricare in background e ti avvisa alla fine."))
+                    .font(.system(size: 11)).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
             case .ready:
                 let on = chosen && vm.useBrain
                 Toggle(isOn: Binding(get: { on }, set: { v in
@@ -320,7 +325,7 @@ struct SettingsView: View {
                 }
             case .failed(let why):
                 Text(why).font(.system(size: 12, weight: .medium)).foregroundColor(Theme.neonPink)
-                button(T("再下載一次", "Try again", "Reintentar", "Riprova")) { store.selectedID = m.id; store.download(m) }
+                button(T("繼續下載", "Resume", "Reanudar", "Riprendi")) { store.selectedID = m.id; store.download(m) }
             }
         }
         .padding(.vertical, 4)
