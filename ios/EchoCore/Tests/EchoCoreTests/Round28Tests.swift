@@ -48,4 +48,14 @@ final class Round28Tests: XCTestCase {
         XCTAssertTrue(EchoEngine.personalityForDateQuestion("7月5號出生的人是什麼個性")?.contains("巨蟹座") == true)
         XCTAssertNil(EchoEngine.personalityForDateQuestion("我的個性怎麼樣"))
     }
+
+    /// 「出國可以帶泡麵嗎」「旅行要買旅平險嗎」是實際的問題，不是出國運勢（以前回「我還不知道你的生日」）
+    func testPracticalTravelIsNotFortune() throws {
+        let engine = try SimpleQuestionsProbeTests.engine()
+        for q in ["出國可以帶泡麵嗎", "出國手機要開漫遊嗎", "旅行要買旅平險嗎"] {
+            let a = engine.reply(to: q, history: [], context: EchoEngine.Context()).turn.text
+            XCTAssertFalse(a.contains("生日"), q + " → " + a)
+        }
+        XCTAssertFalse(EchoEngine.knowledgeNotFortune("我出國順不順"))
+    }
 }

@@ -2580,6 +2580,8 @@ public final class EchoEngine {
 
     static func knowledgeNotFortune(_ t: String) -> Bool {
         if t.range(of: "運|命|算命|算算|幫我算|幫我看|占卜|星盤|宮|流年|順不順|順利|好不好", options: .regularExpression) != nil { return false }
+        // 「出國可以帶泡麵嗎」「出國手機要開漫遊嗎」「旅行要買旅平險嗎」：問的是實際要怎麼做，不是出國的運勢
+        if t.range(of: "(可以|可不可以|能不能|能|要不要|需不需要|需要|要|該|一定要)(帶|買|開|辦|用|吃|喝|換|申請|準備|穿|搭|坐|保|刷|付|上|裝|簽)", options: .regularExpression) != nil { return true }
         let rules = t.range(of: "請假|事假|病假|特休|扣薪|扣錢|違法|合法|規定|勞基法|罰|繳稅|要繳|補助|津貼|申請|怎麼算|怎麼計算", options: .regularExpression) != nil
         if t.contains("我") && !rules { return false }
         return Commonsense.answer(t) != nil || Fuzzy.match(t) != nil
