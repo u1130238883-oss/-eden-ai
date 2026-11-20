@@ -153,6 +153,8 @@ final class ChatViewModel: ObservableObject {
                 Brain.shared = try? Brain(bundle: .main)
                 // 理解問題（自己訓練的模型）：看懂這句話要的是什麼——列出有哪些、在講什麼、有幾個……
                 Intent.shared = try? Intent(bundle: .main)
+                // 意思比對：換了說法的問題、規則沒認出的想輕生的話（NineSun 自己訓練的模型，要用上面的閱讀模型）
+                MeaningMatch.shared = try? MeaningMatch(bundle: .main)
                 let core = try PalaceCore(bundle: .main)
                 if let d = try? Data(contentsOf: Self.coreURL), let s = try? JSONDecoder().decode(PalaceCore.Snapshot.self, from: d) {
                     core.restore(s)

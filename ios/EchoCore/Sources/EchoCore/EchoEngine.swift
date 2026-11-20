@@ -552,7 +552,8 @@ public final class EchoEngine {
            r.webQuery != nil || (Talk.chat(text) == nil && Talk.detailed(text) == nil),
            !(r.turn.source == .neural && !EchoEngine.isQuestion(text) && !asksMethod
              && text.range(of: "難過|傷心|壓力|焦慮|寂寞|孤單|想哭|好煩|很煩|崩潰|生氣|討厭|害怕|擔心|好累|很累|不開心|失落|心情|想死|自殺|沒有朋友|沒人理|身心俱疲|委屈|空虛|迷茫|沮喪", options: .regularExpression) != nil),
-           let a = Fuzzy.answer(text, now: context.now) {
+           // 規則的換句話說對不到時，交給 NineSun 自己訓練的意思比對模型（MeaningMatch）：很有把握是哪個條目才用
+           let a = Fuzzy.answer(text, now: context.now) ?? MeaningMatch.shared?.answer(text, now: context.now) {
             let m = Fuzzy.match(text)
             let sub = m.map { m in Commonsense.howtos.contains(where: { $0.name == m.entity.name }) ? "" : (Commonsense.subject(m.alias) ?? "") } ?? ""
             lastLocal = LocalContext(kind: "fact", subject: sub, extra: m?.alias ?? text, answer: a, turn: history.count)

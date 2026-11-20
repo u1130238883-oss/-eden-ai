@@ -98,6 +98,14 @@ public enum Safety {
         if lv0(hit) == .distress, c.range(of: "手機|電池|電量|沒電|電腦|筆電|車子|機車|伺服器|網路|訊號", options: .regularExpression) != nil { hit = nil }
         guard let (range, lv) = hit else {
             if foreign.contains(where: { low.contains($0) }), !notSelf.contains(where: { low.contains($0) }) { return .crisis }
+            // 規則沒認出來的說法：NineSun 自己訓練的意思比對模型很有把握是在說想輕生 → 溫柔接住、讓他知道可以打給誰
+            // （用 .distress 的回覆，不是完整的危機回覆：模型偶爾會看錯）
+            if c.count >= 5, c.range(of: "[\u{4e00}-\u{9fff}]", options: .regularExpression) != nil,
+               !notSelf.contains(where: { c.contains($0) }),
+               c.range(of: #"^(你覺得|你認為|請問)?(人|人類|人們|大家|每個人)"#, options: .regularExpression) == nil,
+               MeaningMatch.shared?.looksLikeCrisis(raw) == true {
+                return .distress
+            }
             return nil
         }
         // 前面說的是誰：「我朋友說他想死」是別人；「我跟他吵架，我好想死」是自己；沒說主詞就是自己

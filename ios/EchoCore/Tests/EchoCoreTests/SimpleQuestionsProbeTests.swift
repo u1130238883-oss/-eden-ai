@@ -11,6 +11,10 @@ final class SimpleQuestionsProbeTests: XCTestCase {
                                   metaJSON: Data(contentsOf: EchoCoreTests.resources.appendingPathComponent("reader.json")))
         Intent.shared = try? Intent(weights: Data(contentsOf: EchoCoreTests.resources.appendingPathComponent("intent.bin")),
                                     metaJSON: Data(contentsOf: EchoCoreTests.resources.appendingPathComponent("intent.json")))
+        // NINESUN_NO_MEANING=1：不用意思比對模型（比較有沒有它的差別）
+        MeaningMatch.shared = ProcessInfo.processInfo.environment["NINESUN_NO_MEANING"] == "1" ? nil
+            : try? MeaningMatch(weights: Data(contentsOf: EchoCoreTests.resources.appendingPathComponent("meaning.bin")),
+                                metaJSON: Data(contentsOf: EchoCoreTests.resources.appendingPathComponent("meaning.json")))
         let qs = try String(contentsOfFile: path, encoding: .utf8).split(separator: "\n").map(String.init).filter { !$0.isEmpty && !$0.hasPrefix("#") }
         for q in qs {
             // App 先看是不是翻譯（「謝謝的英文怎麼說」），是的話不會進到引擎
