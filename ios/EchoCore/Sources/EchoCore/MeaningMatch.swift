@@ -12,6 +12,8 @@ public final class MeaningMatch: @unchecked Sendable {
     /// 有把握的門檻（訓練時用驗證題挑的，存在 meaning.json；舊檔沒有就用預設）
     let answerMin: Float, crisisMin: Float
     let Wm: [Float], E: [Float], b: [Float], P: [Float], c: [Float]
+    /// 閱讀模型的意思要先標準化（訓練時的平均、標準差；舊檔沒有）
+    let mu: [Float], sd: [Float]
 
     struct Meta: Codable {
         let format: String
@@ -21,6 +23,7 @@ public final class MeaningMatch: @unchecked Sendable {
         let enc: Int
         let answer_min: Float?
         let crisis_min: Float?
+        let std: Bool?
     }
 
     public init(weights: Data, metaJSON: Data) throws {
@@ -34,10 +37,12 @@ public final class MeaningMatch: @unchecked Sendable {
             for i in 0..<n { all[i] = Brain.half(UInt16(littleEndian: raw.loadUnaligned(fromByteOffset: i * 2, as: UInt16.self))) }
         }
         let K = labels.count, H = hidden
-        guard n == enc * H + buckets * H + H + K * H + K else { throw EchoError.missing("meaning.bin 大小不對") }
+        let hasStd = m.std ?? false
+        guard n == enc * H + buckets * H + H + K * H + K + (hasStd ? 2 * enc : 0) else { throw EchoError.missing("meaning.bin 大小不對") }
         var off = 0
         func take(_ k: Int) -> [Float] { defer { off += k }; return Array(all[off..<off + k]) }
         Wm = take(enc * H); E = take(buckets * H); b = take(H); P = take(K * H); c = take(K)
+        if hasStd { mu = take(enc); sd = take(enc) } else { mu = []; sd = [] }
     }
 
     public convenience init(bundle: Bundle, name: String = "meaning") throws {
@@ -61,8 +66,9 @@ public final class MeaningMatch: @unchecked Sendable {
     /// 最可能的條目和把握；沒有閱讀模型時不猜
     public func top(_ q: String, brain: Brain? = Brain.shared) -> (label: String, p: Float)? {
         guard let brain else { return nil }
-        let m = brain.meaning(q)
+        var m = brain.meaning(q)
         guard m.count == enc else { return nil }
+        if !mu.isEmpty { for i in 0..<enc { m[i] = (m[i] - mu[i]) / sd[i] } }
         let f = features(q)
         let H = hidden, K = labels.count
         var z = b
