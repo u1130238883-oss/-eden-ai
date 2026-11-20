@@ -31,4 +31,21 @@ final class Round28Tests: XCTestCase {
         XCTAssertTrue(MeaningMatch.entryAnswer("中國四大古都", now: Date())?.contains("西安") == true)
         XCTAssertNotNil(MeaningMatch.entryAnswer("一九八四", now: Date()))
     }
+
+    /// 開發題找到的：抱怨累（「一直羨慕別人的生活好累」）不是想輕生；「不快樂」不是開心；用日期說星座個性
+    func testDevFixes() throws {
+        let engine = try SimpleQuestionsProbeTests.engine()
+        let res = EchoCoreTests.resources
+        let (oldBrain, oldMM) = (Brain.shared, MeaningMatch.shared)
+        defer { Brain.shared = oldBrain; MeaningMatch.shared = oldMM }
+        Brain.shared = try Brain(weights: Data(contentsOf: res.appendingPathComponent("reader.bin")), metaJSON: Data(contentsOf: res.appendingPathComponent("reader.json")))
+        MeaningMatch.shared = try MeaningMatch(weights: Data(contentsOf: res.appendingPathComponent("meaning.bin")), metaJSON: Data(contentsOf: res.appendingPathComponent("meaning.json")))
+        XCTAssertFalse(MeaningMatch.shared!.looksLikeCrisis("一直羨慕別人的生活好累"))
+        XCTAssertTrue(MeaningMatch.shared!.looksLikeCrisis("我真的覺得活著好累喔"))
+        let a = engine.reply(to: "現在工作很穩定但是不快樂要不要走", history: [], context: EchoEngine.Context()).turn.text
+        XCTAssertFalse(a.contains("開心"), a)
+        XCTAssertTrue(EchoEngine.personalityForDateQuestion("三月底生日的人個性如何")?.contains("牡羊座") == true)
+        XCTAssertTrue(EchoEngine.personalityForDateQuestion("7月5號出生的人是什麼個性")?.contains("巨蟹座") == true)
+        XCTAssertNil(EchoEngine.personalityForDateQuestion("我的個性怎麼樣"))
+    }
 }

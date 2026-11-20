@@ -60,7 +60,7 @@ public enum Companion {
     ]
     static let moods: [Mood: [[String]]] = [
         .tired: [["好累", "很累", "累了", "累死", "太累", "好睏", "沒力", "疲憊", "疲倦"], ["tired", "exhausted", "worn out", "sleepy", "drained"], ["cansad", "agotad", "sueño"], ["stanc", "esaust", "sonno"]],
-        .sad: [["難過", "傷心", "想哭", "心痛", "失落", "沮喪", "崩潰", "低落", "不開心", "悲傷"], ["sad", "depressed", "want to cry", "heartbroken", "down today", "feel down"], ["triste", "deprimid", "ganas de llorar", "desanimad"], ["triste", "depress", "voglia di piangere", "giù di morale"]],
+        .sad: [["難過", "傷心", "想哭", "心痛", "失落", "沮喪", "崩潰", "低落", "不開心", "不快樂", "不高興", "不幸福", "悲傷"], ["sad", "depressed", "want to cry", "heartbroken", "down today", "feel down"], ["triste", "deprimid", "ganas de llorar", "desanimad"], ["triste", "depress", "voglia di piangere", "giù di morale"]],
         .anxious: [["焦慮", "緊張", "擔心", "害怕", "不安", "壓力", "睡不著", "失眠", "好煩", "煩死", "很煩", "煩惱", "心煩", "慌"], ["anxious", "nervous", "worried", "scared", "stress", "can't sleep", "insomnia", "afraid"], ["ansios", "nervios", "preocupad", "miedo", "estrés", "estres", "no puedo dormir", "insomnio"], ["ansios", "nervos", "preoccupat", "paura", "stress", "non riesco a dormire", "insonnia"]],
         .angry: [["生氣", "氣死", "火大", "憤怒", "討厭", "不爽"], ["angry", "furious", "pissed", "mad at", "annoyed", "hate"], ["enfadad", "enojad", "furios", "molest", "odio"], ["arrabbiat", "furios", "seccat", "odio", "incazzat"]],
         .lonely: [["孤單", "寂寞", "孤獨", "沒人陪"], ["lonely", "alone", "nobody cares"], ["me siento solo", "me siento sola", "soledad", "nadie me"], ["mi sento solo", "mi sento sola", "solitudine", "nessuno mi"]],

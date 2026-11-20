@@ -718,6 +718,25 @@ public final class EchoEngine {
     }
 
     /// 「三月底出生是什麼星座」「7月5號生的是什麼星座」「十月初是什麼星座」：月、日（或月初／月中／月底）→ 星座
+    /// 「三月底生日的人個性如何」「7月5號出生的人是什麼個性」：先用日期算星座，再說那個星座一般說的個性
+    static func personalityForDateQuestion(_ raw: String) -> String? {
+        let t = raw.filter { !"？?。！!，, ".contains($0) }
+        guard let g = RuleBook.match(t, #"^(?:請問|那|那麼)?(?:我|他|她|小孩|朋友)?(?:是)?([0-9]{1,2}|十一|十二|十|[一二三四五六七八九])月(初|中|底|上旬|中旬|下旬|([0-9]{1,2})(?:日|號))(?:出生|生日|生)?(?:的人|的)?(?:個性|性格|是什麼個性|是怎樣的人|是什麼樣的人)(?:如何|怎麼樣|怎樣|是什麼|呢)?$"#) else { return nil }
+        let cn = ["一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10, "十一": 11, "十二": 12]
+        guard let m = Int(g[0]) ?? cn[g[0]], (1...12).contains(m) else { return nil }
+        let day: Int
+        switch g[1] {
+        case "初", "上旬": day = 5
+        case "中", "中旬": day = 15
+        case "底", "下旬": day = 28
+        default: guard let d = Int(g[2]), (1...31).contains(d) else { return nil }; day = d
+        }
+        let sign = sunSign(month: m, day: day)
+        guard let p = Commonsense.facts.first(where: { $0.name == sign })?.attr("個性") else { return nil }
+        let exact = Int(g[2]) != nil
+        return (exact ? "\(m) 月 \(day) 日出生是\(sign)。" : "\(m) 月\(g[1])出生大多是\(sign)。") + p.replacingOccurrences(of: "一般說", with: "一般說法是") + "。"
+    }
+
     static func signForDateQuestion(_ raw: String) -> String? {
         let t = raw.filter { !"？?。！!，, 的".contains($0) }
         guard t.contains("星座"), !t.contains("我的生日是"),
@@ -1028,6 +1047,7 @@ public final class EchoEngine {
         if L == .zh, let a = ctx.rules.recall(text) { return done(a, .rule) }
         // 2.00059) 「三月底出生是什麼星座」「7月5號生的是什麼星座」：用日期算（工具），不要讓模型猜
         if L == .zh, let a = EchoEngine.signForDateQuestion(text) { return done(a, .tool) }
+        if L == .zh, let a = EchoEngine.personalityForDateQuestion(text) { return done(a, .tool) }
         // 2.0006) 「我是什麼星座」「我屬什麼」：用存好的生日算
         if L == .zh, let g = RuleBook.match(text.filter { !"？?。！!，, ".contains($0) }, #"^(?:那|那麼)?我(?:是)?(?:什麼|哪個)(星座|生肖)(?:呢|啊)?$|^(?:那|那麼)?我屬什麼(?:生肖)?(?:呢|啊)?$"#) {
             guard let b = ctx.profile.birthday else { return done("告訴我你的生日（例如「我的生日是2000年1月1日」），我就能告訴你是什麼星座、屬什麼。", .tool) }

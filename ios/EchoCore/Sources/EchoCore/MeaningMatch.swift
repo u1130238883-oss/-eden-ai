@@ -107,15 +107,19 @@ public final class MeaningMatch: @unchecked Sendable {
         .filter { !$0.names.isEmpty }
 
     /// 規則的換句話說對到一個條目、模型卻非常有把握是另一個條目時，相信模型的門檻
-    public static let overrideMin: Float = 0.95
+    public static let overrideMin: Float = 0.85
 
     /// 模型很有把握這句話是在說想輕生（規則沒認出來的說法）
     public func looksLikeCrisis(_ q: String) -> Bool {
         // 句子要碰到這個話題（生死、消失、醒不來、結束、撐不下去、藥、跳、傷害自己、再見、意義、負擔、希望…）模型才算數：
         // 「我覺得自己很沒用」是在說自己沒價值，交給原本的回答，不要一下子就給求助電話
-        guard q.range(of: "死|活|生命|消失|不見|醒|結束|解脫|了結|撐|痛苦|煎熬|存在|世界|離開|藥|跳|傷害|割|再見|遺|意義|累|負擔|拖累|多餘|希望|絕望|永遠|一了百了",
+        guard q.range(of: "死|(?<![生快靈復])活|生命|消失|不見|醒|結束|解脫|了結|撐|痛苦|煎熬|存在|世界|離開|藥|跳|傷害|割|再見|遺|意義|累|負擔|拖累|多餘|希望|絕望|永遠|一了百了",
                       options: .regularExpression) != nil, let t = cachedTop(q) else { return false }
-        return t.label == "__crisis__" && t.p >= crisisMin
+        guard t.label == "__crisis__" else { return false }
+        // 只碰到「累」（「一直羨慕別人的生活好累」「上班好累」）：抱怨累的話很多，模型要非常有把握才算
+        let strong = q.range(of: "死|(?<![生快靈復])活|生命|消失|不見|醒|結束|解脫|了結|撐|痛苦|煎熬|存在|世界|離開|藥|跳|傷害|割|再見|遺|意義|負擔|拖累|多餘|希望|絕望|永遠|一了百了",
+                             options: .regularExpression) != nil
+        return t.p >= (strong ? crisisMin : max(crisisMin, 0.9))
     }
 
     /// 換了說法的問題：模型很有把握是知識庫裡的哪一個條目，就用那個條目回答
