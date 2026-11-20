@@ -41,6 +41,7 @@ final class Round27Tests: XCTestCase {
         func ask(_ q: String) -> EchoEngine.Reply { engine.reply(to: q, history: [], context: EchoEngine.Context()) }
         let a = ask("下雨天衣服都乾不了")
         XCTAssertTrue(a.turn.text.contains("衣服快點乾"), a.turn.text)
+        XCTAssertFalse(ask("我想知道出國需要注意哪些？").turn.text.contains("韓國"))
         for q in ["哭泣的駱駝好看嗎", "房價會跌嗎"] {
             let r = ask(q)
             XCTAssertFalse(r.turn.text.contains("駝峰") || r.turn.text.contains("房貸是"), q + " → " + r.turn.text)
@@ -59,7 +60,9 @@ final class Round27Tests: XCTestCase {
                       "信用卡忘記繳會怎樣": "最低應繳", "手機掉到馬桶": "關機", "起床脖子好痛": "落枕", "兔子不吃東西": "12 小時",
                       "汽車電瓶沒電怎麼辦": "道路救援", "照片不小心刪掉了": "最近刪除", "菜太鹹了怎麼救": "稀釋",
                       "那個我家冰箱好像不冷了耶": "膠條", "欸我那個機車發不動了": "側柱", "我想要存錢但是每個月都花光光": "記帳",
-                      "就是我想減肥但是晚上都會很餓": "減肥", "那個我朋友生日要送什麼比較好": "送禮", "早上都爬不起來": "早起"]
+                      "就是我想減肥但是晚上都會很餓": "減肥", "那個我朋友生日要送什麼比較好": "送禮", "早上都爬不起來": "早起",
+                      "手機一直自己重開機": "更新", "健保卡怎麼註冊": "快易通", "瓦斯桶沒瓦斯了": "瓦斯行", "水龍頭一直滴水": "墊片",
+                      "前天我錄取醫學系了，真的，怎麼辦！": "恭喜"]
         for (q, w) in expect { XCTAssertTrue(ask(q).contains(w), q + " → " + ask(q)) }
     }
 

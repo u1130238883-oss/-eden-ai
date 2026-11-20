@@ -100,6 +100,12 @@ public final class MeaningMatch: @unchecked Sendable {
         return cacheResult
     }
 
+    /// 知識庫裡的國家、城市、地方（名稱和別名，兩個字以上）
+    static let places: [(name: String, names: [String])] = Commonsense.facts
+        .filter { ["國家", "城市", "地方", "地標"].contains($0.kind) }
+        .map { ($0.name, $0.names.filter { $0.count >= 2 }) }
+        .filter { !$0.names.isEmpty }
+
     /// 規則的換句話說對到一個條目、模型卻非常有把握是另一個條目時，相信模型的門檻
     public static let overrideMin: Float = 0.95
 
@@ -120,6 +126,8 @@ public final class MeaningMatch: @unchecked Sendable {
         // 常識檢查：條目的名稱和問題至少要有一個相同的中文字（不能跳到完全不相干的條目）
         let han = { (s: String) in Set(s.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }) }
         guard !han(t.label).isDisjoint(with: han(q)) else { return nil }
+        // 條目名稱裡有國家、城市（「韓國旅遊注意」），問題卻沒提到那個地方（「出國需要注意哪些」）：不是在問那裡
+        for p in MeaningMatch.places where p.names.contains(where: { t.label.contains($0) }) && !p.names.contains(where: { q.contains($0) }) { return nil }
         return Commonsense.answer(t.label, now: now) ?? Commonsense.answer(t.label + "怎麼辦", now: now)
     }
 }
