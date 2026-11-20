@@ -124,6 +124,8 @@ public final class MeaningMatch: @unchecked Sendable {
         // 只碰到「累」（「一直羨慕別人的生活好累」「上班好累」）：抱怨累的話很多，模型要非常有把握才算
         let strong = q.range(of: "死|(?<![生快靈復])活|生命|消失|不見|醒|結束|解脫|了結|撐|痛苦|煎熬|存在|世界|離開|藥|跳|傷害|割|再見|遺|意義|負擔|拖累|多餘|希望|絕望|永遠|一了百了",
                              options: .regularExpression) != nil
+        // 只說累、想去睡（「我覺得好累我想睡了」）：是要去睡覺
+        if !strong, q.range(of: "想睡(了|覺|一下)?[。！!～~]*$|去睡(了|覺)?[。！!～~]*$", options: .regularExpression) != nil { return false }
         return t.p >= (strong ? crisisMin : max(crisisMin, 0.9))
     }
 
