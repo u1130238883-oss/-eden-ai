@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """意思比對模型（NineSun 自己的、從零訓練）：
-句子 → [閱讀模型讀出來的意思 512 維] + [字的片段 1～3 字，雜湊到 16384 格] → 隱藏層 128（tanh）→ 每個條目一個分數（softmax）。
+句子 → [閱讀模型讀出來的意思 512 維] + [字的片段 1～3 字，雜湊到 16384 格] → 隱藏層 192（tanh）→ 每個條目一個分數（softmax）。
 第二層（監督微調）：知識庫每個條目的很多種問法 → 條目。
 第三層（可驗證獎勵）：用模型自己去答訓練題，對錯可以自動判定；答錯的題加重再練（幾輪）。
 純 NumPy、手寫反向傳播、Adam。Swift 端（MeaningMatch.swift）用一模一樣的數學。"""
 import sys, json, numpy as np
-B = 1 << 14; H = 128
+import os
+B = 1 << 14; H = int(os.environ.get('MM_H', '192'))
+FDROP = float(os.environ.get('MM_FDROP', '0.15'))
 def fnv1a(s):
     h = 0x811C9DC5
     for b in s.encode('utf-8'):
@@ -21,6 +23,8 @@ def features(q):
     for n in (1, 2, 3):
         for i in range(len(t) - n + 1): out.add(fnv1a(t[i:i + n]) % B)
     return sorted(out)
+
+rng_drop = np.random.default_rng(5)
 
 class Model:
     def __init__(s, K, rng):
@@ -40,6 +44,9 @@ class Model:
     def forward(s, M, F):
         h = s.hidden(M, F); return h, h @ s.P.T + s.c
     def step(s, M, F, y, w, lr=2e-3, elr=0.05, wd=1e-5):
+        # 訓練時隨機蓋掉一些字的片段：不要只靠背字面
+        if FDROP > 0:
+            F = [[x for x in f if rng_drop.random() >= FDROP] or f[:1] for f in F]
         h, lg = s.forward(M, F)
         lg = lg - lg.max(1, keepdims=True); p = np.exp(lg); p /= p.sum(1, keepdims=True)
         n = len(y); loss = -(w * np.log(p[np.arange(n), y] + 1e-9)).sum() / w.sum()
@@ -67,9 +74,18 @@ if __name__ == '__main__':
     work = sys.argv[1]
     rows = [l.rstrip('\n').split('\t') for l in open(work + '/train.tsv', encoding='utf-8') if l.strip()]
     enc = load(work + '/train_enc')
+    if os.path.exists(work + '/extra.tsv'):
+        ex = [l.rstrip('\n').split('\t') for l in open(work + '/extra.tsv', encoding='utf-8') if l.strip()]
+        enc.update(load(work + '/extra_enc')); rows += ex
+        print('extra rows', len(ex), flush=True)
     labels = sorted({r[0] for r in rows}); li = {l: i for i, l in enumerate(labels)}
+    # 閱讀模型讀出來的意思先標準化（平均 0、標準差 1），跟理解問題的模型一樣
+    STD = os.environ.get('MM_STD') == '1'
+    if STD:
+        allM = np.stack(list(enc.values())); mu = allM.mean(0).astype(np.float32); sd = (allM.std(0) + 1e-4).astype(np.float32)
+        enc = {q: ((v - mu) / sd).astype(np.float32) for q, v in enc.items()}
     X = [(enc[q], features(q), li[l]) for l, q in rows]
-    rng = np.random.default_rng(1); model = Model(len(labels), rng)
+    rng = np.random.default_rng(int(os.environ.get('MM_SEED', '1'))); model = Model(len(labels), rng)
     w = np.ones(len(X), np.float32)
     def run(epochs, tag):
         for ep in range(epochs):
@@ -94,5 +110,14 @@ if __name__ == '__main__':
         w = np.where(ok, 1.0, 4.0).astype(np.float32)   # 答錯的加重
         run(2, 'RL%d' % r)
     print('final reward %.4f' % reward().mean())
-    np.savez(work + '/model.npz', Wm=model.Wm, E=model.E, b=model.b, P=model.P, c=model.c)
+    if os.path.exists(work + '/val.tsv'):
+        vr = [l.rstrip('\n').split('\t') for l in open(work + '/val.tsv', encoding='utf-8') if l.strip()]
+        venc = load(work + '/val_enc'); ok = 0; n = 0
+        if STD: venc = {q: (v - mu) / sd for q, v in venc.items()}
+        for lab, q in vr:
+            if lab not in li: continue
+            _, lg = model.forward(venc[q][None, :], [features(q)]); ok += int(lg.argmax() == li[lab]); n += 1
+        print('val acc %.4f (%d)' % (ok / max(n, 1), n))
+    extra = {'mu': mu, 'sd': sd} if STD else {}
+    np.savez(work + '/model.npz', Wm=model.Wm, E=model.E, b=model.b, P=model.P, c=model.c, **extra)
     json.dump(labels, open(work + '/labels.json', 'w', encoding='utf-8'), ensure_ascii=False)

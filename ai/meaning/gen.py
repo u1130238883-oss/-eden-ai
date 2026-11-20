@@ -63,6 +63,9 @@ def variants(name, kind, phrases, n):
             t = R.choice(WHAT + ['{b}'])
         if '怎麼' in b or '嗎' in b or '什麼' in b: t = '{b}'
         q = R.choice(FILL_PRE) + R.choice(CTX) + t.format(b=b) + R.choice(FILL_END)
+        if R.random() < 0.1:
+            for a_, b_ in (('什麼', '甚麼'), ('怎麼', '怎摸'), ('什麼', '什摸'), ('在', '再'), ('哪', '那'), ('的', '得'), ('嗎', '嘛')):
+                if a_ in q and R.random() < 0.5: q = q.replace(a_, b_, 1)
         outs.add(q)
     return sorted(outs)
 
@@ -72,13 +75,44 @@ for name, (kind, phrases) in entries.items():
         rows.append((name, q))
 
 # 危機（安全網）：上一輪自己寫、調整過的句子＋加上語氣詞的變化（獨立測試的句子不在這裡）
-crisis = [l.strip() for l in open(HERE + '/data/crisis_train.txt', encoding='utf-8') if l.strip()]
+crisis = [l.strip() for f in ('crisis_train.txt', 'crisis_train2.txt') for l in open(HERE + '/data/' + f, encoding='utf-8') if l.strip()]
 for c in crisis:
     rows.append(('__crisis__', c))
     for _ in range(3): rows.append(('__crisis__', R.choice(FILL_PRE) + c + R.choice(FILL_END)))
 # 不是知識題（閒聊、心情、算命、工具）：重播題組裡引擎不是用知識庫回答的句子，加上不該觸發危機的句子
-none = [l.strip() for f in ('not_crisis_train.txt', 'chat_train.txt') for l in open(HERE + '/data/' + f, encoding='utf-8') if l.strip()]
+none = [l.strip() for f in ('not_crisis_train.txt', 'not_crisis_train2.txt', 'chat_train.txt', 'chat_mentions.txt', 'chat_mentions.txt') for l in open(HERE + '/data/' + f, encoding='utf-8') if l.strip()]
+TIMES = ['今天', '明天', '這週', '這個月', '今年', '明年', '下個月', '今晚', '後天']
+ASPECT = ['', '感情', '事業', '財', '工作', '健康', '學業', '桃花', '人際']
+for _ in range(900):
+    t = R.choice(TIMES); a = R.choice(ASPECT)
+    none.append(R.choice(FILL_PRE) + R.choice(['{t}{a}運勢', '我{t}{a}運如何', '幫我看{t}{a}運勢', '我{t}的{a}運勢好嗎', '{t}{a}運怎麼樣', '算一下我{t}{a}運']).format(t=t, a=a) + R.choice(FILL_END))
+none += ['我的命盤', '幫我做完整解讀', '我的八字', '我的紫微', '我的大運', '算一卦', '我適合什麼工作', '我什麼時候會結婚', '我壓力大的時候會怎樣',
+         '我今年哪方面比較順', '今年哪個月最好', '這個月哪天適合告白', '我的流年', '我的星座運勢', '我的生命靈數', '幫我抽一張塔羅',
+         '你好', '哈囉', '早安', '午安', '晚安', '你是誰', '你會什麼', '陪我聊天', '講個笑話', '謝謝', '謝謝你', '好喔', '哈哈哈', '嗯嗯', '掰掰',
+         '你今天好嗎', '你吃飯了嗎', '你喜歡我嗎', '你是男生還是女生', '你幾歲', '我好無聊', '我在上班', '我剛下班', '我在吃飯', '今天天氣真好',
+         '現在幾點', '今天幾號', '一加一等於多少', '幫我翻譯成英文', '幫我寫一首詩', '幫我取名字', '我的生日是2000年1月1日', '記住我喜歡吃辣']
 for q in none: rows.append(('__none__', q))
+# 自己寫的自然問句（只寫測試、開發題組以外的條目）：重複 3 次，另外加兩個帶語氣詞的版本
+import glob as _g
+_skip = set(os.environ.get('NAT_EXCLUDE', '').split(','))
+for fn in sorted(_g.glob(HERE + '/data/natural*.tsv')):
+    if os.path.basename(fn) in _skip: continue
+    for l in open(fn, encoding='utf-8'):
+        if not l.strip(): continue
+        q, lab = l.rstrip('\n').split('\t')
+        if lab not in entries: continue
+        for _ in range(3): rows.append((lab, q))
+        for _ in range(2): rows.append((lab, R.choice(FILL_PRE) + q + R.choice(FILL_END)))
+# 知識庫自己的內容：每個條目回答裡、只屬於它的子句（像預先讀過百科）
+if os.environ.get('ANSWER_CLAUSES', '1') == '1':
+    for l in open(os.environ.get('CLAUSES_FILE', HERE + '/data/answer_clauses.tsv'), encoding='utf-8'):
+        lab, q = l.rstrip('\n').split('\t')
+        if lab in entries: rows.append((lab, q))
+# 用規則引擎當老師標出來的自然問句（加重：重複 3 次）
+for l in open(HERE + '/data/distill.tsv', encoding='utf-8'):
+    lab, q = l.rstrip('\n').split('\t')
+    if lab in entries:
+        for _ in range(3): rows.append((lab, q))
 R.shuffle(rows)
 for lab, q in rows: print(lab + '\t' + q)
 print(len(entries), 'entries', len(rows), 'rows', sum(1 for l, _ in rows if l == '__none__'), 'none', file=sys.stderr)
