@@ -92,6 +92,31 @@ none += ['我的命盤', '幫我做完整解讀', '我的八字', '我的紫微'
          '你今天好嗎', '你吃飯了嗎', '你喜歡我嗎', '你是男生還是女生', '你幾歲', '我好無聊', '我在上班', '我剛下班', '我在吃飯', '今天天氣真好',
          '現在幾點', '今天幾號', '一加一等於多少', '幫我翻譯成英文', '幫我寫一首詩', '幫我取名字', '我的生日是2000年1月1日', '記住我喜歡吃辣']
 for q in none: rows.append(('__none__', q))
+# 問法框架的換句話說（只拿來擴充自然問句；用另一個亂數，其他資料不變）
+RA = random.Random(11)
+FRAMES = [("怎麼辦", ["要怎麼處理", "該怎麼做", "有什麼辦法", "怎麼處理比較好", "要怎麼辦才好"]),
+          ("是什麼", ["指的是什麼", "到底是什麼", "是啥", "是什麼東西", "是在說什麼"]),
+          ("要怎麼", ["該怎麼", "如何", "怎樣才能", "可以怎麼"]),
+          ("怎麼", ["要怎樣", "如何", "該怎麼"]),
+          ("可以", ["能不能", "可不可以", "能"]),
+          ("會不會", ["是不是會", "會", "容易"]),
+          ("好嗎", ["好不好", "可以嗎", "OK嗎"]),
+          ("多少", ["大概多少", "大約多少"]),
+          ("為什麼", ["為何", "怎麼會", "是什麼原因"]),
+          ("有哪些", ["有什麼", "有幾個", "包括哪些"]),
+          ("是誰", ["是哪一位", "是哪個人"]),
+          ("嗎", ["嗎？", "嗎啊", "嗎?"])]
+def frame_variants(q, rnd):
+    out = []
+    hits = [(a, bs) for a, bs in FRAMES if a in q]
+    rnd.shuffle(hits)
+    for a, bs in hits[:2]:
+        v = q.replace(a, rnd.choice(bs), 1)
+        if v != q: out.append(v)
+    # 拿掉開頭的「我」「我家的」「請問」這類
+    for pre in ("請問", "我家的", "我家", "我的", "我"):
+        if q.startswith(pre) and len(q) - len(pre) >= 4: out.append(q[len(pre):]); break
+    return out[:3]
 # 自己寫的自然問句（只寫測試、開發題組以外的條目）：重複 3 次，另外加兩個帶語氣詞的版本
 import glob as _g
 _skip = set(os.environ.get('NAT_EXCLUDE', '').split(','))
@@ -103,6 +128,9 @@ for fn in sorted(_g.glob(HERE + '/data/natural*.tsv')):
         if lab not in entries: continue
         for _ in range(3): rows.append((lab, q))
         for _ in range(2): rows.append((lab, R.choice(FILL_PRE) + q + R.choice(FILL_END)))
+        # 換掉問法的框架（「怎麼辦」→「要怎麼處理」、「是什麼」→「指的是什麼」…），讓模型看內容、不是看框架
+        if os.environ.get('NAT_FRAMES', '0') == '1':   # 第 28 輪試過：開發題沒有比較好，預設不開
+            for v in frame_variants(q, RA): rows += [(lab, v), (lab, v)]
 # 知識庫自己的內容：每個條目回答裡、只屬於它的子句（像預先讀過百科）
 if os.environ.get('ANSWER_CLAUSES', '1') == '1':
     for l in open(os.environ.get('CLAUSES_FILE', HERE + '/data/answer_clauses.tsv'), encoding='utf-8'):
