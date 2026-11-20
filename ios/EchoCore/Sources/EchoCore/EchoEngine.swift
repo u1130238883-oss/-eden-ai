@@ -215,7 +215,9 @@ public final class EchoEngine {
         // 帶著感受回答：對方開心就替他開心、難過就先心疼、罵我就先道歉——回答本來就有這種語氣、或是一般的問題就不加
         // 說想死的時候不加（「我想結束自己，哈哈」不能回「你真有趣😆」）
         // NineSun 自己的話（笑話、看法、選擇題）本身就帶著語氣，不再加「你真有趣😆」這種開頭
-        if r.lang == .zh, r.turn.role == .echo, !r.turn.text.isEmpty, !Safety.isCrisis(message), r.turn.variant != "talk" {
+        if r.lang == .zh, r.turn.role == .echo, !r.turn.text.isEmpty, !Safety.isCrisis(message), r.turn.variant != "talk",
+           // 在說別人的緊急狀況（「有人昏倒」「看到有人抽搐」）：不要對使用者說「辛苦了，生病要多喝水」
+           message.range(of: "^(看到|遇到|路上|旁邊)?有人", options: .regularExpression) == nil {
             r.turn.text = Affect.color(r.turn.text, for: message, seed: message.count, voice: context.profile.birthday.map { Voice($0) })
         }
         return r
