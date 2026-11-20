@@ -577,6 +577,14 @@ public final class EchoEngine {
             r.turn.source = .tool
             return r
         }
+        // 剛用本地知識回答了一件事（「手機一直自己重開機」），下一句是沒有主語的短追問（「要送修嗎」「會影響信用嗎」），
+        // 本地答不出來要上網查：查的時候帶著那個主題（不然只查「要送修」）
+        if r.webQuery != nil, let lc = lastLocal, lc.kind == "fact", history.count - lc.turn <= 2,
+           message.count <= 10, let prevUser = history.last(where: { $0.role == .user })?.text,
+           Talk.clean(message).range(of: #"^(那|要|會|可以|需要|是不是|還要|有沒有|該|能不能|一定要|換|修|買|多久|多少|幾)"#, options: .regularExpression) != nil {
+            let topic = EchoEngine.dropFillers(prevUser).replacingOccurrences(of: #"(怎麼辦|嗎|呢|啊|啦|？|\?|！|!)+$"#, with: "", options: .regularExpression)
+            if let w = r.webQuery, topic.count >= 2, !w.hasPrefix(String(topic.prefix(3))) { r.webQuery = topic + " " + w }
+        }
         // 沒有主語的問題（「名字叫什麼」「多少錢」）：接上一題的主題；問的是個人資料就是在問我；都不是就先問清楚
         if r.webQuery != nil, let miss = Understanding.missingSubject(message) {
             if miss == .generic, let prev = prevQuestion, Understanding.missingSubject(prev) == nil, history.count - prevQuestionTurn <= 4 {
@@ -1810,8 +1818,10 @@ public final class EchoEngine {
         // 問句裡真正在問的東西
         var core = t
         // 「要多少錢」「要錢嗎」：找剛剛說到費用的那段
+        // （問「多少錢」要有價錢；只說到「免費的道路救援」不是電瓶的價錢）
+        let asksPrice = t.range(of: "多少錢|價錢|要花多少|費用多少", options: .regularExpression) != nil
         if t.range(of: "多少錢|要錢嗎|收費|費用|價錢|要花多少|免費嗎|要付錢", options: .regularExpression) != nil, t.count <= 10,
-           let c = answer.components(separatedBy: CharacterSet(charactersIn: "。；\n")).first(where: { $0.range(of: "[0-9０-９]+ ?(元|塊)|免費|工本費|費用", options: .regularExpression) != nil }) {
+           let c = answer.components(separatedBy: CharacterSet(charactersIn: "。；\n")).first(where: { $0.range(of: asksPrice ? "[0-9０-９]+ ?(元|塊)" : "[0-9０-９]+ ?(元|塊)|免費|工本費|費用", options: .regularExpression) != nil }) {
             let clause = c.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: #"^([0-9]+\.|⚠️|小提醒：)\s*"#, with: "", options: .regularExpression)
             return clause + (clause.hasSuffix("）") ? "" : "。")
         }

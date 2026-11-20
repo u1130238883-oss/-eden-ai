@@ -1,0 +1,34 @@
+import XCTest
+@testable import EchoCore
+
+/// Round 28（2026-11-20）：本地剛回答了一件事，下一句沒有主語的短追問要上網查時，帶著那個主題查
+final class Round28Tests: XCTestCase {
+    func run(_ qs: [String]) throws -> [EchoEngine.Reply] {
+        let engine = try SimpleQuestionsProbeTests.engine()
+        var h: [ChatTurn] = [], out: [EchoEngine.Reply] = []
+        for q in qs {
+            let r = engine.reply(to: q, history: h, context: EchoEngine.Context())
+            h.append(ChatTurn(role: .user, text: q)); h.append(r.turn); out.append(r)
+        }
+        return out
+    }
+
+    func testFollowUpSearchKeepsTopic() throws {
+        let a = try run(["手機一直自己重開機", "要送修嗎"])
+        XCTAssertEqual(a[1].webQuery, "手機一直自己重開機 要送修")
+        let b = try run(["信用卡忘記繳會怎樣", "會影響信用嗎"])
+        XCTAssertTrue(b[1].webQuery?.hasPrefix("信用卡忘記繳") == true, b[1].webQuery ?? b[1].turn.text)
+        // 「多少錢」要找到真的價錢；「免費的道路救援」不是電瓶的價錢
+        let c = try run(["汽車電瓶沒電怎麼辦", "換一顆要多少錢"])
+        XCTAssertFalse(c[1].turn.text.contains("道路救援"), c[1].turn.text)
+    }
+
+    /// 模型對到的條目，用名稱查不到回答的（「誰提出的」「作品」類）也要回答得出來
+    func testEntryAnswerCoversWhoAndWorks() throws {
+        _ = try SimpleQuestionsProbeTests.engine()
+        XCTAssertTrue(MeaningMatch.entryAnswer("精神分析", now: Date())?.contains("佛洛伊德") == true)
+        XCTAssertTrue(MeaningMatch.entryAnswer("基督教", now: Date())?.contains("耶穌") == true)
+        XCTAssertTrue(MeaningMatch.entryAnswer("中國四大古都", now: Date())?.contains("西安") == true)
+        XCTAssertNotNil(MeaningMatch.entryAnswer("一九八四", now: Date()))
+    }
+}
