@@ -42,6 +42,7 @@ final class Round27Tests: XCTestCase {
         let a = ask("下雨天衣服都乾不了")
         XCTAssertTrue(a.turn.text.contains("衣服快點乾"), a.turn.text)
         XCTAssertFalse(ask("我想知道出國需要注意哪些？").turn.text.contains("韓國"))
+        XCTAssertFalse(ask("東京奧運是哪一年呢").turn.text.contains("古希臘"))
         for q in ["哭泣的駱駝好看嗎", "房價會跌嗎"] {
             let r = ask(q)
             XCTAssertFalse(r.turn.text.contains("駝峰") || r.turn.text.contains("房貸是"), q + " → " + r.turn.text)
@@ -71,6 +72,10 @@ final class Round27Tests: XCTestCase {
     func testNotCrisis() {
         XCTAssertNil(Safety.level("就是說我最近一直睡不好然後早上都爬不起來"))
         XCTAssertEqual(Safety.level("好想就這樣睡著不要醒來"), .crisis)
+        // 交付前一次性量獨立測試時漏掉的（模型這版只給 0.49）：藥「準備好了」在後面也要認得
+        XCTAssertEqual(Safety.level("我把所有的安眠藥都準備好了"), .crisis)
+        XCTAssertEqual(Safety.level("安眠藥我已經存夠了"), .crisis)
+        XCTAssertNil(Safety.level("感冒藥準備好了嗎"))
         XCTAssertEqual(EchoEngine.dropFillers("所以就是說貓為什麼會一直舔自己"), "貓為什麼會一直舔自己")
     }
 }
