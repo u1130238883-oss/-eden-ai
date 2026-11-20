@@ -51,8 +51,8 @@ final class Round27Tests: XCTestCase {
 
     /// 探測找到的：吃藥不是推薦美食；「吃完飯就想睡」不是在說吃了什麼；擔心的好消息不先恭喜；新加的生活知識
     func testProbeFixes() throws {
-        let engine = try SimpleQuestionsProbeTests.engine()
-        func ask(_ q: String) -> String { engine.reply(to: q, history: [], context: EchoEngine.Context()).turn.text }
+        // 每一題用新的引擎（字典的順序每次不同，同一個引擎會帶著上一題的狀態）
+        func ask(_ q: String) -> String { (try? SimpleQuestionsProbeTests.engine())?.reply(to: q, history: [], context: EchoEngine.Context()).turn.text ?? "" }
         XCTAssertFalse(ask("頭痛要吃什麼藥").contains("我推薦這幾個"))
         XCTAssertFalse(ask("吃完飯就想睡").contains("好吃嗎"))
         XCTAssertEqual(Talk.chat("我吃完拉麵了")?.hasPrefix("拉麵好吃嗎"), true)
