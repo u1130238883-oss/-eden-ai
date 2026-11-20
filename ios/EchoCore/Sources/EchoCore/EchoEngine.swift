@@ -183,6 +183,18 @@ public final class EchoEngine {
         // 語音輸入常有的開頭（「就是說」「那個」「然後」「我想問一下」「我跟你說喔」）：拿掉再理解
         let message = EchoEngine.dropFillers(message1)
         var r = replyMain(to: message, history: history, context: context, onToken: onToken)
+        // 短追問答出來跟上一句一樣（「狗狗不肯刷牙」→「多久刷一次」又把整段重講一次）：本地其實答不出來，帶著主題上網查
+        if r.lang == .zh, r.webQuery == nil, message.count <= 10, r.turn.text.count >= 40,
+           let prevEcho = history.last(where: { $0.role == .echo })?.text, prevEcho.contains(String(r.turn.text.suffix(40))),
+           let prevUser = history.last(where: { $0.role == .user })?.text, Talk.clean(prevUser) != Talk.clean(message),
+           message.range(of: "再說|再講|重複|再一次|再一遍|說什麼|蛤|什麼意思|沒聽懂|聽不懂|看不懂", options: .regularExpression) == nil {
+            let topic = EchoEngine.dropFillers(prevUser)
+                .replacingOccurrences(of: #"^(我的|我家的|我家)"#, with: "", options: .regularExpression)
+                .replacingOccurrences(of: #"(怎麼辦|嗎|呢|啊|啦|了|？|\?|！|!)+$"#, with: "", options: .regularExpression)
+            r = Reply(turn: ChatTurn(role: .echo, text: Loc.s("webAsk", .zh), source: .tool), profile: nil, rules: nil,
+                      webQuery: topic + " " + EchoEngine.searchQuery(message))
+            return r
+        }
         // 問的是查表就能答的命理知識（「庚干的四化」「日主辛看癸是什麼十神」），引擎卻在要生日：直接用算好的答
         if r.lang == .zh, r.turn.text.contains("不知道你的生日") {
             let facts = BrainFacts.fortune(message)
@@ -581,8 +593,8 @@ public final class EchoEngine {
         // 本地答不出來要上網查：查的時候帶著那個主題（不然只查「要送修」）
         if r.webQuery != nil, let lc = lastLocal, lc.kind == "fact", history.count - lc.turn <= 2,
            message.count <= 10, let prevUser = history.last(where: { $0.role == .user })?.text,
-           Talk.clean(message).range(of: #"^(那|要|會|可以|需要|是不是|還要|有沒有|該|能不能|一定要|換|修|買|多久|多少|幾)"#, options: .regularExpression) != nil {
-            let topic = EchoEngine.dropFillers(prevUser).replacingOccurrences(of: #"(怎麼辦|嗎|呢|啊|啦|？|\?|！|!)+$"#, with: "", options: .regularExpression)
+           Talk.clean(message).range(of: #"^(那|要|會|可以|需要|是不是|還要|還|有沒有|該|能不能|一定要|換|修|送修|買|多久|多少|幾|一個月|一次|大概|平均|通常|如果|萬一|什麼時候|去哪|哪裡|貴不貴|會不會|可不可以)"#, options: .regularExpression) != nil {
+            let topic = EchoEngine.dropFillers(prevUser).replacingOccurrences(of: #"^(我的|我家的|我家)"#, with: "", options: .regularExpression).replacingOccurrences(of: #"(怎麼辦|嗎|呢|啊|啦|？|\?|！|!)+$"#, with: "", options: .regularExpression)
             if let w = r.webQuery, topic.count >= 2, !w.hasPrefix(String(topic.prefix(3))) { r.webQuery = topic + " " + w }
         }
         // 沒有主語的問題（「名字叫什麼」「多少錢」）：接上一題的主題；問的是個人資料就是在問我；都不是就先問清楚

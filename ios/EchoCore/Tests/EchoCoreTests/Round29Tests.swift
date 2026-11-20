@@ -37,4 +37,18 @@ final class Round29Tests: XCTestCase {
                       "我一直冒冷汗": "119", "我的牙齒很敏感": "抗敏感", "欸我車子的胎壓燈亮了": "打氣"]
         for (q, w) in expect { let a = ask(q); XCTAssertTrue(a.contains(w), q + " → " + a) }
     }
+
+    /// 短追問本地答不出來時，不要把上一段整個重講一次；改成帶著主題上網查。要求再說一次的照樣重講
+    func testFollowUpDoesNotRepeatTheWholeAnswer() throws {
+        func dialog(_ a: String, _ b: String) throws -> EchoEngine.Reply {
+            let engine = try SimpleQuestionsProbeTests.engine()
+            let r1 = engine.reply(to: a, history: [], context: EchoEngine.Context())
+            return engine.reply(to: b, history: [ChatTurn(role: .user, text: a), r1.turn], context: EchoEngine.Context())
+        }
+        let r = try dialog("滷肉不入味", "要滷多久")
+        XCTAssertEqual(r.webQuery?.hasPrefix("滷肉不入味"), true, r.turn.text)
+        XCTAssertTrue(try dialog("多肉植物爛根", "還救得回來嗎").webQuery?.hasPrefix("多肉植物爛根") == true)
+        XCTAssertTrue(try dialog("我的iCloud滿了", "一個月多少錢").webQuery?.hasPrefix("iCloud") == true)
+        XCTAssertNil(try dialog("滷肉不入味", "再說一次").webQuery)
+    }
 }
