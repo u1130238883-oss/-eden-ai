@@ -117,6 +117,8 @@ public enum Affect {
             if [.sad, .anxious, .tired, .lonely, .frustrated].contains(m),
                t.range(of: "^(我的?|我家的?)?(爸爸|媽媽|爸|媽|父親|母親|老公|老婆|先生|太太|男朋友|女朋友|男友|女友|另一半|朋友|好朋友|同事|同學|哥哥|姊姊|姐姐|弟弟|妹妹|爺爺|奶奶|阿公|阿嬤|外公|外婆|家人)", options: .regularExpression) != nil,
                t.range(of: "(罵|對|讓|害|逼|打|管|念|唸|嫌|兇|吼|騙|笑|說)我|跟我|不理我", options: .regularExpression) == nil { return .worryOther }
+            // 「上課聽不懂怎麼辦」「數學題目看不懂」：說的是課、題目看不懂，不是看不懂我剛剛說的話
+            if m == .confused, t.range(of: "上課|老師|課|題目|數學|英文|國文|物理|化學|課本|書|文章|報告|說明書|合約|規定|帳單|醫生|日文|韓文", options: .regularExpression) != nil { return .info }
             // 「為什麼會打雷」「打雷可以洗澡嗎」：問打雷這件事，不是在害怕
             if m == .scared, t.contains("打雷"), t.range(of: "為什麼|為甚麼|為何|怎麼形成|是什麼|可以|能不能|要不要|會不會|嗎", options: .regularExpression) != nil,
                t.range(of: "好怕|很怕|害怕|嚇", options: .regularExpression) == nil { return .info }
