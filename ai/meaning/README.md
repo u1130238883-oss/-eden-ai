@@ -1,4 +1,4 @@
-# 意思比對模型（NineSun 自己訓練的，2026-11-20）
+# 意思比對模型（NineSun 自己訓練的，2026-11-20；第 27 輪重新訓練）
 
 一句話 → 知識庫裡它在問的是哪一個條目（2,202 個），或是 `__crisis__`（在說想輕生）、`__none__`（不是在問知識：閒聊、心情、算命）。
 用途：規則聽不懂的換句話說、規則沒認出來的想輕生的話。不是大型語言模型；是一個小模型，專門做「不同說法、同一個意思」。
@@ -9,13 +9,23 @@
 3. **可驗證獎勵**：模型自己去答全部訓練題，「挑的條目對不對」可以自動判定；答錯的加重 4 倍再練，做 4 輪（訓練題答對率 99.53% → 99.72%）。
 4. **接地**：接到 App 的引擎（`EchoCore/MeaningMatch.swift`）：引擎本來要上網查、或只能回客套話時，模型有把握（≥ 0.6，而且條目名稱和問題至少有一個相同的中文字）就用那個條目的知識回答；安全檢查的規則沒認出來時，模型有把握是在說想輕生（≥ 0.5，而且句子碰到生死、消失、撐不下去這類話題）就溫柔接住、給 1925。結果用整個引擎量（下面「整個引擎」那一欄）。
 
-## 怎麼練
+## 怎麼練（第 27 輪的版本）
 ```
-python3 ai/meaning/gen.py > 工作/train.tsv
-OMP_NUM_THREADS=1 python3 ai/meaning/enc.py 工作/train.tsv 工作/train_enc        # 閱讀模型讀出意思（4 個行程）
-python3 ai/meaning/train.py 工作 8 4                                             # 監督微調 8 輪＋獎勵 4 輪
-python3 ai/meaning/export.py 工作 ios/NineSun/Resources                           # meaning.bin（f16，4.9 MB）＋ meaning.json
+python3 ai/meaning/gen.py > 工作/train.tsv                                        # 80,507 句
+OMP_NUM_THREADS=1 python3 ai/meaning/enc.py 工作/train.tsv 工作/train_enc        # 閱讀模型讀出意思（4 個行程，約 1 分鐘）
+MM_SEED=2 python3 ai/meaning/train.py 工作 8 4                                   # 隱藏層 192；監督微調 8 輪＋獎勵 4 輪
+echo '{"answer_min": 0.7, "crisis_min": 0.6}' > 工作/pick.json                   # 門檻（用 dev/ 挑的）
+python3 ai/meaning/export.py 工作 ios/NineSun/Resources                           # meaning.bin（f16，7.3 MB）＋ meaning.json
 ```
+訓練資料（`gen.py` 全部產生）：
+- 程式套出來的問法（第 26 輪就有的）
+- `data/natural*.tsv`：手寫的自然問句 2,074 句，涵蓋測試、開發題組以外的每一個條目（重複 3 次＋2 個加語氣詞的版本）
+- `data/answer_clauses.tsv`：每個條目自己回答裡的子句（最多 8 句），像「預先讀過百科」——這一項在開發題上幫最多（288 題多對 13 題）
+- `data/distill.tsv`：規則引擎當老師標出來的問句（引擎回答剛好對到一個條目的標準回答才算）
+- 想輕生／不是想輕生的句子（`data/crisis_train*.txt`、`not_crisis_train*.txt`）、只是提到某個主題的閒聊（`chat_mentions.txt`）
+
+試過但沒有用的（照實記）：隱藏層 256（跟 192 差不多）、把閱讀模型的意思先標準化（變差）、兩個模型一起投票（好一點點，但檔案變兩倍）、
+針對答錯的再加練（「挑戰」回合：合成題 78%→96%，真人問法沒有變好）、把知識庫沒有的名詞換進問法當成「不是在問知識」的反例（開發題錯更多，刪掉）。
 `MeaningMatchTests` 檢查 Swift 算的跟 Python 一樣。
 
 ## 成績（`heldout/`：訓練前寫好、沒有拿來訓練或調整；但第一版和第二版之間是看這組分數挑的，所以會稍微樂觀）
