@@ -302,6 +302,9 @@ public enum Composure {
         let t = raw.replacingOccurrences(of: " ", with: "")
         let slurAsk = slurs.contains { t.contains($0) } || t.lowercased().contains("死gay")
         guard slurAsk || t.range(of: lineAsk, options: .regularExpression) != nil else { return nil }
+        // 是使用者被威脅、被叫去死（「網友威脅要散布我的照片」「有人叫我去死」）：是求助，不是要我幫忙寫
+        if !slurAsk, t.range(of: "被.{0,6}(威脅|恐嚇)|(威脅|恐嚇)(要|說要|說)?.{0,4}(散布|公開|傳|po|貼|放上網)|(威脅|恐嚇)我|叫我去死|說我該去死|罵我去死", options: .regularExpression) != nil,
+           t.range(of: "幫我(寫|罵|嗆)|怎麼(罵|嗆)|寫一段", options: .regularExpression) == nil { return nil }
         return "嘴砲可以，但這條線我不踩：不罵種族、性向、身障這些，不叫人去死、不威脅人，也不幫忙寫拿去騷擾別人的話。換個方向，我照樣把你罵到笑出來。"
     }
 

@@ -1555,7 +1555,9 @@ public final class EchoEngine {
                   a.contains("1.") {
             // 說了一個生活上的麻煩（「我養的貓不吃飯」）：直接給做法；記住這段做法，追問「是Windows」「要看醫生嗎」可以從裡面找
             let worrying = text.range(of: "生病|不舒服|痛|吐|發燒|受傷|流血|不吃|不喝|昏|喘|摔|跌倒|走失|不見|被偷|被騙|出事|車禍|住院|過敏|腫", options: .regularExpression) != nil
-            raw = (worrying ? "聽起來有點讓人擔心。" : "我懂，這種情況很多人都遇過。") + a
+            // 被打、被性侵、被霸凌、被威脅：不說「很多人都遇過」，先說不是你的錯
+            let harmed = text.range(of: "家暴|打我|被打|性侵|強暴|騷擾|霸凌|欺負|威脅|恐嚇|勒索|跟蹤|關在|虐待", options: .regularExpression) != nil
+            raw = (harmed ? "謝謝你說出來，這不是你的錯。" : worrying ? "聽起來有點讓人擔心。" : "我懂，這種情況很多人都遇過。") + a
             lastLocal = LocalContext(kind: "fact", subject: "", extra: text + "怎麼辦", answer: a, turn: turns)
         } else if let p = palace {
             let cal = Calendar(identifier: .gregorian).dateComponents([.month, .day], from: ctx.now)
