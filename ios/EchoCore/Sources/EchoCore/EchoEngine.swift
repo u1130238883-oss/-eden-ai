@@ -675,7 +675,7 @@ public final class EchoEngine {
     /// 語音輸入常有的開頭：「就是說我想問一下台北明天天氣怎麼樣」→「台北明天天氣怎麼樣」、「然後那個我想知道現在幾點」→「我想知道現在幾點」。
     /// 只拿掉句子開頭的；拿掉後太短（「然後呢」「那個呢」）或變成「一個問題」就照原樣
     static func dropFillers(_ m: String) -> String {
-        let pat = #"^(?:(?:欸|誒|嗯|呃|喂|(?:那個|就是)(?=[，,、\s]|我|你|就是|然後|那個|想問|請問|嗯|欸)|就是說|然後|對了|我跟你說|跟你說|我想問你|我想問一下|想問一下|我想問|請問一下|說真的|你知道嗎)(?:喔|啊|啦|耶|呀|哦)?[，,、\s]*)+"#
+        let pat = #"^(?:(?:欸|誒|嗯|呃|喂|(?:那個|就是)(?=[，,、\s]|我|你|就是|然後|那個|想問|請問|嗯|欸)|所以就是說|所以說|就是說|就是想問|我想問說|然後|對了|我跟你說|跟你說|我想問你|我想問一下|想問一下|我想問|請問一下|說真的|你知道嗎)(?:喔|啊|啦|耶|呀|哦)?[，,、\s]*)+"#
         let t = m.replacingOccurrences(of: pat, with: "", options: .regularExpression)
         if t == m { return m }
         let core = t.replacingOccurrences(of: #"[^\p{L}\p{N}]"#, with: "", options: .regularExpression)
@@ -683,16 +683,26 @@ public final class EchoEngine {
         return t
     }
 
-    /// 太陽星座：分界日（含）之後是下一個星座
     /// 換句話說的問題：先用規則（Fuzzy），規則對不到再用意思比對模型；
     /// 規則對到了、但模型非常有把握（≥ 0.95）是另一個條目時（「下雨天衣服都乾不了」規則對成「不要的衣服」、模型是「晾衣服」），用模型的
     static func paraphraseAnswer(_ text: String, now: Date) -> (String, Bool)? {
         let rules = Fuzzy.answer(text, now: now)
-        if rules != nil, let sure = MeaningMatch.shared?.answer(text, now: now, min: MeaningMatch.overrideMin), sure != rules { return (sure, false) }
+        // 同一個主題（規則對到「早起」的做法、模型對到「早起」的說明）就照規則
+        if rules != nil, let mm = MeaningMatch.shared, let t = mm.cachedTop(text), t.p >= MeaningMatch.overrideMin,
+           let fm = Fuzzy.match(text), !fm.entity.name.contains(t.label), !t.label.contains(fm.entity.name),
+           let sure = mm.answer(text, now: now, min: MeaningMatch.overrideMin), sure != rules { return (sure, false) }
         if let rules { return (rules, true) }
-        return MeaningMatch.shared?.answer(text, now: now).map { ($0, false) }
+        if let a = MeaningMatch.shared?.answer(text, now: now) { return (a, false) }
+        // 「我想要存錢但是每個月都花光光」「我想減肥但是晚上都會很餓」：想做的事＋卡住的地方 → 那件事的做法
+        if let g = RuleBook.match(text, #"^(?:我)?(?:真的|一直|很)?(?:想要|想|在|正在|開始)(.{2,6}?)[，, ]*(?:但是|可是|但|不過)(.{2,})$"#) {
+            for v in [g[0] + "怎麼辦", "怎麼" + g[0], "想" + g[0]] {
+                if let a = Commonsense.answer(v, now: now), a.contains("\n1. ") { return (a, false) }
+            }
+        }
+        return nil
     }
 
+    /// 太陽星座：分界日（含）之後是下一個星座
     static func sunSign(month: Int, day: Int) -> String {
         let cut = [20, 19, 21, 20, 21, 22, 23, 23, 23, 24, 23, 22]
         let order = ["摩羯座", "水瓶座", "雙魚座", "牡羊座", "金牛座", "雙子座", "巨蟹座", "獅子座", "處女座", "天秤座", "天蠍座", "射手座"]
