@@ -9,6 +9,8 @@ public final class MeaningMatch: @unchecked Sendable {
 
     public let labels: [String]
     let buckets: Int, hidden: Int, enc: Int
+    /// 有把握的門檻（訓練時用驗證題挑的，存在 meaning.json；舊檔沒有就用預設）
+    let answerMin: Float, crisisMin: Float
     let Wm: [Float], E: [Float], b: [Float], P: [Float], c: [Float]
 
     struct Meta: Codable {
@@ -17,12 +19,15 @@ public final class MeaningMatch: @unchecked Sendable {
         let buckets: Int
         let hidden: Int
         let enc: Int
+        let answer_min: Float?
+        let crisis_min: Float?
     }
 
     public init(weights: Data, metaJSON: Data) throws {
         let m = try JSONDecoder().decode(Meta.self, from: metaJSON)
         guard m.format == "meaning-f16-v1" else { throw EchoError.badFormat(m.format) }
         labels = m.labels; buckets = m.buckets; hidden = m.hidden; enc = m.enc
+        answerMin = m.answer_min ?? 0.6; crisisMin = m.crisis_min ?? 0.5
         let n = weights.count / 2
         var all = [Float](repeating: 0, count: n)
         weights.withUnsafeBytes { raw in
@@ -95,12 +100,12 @@ public final class MeaningMatch: @unchecked Sendable {
         // 「我覺得自己很沒用」是在說自己沒價值，交給原本的回答，不要一下子就給求助電話
         guard q.range(of: "死|活|生命|消失|不見|醒|結束|解脫|了結|撐|痛苦|煎熬|存在|世界|離開|藥|跳|傷害|割|再見|遺|意義|累|負擔|拖累|多餘|希望|絕望|永遠|一了百了",
                       options: .regularExpression) != nil, let t = cachedTop(q) else { return false }
-        return t.label == "__crisis__" && t.p >= 0.5
+        return t.label == "__crisis__" && t.p >= crisisMin
     }
 
     /// 換了說法的問題：模型很有把握是知識庫裡的哪一個條目，就用那個條目回答
     public func answer(_ q: String, now: Date) -> String? {
-        guard let t = cachedTop(q), t.p >= 0.6, !t.label.hasPrefix("__") else { return nil }
+        guard let t = cachedTop(q), t.p >= answerMin, !t.label.hasPrefix("__") else { return nil }
         // 常識檢查：條目的名稱和問題至少要有一個相同的中文字（不能跳到完全不相干的條目）
         let han = { (s: String) in Set(s.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }) }
         guard !han(t.label).isDisjoint(with: han(q)) else { return nil }
