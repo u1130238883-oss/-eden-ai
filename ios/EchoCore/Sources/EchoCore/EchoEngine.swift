@@ -553,8 +553,8 @@ public final class EchoEngine {
            !(r.turn.source == .neural && !EchoEngine.isQuestion(text) && !asksMethod
              && text.range(of: "難過|傷心|壓力|焦慮|寂寞|孤單|想哭|好煩|很煩|崩潰|生氣|討厭|害怕|擔心|好累|很累|不開心|失落|心情|想死|自殺|沒有朋友|沒人理|身心俱疲|委屈|空虛|迷茫|沮喪", options: .regularExpression) != nil),
            // 規則的換句話說對不到時，交給 NineSun 自己訓練的意思比對模型（MeaningMatch）：很有把握是哪個條目才用
-           let a = Fuzzy.answer(text, now: context.now) ?? MeaningMatch.shared?.answer(text, now: context.now) {
-            let m = Fuzzy.match(text)
+           let (a, byRules) = EchoEngine.paraphraseAnswer(text, now: context.now) {
+            let m = byRules ? Fuzzy.match(text) : nil
             let sub = m.map { m in Commonsense.howtos.contains(where: { $0.name == m.entity.name }) ? "" : (Commonsense.subject(m.alias) ?? "") } ?? ""
             lastLocal = LocalContext(kind: "fact", subject: sub, extra: m?.alias ?? text, answer: a, turn: history.count)
             // 帶著心情問方法（「工作壓力很大怎麼辦」）：先接住心情，再給方法
@@ -684,6 +684,15 @@ public final class EchoEngine {
     }
 
     /// 太陽星座：分界日（含）之後是下一個星座
+    /// 換句話說的問題：先用規則（Fuzzy），規則對不到再用意思比對模型；
+    /// 規則對到了、但模型非常有把握（≥ 0.95）是另一個條目時（「下雨天衣服都乾不了」規則對成「不要的衣服」、模型是「晾衣服」），用模型的
+    static func paraphraseAnswer(_ text: String, now: Date) -> (String, Bool)? {
+        let rules = Fuzzy.answer(text, now: now)
+        if rules != nil, let sure = MeaningMatch.shared?.answer(text, now: now, min: MeaningMatch.overrideMin), sure != rules { return (sure, false) }
+        if let rules { return (rules, true) }
+        return MeaningMatch.shared?.answer(text, now: now).map { ($0, false) }
+    }
+
     static func sunSign(month: Int, day: Int) -> String {
         let cut = [20, 19, 21, 20, 21, 22, 23, 23, 23, 24, 23, 22]
         let order = ["摩羯座", "水瓶座", "雙魚座", "牡羊座", "金牛座", "雙子座", "巨蟹座", "獅子座", "處女座", "天秤座", "天蠍座", "射手座"]

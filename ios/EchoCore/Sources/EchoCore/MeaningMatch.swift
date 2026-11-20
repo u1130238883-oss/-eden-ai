@@ -100,6 +100,9 @@ public final class MeaningMatch: @unchecked Sendable {
         return cacheResult
     }
 
+    /// 規則的換句話說對到一個條目、模型卻非常有把握是另一個條目時，相信模型的門檻
+    public static let overrideMin: Float = 0.95
+
     /// 模型很有把握這句話是在說想輕生（規則沒認出來的說法）
     public func looksLikeCrisis(_ q: String) -> Bool {
         // 句子要碰到這個話題（生死、消失、醒不來、結束、撐不下去、藥、跳、傷害自己、再見、意義、負擔、希望…）模型才算數：
@@ -110,8 +113,10 @@ public final class MeaningMatch: @unchecked Sendable {
     }
 
     /// 換了說法的問題：模型很有把握是知識庫裡的哪一個條目，就用那個條目回答
-    public func answer(_ q: String, now: Date) -> String? {
-        guard let t = cachedTop(q), t.p >= answerMin, !t.label.hasPrefix("__") else { return nil }
+    public func answer(_ q: String, now: Date, min: Float? = nil) -> String? {
+        guard let t = cachedTop(q), t.p >= (min ?? answerMin), !t.label.hasPrefix("__") else { return nil }
+        // 問好不好看、會不會漲跌：知識庫的條目回答不了（「哭泣的駱駝好看嗎」是三毛的書，不是駱駝；「房價會跌嗎」不是在問房貸）
+        guard q.range(of: "好看嗎|好聽嗎|好看不好看|值得看|值得一看|值得買嗎|會跌嗎|會漲嗎|會不會跌|會不會漲|漲還是跌", options: .regularExpression) == nil else { return nil }
         // 常識檢查：條目的名稱和問題至少要有一個相同的中文字（不能跳到完全不相干的條目）
         let han = { (s: String) in Set(s.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }) }
         guard !han(t.label).isDisjoint(with: han(q)) else { return nil }
