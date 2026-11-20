@@ -145,6 +145,8 @@ public final class MeaningMatch: @unchecked Sendable {
         if labelPlaces.isEmpty, MeaningMatch.places.contains(where: { p in !p.names.contains("台灣") && p.names.contains(where: { q.contains($0) }) }) { return nil }
         // 問行政區（縣、省、州、都道府縣），條目卻不是在講行政區（「日本的縣有哪些」≠「日本的大城市」）
         if let r = q.range(of: "都道府縣|縣|省|州", options: .regularExpression), !t.label.contains(String(q[r])) { return nil }
+        // 一個字的條目（「人」「狗」）只在真的在問的時候用：「我想一個人」不是在問人類
+        if t.label.count == 1, q.range(of: "什麼|為什麼|怎麼|嗎|哪|幾|多|誰|如何|介紹|是啥|\\?|？", options: .regularExpression) == nil { return nil }
         guard let ea = MeaningMatch.entryAnswerDetailed(t.label, now: now) else { return nil }
         // 問作品在講什麼、劇情、主角（「悲慘世界講了什麼」）：只查得到作者的話不算回答，交給上網查
         // 作品（書、電影、漫畫）：問內容、劇情、主角，照原本的設計上網查完整的介紹（本地只有作者和一句說明）

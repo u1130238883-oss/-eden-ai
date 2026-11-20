@@ -55,6 +55,7 @@ final class Round29Tests: XCTestCase {
     /// 問錢卻配到跟錢無關的條目不答；追問的追問往前找主題
     func testMoneyGuardAndTopicTwoBack() throws {
         XCTAssertFalse(ask("一個月要花多少").contains("滿月"))
+        XCTAssertFalse(ask("我想一個人").contains("智人"))
         let engine = try SimpleQuestionsProbeTests.engine()
         var h: [ChatTurn] = []
         var last: EchoEngine.Reply?
