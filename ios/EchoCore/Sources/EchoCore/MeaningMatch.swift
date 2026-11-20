@@ -100,6 +100,9 @@ public final class MeaningMatch: @unchecked Sendable {
         return cacheResult
     }
 
+    /// 常識資料庫自己的條目名稱（作品、「誰提出的」這些在 Library，不在這裡）
+    static let ownNames: Set<String> = Set(Commonsense.all.map(\.name))
+
     /// 知識庫裡的國家、城市、地方（名稱和別名，兩個字以上）
     static let places: [(name: String, names: [String])] = Commonsense.facts
         .filter { ["國家", "城市", "地方", "地標"].contains($0.kind) }
@@ -138,17 +141,36 @@ public final class MeaningMatch: @unchecked Sendable {
         if labelPlaces.contains(where: { !$0.names.contains(where: { q.contains($0) }) }) { return nil }
         // （「台灣」不算：「台灣常見的水果有哪些」問的還是一般的事）
         if labelPlaces.isEmpty, MeaningMatch.places.contains(where: { p in !p.names.contains("台灣") && p.names.contains(where: { q.contains($0) }) }) { return nil }
-        return MeaningMatch.entryAnswer(t.label, now: now)
+        guard let ea = MeaningMatch.entryAnswerDetailed(t.label, now: now) else { return nil }
+        // 問作品在講什麼、劇情、主角（「悲慘世界講了什麼」）：只查得到作者的話不算回答，交給上網查
+        // （回答裡有一句它是什麼的說明就算，像「它是寫校園霸凌…的小說」；只有作者生平的不算）
+        if ["%的作者是誰", "%是誰提出的"].contains(ea.via), !ea.text.contains("它是"), !ea.text.contains("\n"),
+           q.range(of: "講什麼|講了什麼|在講|內容|劇情|想表達|主角|結局|故事|好看", options: .regularExpression) != nil { return nil }
+        return ea.text
     }
 
     /// 一個條目的回答：大部分直接用名稱就查得到；「誰提出的」「作品」「清單」這幾類要換個問法
     /// （「精神分析」「基督教」用名稱查不到，用「是誰提出的」才查得到）
-    public static func entryAnswer(_ label: String, now: Date) -> String? {
+    public static func entryAnswer(_ label: String, now: Date) -> String? { entryAnswerDetailed(label, now: now)?.text }
+
+    /// 回答和是用哪一種問法查到的（「%的作者是誰」「%是誰提出的」只有作者、提出者，不是內容）
+    static func entryAnswerDetailed(_ label: String, now: Date) -> (text: String, via: String)? {
+        let han = { (s: String) in Set(s.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }.map { String($0) }) }
+        // 名稱裡問句的字（為什麼、怎麼、會、要…）不用出現在回答裡
+        let need = han(label).subtracting(["為", "什", "麼", "會", "怎", "樣", "辦", "嗎", "呢", "的", "了", "是", "有", "要", "可", "以", "能", "不", "多", "少", "幾", "哪", "誰", "如", "何", "該", "去", "做", "很", "好"])
+        let own = MeaningMatch.ownNames.contains(label)
         for t in ["%", "%怎麼辦", "%是什麼", "什麼是%", "%是誰提出的", "%的作者是誰", "%有哪些"] {
             let q = t.replacingOccurrences(of: "%", with: label)
-            if let a = Commonsense.answer(q, now: now) ?? Library.answer(q) { return a }
+            guard let a = Commonsense.answer(q, now: now) ?? Library.answer(q) else { continue }
+            // 查到的要真的是在講這個條目（「老人與海」查到「海水是…」不算）：名稱裡的字至少一半要出現在回答裡
+            let shared = need.intersection(han(a)).count
+            // 知識庫自己的條目（用名稱直接查到的）就是它本身的回答；其他問法查到的才要檢查是不是在講這個條目
+            if t == "%", own { return (a, t) }
+            if need.count >= 3 ? Double(shared) / Double(need.count) < 0.5 : (!need.isEmpty && shared == 0) { continue }
+            return (a, t)
         }
         return nil
     }
+
 
 }

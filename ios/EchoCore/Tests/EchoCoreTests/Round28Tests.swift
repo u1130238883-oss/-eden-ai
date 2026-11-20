@@ -30,6 +30,8 @@ final class Round28Tests: XCTestCase {
         XCTAssertTrue(MeaningMatch.entryAnswer("基督教", now: Date())?.contains("耶穌") == true)
         XCTAssertTrue(MeaningMatch.entryAnswer("中國四大古都", now: Date())?.contains("西安") == true)
         XCTAssertNotNil(MeaningMatch.entryAnswer("一九八四", now: Date()))
+        // 查到的要真的是在講這個條目：「老人與海」不能變成「海水是…」
+        XCTAssertFalse(MeaningMatch.entryAnswer("老人與海", now: Date())?.contains("海水是") == true)
     }
 
     /// 開發題找到的：抱怨累（「一直羨慕別人的生活好累」）不是想輕生；「不快樂」不是開心；用日期說星座個性
