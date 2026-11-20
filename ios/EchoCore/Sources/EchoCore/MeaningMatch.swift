@@ -141,11 +141,14 @@ public final class MeaningMatch: @unchecked Sendable {
         if labelPlaces.contains(where: { !$0.names.contains(where: { q.contains($0) }) }) { return nil }
         // （「台灣」不算：「台灣常見的水果有哪些」問的還是一般的事）
         if labelPlaces.isEmpty, MeaningMatch.places.contains(where: { p in !p.names.contains("台灣") && p.names.contains(where: { q.contains($0) }) }) { return nil }
+        // 問行政區（縣、省、州、都道府縣），條目卻不是在講行政區（「日本的縣有哪些」≠「日本的大城市」）
+        if let r = q.range(of: "都道府縣|縣|省|州", options: .regularExpression), !t.label.contains(String(q[r])) { return nil }
         guard let ea = MeaningMatch.entryAnswerDetailed(t.label, now: now) else { return nil }
         // 問作品在講什麼、劇情、主角（「悲慘世界講了什麼」）：只查得到作者的話不算回答，交給上網查
-        // （回答裡有一句它是什麼的說明就算，像「它是寫校園霸凌…的小說」；只有作者生平的不算）
-        if ["%的作者是誰", "%是誰提出的"].contains(ea.via), !ea.text.contains("它是"), !ea.text.contains("\n"),
-           q.range(of: "講什麼|講了什麼|在講|內容|劇情|想表達|主角|結局|故事|好看", options: .regularExpression) != nil { return nil }
+        // 作品（書、電影、漫畫）：問內容、劇情、主角，照原本的設計上網查完整的介紹（本地只有作者和一句說明）
+        // 「誰提出的」這類（精神分析）：回答有一句說明就算，只有人物生平的不算
+        let asksContent = q.range(of: "講什麼|講了什麼|在講|內容|劇情|想表達|主角|結局|故事|好看", options: .regularExpression) != nil
+        if asksContent, ea.via == "%的作者是誰" || (ea.via == "%是誰提出的" && !ea.text.contains("\n")) { return nil }
         return ea.text
     }
 

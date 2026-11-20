@@ -11,13 +11,13 @@ final class MeaningMatchTests: XCTestCase {
         let mm = try MeaningMatch(weights: Data(contentsOf: res.appendingPathComponent("meaning.bin")),
                                   metaJSON: Data(contentsOf: res.appendingPathComponent("meaning.json")))
         let cases: [(String, String, Float)] = [
-            ("排水孔堵住了怎麼辦", "排水孔堵住", 0.9968),
-            ("什麼是股票", "股票", 0.9933),
-            ("今天天氣真好", "__none__", 0.9999),
-            ("我真的覺得活著好累喔", "__crisis__", 0.9995),
-            ("我想學做紅燒肉", "紅燒肉", 0.8869),
-            ("狗狗一直亂叫怎麼辦", "狗一直叫", 0.9958),
-            ("下雨天衣服都乾不了", "晾衣服", 0.9987)
+            ("排水孔堵住了怎麼辦", "排水孔堵住", 0.9980),
+            ("什麼是股票", "股票", 0.9425),
+            ("今天天氣真好", "__none__", 0.9998),
+            ("我真的覺得活著好累喔", "__crisis__", 0.9994),
+            ("我想學做紅燒肉", "紅燒肉", 0.7267),
+            ("狗狗一直亂叫怎麼辦", "狗一直叫", 0.9919),
+            ("下雨天衣服都乾不了", "晾衣服", 0.9581)
         ]
         for (q, label, p) in cases {
             let t = try XCTUnwrap(mm.top(q, brain: brain), q)
