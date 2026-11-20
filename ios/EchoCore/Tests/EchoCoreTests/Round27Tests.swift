@@ -22,7 +22,7 @@ final class Round27Tests: XCTestCase {
         for q in ["英文講不出口要怎麼練", "日文聽力很差怎麼辦", "韓文單字背不起來"] {
             XCTAssertNil(Translate.parse(q), q)
         }
-        for q in ["謝謝的英文怎麼說", "蘋果翻成英文", "早安的日文怎麼講"] {
+        for q in ["謝謝的英文怎麼說", "蘋果翻成英文", "早安的日文怎麼講", "文法的西班牙文是什麼"] {
             XCTAssertNotNil(Translate.parse(q), q)
         }
     }
@@ -45,5 +45,19 @@ final class Round27Tests: XCTestCase {
             let r = ask(q)
             XCTAssertFalse(r.turn.text.contains("駝峰") || r.turn.text.contains("房貸是"), q + " → " + r.turn.text)
         }
+    }
+
+    /// 探測找到的：吃藥不是推薦美食；「吃完飯就想睡」不是在說吃了什麼；擔心的好消息不先恭喜；新加的生活知識
+    func testProbeFixes() throws {
+        let engine = try SimpleQuestionsProbeTests.engine()
+        func ask(_ q: String) -> String { engine.reply(to: q, history: [], context: EchoEngine.Context()).turn.text }
+        XCTAssertFalse(ask("頭痛要吃什麼藥").contains("我推薦這幾個"))
+        XCTAssertFalse(ask("吃完飯就想睡").contains("好吃嗎"))
+        XCTAssertEqual(Talk.chat("我吃完拉麵了")?.hasPrefix("拉麵好吃嗎"), true)
+        XCTAssertFalse(ask("畢業了不知道要做什麼").contains("恭喜"))
+        let expect = ["衣服沾到原子筆": "原子筆", "被狗咬到要打針嗎": "肥皂", "網路一直斷線": "路由器", "耳機一邊沒聲音": "平衡",
+                      "信用卡忘記繳會怎樣": "最低應繳", "手機掉到馬桶": "關機", "起床脖子好痛": "落枕", "兔子不吃東西": "12 小時",
+                      "汽車電瓶沒電怎麼辦": "道路救援", "照片不小心刪掉了": "最近刪除", "菜太鹹了怎麼救": "稀釋"]
+        for (q, w) in expect { XCTAssertTrue(ask(q).contains(w), q + " → " + ask(q)) }
     }
 }
