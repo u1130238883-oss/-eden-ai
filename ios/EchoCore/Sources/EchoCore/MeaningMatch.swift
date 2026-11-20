@@ -8,6 +8,8 @@ public final class MeaningMatch: @unchecked Sendable {
     nonisolated(unsafe) public static var shared: MeaningMatch?
 
     public let labels: [String]
+    /// 訓練時看過的條目（模型沒看過的條目，它說「是別的」不算數）
+    public let labelSet: Set<String>
     let buckets: Int, hidden: Int, enc: Int
     /// 有把握的門檻（訓練時用驗證題挑的，存在 meaning.json；舊檔沒有就用預設）
     let answerMin: Float, crisisMin: Float
@@ -29,7 +31,7 @@ public final class MeaningMatch: @unchecked Sendable {
     public init(weights: Data, metaJSON: Data) throws {
         let m = try JSONDecoder().decode(Meta.self, from: metaJSON)
         guard m.format == "meaning-f16-v1" else { throw EchoError.badFormat(m.format) }
-        labels = m.labels; buckets = m.buckets; hidden = m.hidden; enc = m.enc
+        labels = m.labels; labelSet = Set(m.labels); buckets = m.buckets; hidden = m.hidden; enc = m.enc
         answerMin = m.answer_min ?? 0.6; crisisMin = m.crisis_min ?? 0.5
         let n = weights.count / 2
         var all = [Float](repeating: 0, count: n)

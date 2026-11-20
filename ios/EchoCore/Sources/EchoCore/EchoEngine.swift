@@ -697,7 +697,7 @@ public final class EchoEngine {
         let rules = Fuzzy.answer(text, now: now)
         // 同一個主題（規則對到「早起」的做法、模型對到「早起」的說明）就照規則
         if rules != nil, let mm = MeaningMatch.shared, let t = mm.cachedTop(text), t.p >= MeaningMatch.overrideMin,
-           let fm = Fuzzy.match(text), !fm.entity.name.contains(t.label), !t.label.contains(fm.entity.name),
+           let fm = Fuzzy.match(text), mm.labelSet.contains(fm.entity.name), !fm.entity.name.contains(t.label), !t.label.contains(fm.entity.name),
            let sure = mm.answer(text, now: now, min: MeaningMatch.overrideMin), sure != rules { return (sure, false) }
         if let rules { return (rules, true) }
         if let a = MeaningMatch.shared?.answer(text, now: now) { return (a, false) }
