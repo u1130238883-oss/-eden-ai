@@ -132,7 +132,8 @@ public final class MeaningMatch: @unchecked Sendable {
         // 反過來，問題問的是某個地方（「東京奧運是哪一年」），條目卻不是那個地方的（「奧運」的說明）：交給上網查
         let labelPlaces = MeaningMatch.places.filter { $0.names.contains(where: { t.label.contains($0) }) }
         if labelPlaces.contains(where: { !$0.names.contains(where: { q.contains($0) }) }) { return nil }
-        if labelPlaces.isEmpty, MeaningMatch.places.contains(where: { $0.names.contains(where: { q.contains($0) }) }) { return nil }
+        // （「台灣」不算：「台灣常見的水果有哪些」問的還是一般的事）
+        if labelPlaces.isEmpty, MeaningMatch.places.contains(where: { p in !p.names.contains("台灣") && p.names.contains(where: { q.contains($0) }) }) { return nil }
         return MeaningMatch.entryAnswer(t.label, now: now)
     }
 
