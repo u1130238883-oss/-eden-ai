@@ -51,4 +51,17 @@ final class Round29Tests: XCTestCase {
         XCTAssertTrue(try dialog("我的iCloud滿了", "一個月多少錢").webQuery?.hasPrefix("iCloud") == true)
         XCTAssertNil(try dialog("滷肉不入味", "再說一次").webQuery)
     }
+
+    /// 問錢卻配到跟錢無關的條目不答；追問的追問往前找主題
+    func testMoneyGuardAndTopicTwoBack() throws {
+        XCTAssertFalse(ask("一個月要花多少").contains("滿月"))
+        let engine = try SimpleQuestionsProbeTests.engine()
+        var h: [ChatTurn] = []
+        var last: EchoEngine.Reply?
+        for q in ["我想養貓", "要準備什麼", "一個月要花多少"] {
+            let r = engine.reply(to: q, history: h, context: EchoEngine.Context())
+            h.append(ChatTurn(role: .user, text: q)); h.append(r.turn); last = r
+        }
+        XCTAssertEqual(last?.webQuery?.hasPrefix("養貓"), true, last?.webQuery ?? last?.turn.text ?? "")
+    }
 }

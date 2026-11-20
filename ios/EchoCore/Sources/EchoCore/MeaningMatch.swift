@@ -150,6 +150,9 @@ public final class MeaningMatch: @unchecked Sendable {
         // 作品（書、電影、漫畫）：問內容、劇情、主角，照原本的設計上網查完整的介紹（本地只有作者和一句說明）
         // 「誰提出的」這類（精神分析）：回答有一句說明就算，只有人物生平的不算
         let asksContent = q.range(of: "講什麼|講了什麼|在講|內容|劇情|想表達|主角|結局|故事|好看", options: .regularExpression) != nil
+        // 問錢（「一個月要花多少」）卻配到跟錢無關的條目（「一年12個月」）：不答
+        if q.range(of: "多少錢|花多少|要花|費用|價格|價錢|貴不貴|多貴", options: .regularExpression) != nil,
+           ea.text.range(of: "錢|元|塊|費|價|預算|花", options: .regularExpression) == nil { return nil }
         if asksContent, ea.via == "%的作者是誰" || (ea.via == "%是誰提出的" && !ea.text.contains("\n")) { return nil }
         return ea.text
     }

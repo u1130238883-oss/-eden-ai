@@ -189,7 +189,7 @@ public final class EchoEngine {
            let prevUser = history.last(where: { $0.role == .user })?.text, Talk.clean(prevUser) != Talk.clean(message),
            message.range(of: "再說|再講|重複|再一次|再一遍|說什麼|蛤|什麼意思|沒聽懂|聽不懂|看不懂", options: .regularExpression) == nil {
             let topic = EchoEngine.dropFillers(prevUser)
-                .replacingOccurrences(of: #"^(我的|我家的|我家)"#, with: "", options: .regularExpression)
+                .replacingOccurrences(of: #"^(我的|我家的|我家|我想要|我想|我要)"#, with: "", options: .regularExpression)
                 .replacingOccurrences(of: #"(怎麼辦|嗎|呢|啊|啦|了|？|\?|！|!)+$"#, with: "", options: .regularExpression)
             r = Reply(turn: ChatTurn(role: .echo, text: Loc.s("webAsk", .zh), source: .tool), profile: nil, rules: nil,
                       webQuery: topic + " " + EchoEngine.searchQuery(message))
@@ -592,9 +592,10 @@ public final class EchoEngine {
         // 剛用本地知識回答了一件事（「手機一直自己重開機」），下一句是沒有主語的短追問（「要送修嗎」「會影響信用嗎」），
         // 本地答不出來要上網查：查的時候帶著那個主題（不然只查「要送修」）
         if r.webQuery != nil, let lc = lastLocal, lc.kind == "fact", history.count - lc.turn <= 2,
-           message.count <= 10, let prevUser = history.last(where: { $0.role == .user })?.text,
-           Talk.clean(message).range(of: #"^(那|要|會|可以|需要|是不是|還要|還|有沒有|該|能不能|一定要|換|修|送修|買|多久|多少|幾|一個月|一次|大概|平均|通常|如果|萬一|什麼時候|去哪|哪裡|貴不貴|會不會|可不可以)"#, options: .regularExpression) != nil {
-            let topic = EchoEngine.dropFillers(prevUser).replacingOccurrences(of: #"^(我的|我家的|我家)"#, with: "", options: .regularExpression).replacingOccurrences(of: #"(怎麼辦|嗎|呢|啊|啦|？|\?|！|!)+$"#, with: "", options: .regularExpression)
+           message.count <= 10, EchoEngine.isShortFollowUp(message),
+           // 上一句本身也是短追問（「我想養貓」→「要準備什麼」→「一個月要花多少」）：往前找真正的主題
+           let prevUser = history.suffix(8).filter({ $0.role == .user }).reversed().first(where: { !EchoEngine.isShortFollowUp($0.text) })?.text {
+            let topic = EchoEngine.dropFillers(prevUser).replacingOccurrences(of: #"^(我的|我家的|我家|我想要|我想|我要)"#, with: "", options: .regularExpression).replacingOccurrences(of: #"(怎麼辦|嗎|呢|啊|啦|？|\?|！|!)+$"#, with: "", options: .regularExpression)
             if let w = r.webQuery, topic.count >= 2, !w.hasPrefix(String(topic.prefix(3))) { r.webQuery = topic + " " + w }
         }
         // 沒有主語的問題（「名字叫什麼」「多少錢」）：接上一題的主題；問的是個人資料就是在問我；都不是就先問清楚
@@ -701,6 +702,11 @@ public final class EchoEngine {
         let core = t.replacingOccurrences(of: #"[^\p{L}\p{N}]"#, with: "", options: .regularExpression)
         if core.count < 3 || t.range(of: "^(一個問題|個問題|一件事|件事|喔|啊|呢|嗎)", options: .regularExpression) != nil { return m }
         return t
+    }
+
+    /// 沒有主語的短追問（「要多久」「還救得回來嗎」「一個月要花多少」）
+    static func isShortFollowUp(_ m: String) -> Bool {
+        m.count <= 10 && Talk.clean(m).range(of: #"^(那|要|會|可以|需要|是不是|還要|還|有沒有|該|能不能|一定要|換|修|送修|買|多久|多少|幾|一個月|一次|大概|平均|通常|如果|萬一|什麼時候|去哪|哪裡|貴不貴|會不會|可不可以)"#, options: .regularExpression) != nil
     }
 
     /// 換句話說的問題：先用規則（Fuzzy），規則對不到再用意思比對模型；
