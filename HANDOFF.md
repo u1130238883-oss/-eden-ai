@@ -1050,3 +1050,5 @@ brief; still wrong: "鐵達尼號講的是什麼" (gets the ship: the film's art
 **App**：`ios/NineSun/Resources/meaning.bin`（4.9 MB）＋`meaning.json`；`MeaningMatch.shared` 在 `ChatViewModel` 跟閱讀模型一起載入；引擎的換句話說後備（`EchoEngine` 用 `Fuzzy.answer` 的地方）和 `Safety.level`（規則沒認出時）用它。沒有閱讀模型或沒有這個檔時，什麼都不做（照舊用規則）。
 
 **沒做的**：沒有重新預訓練閱讀模型；沒有做多模態、工具使用的訓練（引擎本來就有計算機、時鐘、上網查，第四層只做到「把模型接到這些回答上、用整個引擎的結果來量」）。
+
+**測試**：完整跑一次 267 個測試、18 個跳過、0 個失敗（新增 `MeaningMatchTests`：Swift 和 Python 算出來一樣）。交付 IPA build 507（commit 7e37fa5）：`https://github.com/u1130238883-oss/-eden-ai/raw/ninesun-ipa/build-507/NineSun.ipa`，檢查過裡面的 meaning.bin 跟訓練出來的一模一樣。
