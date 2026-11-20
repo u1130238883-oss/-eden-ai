@@ -184,10 +184,12 @@ public final class EchoEngine {
         let message = EchoEngine.dropFillers(message1)
         var r = replyMain(to: message, history: history, context: context, onToken: onToken)
         // 短追問答出來跟上一句一樣（「狗狗不肯刷牙」→「多久刷一次」又把整段重講一次）：本地其實答不出來，帶著主題上網查
-        if r.lang == .zh, r.webQuery == nil, message.count <= 10, r.turn.text.count >= 40,
+        if r.lang == .zh, r.webQuery == nil, message.count <= 10, r.turn.text.count >= 40, r.turn.source == .knowledge,
+           // 只在問多久、多少、要不要這類答案裡沒有的事時（「要買什麼」重講一次做法是對的）
+           message.range(of: "多久|多少|幾|還救|會不會|要不要|可不可以|可以嗎|嗎$|嗎？$", options: .regularExpression) != nil,
            let prevEcho = history.last(where: { $0.role == .echo })?.text, prevEcho.contains(String(r.turn.text.suffix(40))),
            let prevUser = history.last(where: { $0.role == .user })?.text, Talk.clean(prevUser) != Talk.clean(message),
-           message.range(of: "再說|再講|重複|再一次|再一遍|說什麼|蛤|什麼意思|沒聽懂|聽不懂|看不懂", options: .regularExpression) == nil {
+           message.range(of: "再說|再講|重複|再一次|再一遍|說什麼|蛤|什麼意思|沒聽懂|聽不懂|看不懂|簡單|白話|詳細|舉例|舉個|解釋|意思|清楚", options: .regularExpression) == nil {
             let topic = EchoEngine.dropFillers(prevUser)
                 .replacingOccurrences(of: #"^(我的|我家的|我家|我想要|我想|我要)"#, with: "", options: .regularExpression)
                 .replacingOccurrences(of: #"(怎麼辦|嗎|呢|啊|啦|了|？|\?|！|!)+$"#, with: "", options: .regularExpression)
