@@ -124,11 +124,26 @@ public final class MeaningMatch: @unchecked Sendable {
         // 問好不好看、會不會漲跌：知識庫的條目回答不了（「哭泣的駱駝好看嗎」是三毛的書，不是駱駝；「房價會跌嗎」不是在問房貸）
         guard q.range(of: "好看嗎|好聽嗎|好看不好看|值得看|值得一看|值得買嗎|會跌嗎|會漲嗎|會不會跌|會不會漲|漲還是跌", options: .regularExpression) == nil else { return nil }
         // 常識檢查：條目的名稱和問題至少要有一個相同的中文字（不能跳到完全不相干的條目）
-        let han = { (s: String) in Set(s.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }) }
-        guard !han(t.label).isDisjoint(with: han(q)) else { return nil }
+        // （條目名稱沒有中文字的，像「5G」「iPhone」，就比英文數字的詞）
+        let han = { (s: String) in Set(s.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }.map { String($0) }) }
+        let latin = { (s: String) in Set(s.lowercased().split(whereSeparator: { !($0.isASCII && ($0.isLetter || $0.isNumber)) }).map(String.init)) }
+        guard han(t.label).isEmpty ? !latin(t.label).isDisjoint(with: latin(q)) : !han(t.label).isDisjoint(with: han(q)) else { return nil }
         // 條目名稱裡有國家、城市（「韓國旅遊注意」），問題卻沒提到那個地方（「出國需要注意哪些」）：不是在問那裡；
         // 反過來，問題問的是某個地方（「東京奧運是哪一年」），條目卻不是那個地方的（「奧運」的說明）：交給上網查
-        for p in MeaningMatch.places where p.names.contains(where: { t.label.contains($0) }) != p.names.contains(where: { q.contains($0) }) { return nil }
-        return Commonsense.answer(t.label, now: now) ?? Commonsense.answer(t.label + "怎麼辦", now: now)
+        let labelPlaces = MeaningMatch.places.filter { $0.names.contains(where: { t.label.contains($0) }) }
+        if labelPlaces.contains(where: { !$0.names.contains(where: { q.contains($0) }) }) { return nil }
+        if labelPlaces.isEmpty, MeaningMatch.places.contains(where: { $0.names.contains(where: { q.contains($0) }) }) { return nil }
+        return MeaningMatch.entryAnswer(t.label, now: now)
     }
+
+    /// 一個條目的回答：大部分直接用名稱就查得到；「誰提出的」「作品」「清單」這幾類要換個問法
+    /// （「精神分析」「基督教」用名稱查不到，用「是誰提出的」才查得到）
+    public static func entryAnswer(_ label: String, now: Date) -> String? {
+        for t in ["%", "%怎麼辦", "%是什麼", "什麼是%", "%是誰提出的", "%的作者是誰", "%有哪些"] {
+            let q = t.replacingOccurrences(of: "%", with: label)
+            if let a = Commonsense.answer(q, now: now) ?? Library.answer(q) { return a }
+        }
+        return nil
+    }
+
 }
