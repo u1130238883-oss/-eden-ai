@@ -125,6 +125,8 @@ public enum Affect {
             // 「鄧麗君是怎麼過世的」「愛因斯坦幾歲去世」：問別人（名人）怎麼過世的，是在問事情
             if m == .grief, t.range(of: "(怎麼|如何|為什麼|什麼時候|哪一年|幾歲|是怎麼|因為什麼)(過世|去世|死|離世|逝世)", options: .regularExpression) != nil,
                t.range(of: "我|爸|媽|爺|奶|外公|外婆|阿公|阿嬤|家|狗|貓|寵物|朋友|老公|老婆|男友|女友|同學|同事", options: .regularExpression) == nil { return .info }
+            // 「手機死掉了」「電池死了」：東西壞了，不是失去親人
+            if m == .grief, t.range(of: "(手機|電腦|筆電|電池|電瓶|螢幕|機車|車子|車|遊戲|網路|系統|程式|伺服器|平板|耳機|滑鼠|鍵盤|印表機|手錶)(又|整個|突然)?(死掉|死了|掛了|掛掉)", options: .regularExpression) != nil { return .info }
             // 「喪禮要包多少」「那喪禮呢」「告別式要穿什麼」：問禮俗，不是剛失去親人
             if m == .grief, t.range(of: "過世|去世|走了|離世|離開人世|往生|死|不在了|彩虹橋|逝世|病逝|驟逝|仙逝|離開我們", options: .regularExpression) == nil,
                t.range(of: "包多少|要包|要穿|穿什麼|要注意|注意什麼|要準備|怎麼|呢$|嗎$|禮俗|習俗", options: .regularExpression) != nil

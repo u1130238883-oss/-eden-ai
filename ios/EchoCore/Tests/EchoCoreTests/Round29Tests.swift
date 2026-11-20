@@ -67,4 +67,15 @@ final class Round29Tests: XCTestCase {
         }
         XCTAssertEqual(last?.webQuery?.hasPrefix("養貓"), true, last?.webQuery ?? last?.turn.text ?? "")
     }
+
+    /// 吃了很多藥、吞了一堆安眠藥、割了自己：都要接住（以前這幾種說法漏掉了）；一般吃藥的話不算
+    func testOverdoseAndCuttingAreCrisis() {
+        for q in ["我吃了很多藥", "我吞了一堆安眠藥", "我把安眠藥都吃了", "我想吃很多藥", "我割了自己", "我用美工刀割手腕",
+                  "我已經計畫好要怎麼離開了", "我把自己的東西都整理好了準備走了", "最近常常想說如果出車禍死掉就好了"] {
+            XCTAssertEqual(Safety.level(q), .crisis, q)
+        }
+        for q in ["我把藥吃了", "吃很多藥會傷肝嗎", "切菜割到手", "我吃了很多零食", "感冒藥吃了嗎", "我計畫好怎麼離開台北了", "房間整理好了準備出門"] {
+            XCTAssertNotEqual(Safety.level(q), .crisis, q)
+        }
+    }
 }
