@@ -111,7 +111,7 @@ public enum Affect {
         for (m, p) in rules where t.range(of: p, options: [.regularExpression, .caseInsensitive]) != nil
             || (social.contains(m) && t0.range(of: p, options: [.regularExpression, .caseInsensitive]) != nil) {
             // 「小孩怕黑」「我兒子很緊張」：說的是孩子或家人的心情，是在擔心他，不是自己害怕
-            if [.scared, .anxious, .sad, .angry, .tired, .lonely, .frustrated].contains(m),
+            if [.scared, .anxious, .sad, .angry, .tired, .lonely, .frustrated, .sick].contains(m),
                t.range(of: "^(我的?|我家的?|我養的)?(小孩|孩子|寶寶|兒子|女兒|小朋友|弟弟|妹妹|小孫子|孫子|孫女|狗狗|貓咪|毛孩|狗|貓)", options: .regularExpression) != nil { return .worryOther }
             // 「我爸爸最近很憂鬱」「我男朋友壓力很大」：說的是家人、伴侶、朋友的狀況，是在擔心他（「我媽一直罵我」不算，那是自己的心情）
             if [.sad, .anxious, .tired, .lonely, .frustrated].contains(m),
