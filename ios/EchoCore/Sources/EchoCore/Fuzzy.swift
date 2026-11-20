@@ -186,7 +186,7 @@ enum Fuzzy {
     static func problemStatement(_ raw: String, now: Date) -> String? {
         let t = Talk.clean(raw)
         guard (3...14).contains(t.count), !EchoEngine.isQuestion(raw.replacingOccurrences(of: "好幾", with: "很多")),
-              t.range(of: "痠|痛|癢|抽筋|曬傷|燙傷|割傷|扭到|落枕|便秘|拉肚子|當機|壞了|不見了|漏水|塞住|發霉|中毒|過敏|咳|流鼻血|腫|頭暈|睡不著|卡住|打不開|開不了", options: .regularExpression) != nil,
+              t.range(of: "痠|痛|癢|抽筋|曬傷|燙傷|割傷|扭到|落枕|便秘|拉肚子|當機|壞了|不見了|漏水|塞住|發霉|中毒|過敏|咳|流鼻血|腫|頭暈|睡不著|卡住|打不開|開不了|斷線|沒聲音|沒有聲音", options: .regularExpression) != nil,
               let a = Commonsense.answer(t + "怎麼辦", now: now), a.count >= 20 else { return nil }
         return a
     }

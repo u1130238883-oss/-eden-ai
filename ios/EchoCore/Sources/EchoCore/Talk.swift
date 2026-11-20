@@ -161,8 +161,11 @@ public enum Talk {
             }
         }
         // 剛吃完、剛看完
-        if let g = m(#"^我?(?:剛|剛剛|才剛|已經)?(吃完|看完|讀完|追完|玩完|聽完)(.{1,10})(?:了)?$"#) {
+        // 「吃完飯就想睡」「吃完東西肚子痛」：後面是吃完之後怎麼了，不是在說吃了什麼
+        if let g = m(#"^我?(?:剛|剛剛|才剛|已經)?(吃完|看完|讀完|追完|玩完|聽完)(.{1,10})(?:了)?$"#),
+           g[1].range(of: "就|都會|會想|一直|馬上|肚子|胃|頭|想睡|很想|好想|不舒服|痛|脹|暈", options: .regularExpression) == nil {
             var x = g[1]
+            if x.count > 1, x.hasSuffix("了") { x.removeLast() }   // 「我吃完拉麵了」
             if let r = x.range(of: #"^(一|1)(本|部|首|集|場|個|款|齣|片)"#, options: .regularExpression) { x.replaceSubrange(r, with: "那" + x[r].dropFirst()) }
             switch g[0] {
             case "吃完": lastChatTopic = "吃"; return ["早餐", "午餐", "晚餐", "飯", "宵夜", "早午餐"].contains(x) ? "吃飽了真好～\(x)吃了什麼好吃的？" : "\(x)好吃嗎？"
