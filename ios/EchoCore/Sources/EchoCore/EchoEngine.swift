@@ -707,6 +707,13 @@ public final class EchoEngine {
                 if let a = Commonsense.answer(v, now: now), a.contains("\n1. ") { return (a, false) }
             }
         }
+        // 「我想要學開車」「我想戒手搖飲」「我打算開始跑步」：只說想做什麼 → 那件事的做法（只接受有步驟的回答）
+        if let g = RuleBook.match(text, #"^(?:我|我們)?(?:真的|好|很|一直|最近|今年)?(?:想要|好想|很想|想|打算|準備|決定)(.{2,8}?)(?:了|啦|耶|欸|啊)?[。！!]*$"#),
+           g[0].range(of: "[你妳他她嗎呢吧什麼誰哪]|^(要|去|說|講|問|聽|看你|跟你)", options: .regularExpression) == nil {
+            for v in ["怎麼" + g[0], g[0] + "怎麼辦", g[0] + "要準備什麼"] {
+                if let a = Commonsense.answer(v, now: now), a.contains("\n1. ") { return (a, false) }
+            }
+        }
         return nil
     }
 
