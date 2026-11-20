@@ -145,6 +145,9 @@ public final class MeaningMatch: @unchecked Sendable {
         if labelPlaces.isEmpty, MeaningMatch.places.contains(where: { p in !p.names.contains("台灣") && p.names.contains(where: { q.contains($0) }) }) { return nil }
         // 問行政區（縣、省、州、都道府縣），條目卻不是在講行政區（「日本的縣有哪些」≠「日本的大城市」）
         if let r = q.range(of: "都道府縣|縣|省|州", options: .regularExpression), !t.label.contains(String(q[r])) { return nil }
+        // 「我想學化妝」「想學釣魚」：要學的東西跟條目至少要有兩個字一樣（不能只靠「化」配到「化學反應」、「魚」配到「金魚」）
+        if let r = q.range(of: "(?<=學|學習|學會)[\\p{Han}]{2,6}", options: .regularExpression), q.range(of: "想(要)?學|學(習|會)?怎麼|要學", options: .regularExpression) != nil,
+           han(String(q[r])).intersection(han(t.label)).count < (t.label.hasPrefix("學") ? 1 : 2) { return nil }
         // 一個字的條目（「人」「狗」）只在真的在問的時候用：「我想一個人」不是在問人類
         if t.label.count == 1, q.range(of: "什麼|為什麼|怎麼|嗎|哪|幾|多|誰|如何|介紹|是啥|\\?|？", options: .regularExpression) == nil { return nil }
         guard let ea = MeaningMatch.entryAnswerDetailed(t.label, now: now) else { return nil }

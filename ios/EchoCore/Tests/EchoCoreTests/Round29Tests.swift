@@ -56,6 +56,8 @@ final class Round29Tests: XCTestCase {
     func testMoneyGuardAndTopicTwoBack() throws {
         XCTAssertFalse(ask("一個月要花多少").contains("滿月"))
         XCTAssertFalse(ask("我想一個人").contains("智人"))
+        XCTAssertFalse(ask("我想學化妝").contains("化學反應"))
+        XCTAssertFalse(ask("我想學釣魚").contains("金魚是"))
         let engine = try SimpleQuestionsProbeTests.engine()
         var h: [ChatTurn] = []
         var last: EchoEngine.Reply?
